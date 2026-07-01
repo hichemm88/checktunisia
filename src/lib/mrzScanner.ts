@@ -414,6 +414,53 @@ function isTD1Line2(line: string): boolean {
  * If the initial tight crop fails to produce MRZ, the caller retries with a
  * wider 42 % crop (for close-up shots where the MRZ fills more of the frame).
  */
+/**
+ * Compute an optimal binarisation threshold using Otsu's method.
+ *
+ * Otsu finds the luminance value that maximises the between-class variance
+ * (i.e. best separates the histogram into "ink" and "paper"). This adapts to
+ * the actual lighting of the image instead of a fixed cut-off, which is critical
+ * for dark / unevenly-lit passport photos.
+ *
+ * @param histogram 256-bin luminance histogram (index = luminance 0-255)
+ * @param total     total number of sampled pixels
+ * @returns the threshold in [0, 255]
+ */
+function otsuThreshold(histogram: number[], total: number): number {
+  // Sum of (intensity * count) across the whole histogram
+  let sumAll = 0;
+  for (let t = 0; t < 256; t++) sumAll += t * histogram[t];
+
+  let sumBackground = 0;   // weighted sum of the background class
+  let weightBackground = 0; // pixel count of the background class
+  let maxVariance = -1;
+  let threshold = 127;
+
+  for (let t = 0; t < 256; t++) {
+    weightBackground += histogram[t];
+    if (weightBackground === 0) continue;
+
+    const weightForeground = total - weightBackground;
+    if (weightForeground === 0) break;
+
+    sumBackground += t * histogram[t];
+
+    const meanBackground = sumBackground / weightBackground;
+    const meanForeground = (sumAll - sumBackground) / weightForeground;
+
+    // Between-class variance
+    const diff = meanBackground - meanForeground;
+    const variance = weightBackground * weightForeground * diff * diff;
+
+    if (variance > maxVariance) {
+      maxVariance = variance;
+      threshold = t;
+    }
+  }
+
+  return threshold;
+}
+
 async function cropAndBinarise(file: File, cropFromBottom: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -428,27 +475,66 @@ async function cropAndBinarise(file: File, cropFromBottom: number): Promise<stri
         const canvas = document.createElement('canvas');
         canvas.width  = Math.round(img.width  * SCALE);
         canvas.height = Math.round(cropH * SCALE);
+        const w = canvas.width;
+        const h = canvas.height;
 
         const ctx = canvas.getContext('2d')!;
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, 0, cropTop, img.width, cropH, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, cropTop, img.width, cropH, 0, 0, w, h);
 
-        // Grayscale → auto-level → threshold
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const imgData = ctx.getImageData(0, 0, w, h);
         const d = imgData.data;
+        const pixelCount = w * h;
 
-        let minL = 255, maxL = 0;
-        for (let i = 0; i < d.length; i += 4) {
-          const l = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-          if (l < minL) minL = l;
-          if (l > maxL) maxL = l;
+        // ── 1. Build a grayscale luminance buffer ────────────────────────────
+        const gray = new Float32Array(pixelCount);
+        for (let p = 0, i = 0; p < pixelCount; p++, i += 4) {
+          gray[p] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
         }
-        const range = maxL - minL || 1;
-        for (let i = 0; i < d.length; i += 4) {
-          const l  = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-          const v  = ((l - minL) / range) * 255 < 148 ? 0 : 255;
+
+        // ── 2. Sharpen (unsharp mask via 3×3 Laplacian) ──────────────────────
+        // A 3×3 box blur approximates the low-frequency image; subtracting it
+        // from a scaled original enhances character edges:
+        //   sharp = 2*original - blur
+        // Implemented as a Laplacian-style kernel:
+        //     0 -1  0
+        //    -1  5 -1
+        //     0 -1  0
+        // Edge pixels are copied through unchanged.
+        const sharp = new Float32Array(pixelCount);
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const p = y * w + x;
+            if (x === 0 || y === 0 || x === w - 1 || y === h - 1) {
+              sharp[p] = gray[p];
+              continue;
+            }
+            const c  = gray[p];
+            const up = gray[p - w];
+            const dn = gray[p + w];
+            const lf = gray[p - 1];
+            const rt = gray[p + 1];
+            let v = 5 * c - up - dn - lf - rt;
+            if (v < 0) v = 0;
+            else if (v > 255) v = 255;
+            sharp[p] = v;
+          }
+        }
+
+        // ── 3. Histogram of the sharpened grayscale for Otsu ─────────────────
+        const histogram = new Array<number>(256).fill(0);
+        for (let p = 0; p < pixelCount; p++) {
+          histogram[Math.round(sharp[p]) & 255]++;
+        }
+        const threshold = otsuThreshold(histogram, pixelCount);
+        console.log('[MRZ] Otsu threshold:', threshold);
+
+        // ── 4. Binarise using the adaptive Otsu threshold ────────────────────
+        for (let p = 0, i = 0; p < pixelCount; p++, i += 4) {
+          const v = sharp[p] < threshold ? 0 : 255;
           d[i] = d[i + 1] = d[i + 2] = v;
+          d[i + 3] = 255;
         }
         ctx.putImageData(imgData, 0, 0);
 
@@ -550,9 +636,18 @@ function extractMrzLines(rawText: string): { lines: string[]; format: 'TD3' | 'T
   )];
 
   if (longLines.length >= 2) {
-    // Sort: P/I/V lines first
-    longLines.sort((a) => /^[PIV]/.test(a) ? -1 : 1);
-    return { lines: longLines.slice(0, 2), format: 'TD3' };
+    // REQUIRE a plausible doc-type line (starts with P / I / V). Without one,
+    // these are just two long biographical-zone lines — NOT an MRZ. Accepting
+    // them would surface confident garbage to the user, so we bail instead.
+    const pivLines   = longLines.filter(l => /^[PIV]/.test(l));
+    const otherLines = longLines.filter(l => !/^[PIV]/.test(l));
+
+    if (pivLines.length >= 1 && otherLines.length >= 1) {
+      console.log('[MRZ] last-resort: using PIV line + best other line');
+      return { lines: [pivLines[0], otherLines[0]], format: 'TD3' };
+    }
+    // No PIV line found → the OCR output is not an MRZ. Fall through to the
+    // error below rather than returning garbage.
   }
 
   throw new Error(
@@ -565,7 +660,22 @@ function extractMrzLines(rawText: string): { lines: string[]; format: 'TD3' | 'T
 
 // ─── OCR ───────────────────────────────────────────────────────────────────────
 
-async function runOcr(image: string | File, onProgress?: (n: number) => void): Promise<string> {
+/**
+ * Run tesseract OCR on a preprocessed image.
+ *
+ * @param psm tesseract page-segmentation mode. Default '6' (single uniform
+ *            block) works for a tight MRZ crop; '11' (sparse text) is useful as
+ *            a retry for wider crops where the MRZ is surrounded by other text.
+ *
+ * A confidence gate rejects unreadable images: if tesseract's overall
+ * confidence is very low the image is garbage, so we throw rather than return
+ * OCR noise that downstream parsing would happily accept as "valid" data.
+ */
+async function runOcr(
+  image: string | File,
+  onProgress?: (n: number) => void,
+  psm: string = '6',
+): Promise<string> {
   const worker = await createWorker('eng', 1, {
     logger: (m: { status: string; progress: number }) => {
       if (m.status === 'recognizing text') onProgress?.(Math.round(m.progress * 100));
@@ -573,10 +683,21 @@ async function runOcr(image: string | File, onProgress?: (n: number) => void): P
   });
   await worker.setParameters({
     tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
-    tessedit_pageseg_mode: '6' as never, // single uniform block
+    tessedit_pageseg_mode: psm as never, // 6 = single uniform block, 11 = sparse text
   });
-  const { data: { text } } = await worker.recognize(image as string);
+  const { data: { text, confidence } } = await worker.recognize(image as string);
   await worker.terminate();
+  console.log('[MRZ] OCR confidence:', confidence);
+  // If confidence is very low, the image is unreadable — fail fast, don't return garbage
+  if ((confidence as number) < 30) {
+    throw new Error(
+      'Qualité du scan insuffisante.\n\n' +
+      'Conseils :\n' +
+      '• Photographiez la PAGE ENTIÈRE du passeport\n' +
+      '• Éclairage suffisant, pas de reflets\n' +
+      '• Tenez l\'appareil stable — image bien nette'
+    );
+  }
   return text;
 }
 
@@ -601,7 +722,10 @@ export async function scanMrz(
         // preprocessing failed, use original
       }
 
-      const text = await runOcr(image, onProgress);
+      // For the widest crop (0.60) the MRZ is surrounded by other page text,
+      // so use PSM 11 (sparse text); tighter crops use PSM 6 (uniform block).
+      const psm = crop >= 0.60 ? '11' : '6';
+      const text = await runOcr(image, onProgress, psm);
       const { lines, format } = extractMrzLines(text);
 
       if (format === 'TD3' && lines.length >= 2) return parseTD3(lines[0], lines[1]);
