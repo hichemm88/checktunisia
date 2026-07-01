@@ -69,11 +69,39 @@ async function preprocessForMrz(file: File): Promise<string> {
 
 /** Fix common OCR misreads in MRZ context */
 function fixMrzOcrErrors(line: string): string {
-  // Characters that look like '<' in OCR-B
   return line
     .replace(/[-_–—~\.·,;]/g, '<')  // dash/dot variants → <
     .replace(/\s+/g, '')             // remove all spaces
     .toUpperCase();
+}
+
+/**
+ * Remove OCR garbage from a parsed MRZ name.
+ * After `<<` separator, tesseract misreads `<` fillers as L, K, I, etc.
+ * Real name parts have high character variety; garbage has very few unique chars.
+ */
+function cleanMrzName(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const parts = raw.trim().split(/\s+/);
+  const clean = parts.filter(part => {
+    if (part.length < 2) return false;
+    const uniqueChars = new Set(part.split('')).size;
+    // Garbage like "LLKLKLLLL" has ratio = 9/2 = 4.5 → filter out
+    // Real names like "HICHEM" have ratio = 6/5 = 1.2 → keep
+    return part.length / uniqueChars < 3.5;
+  });
+  return clean.length > 0 ? clean.join(' ') : (parts[0] ?? null);
+}
+
+/**
+ * Map MRZ sex char to our enum.
+ * mrz package returns 'M', 'F', or '<' (unspecified).
+ */
+function parseSex(raw: unknown): 'M' | 'F' | 'X' {
+  const s = String(raw ?? '').trim().toUpperCase();
+  if (s === 'M') return 'M';
+  if (s === 'F') return 'F';
+  return 'X';
 }
 
 /** Extract 44-char MRZ lines from OCR text */
@@ -137,13 +165,12 @@ export async function scanMrz(
   }
 
   const f = parsed.fields;
-  const sex = (f.sex as string) === 'M' ? 'M' : (f.sex as string) === 'F' ? 'F' : 'X';
 
   return {
-    first_name: (f.firstName as string | null) ?? null,
-    last_name: (f.lastName as string | null) ?? null,
+    first_name: cleanMrzName(f.firstName as string | null),
+    last_name: cleanMrzName(f.lastName as string | null),
     date_of_birth: mrzDateToISO(f.birthDate as string, true),
-    sex: sex as 'M' | 'F' | 'X',
+    sex: parseSex(f.sex),
     nationality_code: (f.nationality as string | null) ?? null,
     document_number: (f.documentNumber as string | null) ?? null,
     issuing_country_code: (f.issuingState as string | null) ?? null,
