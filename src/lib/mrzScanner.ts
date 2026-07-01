@@ -465,6 +465,11 @@ function otsuThreshold(histogram: number[], total: number): number {
   return threshold;
 }
 
+// Maximum canvas width after scaling — large enough for tesseract accuracy but
+// not so large that pixel processing bogs down a mobile CPU.
+// A 12MP phone photo at 2.5× would be ~10 000 px wide; we cap at 2 000 px.
+const MAX_CANVAS_W = 2000;
+
 async function cropAndBinarise(file: File, cropFromBottom: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -474,69 +479,38 @@ async function cropAndBinarise(file: File, cropFromBottom: number): Promise<stri
       try {
         const cropTop = Math.floor(img.height * (1 - cropFromBottom));
         const cropH   = img.height - cropTop;
-        const SCALE   = 2.5;
+
+        // Scale up to improve OCR, but cap at MAX_CANVAS_W (performance on mobile).
+        const scale = Math.min(2.5, MAX_CANVAS_W / img.width);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(cropH    * scale);
 
         const canvas = document.createElement('canvas');
-        canvas.width  = Math.round(img.width  * SCALE);
-        canvas.height = Math.round(cropH * SCALE);
-        const w = canvas.width;
-        const h = canvas.height;
+        canvas.width  = w;
+        canvas.height = h;
 
         const ctx = canvas.getContext('2d')!;
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, cropTop, img.width, cropH, 0, 0, w, h);
 
-        const imgData = ctx.getImageData(0, 0, w, h);
-        const d = imgData.data;
+        const imgData    = ctx.getImageData(0, 0, w, h);
+        const d          = imgData.data;
         const pixelCount = w * h;
 
-        // ── 1. Build a grayscale luminance buffer ────────────────────────────
-        const gray = new Float32Array(pixelCount);
-        for (let p = 0, i = 0; p < pixelCount; p++, i += 4) {
-          gray[p] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-        }
-
-        // ── 2. Sharpen (unsharp mask via 3×3 Laplacian) ──────────────────────
-        // A 3×3 box blur approximates the low-frequency image; subtracting it
-        // from a scaled original enhances character edges:
-        //   sharp = 2*original - blur
-        // Implemented as a Laplacian-style kernel:
-        //     0 -1  0
-        //    -1  5 -1
-        //     0 -1  0
-        // Edge pixels are copied through unchanged.
-        const sharp = new Float32Array(pixelCount);
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            const p = y * w + x;
-            if (x === 0 || y === 0 || x === w - 1 || y === h - 1) {
-              sharp[p] = gray[p];
-              continue;
-            }
-            const c  = gray[p];
-            const up = gray[p - w];
-            const dn = gray[p + w];
-            const lf = gray[p - 1];
-            const rt = gray[p + 1];
-            let v = 5 * c - up - dn - lf - rt;
-            if (v < 0) v = 0;
-            else if (v > 255) v = 255;
-            sharp[p] = v;
-          }
-        }
-
-        // ── 3. Histogram of the sharpened grayscale for Otsu ─────────────────
+        // ── Grayscale → Otsu adaptive threshold → binarise ──────────────────
+        // No Laplacian sharpening — the pixel loop alone is O(w×h) and on a
+        // high-res phone crop can take several seconds without meaningful gain.
         const histogram = new Array<number>(256).fill(0);
-        for (let p = 0; p < pixelCount; p++) {
-          histogram[Math.round(sharp[p]) & 255]++;
+        for (let i = 0; i < d.length; i += 4) {
+          histogram[Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) & 255]++;
         }
         const threshold = otsuThreshold(histogram, pixelCount);
-        console.log('[MRZ] Otsu threshold:', threshold);
+        console.log('[MRZ] Otsu threshold:', threshold, '  crop:', cropFromBottom, '  canvas:', w, '×', h);
 
-        // ── 4. Binarise using the adaptive Otsu threshold ────────────────────
-        for (let p = 0, i = 0; p < pixelCount; p++, i += 4) {
-          const v = sharp[p] < threshold ? 0 : 255;
+        for (let i = 0; i < d.length; i += 4) {
+          const l = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+          const v = l < threshold ? 0 : 255;
           d[i] = d[i + 1] = d[i + 2] = v;
           d[i + 3] = 255;
         }
@@ -664,35 +638,28 @@ function extractMrzLines(rawText: string): { lines: string[]; format: 'TD3' | 'T
 
 // ─── OCR ───────────────────────────────────────────────────────────────────────
 
+type TesseractWorker = Awaited<ReturnType<typeof createWorker>>;
+
 /**
- * Run tesseract OCR on a preprocessed image.
+ * Run OCR with an ALREADY-CREATED worker.
  *
- * @param psm tesseract page-segmentation mode. Default '6' (single uniform
- *            block) works for a tight MRZ crop; '11' (sparse text) is useful as
- *            a retry for wider crops where the MRZ is surrounded by other text.
- *
- * A confidence gate rejects unreadable images: if tesseract's overall
- * confidence is very low the image is garbage, so we throw rather than return
- * OCR noise that downstream parsing would happily accept as "valid" data.
+ * The worker is created once in scanMrz() and reused for every crop attempt.
+ * Creating a new worker per attempt caused 3× the init cost (WebAssembly boot +
+ * trained-data download) which pushed total scan time to 10+ minutes on mobile.
  */
-async function runOcr(
+async function runOcrWithWorker(
+  worker: TesseractWorker,
   image: string | File,
-  onProgress?: (n: number) => void,
   psm: string = '6',
 ): Promise<string> {
-  const worker = await createWorker('eng', 1, {
-    logger: (m: { status: string; progress: number }) => {
-      if (m.status === 'recognizing text') onProgress?.(Math.round(m.progress * 100));
-    },
-  });
   await worker.setParameters({
     tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
-    tessedit_pageseg_mode: psm as never, // 6 = single uniform block, 11 = sparse text
+    tessedit_pageseg_mode: psm as never,
   });
   const { data: { text, confidence } } = await worker.recognize(image as string);
-  await worker.terminate();
   console.log('[MRZ] OCR confidence:', confidence);
-  // If confidence is very low, the image is unreadable — fail fast, don't return garbage
+  // Gate: very low confidence means the image is unreadable — fail fast so the
+  // next crop attempt runs, rather than trying to parse garbage as MRZ data.
   if ((confidence as number) < 30) {
     throw new Error(
       'Qualité du scan insuffisante.\n\n' +
@@ -711,33 +678,44 @@ export async function scanMrz(
   file: File,
   onProgress?: (pct: number) => void,
 ): Promise<MrzData> {
-  // Try tight crop first (bottom 22 %) — optimal for full-page passport photos
-  // If structural validation fails, retry with wider crop (bottom 42 %)
-  const cropPercentages = [0.22, 0.42, 0.60];
+  // Two crop sizes — tight (full-page shot) then wider (close-up shot).
+  // The 0.60 third attempt was removed: it rarely helped and tripled latency.
+  const cropPercentages = [0.22, 0.42];
+
+  // ── Create ONE worker for ALL crop attempts ──────────────────────────────────
+  // Worker init (WebAssembly boot + ~10 MB trained-data download) took 5-10 s
+  // per attempt on mobile. One shared worker cuts total init cost to a single hit.
+  const worker = await createWorker('eng', 1, {
+    logger: (m: { status: string; progress: number }) => {
+      if (m.status === 'recognizing text') onProgress?.(Math.round(m.progress * 100));
+    },
+  });
 
   let lastError: Error | null = null;
 
-  for (const crop of cropPercentages) {
-    try {
-      let image: string | File = file;
+  try {
+    for (const crop of cropPercentages) {
       try {
-        image = await cropAndBinarise(file, crop);
-      } catch {
-        // preprocessing failed, use original
+        let image: string | File = file;
+        try {
+          image = await cropAndBinarise(file, crop);
+        } catch {
+          // preprocessing failed — fall back to original file
+        }
+
+        const text = await runOcrWithWorker(worker, image, '6');
+        const { lines, format } = extractMrzLines(text);
+
+        if (format === 'TD3' && lines.length >= 2) return parseTD3(lines[0], lines[1]);
+        if (format === 'TD1' && lines.length >= 3) return parseTD1(lines);
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        // continue to next crop
       }
-
-      // For the widest crop (0.60) the MRZ is surrounded by other page text,
-      // so use PSM 11 (sparse text); tighter crops use PSM 6 (uniform block).
-      const psm = crop >= 0.60 ? '11' : '6';
-      const text = await runOcr(image, onProgress, psm);
-      const { lines, format } = extractMrzLines(text);
-
-      if (format === 'TD3' && lines.length >= 2) return parseTD3(lines[0], lines[1]);
-      if (format === 'TD1' && lines.length >= 3) return parseTD1(lines);
-    } catch (err) {
-      lastError = err instanceof Error ? err : new Error(String(err));
-      // Continue to next crop percentage
     }
+  } finally {
+    // Always release the worker, even if we're about to throw
+    await worker.terminate();
   }
 
   throw lastError ?? new Error('Scan échoué. Utilisez la saisie manuelle.');
