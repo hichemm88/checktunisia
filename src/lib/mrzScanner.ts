@@ -44,45 +44,121 @@ function mrzDateToISO(yymmdd: string, isBirth: boolean): string | null {
 // ─── Filler detection ──────────────────────────────────────────────────────────
 
 /**
- * Detect the filler character from the TAIL of the name field.
+ * Detect the top-2 most likely filler characters from the TAIL of the name field.
  *
- * The last 12 characters of a TD3 39-char name field are almost always pure
- * filler (a name would need to be 27+ chars to reach them).  The dominant
- * character in that tail is the filler, regardless of what tesseract mapped
- * '<' to (K, L, space-then-removed, etc.).
- *
- * Trying progressively shorter tails handles the rare very-long names.
+ * The last 16 chars of the TD3 name field are almost always pure filler.
+ * We return a Set of candidate filler chars so the separator search can try
+ * every combination (LL, KK, KL, LK, K<, <K …) rather than one fixed pair.
  */
-function detectFiller(nameField: string): string {
-  for (const tailLen of [12, 8, 6]) {
+function detectFillerSet(nameField: string): Set<string> {
+  const fillers = new Set<string>(['<']); // '<' is always a candidate
+  for (const tailLen of [16, 12, 8]) {
     if (nameField.length < tailLen) continue;
     const tail = nameField.slice(-tailLen);
     const freq: Record<string, number> = {};
     for (const c of tail) freq[c] = (freq[c] ?? 0) + 1;
     const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
-    // Require ≥60% of tail to be the same char to call it filler
-    if (sorted[0] && sorted[0][1] / tailLen >= 0.6) return sorted[0][0];
+    // Top-2 chars that each represent ≥15 % of the tail are filler candidates
+    for (const [char, count] of sorted.slice(0, 2)) {
+      if (count / tailLen >= 0.15) fillers.add(char);
+    }
+    if (fillers.size >= 2) break; // found enough
   }
-  return '<'; // fallback
+  return fillers;
 }
 
 // ─── Name field parsing ────────────────────────────────────────────────────────
 
 /**
- * Clean a name section (surname or given-names string) by:
- *  1. Splitting on the detected filler
- *  2. Further stripping any residual non-alpha chars (e.g. literal '<' that
- *     wasn't the filler, stray digits from OCR noise)
- *  3. Discarding tokens that are a single character (almost always a misread filler)
- *  4. Joining surviving tokens with a space
+ * Split the 39-char name field into surname and given-names sections.
+ *
+ * The MRZ structure is:  SURNAME << GIVEN1 < GIVEN2 < GIVEN3 << padding
+ * Tesseract may map the `<` char to L, K, or leave it as `<` — inconsistently
+ * even within the same line.  So `<<` may appear as: <<, LL, KK, KL, LK, L<,
+ * <L, K<, <K.
+ *
+ * Strategy: try EVERY pair from the detected filler-set × filler-set (including
+ * all combinations with literal `<`).  Take the EARLIEST match that is preceded
+ * by ≥ 3 alpha characters (= minimum plausible surname).
  */
-function cleanNameSection(section: string, filler: string): string {
-  // Split on both the detected filler AND literal '<' (tesseract may use either
-  // for the same character at different positions in the same line)
+function splitNameField(
+  field: string,
+  fillerSet: Set<string>,
+): { last: string; first: string } {
+  // Build all 2-char separator candidates from the cross-product of fillerSet
+  const candidates = new Set<string>();
+  for (const a of fillerSet) {
+    for (const b of fillerSet) {
+      candidates.add(a + b);
+    }
+  }
+
+  let bestIdx = -1;
+  let bestSepLen = 2;
+
+  for (const sep of candidates) {
+    let searchFrom = 0;
+    while (true) {
+      const i = field.indexOf(sep, searchFrom);
+      if (i < 0) break;
+      // Require ≥ 3 alpha chars before the separator (minimum surname length)
+      const alphasBefore = field.slice(0, i).replace(/[^A-Z]/g, '').length;
+      if (alphasBefore >= 3 && (bestIdx < 0 || i < bestIdx)) {
+        bestIdx   = i;
+        bestSepLen = sep.length;
+        break; // earliest valid occurrence of this sep; try others
+      }
+      searchFrom = i + 1;
+    }
+  }
+
+  const primaryFiller = [...fillerSet].find(c => c !== '<') ?? '<';
+
+  if (bestIdx < 0) {
+    // No separator found — treat whole field as surname, no given name
+    return { last: cleanSurname(field, fillerSet), first: '' };
+  }
+
+  console.log('[MRZ] separator found at idx', bestIdx, 'sep:', JSON.stringify(field.slice(bestIdx, bestIdx + bestSepLen)));
+
+  return {
+    last:  cleanSurname(field.slice(0, bestIdx), fillerSet),
+    first: cleanGivenNames(field.slice(bestIdx + bestSepLen), primaryFiller, fillerSet),
+  };
+}
+
+/**
+ * Clean the SURNAME section.
+ * Surname = ONE word — we do NOT split on the internal filler because the filler
+ * char (L, K …) may be a real letter in the name (MATHLOUTHI, KAOUACH…).
+ * We only strip chars that are definitively not part of an alpha name.
+ */
+function cleanSurname(section: string, fillerSet: Set<string>): string {
+  // Keep only alpha chars from the section
+  const alpha = section.replace(/[^A-Z]/g, '');
+  // Strip any leading/trailing filler chars (which are OCR-noise padding)
+  let s = alpha;
+  for (const f of fillerSet) {
+    if (f === '<') continue; // already removed by replace above
+    // Strip leading and trailing runs of the filler char
+    const re = new RegExp(`^${f}+|${f}+$`, 'g');
+    s = s.replace(re, '');
+  }
+  return s;
+}
+
+/**
+ * Clean the GIVEN-NAMES section.
+ * Given names are separated by single `<` in MRZ (→ single filler char in OCR).
+ * We split on filler chars and keep parts ≥ 2 chars.
+ * Extra filter: drop tokens that are all the same character (KK, LL …) — these
+ * are filler bleed-through that happen to be ≥ 2 chars long.
+ */
+function cleanGivenNames(section: string, primaryFiller: string, fillerSet: Set<string>): string {
   const result: string[] = [];
   let part = '';
   for (const c of section) {
-    if (c === filler || c === '<') {
+    if (fillerSet.has(c)) {
       if (part) result.push(part);
       part = '';
     } else {
@@ -92,43 +168,18 @@ function cleanNameSection(section: string, filler: string): string {
   if (part) result.push(part);
 
   return result
-    .map(p => p.replace(/[^A-Z]/g, '')) // strip any non-alpha residue
-    .filter(p => p.length >= 2)          // drop single-char garbage
+    .map(p => p.replace(/[^A-Z]/g, ''))
+    .filter(p =>
+      p.length >= 2 &&              // drop 1-char garbage
+      !/^(.)\1+$/.test(p)           // drop repeated-char tokens (KK, LL, KKK…)
+    )
     .join(' ')
     .trim();
 }
 
-function splitNameField(field: string, filler: string): { last: string; first: string } {
-  // Try multiple separator representations in priority order (earliest wins):
-  //   1. filler+filler  (e.g. 'LL', 'KK') – when '<' was consistently misread
-  //   2. '<<'           – when '<' was correctly read at the separator position
-  //   3. filler+'<'     – mixed reads (one filler char + one literal '<')
-  //   4. '<'+filler     – mixed reads (other order)
-  const sepCandidates: string[] = [filler + filler, '<<'];
-  if (filler !== '<') {
-    sepCandidates.push(filler + '<', '<' + filler);
-  }
-
-  let bestIdx = -1;
-  let bestSepLen = 2;
-
-  for (const sep of sepCandidates) {
-    // Require at least 2 chars before the separator (minimum realistic surname)
-    const i = field.indexOf(sep);
-    if (i >= 2 && (bestIdx < 0 || i < bestIdx)) {
-      bestIdx   = i;
-      bestSepLen = sep.length;
-    }
-  }
-
-  if (bestIdx < 0) {
-    return { last: cleanNameSection(field, filler), first: '' };
-  }
-
-  return {
-    last:  cleanNameSection(field.slice(0, bestIdx),             filler),
-    first: cleanNameSection(field.slice(bestIdx + bestSepLen),   filler),
-  };
+// Keep cleanNameSection for backwards compatibility with TD1 parser
+function cleanNameSection(section: string, filler: string): string {
+  return cleanGivenNames(section, filler, new Set([filler, '<']));
 }
 
 /**
@@ -168,14 +219,20 @@ function parseTD3(line1: string, line2: string): MrzData {
   const docType      = line1[0];
   const nameField    = line1.slice(5, 44);
 
-  // Detect filler from the TAIL of the name field (last 12 chars are pure filler)
-  const filler = detectFiller(nameField);
+  // Detect filler set from the TAIL of the name field
+  const fillerSet    = detectFillerSet(nameField);
+  const primaryFiller = [...fillerSet].find(c => c !== '<') ?? '<';
 
-  const { last: lastName, first: firstName } = splitNameField(nameField, filler);
+  console.log('[MRZ] TD3 line1:', line1);
+  console.log('[MRZ] TD3 line2:', line2);
+  console.log('[MRZ] nameField:', nameField);
+  console.log('[MRZ] fillerSet:', [...fillerSet]);
 
-  // Line 2 uses the same filler (tesseract maps '<' consistently)
-  const docNumber   = cleanField(line2.slice(0, 9),  filler);
-  const nationality = cleanField(line2.slice(10, 13), filler);
+  const { last: lastName, first: firstName } = splitNameField(nameField, fillerSet);
+
+  // Line 2: use positional parsing (ISO 7501) — filler-independent
+  const docNumber   = cleanField(line2.slice(0, 9),  primaryFiller);
+  const nationality = cleanField(line2.slice(10, 13), primaryFiller);
   const dob         = line2.slice(13, 19); // 6 digits
   const sexChar     = line2[20];
   const expiry      = line2.slice(21, 27); // 6 digits
@@ -204,17 +261,18 @@ function parseTD3(line1: string, line2: string): MrzData {
 
 function parseTD1(lines: string[]): MrzData {
   const [line1, line2, line3] = lines;
-  const issuingState = line1.slice(2, 5);
-  const docType      = line1[0];
-  const filler       = detectFiller(line3);               // line3 = name, most fillers
-  const docNumber    = cleanField(line1.slice(5, 14), filler);
+  const issuingState  = line1.slice(2, 5);
+  const docType       = line1[0];
+  const fillerSet     = detectFillerSet(line3);           // line3 = name field
+  const primaryFiller = [...fillerSet].find(c => c !== '<') ?? '<';
+  const docNumber    = cleanField(line1.slice(5, 14), primaryFiller);
   const dob          = line2.slice(0, 6);
   const sexChar      = line2[7];
   const expiry       = line2.slice(8, 14);
-  const nationality  = cleanField(line2.slice(15, 18), filler);
+  const nationality  = cleanField(line2.slice(15, 18), primaryFiller);
   const sex: 'M' | 'F' | 'X' =
     sexChar === 'M' ? 'M' : sexChar === 'F' ? 'F' : 'X';
-  const { last: lastName, first: firstName } = splitNameField(line3, filler);
+  const { last: lastName, first: firstName } = splitNameField(line3, fillerSet);
   return {
     last_name:            lastName  || null,
     first_name:           firstName || null,
@@ -333,6 +391,8 @@ async function cropAndBinarise(file: File, cropFromBottom: number): Promise<stri
  *      Biographical-data text virtually never satisfies these.
  */
 function extractMrzLines(rawText: string): { lines: string[]; format: 'TD3' | 'TD1' } {
+  console.log('[MRZ] raw OCR text:\n', rawText);
+
   const td3Line1s: string[] = [];
   const td3Line2s: string[] = [];
   const td1Lines:  string[] = [];
@@ -348,6 +408,8 @@ function extractMrzLines(rawText: string): { lines: string[]; format: 'TD3' | 'T
       .replace(/[ \t]{2,}/g, '<<') // preserve double-space as double-filler
       .replace(/[ \t]/g, '')        // remove remaining single spaces
       .replace(/[^A-Z0-9<]/g, ''); // keep only MRZ chars
+
+    if (clean.length >= 28) console.log('[MRZ] candidate line:', clean);
 
     if (clean.length < 28) continue;
 
