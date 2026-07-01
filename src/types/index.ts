@@ -1,0 +1,80 @@
+export interface Hotel {
+  id: string; name: string; slug: string; type: string; room_count: number;
+  status: string; registration_number?: string; stars?: number;
+  subscription?: { plan: string; status: string; expires_at: string } | null;
+}
+
+export interface Room {
+  id: string; number: string; floor?: number; type: string; capacity: number; status: string;
+}
+
+export interface TravelDocument {
+  id: string; type: string; document_number: string; issuing_country_code: string;
+  issue_date?: string; expiry_date?: string; is_verified: boolean;
+}
+
+export interface Guest {
+  id: string; first_name: string; last_name: string; date_of_birth: string;
+  sex: 'M' | 'F' | 'X'; nationality_code: string; is_primary?: boolean;
+  document?: TravelDocument | null;
+}
+
+export interface CheckIn {
+  id: string; reference: string; status: 'draft' | 'active' | 'completed' | 'cancelled' | 'no_show';
+  room?: Room | null; booking_reference?: string; booking_source?: string;
+  check_in_date: string; expected_check_out_date: string; actual_check_out_date?: string;
+  adults_count: number; children_count: number; notes?: string;
+  guests?: Guest[]; guests_count?: number;
+  primary_guest?: { first_name: string; last_name: string; nationality_code: string };
+  created_by?: { id: string; first_name: string; last_name: string };
+  completed_at?: string; created_at: string;
+}
+
+export interface SubscriptionPlan {
+  id: number; name: string; slug: string; min_rooms: number; max_rooms?: number;
+  price_monthly: number; price_yearly?: number; currency: string;
+  features: Record<string, unknown>;
+}
+
+export interface Subscription {
+  id: string; plan: SubscriptionPlan; status: string; billing_cycle: string;
+  started_at: string; expires_at: string; auto_renew: boolean; days_remaining: number;
+}
+
+export interface OcrExtracted {
+  first_name: string; last_name: string; date_of_birth: string; sex: string;
+  nationality_code: string; document_type: string; document_number: string;
+  issuing_country_code: string; expiry_date: string; mrz_line1?: string; mrz_line2?: string;
+}
+
+export interface ScanStatus {
+  scan_id: string; status: 'pending' | 'processing' | 'completed' | 'failed';
+  confidence?: number; extracted?: OcrExtracted; error?: string; progress?: number;
+}
+
+export interface DashboardData {
+  today: { arrivals_expected: number; arrivals_done: number; currently_present: number; departures_today: number };
+  month: { check_ins_total: number };
+  subscription: { status: string; expires_at?: string; days_remaining?: number; plan?: string };
+  recent_check_ins: Array<{ id: string; reference: string; room?: string; status: string; primary_guest?: string; check_in_date: string }>;
+}
+
+export interface AuthorityGuest {
+  guest_id: string; first_name: string; last_name: string; date_of_birth: string;
+  sex: string; nationality_code: string; document_number?: string; document_type?: string;
+  last_stay?: { hotel_name: string; check_in_date: string; status: string } | null;
+}
+
+export interface AuthorityGuestProfile {
+  id: string; first_name: string; last_name: string; date_of_birth: string; sex: string;
+  nationality_code: string;
+  documents: TravelDocument[];
+  stays: Array<{
+    check_in_id: string; hotel: { name: string; city?: string; governorate?: string; registration_number?: string };
+    room_number?: string; check_in_date: string; expected_check_out_date: string;
+    actual_check_out_date?: string; status: string;
+  }>;
+}
+
+export interface ApiList<T> { data: T[]; meta: { total: number; current_page: number; per_page: number } }
+export interface ApiItem<T> { data: T }
