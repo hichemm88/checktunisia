@@ -230,10 +230,24 @@ const DocumentStep = ({ checkIn, onNext }: { checkIn: CheckIn; onNext: () => voi
   );
 };
 
+// helper — extract date part from ISO string or date string
+const fmtDate = (d?: string) =>
+  d ? new Date(d).toLocaleDateString('fr-TN', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+
 // ─── Step 3: Validation ─────────────────────────────────────────────────────
 const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => void }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Re-fetch the check-in so guests added in step 2 are visible
+  const { data: current, isLoading: fetching } = useQuery({
+    queryKey: ['check-in-detail', checkIn.id],
+    queryFn: () => checkInsApi.get(checkIn.id),
+    staleTime: 0,
+  });
+
+  const ci     = current ?? checkIn;
+  const guests = ci.guests ?? [];
 
   const completeMutation = useMutation({
     mutationFn: () => checkInsApi.complete(checkIn.id),
@@ -245,34 +259,35 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
     onError: (err) => toast(extractErrors(err), 'error'),
   });
 
-  const guests = checkIn.guests ?? [];
-
   return (
     <div className="flex flex-col gap-5">
       <Card>
         <div className="flex flex-col gap-3">
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Référence</span>
-            <span className="font-mono font-medium text-gray-900">{checkIn.reference}</span>
+            <span className="font-mono font-medium text-gray-900">{ci.reference}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Chambre</span>
-            <span className="font-medium text-gray-900">{checkIn.room?.number ?? '—'}</span>
+            <span className="font-medium text-gray-900">{ci.room?.number ?? '—'}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Arrivée</span>
-            <span className="font-medium text-gray-900">{checkIn.check_in_date}</span>
+            <span className="font-medium text-gray-900">{fmtDate(ci.check_in_date)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">Départ prévu</span>
-            <span className="font-medium text-gray-900">{checkIn.expected_check_out_date}</span>
+            <span className="font-medium text-gray-900">{fmtDate(ci.expected_check_out_date)}</span>
           </div>
         </div>
       </Card>
 
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-semibold text-gray-700">Voyageurs ({guests.length})</p>
-        {guests.map((g, i) => (
+        <p className="text-sm font-semibold text-gray-700">
+          Voyageurs ({fetching ? '…' : guests.length})
+        </p>
+        {fetching && <div className="h-14 animate-pulse rounded-xl bg-gray-100" />}
+        {!fetching && guests.map((g) => (
           <Card key={g.id} className="flex items-center gap-3 py-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-50 text-primary-600">
               <User className="h-4 w-4" />
@@ -282,11 +297,11 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
                 {g.first_name} {g.last_name}
                 {g.is_primary && <span className="ml-2 text-xs text-primary-600">(principal)</span>}
               </p>
-              <p className="text-xs text-gray-500">{g.nationality_code} · {g.date_of_birth}</p>
+              <p className="text-xs text-gray-500">{g.nationality_code} · {fmtDate(g.date_of_birth)}</p>
             </div>
           </Card>
         ))}
-        {guests.length === 0 && (
+        {!fetching && guests.length === 0 && (
           <p className="text-sm text-red-600">Au moins 1 voyageur requis</p>
         )}
       </div>
@@ -295,7 +310,7 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
         fullWidth
         size="lg"
         loading={completeMutation.isPending}
-        disabled={guests.length === 0}
+        disabled={fetching || guests.length === 0}
         onClick={() => completeMutation.mutate()}
       >
         <CheckCircle className="h-5 w-5" />
