@@ -77,23 +77,57 @@ function detectFiller(nameField: string): string {
  *  4. Joining surviving tokens with a space
  */
 function cleanNameSection(section: string, filler: string): string {
-  return section
-    .split(filler)
-    .map(part => part.replace(/[^A-Z]/g, '')) // strip non-alpha residue
-    .filter(part => part.length >= 2)          // drop single-char garbage
+  // Split on both the detected filler AND literal '<' (tesseract may use either
+  // for the same character at different positions in the same line)
+  const result: string[] = [];
+  let part = '';
+  for (const c of section) {
+    if (c === filler || c === '<') {
+      if (part) result.push(part);
+      part = '';
+    } else {
+      part += c;
+    }
+  }
+  if (part) result.push(part);
+
+  return result
+    .map(p => p.replace(/[^A-Z]/g, '')) // strip any non-alpha residue
+    .filter(p => p.length >= 2)          // drop single-char garbage
     .join(' ')
     .trim();
 }
 
 function splitNameField(field: string, filler: string): { last: string; first: string } {
-  const sep = filler + filler;
-  const idx = field.indexOf(sep);
-  if (idx < 0) {
+  // Try multiple separator representations in priority order (earliest wins):
+  //   1. filler+filler  (e.g. 'LL', 'KK') – when '<' was consistently misread
+  //   2. '<<'           – when '<' was correctly read at the separator position
+  //   3. filler+'<'     – mixed reads (one filler char + one literal '<')
+  //   4. '<'+filler     – mixed reads (other order)
+  const sepCandidates: string[] = [filler + filler, '<<'];
+  if (filler !== '<') {
+    sepCandidates.push(filler + '<', '<' + filler);
+  }
+
+  let bestIdx = -1;
+  let bestSepLen = 2;
+
+  for (const sep of sepCandidates) {
+    // Require at least 2 chars before the separator (minimum realistic surname)
+    const i = field.indexOf(sep);
+    if (i >= 2 && (bestIdx < 0 || i < bestIdx)) {
+      bestIdx   = i;
+      bestSepLen = sep.length;
+    }
+  }
+
+  if (bestIdx < 0) {
     return { last: cleanNameSection(field, filler), first: '' };
   }
+
   return {
-    last:  cleanNameSection(field.slice(0, idx),       filler),
-    first: cleanNameSection(field.slice(idx + sep.length), filler),
+    last:  cleanNameSection(field.slice(0, bestIdx),             filler),
+    first: cleanNameSection(field.slice(bestIdx + bestSepLen),   filler),
   };
 }
 
@@ -304,10 +338,15 @@ function extractMrzLines(rawText: string): { lines: string[]; format: 'TD3' | 'T
   const td1Lines:  string[] = [];
 
   for (const raw of rawText.split('\n')) {
-    // Normalise
+    // Normalise:
+    // 1. Two or more consecutive spaces → '<<'  (tesseract outputs 2 spaces where
+    //    OCR-B has '<<' between words; preserving this is critical for name parsing)
+    // 2. Single spaces → removed (word-wrap artefacts)
+    // 3. Keep only MRZ chars [A-Z0-9<]
     const clean = raw
       .toUpperCase()
-      .replace(/\s+/g, '')          // collapse spaces tesseract inserts
+      .replace(/[ \t]{2,}/g, '<<') // preserve double-space as double-filler
+      .replace(/[ \t]/g, '')        // remove remaining single spaces
       .replace(/[^A-Z0-9<]/g, ''); // keep only MRZ chars
 
     if (clean.length < 28) continue;
@@ -351,7 +390,10 @@ function extractMrzLines(rawText: string): { lines: string[]; format: 'TD3' | 'T
   // (handles passports where DOB digits get slightly mangled but names are OK)
   const longLines = [...new Set(
     rawText.split('\n')
-      .map(l => l.toUpperCase().replace(/\s+/g, '').replace(/[^A-Z0-9<]/g, ''))
+      .map(l => l.toUpperCase()
+        .replace(/[ \t]{2,}/g, '<<') // preserve double-space as '<<' (same as main path)
+        .replace(/[ \t]/g, '')
+        .replace(/[^A-Z0-9<]/g, ''))
       .filter(l => l.length >= 40)
       .map(l => l.slice(0, 44).padEnd(44, '<'))
   )];
