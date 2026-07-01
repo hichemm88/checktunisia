@@ -10,6 +10,7 @@ import { HistoryDetailPage } from '@/pages/hotel/HistoryDetailPage';
 import { SettingsPage } from '@/pages/hotel/SettingsPage';
 import { SearchPage } from '@/pages/authority/SearchPage';
 import { GuestProfilePage } from '@/pages/authority/GuestProfilePage';
+import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
 
 // ─── Guards ─────────────────────────────────────────────────────────────────
 const RequireAuth = () => {
@@ -52,6 +53,11 @@ export const App = () => (
       <Route element={<RequireRole roles={['authority_user']} />}>
         <Route path="/authority/search" element={<SearchPage />} />
         <Route path="/authority/guests/:id" element={<GuestProfilePage />} />
+      </Route>
+
+      {/* Admin */}
+      <Route element={<RequireRole roles={['platform_admin']} />}>
+        <Route path="/admin/hotels" element={<AdminDashboardPage />} />
       </Route>
     </Route>
 
