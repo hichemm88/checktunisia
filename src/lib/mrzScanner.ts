@@ -132,16 +132,20 @@ function splitNameField(
  * Surname = ONE word — we do NOT split on the internal filler because the filler
  * char (L, K …) may be a real letter in the name (MATHLOUTHI, KAOUACH…).
  * We only strip chars that are definitively not part of an alpha name.
+ *
+ * IMPORTANT: we require ≥ 2 consecutive filler chars before stripping.
+ * A single leading/trailing K could be a real letter (KAOUACH, KARIM…).
+ * Only "KK", "LLL"… at the boundary are safe to strip as OCR noise.
  */
 function cleanSurname(section: string, fillerSet: Set<string>): string {
   // Keep only alpha chars from the section
   const alpha = section.replace(/[^A-Z]/g, '');
-  // Strip any leading/trailing filler chars (which are OCR-noise padding)
+  // Strip runs of ≥ 2 consecutive filler chars at the start/end only
   let s = alpha;
   for (const f of fillerSet) {
     if (f === '<') continue; // already removed by replace above
-    // Strip leading and trailing runs of the filler char
-    const re = new RegExp(`^${f}+|${f}+$`, 'g');
+    // Require 2+ consecutive filler chars — a single K/L might be part of the name
+    const re = new RegExp(`^${f}{2,}|${f}{2,}$`, 'g');
     s = s.replace(re, '');
   }
   return s;

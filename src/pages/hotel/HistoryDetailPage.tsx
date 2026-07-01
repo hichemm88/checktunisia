@@ -16,6 +16,9 @@ const DetailRow = ({ label, value }: { label: string; value?: string | number | 
   </div>
 );
 
+const fmtDate = (d?: string | null) =>
+  d ? new Date(d).toLocaleDateString('fr-TN', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+
 export const HistoryDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -65,9 +68,15 @@ export const HistoryDetailPage = () => {
           <div>
             <p className="font-mono text-xs text-gray-400">{ci.reference}</p>
             <h2 className="text-base font-bold text-gray-900 mt-0.5">
-              {ci.primary_guest
-                ? `${ci.primary_guest.first_name} ${ci.primary_guest.last_name}`
-                : 'Sans voyageur principal'}
+              {(() => {
+                // primary_guest is only in list endpoint; fallback to guests array
+                const pg = ci.primary_guest
+                  ?? ci.guests?.find(g => g.is_primary)
+                  ?? ci.guests?.[0];
+                return pg
+                  ? `${pg.first_name} ${pg.last_name}`
+                  : 'Sans voyageur principal';
+              })()}
             </h2>
           </div>
           <Badge variant={ci.status as any}>{ci.status}</Badge>
@@ -76,12 +85,18 @@ export const HistoryDetailPage = () => {
         {/* Booking details */}
         <Card>
           <DetailRow label="Chambre" value={ci.room?.number} />
-          <DetailRow label="Arrivée" value={ci.check_in_date} />
-          <DetailRow label="Départ prévu" value={ci.expected_check_out_date} />
-          <DetailRow label="Départ réel" value={ci.actual_check_out_date} />
+          <DetailRow label="Arrivée" value={fmtDate(ci.check_in_date)} />
+          <DetailRow label="Départ prévu" value={fmtDate(ci.expected_check_out_date)} />
+          <DetailRow label="Départ réel" value={fmtDate(ci.actual_check_out_date)} />
           <DetailRow label="Adultes" value={ci.adults_count} />
           <DetailRow label="Enfants" value={ci.children_count} />
           {ci.booking_reference && <DetailRow label="Réf. réservation" value={ci.booking_reference} />}
+          {ci.created_by && (
+            <DetailRow
+              label="Enregistré par"
+              value={`${ci.created_by.first_name} ${ci.created_by.last_name}`}
+            />
+          )}
           {ci.notes && <DetailRow label="Notes" value={ci.notes} />}
         </Card>
 
@@ -98,10 +113,10 @@ export const HistoryDetailPage = () => {
                   <p className="text-sm font-semibold text-gray-900">{g.first_name} {g.last_name}</p>
                   {g.is_primary && <Badge variant="active">Principal</Badge>}
                 </div>
-                <p className="text-xs text-gray-500">{g.date_of_birth} · {g.sex} · {g.nationality_code}</p>
+                <p className="text-xs text-gray-500">{fmtDate(g.date_of_birth)} · {g.sex} · {g.nationality_code}</p>
                 {g.document && (
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {g.document.type} {g.document.document_number} · expire {g.document.expiry_date ?? '—'}
+                    {g.document.type} {g.document.document_number} · expire {fmtDate(g.document.expiry_date)}
                   </p>
                 )}
               </div>
