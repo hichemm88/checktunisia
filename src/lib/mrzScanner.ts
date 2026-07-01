@@ -678,9 +678,12 @@ export async function scanMrz(
   file: File,
   onProgress?: (pct: number) => void,
 ): Promise<MrzData> {
-  // Two crop sizes — tight (full-page shot) then wider (close-up shot).
-  // The 0.60 third attempt was removed: it rarely helped and tripled latency.
-  const cropPercentages = [0.22, 0.42];
+  // Three crop sizes from tight to wide.
+  // With a single shared worker the 3rd crop only costs ~3-5 s extra — acceptable.
+  // 0.22 → full-page shot (MRZ in bottom strip)
+  // 0.42 → medium distance
+  // 0.60 → close-up or passport not filling the frame
+  const cropPercentages = [0.22, 0.42, 0.60];
 
   // ── Create ONE worker for ALL crop attempts ──────────────────────────────────
   // Worker init (WebAssembly boot + ~10 MB trained-data download) took 5-10 s
@@ -703,7 +706,10 @@ export async function scanMrz(
           // preprocessing failed — fall back to original file
         }
 
-        const text = await runOcrWithWorker(worker, image, '6');
+        // PSM 6 (uniform block) for tight crops where image IS the MRZ zone.
+        // PSM 11 (sparse text) for wider crops where biographical content surrounds the MRZ.
+        const psm = crop >= 0.42 ? '11' : '6';
+        const text = await runOcrWithWorker(worker, image, psm);
         const { lines, format } = extractMrzLines(text);
 
         if (format === 'TD3' && lines.length >= 2) return parseTD3(lines[0], lines[1]);
