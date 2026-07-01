@@ -23,8 +23,8 @@ export const settingsApi = {
   deleteUser: (id: string) =>
     api.delete(`/hotel/users/${id}`),
 
-  // Subscription info
+  // Subscription info — backend returns plan as nested SubscriptionPlan object
   getSubscription: () =>
-    api.get<{ data: { status: string; plan: string; expires_at: string; days_remaining: number } }>('/hotel/subscription')
+    api.get<{ data: { status: string; plan: { name: string } | string | null; expires_at: string; days_remaining: number } }>('/hotel/subscription')
       .then((r) => r.data.data),
 };

@@ -163,7 +163,9 @@ const HotelSection = () => {
           <div className="flex flex-col gap-2 mt-2">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Plan</span>
-              <span className="text-sm font-semibold text-primary-700">{sub.plan}</span>
+              <span className="text-sm font-semibold text-primary-700">
+                {typeof sub.plan === 'object' && sub.plan !== null ? sub.plan.name : (sub.plan ?? '—')}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Statut</span>
