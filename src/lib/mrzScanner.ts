@@ -44,34 +44,69 @@ function mrzDateToISO(yymmdd: string, isBirth: boolean): string | null {
 // ─── Filler detection ──────────────────────────────────────────────────────────
 
 /**
- * Find the most-frequent character in `text`, ignoring `exclude`.
- * In a TD3 line-1 name field (39 chars), the '<' filler appears 15-25 times
- * regardless of what tesseract maps it to.
+ * Detect the filler character from the TAIL of the name field.
+ *
+ * The last 12 characters of a TD3 39-char name field are almost always pure
+ * filler (a name would need to be 27+ chars to reach them).  The dominant
+ * character in that tail is the filler, regardless of what tesseract mapped
+ * '<' to (K, L, space-then-removed, etc.).
+ *
+ * Trying progressively shorter tails handles the rare very-long names.
  */
-function detectFiller(text: string, exclude: string[] = []): string {
-  const freq: Record<string, number> = {};
-  for (const c of text) {
-    if (!exclude.includes(c)) freq[c] = (freq[c] ?? 0) + 1;
+function detectFiller(nameField: string): string {
+  for (const tailLen of [12, 8, 6]) {
+    if (nameField.length < tailLen) continue;
+    const tail = nameField.slice(-tailLen);
+    const freq: Record<string, number> = {};
+    for (const c of tail) freq[c] = (freq[c] ?? 0) + 1;
+    const sorted = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+    // Require ≥60% of tail to be the same char to call it filler
+    if (sorted[0] && sorted[0][1] / tailLen >= 0.6) return sorted[0][0];
   }
-  const top = Object.entries(freq).sort((a, b) => b[1] - a[1])[0];
-  return top && top[1] >= 3 ? top[0] : '<';
+  return '<'; // fallback
 }
 
 // ─── Name field parsing ────────────────────────────────────────────────────────
+
+/**
+ * Clean a name section (surname or given-names string) by:
+ *  1. Splitting on the detected filler
+ *  2. Further stripping any residual non-alpha chars (e.g. literal '<' that
+ *     wasn't the filler, stray digits from OCR noise)
+ *  3. Discarding tokens that are a single character (almost always a misread filler)
+ *  4. Joining surviving tokens with a space
+ */
+function cleanNameSection(section: string, filler: string): string {
+  return section
+    .split(filler)
+    .map(part => part.replace(/[^A-Z]/g, '')) // strip non-alpha residue
+    .filter(part => part.length >= 2)          // drop single-char garbage
+    .join(' ')
+    .trim();
+}
 
 function splitNameField(field: string, filler: string): { last: string; first: string } {
   const sep = filler + filler;
   const idx = field.indexOf(sep);
   if (idx < 0) {
-    return { last: field.split(filler).filter(Boolean).join(' '), first: '' };
+    return { last: cleanNameSection(field, filler), first: '' };
   }
-  const last  = field.slice(0, idx).split(filler).filter(Boolean).join(' ');
-  const first = field.slice(idx + sep.length).split(filler).filter(Boolean).join(' ');
-  return { last, first };
+  return {
+    last:  cleanNameSection(field.slice(0, idx),       filler),
+    first: cleanNameSection(field.slice(idx + sep.length), filler),
+  };
 }
 
+/**
+ * Remove filler chars from a short fixed-length field (doc number, nationality,
+ * issuing country).  We strip BOTH the detected filler AND literal '<' because
+ * tesseract may map '<' inconsistently within the same line.
+ */
 function cleanField(raw: string, filler: string): string {
-  return raw.split(filler).join('').trim();
+  return raw
+    .split(filler).join('')
+    .split('<').join('')   // also remove literal '<' regardless of filler
+    .trim();
 }
 
 // ─── TD3 parser (passport) ─────────────────────────────────────────────────────
@@ -99,9 +134,8 @@ function parseTD3(line1: string, line2: string): MrzData {
   const docType      = line1[0];
   const nameField    = line1.slice(5, 44);
 
-  // Filler from line 1 name field (most frequent char, excluding doc-type prefix chars)
-  const knownChars = Array.from(new Set(['P', 'I', 'V', ...Array.from(issuingState)]));
-  const filler     = detectFiller(nameField, knownChars);
+  // Detect filler from the TAIL of the name field (last 12 chars are pure filler)
+  const filler = detectFiller(nameField);
 
   const { last: lastName, first: firstName } = splitNameField(nameField, filler);
 
@@ -138,7 +172,7 @@ function parseTD1(lines: string[]): MrzData {
   const [line1, line2, line3] = lines;
   const issuingState = line1.slice(2, 5);
   const docType      = line1[0];
-  const filler       = detectFiller(line3, []);          // line3 = name, most fillers
+  const filler       = detectFiller(line3);               // line3 = name, most fillers
   const docNumber    = cleanField(line1.slice(5, 14), filler);
   const dob          = line2.slice(0, 6);
   const sexChar      = line2[7];
