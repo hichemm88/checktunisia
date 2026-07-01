@@ -206,7 +206,7 @@ const DocumentStep = ({ checkIn, onNext }: { checkIn: CheckIn; onNext: () => voi
             <Input label="Date de naissance" type="date" value={guestForm.date_of_birth ?? ''} onChange={(e) => setG('date_of_birth', e.target.value)} required />
             <div className="grid grid-cols-2 gap-3">
               <Select label="Sexe" options={SEX_OPTIONS} value={guestForm.sex ?? ''} onChange={(e) => setG('sex', e.target.value)} />
-              <Input label="Nationalité (code)" placeholder="TN" value={guestForm.nationality_code ?? ''} onChange={(e) => setG('nationality_code', e.target.value.toUpperCase())} maxLength={2} />
+              <Input label="Nationalité (code)" placeholder="TUN" value={guestForm.nationality_code ?? ''} onChange={(e) => setG('nationality_code', e.target.value.toUpperCase())} maxLength={3} />
             </div>
             <Input label="N° document" value={guestForm.document_number ?? ''} onChange={(e) => setG('document_number', e.target.value)} />
             <div className="grid grid-cols-2 gap-3">

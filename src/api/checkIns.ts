@@ -10,6 +10,7 @@ export interface CreateCheckInPayload {
 export interface AddGuestPayload {
   first_name: string; last_name: string; date_of_birth: string;
   sex: 'M' | 'F' | 'X'; nationality_code: string; is_primary?: boolean;
+  // Document fields — sent flat by the form, nested before API call
   document_type?: string; document_number?: string; issuing_country_code?: string;
   issue_date?: string; expiry_date?: string;
 }
@@ -33,8 +34,21 @@ export const checkInsApi = {
   checkout: (id: string) =>
     api.post<ApiItem<CheckIn>>(`/hotel/check-ins/${id}/checkout`).then((r) => r.data.data),
 
-  addGuest: (checkInId: string, payload: AddGuestPayload) =>
-    api.post<ApiItem<Guest>>(`/hotel/check-ins/${checkInId}/guests`, payload).then((r) => r.data.data),
+  addGuest: (checkInId: string, payload: AddGuestPayload) => {
+    // Backend expects document fields nested under a "document" key
+    const { document_type, document_number, issuing_country_code, issue_date, expiry_date, ...guestData } = payload;
+    const body = {
+      ...guestData,
+      document: {
+        type:                  document_type || 'passport',
+        document_number:       document_number || '',
+        issuing_country_code:  issuing_country_code || '',
+        issue_date,
+        expiry_date,
+      },
+    };
+    return api.post<ApiItem<Guest>>(`/hotel/check-ins/${checkInId}/guests`, body).then((r) => r.data.data);
+  },
 
   removeGuest: (checkInId: string, guestId: string) =>
     api.delete(`/hotel/check-ins/${checkInId}/guests/${guestId}`),
