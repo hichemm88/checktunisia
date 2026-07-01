@@ -13,10 +13,12 @@
     "axios": "^1.7.7",
     "clsx": "^2.1.1",
     "lucide-react": "^0.447.0",
+    "mrz": "^3.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2",
     "tailwind-merge": "^2.5.2",
+    "tesseract.js": "^5.1.1",
     "zustand": "^5.0.0"
   },
   "devDependencies": {

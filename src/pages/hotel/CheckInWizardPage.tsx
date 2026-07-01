@@ -9,11 +9,11 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
 import { checkInsApi, AddGuestPayload, CreateCheckInPayload } from '@/api/checkIns';
-import { scansApi } from '@/api/scans';
 import { roomsApi } from '@/api/rooms';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
-import { OcrExtracted, CheckIn } from '@/types';
+import { scanMrz, MrzData } from '@/lib/mrzScanner';
+import { CheckIn } from '@/types';
 
 const STEPS = [
   { label: 'Réservation' },
@@ -115,42 +115,35 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
 const DocumentStep = ({ checkIn, onNext }: { checkIn: CheckIn; onNext: () => void }) => {
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [scanState, setScanState] = useState<'idle' | 'uploading' | 'polling' | 'done' | 'error'>('idle');
-  const [extracted, setExtracted] = useState<OcrExtracted | null>(null);
+  const [scanState, setScanState] = useState<'idle' | 'scanning' | 'done' | 'error'>('idle');
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [extracted, setExtracted] = useState<MrzData | null>(null);
   const [guestForm, setGuestForm] = useState<Partial<AddGuestPayload>>({});
-
-  const poll = async (scanId: string) => {
-    setScanState('polling');
-    for (let i = 0; i < 20; i++) {
-      await new Promise((r) => setTimeout(r, 1500));
-      const status = await scansApi.status(checkIn.id, scanId);
-      if (status.status === 'completed' && status.extracted) {
-        const e = status.extracted;
-        setExtracted(e);
-        setGuestForm({
-          first_name: e.first_name, last_name: e.last_name,
-          date_of_birth: e.date_of_birth, sex: e.sex as 'M' | 'F' | 'X',
-          nationality_code: e.nationality_code, document_type: e.document_type,
-          document_number: e.document_number, issuing_country_code: e.issuing_country_code,
-          expiry_date: e.expiry_date, is_primary: true,
-        });
-        setScanState('done');
-        return;
-      }
-      if (status.status === 'failed') { setScanState('error'); return; }
-    }
-    setScanState('error');
-  };
 
   const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setScanState('uploading');
+    setScanState('scanning');
+    setOcrProgress(0);
     try {
-      const scan = await scansApi.upload(checkIn.id, file);
-      await poll(scan.scan_id);
-    } catch (err) {
-      toast(extractErrors(err), 'error');
+      const mrz = await scanMrz(file, setOcrProgress);
+      setExtracted(mrz);
+      setGuestForm({
+        first_name: mrz.first_name ?? '',
+        last_name: mrz.last_name ?? '',
+        date_of_birth: mrz.date_of_birth ?? '',
+        sex: mrz.sex ?? 'M',
+        nationality_code: mrz.nationality_code ?? '',
+        document_type: mrz.document_type,
+        document_number: mrz.document_number ?? '',
+        issuing_country_code: mrz.issuing_country_code ?? '',
+        expiry_date: mrz.expiry_date ?? '',
+        is_primary: true,
+      });
+      setScanState('done');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Scan échoué';
+      toast(msg, 'error');
       setScanState('error');
     }
   };
@@ -170,30 +163,35 @@ const DocumentStep = ({ checkIn, onNext }: { checkIn: CheckIn; onNext: () => voi
 
       {scanState === 'idle' || scanState === 'error' ? (
         <Card className="flex flex-col items-center gap-4 py-8 border-dashed border-2 border-gray-200">
-          {scanState === 'error' && <p className="text-sm text-red-600">Scan échoué. Réessayer ou saisir manuellement.</p>}
+          {scanState === 'error' && <p className="text-sm text-red-600">Scan échoué. Réessayez ou saisissez manuellement.</p>}
           <div className="flex gap-3">
             <Button variant="secondary" onClick={() => fileRef.current?.click()}>
               <Camera className="h-4 w-4" /> Scanner
             </Button>
-            <Button variant="ghost" onClick={() => { setExtracted({} as OcrExtracted); setScanState('done'); }}>
+            <Button variant="ghost" onClick={() => { setExtracted(null); setScanState('done'); }}>
               <Upload className="h-4 w-4" /> Saisie manuelle
             </Button>
           </div>
           <p className="text-xs text-gray-400">Photographiez la page du passeport (zone MRZ visible)</p>
         </Card>
-      ) : (scanState === 'uploading' || scanState === 'polling') ? (
+      ) : scanState === 'scanning' ? (
         <Card className="flex flex-col items-center gap-4 py-10">
           <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
-          <p className="text-sm text-gray-600">
-            {scanState === 'uploading' ? 'Envoi en cours...' : 'Lecture du document...'}
-          </p>
+          <p className="text-sm text-gray-600 font-medium">Lecture du MRZ en cours…</p>
+          <div className="w-full max-w-xs bg-gray-100 rounded-full h-2">
+            <div
+              className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${ocrProgress}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-400">{ocrProgress}%</p>
         </Card>
       ) : null}
 
       {/* Extracted / manual form */}
       {scanState === 'done' && (
         <>
-          {extracted && Object.keys(extracted).length > 0 && (
+          {extracted && (
             <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-4 py-3">
               <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
               <p className="text-sm text-green-800 font-medium">Document lu avec succès — vérifiez les données ci-dessous</p>
