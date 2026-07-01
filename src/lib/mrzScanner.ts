@@ -247,7 +247,7 @@ function parseTD3(line1: string, line2: string): MrzData {
     sex,
     nationality_code:     nationality                       || null,
     document_number:      docNumber                         || null,
-    issuing_country_code: cleanField(issuingState, filler) || null,
+    issuing_country_code: cleanField(issuingState, primaryFiller) || null,
     expiry_date:          mrzDateToISO(expiry, false),
     document_type:        docType === 'P' ? 'passport' : 'travel_document',
   };
@@ -280,7 +280,7 @@ function parseTD1(lines: string[]): MrzData {
     sex,
     nationality_code:     nationality                       || null,
     document_number:      docNumber                         || null,
-    issuing_country_code: cleanField(issuingState, filler) || null,
+    issuing_country_code: cleanField(issuingState, primaryFiller) || null,
     expiry_date:          mrzDateToISO(expiry, false),
     document_type:        docType === 'I' ? 'national_id' : 'travel_document',
   };
