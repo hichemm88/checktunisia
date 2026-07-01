@@ -10,6 +10,8 @@ import { HistoryDetailPage } from '@/pages/hotel/HistoryDetailPage';
 import { SettingsPage } from '@/pages/hotel/SettingsPage';
 import { SearchPage } from '@/pages/authority/SearchPage';
 import { GuestProfilePage } from '@/pages/authority/GuestProfilePage';
+import { HotelsPage } from '@/pages/authority/HotelsPage';
+import { HotelDetailPage } from '@/pages/authority/HotelDetailPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
 
 // ─── Guards ─────────────────────────────────────────────────────────────────
@@ -53,6 +55,8 @@ export const App = () => (
       <Route element={<RequireRole roles={['authority_user']} />}>
         <Route path="/authority/search" element={<SearchPage />} />
         <Route path="/authority/guests/:id" element={<GuestProfilePage />} />
+        <Route path="/authority/hotels" element={<HotelsPage />} />
+        <Route path="/authority/hotels/:id" element={<HotelDetailPage />} />
       </Route>
 
       {/* Admin */}

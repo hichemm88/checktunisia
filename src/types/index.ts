@@ -53,8 +53,17 @@ export interface ScanStatus {
 }
 
 export interface DashboardData {
-  today: { arrivals_expected: number; arrivals_done: number; currently_present: number; departures_today: number };
+  today: {
+    arrivals_expected: number; arrivals_done: number;
+    currently_present: number; departures_today: number;
+    occupancy_rate: number;
+  };
   month: { check_ins_total: number };
+  weekly_trend: Array<{ date: string; label: string; count: number }>;
+  expiry_alerts: Array<{
+    guest_name: string; document_number: string; expiry_date: string;
+    days_until_expiry: number; check_in_id: string; reference: string;
+  }>;
   subscription: { status: string; expires_at?: string; days_remaining?: number; plan?: string };
   recent_check_ins: Array<{ id: string; reference: string; room?: string; status: string; primary_guest?: string; check_in_date: string }>;
 }
@@ -76,5 +85,27 @@ export interface AuthorityGuestProfile {
   }>;
 }
 
+export interface AuthorityHotel {
+  id: string; name: string; slug: string; type: string; stars?: number;
+  city?: string; governorate?: string; address?: string;
+  registration_number?: string; room_count: number; status: string;
+  subscription_status?: string; subscription_expires_at?: string;
+  active_guests_count?: number; total_check_ins?: number;
+}
+
 export interface ApiList<T> { data: T[]; meta: { total: number; current_page: number; per_page: number } }
 export interface ApiItem<T> { data: T }
+
+// Settings / Profile
+export interface UpdateProfilePayload { first_name?: string; last_name?: string; phone?: string }
+export interface ChangePasswordPayload { current_password: string; new_password: string; new_password_confirmation: string }
+
+export interface HotelUser {
+  id: string; first_name: string; last_name: string; email: string;
+  role: string; is_active: boolean; last_login_at?: string; created_at: string;
+}
+
+export interface CreateUserPayload {
+  first_name: string; last_name: string; email: string;
+  password: string; role: 'hotel_admin' | 'receptionist';
+}

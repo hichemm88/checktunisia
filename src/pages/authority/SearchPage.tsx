@@ -38,7 +38,7 @@ export const SearchPage = () => {
             <Input label="Prénom" placeholder="Ahmed" value={params.first_name ?? ''} onChange={(e) => set('first_name', e.target.value)} />
             <Input label="Nom" placeholder="Ben Ali" value={params.last_name ?? ''} onChange={(e) => set('last_name', e.target.value)} />
             <Input label="N° document" placeholder="Passeport / CIN" value={params.document_number ?? ''} onChange={(e) => set('document_number', e.target.value)} />
-            <Input label="Nationalité (code)" placeholder="TN" value={params.nationality_code ?? ''} onChange={(e) => set('nationality_code', e.target.value.toUpperCase())} maxLength={2} />
+            <Input label="Nationalité (code)" placeholder="TUN" value={params.nationality_code ?? ''} onChange={(e) => set('nationality_code', e.target.value.toUpperCase())} maxLength={3} />
             <Input label="Date de naissance" type="date" value={params.date_of_birth ?? ''} onChange={(e) => set('date_of_birth', e.target.value)} />
             <Input label="Gouvernorat hôtel" placeholder="Tunis" value={params.hotel_governorate ?? ''} onChange={(e) => set('hotel_governorate', e.target.value)} />
             <Input label="Check-in depuis" type="date" value={params.check_in_from ?? ''} onChange={(e) => set('check_in_from', e.target.value)} />
