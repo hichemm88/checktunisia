@@ -52,6 +52,15 @@ const StatCard = ({
 );
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
+const EMPTY_DASH = {
+  today: { arrivals_expected: 0, arrivals_done: 0, currently_present: 0, departures_today: 0, occupancy_rate: 0 },
+  month: { check_ins_total: 0 },
+  weekly_trend:   [] as DashboardData['weekly_trend'],
+  expiry_alerts:  [] as DashboardData['expiry_alerts'],
+  subscription:   { status: 'none', expires_at: undefined, days_remaining: undefined, plan: undefined } as DashboardData['subscription'],
+  recent_check_ins: [] as DashboardData['recent_check_ins'],
+};
+
 export const DashboardPage = () => {
   const navigate = useNavigate();
   const { data, isLoading } = useQuery({
@@ -60,9 +69,10 @@ export const DashboardPage = () => {
     refetchInterval: 60_000,
   });
 
-  const sub = data?.subscription;
-  const isSubWarning = sub && (sub.status !== 'active' || (sub.days_remaining ?? 99) <= 7);
-  const hasAlerts = (data?.expiry_alerts?.length ?? 0) > 0;
+  const d   = data ?? EMPTY_DASH;
+  const sub = d.subscription;
+  const isSubWarning = sub.status !== 'none' && (sub.status !== 'active' || (sub.days_remaining ?? 99) <= 7);
+  const hasAlerts = d.expiry_alerts.length > 0;
 
   return (
     <HotelLayout title="Tableau de bord">
@@ -74,7 +84,7 @@ export const DashboardPage = () => {
             <AlertCircle className="mt-0.5 h-4 w-4 text-amber-600 shrink-0" />
             <div>
               <p className="text-sm font-medium text-amber-800">
-                {sub!.status !== 'active' ? 'Abonnement inactif' : `Expire dans ${sub!.days_remaining} jour${sub!.days_remaining !== 1 ? 's' : ''}`}
+                {sub.status !== 'active' ? 'Abonnement inactif' : `Expire dans ${sub.days_remaining} jour${sub.days_remaining !== 1 ? 's' : ''}`}
               </p>
               <p className="text-xs text-amber-600 mt-0.5">Contactez support@checktunisia.tn pour renouveler.</p>
             </div>
@@ -93,22 +103,22 @@ export const DashboardPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            <StatCard icon={UserCheck} label="Arrivées prévues" value={data!.today.arrivals_expected} color="bg-primary-600" />
-            <StatCard icon={Users}     label="Check-ins faits"  value={data!.today.arrivals_done}     color="bg-green-500" />
-            <StatCard icon={DoorOpen}  label="Présents"         value={data!.today.currently_present} color="bg-navy-700" />
-            <StatCard icon={Calendar}  label="Départs auj."     value={data!.today.departures_today}  color="bg-gold-500" />
+            <StatCard icon={UserCheck} label="Arrivées prévues" value={d.today.arrivals_expected} color="bg-primary-600" />
+            <StatCard icon={Users}     label="Check-ins faits"  value={d.today.arrivals_done}     color="bg-green-500" />
+            <StatCard icon={DoorOpen}  label="Présents"         value={d.today.currently_present} color="bg-navy-700" />
+            <StatCard icon={Calendar}  label="Départs auj."     value={d.today.departures_today}  color="bg-gold-500" />
             <StatCard
               icon={Percent}
               label="Taux d'occupation"
-              value={`${data!.today.occupancy_rate}%`}
-              color={data!.today.occupancy_rate >= 80 ? 'bg-green-600' : data!.today.occupancy_rate >= 50 ? 'bg-amber-500' : 'bg-gray-400'}
+              value={`${d.today.occupancy_rate}%`}
+              color={d.today.occupancy_rate >= 80 ? 'bg-green-600' : d.today.occupancy_rate >= 50 ? 'bg-amber-500' : 'bg-gray-400'}
             />
-            <StatCard icon={TrendingUp} label="Check-ins ce mois" value={data!.month.check_ins_total} color="bg-purple-500" />
+            <StatCard icon={TrendingUp} label="Check-ins ce mois" value={d.month.check_ins_total} color="bg-purple-500" />
           </div>
         )}
 
         {/* Weekly trend */}
-        {data?.weekly_trend && data.weekly_trend.length > 0 && (
+        {d.weekly_trend.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>
@@ -119,7 +129,7 @@ export const DashboardPage = () => {
               </CardTitle>
             </CardHeader>
             <div className="pt-2">
-              <WeeklyChart data={data.weekly_trend} />
+              <WeeklyChart data={d.weekly_trend} />
             </div>
           </Card>
         )}
@@ -135,11 +145,11 @@ export const DashboardPage = () => {
                 </div>
               </CardTitle>
               <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                {data!.expiry_alerts.length} alerte{data!.expiry_alerts.length > 1 ? 's' : ''}
+                {d.expiry_alerts.length} alerte{d.expiry_alerts.length > 1 ? 's' : ''}
               </span>
             </CardHeader>
             <div className="flex flex-col gap-2 mt-1">
-              {data!.expiry_alerts.map((alert, i) => (
+              {d.expiry_alerts.map((alert, i) => (
                 <button
                   key={i}
                   onClick={() => navigate(`/hotel/history/${alert.check_in_id}`)}
@@ -170,7 +180,7 @@ export const DashboardPage = () => {
             </button>
           </CardHeader>
           <div className="divide-y divide-gray-100">
-            {data?.recent_check_ins?.map((c) => (
+            {d.recent_check_ins.map((c) => (
               <button
                 key={c.id}
                 onClick={() => navigate(`/hotel/history/${c.id}`)}
@@ -190,7 +200,7 @@ export const DashboardPage = () => {
                 </div>
               </button>
             ))}
-            {!isLoading && !data?.recent_check_ins?.length && (
+            {!isLoading && !d.recent_check_ins.length && (
               <p className="px-5 py-6 text-center text-sm text-gray-400">Aucun check-in récent</p>
             )}
           </div>
