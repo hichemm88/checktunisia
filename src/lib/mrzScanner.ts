@@ -148,6 +148,29 @@ function cleanSurname(section: string, fillerSet: Set<string>): string {
 }
 
 /**
+ * Trim a spurious trailing "K + 1 char" from a given-name token.
+ *
+ * Tesseract commonly maps `<` to K.  In a sequence like NOUR<EL<HOUDA, when the
+ * filler is L the parser splits at L, giving the token "NOURKE":
+ *   NOUR + K (misread `<`) + E (from EL, whose L is the split-point)
+ * The real name is just "NOUR".  We detect this pattern:
+ *   – K appears at position ≥ 4 (so the prefix is a plausible ≥4-char name)
+ *   – Exactly ONE alpha char follows K (the orphaned letter from the cut-off particle)
+ * We strip K + the trailing char, returning the clean prefix.
+ *
+ * This avoids stripping K from names that START with K (KARIM → K at pos 0 < 4)
+ * and avoids stripping when K is truly embedded (BELKHEIR → K at pos 3 < 4).
+ */
+function trimOrphanedSuffix(token: string): string {
+  const k = token.lastIndexOf('K');
+  if (k >= 4) {
+    const suffix = token.slice(k + 1);
+    if (suffix.length === 1) return token.slice(0, k);
+  }
+  return token;
+}
+
+/**
  * Clean the GIVEN-NAMES section.
  * Given names are separated by single `<` in MRZ (→ single filler char in OCR).
  * We split on filler chars and keep parts ≥ 2 chars.
@@ -169,6 +192,7 @@ function cleanGivenNames(section: string, primaryFiller: string, fillerSet: Set<
 
   return result
     .map(p => p.replace(/[^A-Z]/g, ''))
+    .map(p => trimOrphanedSuffix(p))  // "NOURKE" → "NOUR"
     .filter(p =>
       p.length >= 2 &&              // drop 1-char garbage
       !/^(.)\1+$/.test(p)           // drop repeated-char tokens (KK, LL, KKK…)
@@ -192,6 +216,69 @@ function cleanField(raw: string, filler: string): string {
     .split(filler).join('')
     .split('<').join('')   // also remove literal '<' regardless of filler
     .trim();
+}
+
+// ─── MRZ check-digit validation ───────────────────────────────────────────────
+
+/**
+ * MRZ character values: A-Z → 10-35, 0-9 → 0-9, < → 0  (ISO 7501-1 §A.2)
+ */
+const MRZ_CHAR_VALUE: Record<string, number> = {};
+for (let i = 0; i < 26; i++) MRZ_CHAR_VALUE[String.fromCharCode(65 + i)] = i + 10;
+for (let i = 0; i < 10; i++) MRZ_CHAR_VALUE[String(i)] = i;
+MRZ_CHAR_VALUE['<'] = 0;
+
+function mrzCheckDigit(s: string): number {
+  const W = [7, 3, 1];
+  let sum = 0;
+  for (let i = 0; i < s.length; i++) sum += (MRZ_CHAR_VALUE[s[i]] ?? 0) * W[i % 3];
+  return sum % 10;
+}
+
+/**
+ * Common single-char OCR substitutions for the document-number field.
+ * Key = what tesseract misread; Values = what it might actually be.
+ * We try ONE substitution at a time and accept the first candidate that
+ * makes the check digit match.
+ */
+const DOC_OCR_SUBS: Record<string, string[]> = {
+  '1': ['I', 'J', 'L'],
+  '0': ['O', 'D'],
+  '5': ['S'],
+  '6': ['G'],
+  '8': ['B'],
+  'O': ['0'],
+  'I': ['1'],
+  'B': ['8'],
+  'S': ['5'],
+  'G': ['6'],
+};
+
+/**
+ * If the raw 9-char document-number field fails the check digit, try single-char
+ * OCR substitutions until one passes.  Returns the corrected field (with padding
+ * `<` intact) or the original if no fix is found.
+ */
+function fixDocNumber(raw9: string, checkChar: string): string {
+  const expected = parseInt(checkChar, 10);
+  if (isNaN(expected)) return raw9;
+  if (mrzCheckDigit(raw9) === expected) return raw9; // already correct
+
+  const chars = raw9.split('');
+  for (let pos = 0; pos < chars.length; pos++) {
+    const orig = chars[pos];
+    const subs = DOC_OCR_SUBS[orig];
+    if (!subs) continue;
+    for (const sub of subs) {
+      chars[pos] = sub;
+      if (mrzCheckDigit(chars.join('')) === expected) {
+        console.log(`[MRZ] doc# fixed pos ${pos}: ${orig}→${sub}  (${raw9} → ${chars.join('')})`);
+        return chars.join('');
+      }
+      chars[pos] = orig;
+    }
+  }
+  return raw9; // no single-char fix found
 }
 
 // ─── TD3 parser (passport) ─────────────────────────────────────────────────────
@@ -231,7 +318,8 @@ function parseTD3(line1: string, line2: string): MrzData {
   const { last: lastName, first: firstName } = splitNameField(nameField, fillerSet);
 
   // Line 2: use positional parsing (ISO 7501) — filler-independent
-  const docNumber   = cleanField(line2.slice(0, 9),  primaryFiller);
+  const rawDoc9     = fixDocNumber(line2.slice(0, 9), line2[9]);  // check-digit correction
+  const docNumber   = cleanField(rawDoc9,             primaryFiller);
   const nationality = cleanField(line2.slice(10, 13), primaryFiller);
   const dob         = line2.slice(13, 19); // 6 digits
   const sexChar     = line2[20];
@@ -265,7 +353,8 @@ function parseTD1(lines: string[]): MrzData {
   const docType       = line1[0];
   const fillerSet     = detectFillerSet(line3);           // line3 = name field
   const primaryFiller = [...fillerSet].find(c => c !== '<') ?? '<';
-  const docNumber    = cleanField(line1.slice(5, 14), primaryFiller);
+  const rawDoc9      = fixDocNumber(line1.slice(5, 14), line1[14]);  // check-digit correction
+  const docNumber    = cleanField(rawDoc9,              primaryFiller);
   const dob          = line2.slice(0, 6);
   const sexChar      = line2[7];
   const expiry       = line2.slice(8, 14);
