@@ -274,16 +274,12 @@ async function runOcr(
     tessedit_pageseg_mode: psm as never,
   });
   const { data: { text, confidence } } = await worker.recognize(image);
-  const conf = confidence as number;
-  console.log(`[MRZ] OCR PSM=${psm}  confiance=${conf.toFixed(1)}%`);
-  if (conf < 20) {
-    throw new Error(
-      'Qualité du scan insuffisante.\n\n' +
-      '• Photographiez la page ENTIÈRE du passeport\n' +
-      '• Éclairage suffisant, sans reflets\n' +
-      '• Appareil stable, image bien nette',
-    );
-  }
+  // Log uniquement — pas de seuil bloquant.
+  // Le modèle OCRB est entraîné sur des chars parfaits et retourne une confiance
+  // plus basse que 'eng' sur des photos mobiles, même quand les lignes MRZ sont
+  // parfaitement lisibles. La validation structurelle dans extractMrzLines est
+  // le vrai filtre qualité (longueur 44, chiffres aux positions DOB/expiry…).
+  console.log(`[MRZ] OCR PSM=${psm}  confiance=${(confidence as number).toFixed(1)}%`);
   return text;
 }
 
@@ -396,13 +392,8 @@ export async function scanMrz(
   }
 
   // Toutes tentatives échouées
-  const hint = !usingOcrb
-    ? '\n\n⚠️ Modèle OCR-B indisponible (réseau requis au 1er scan).'
-    : '';
-
-  throw new Error(
-    (lastError?.message ?? 'Scan échoué') +
-    hint +
-    '\n\nSi le problème persiste, utilisez la saisie manuelle.',
-  );
+  const baseMsg = lastError?.message ?? 'Zone MRZ non détectée';
+  // Garder seulement la première ligne du message d'erreur (sans les bullets \n)
+  const firstLine = baseMsg.split('\n')[0];
+  throw new Error(firstLine);
 }
