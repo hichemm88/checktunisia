@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { Search, User, MapPin, Lock } from 'lucide-react';
+import { Search, User, MapPin, Lock, ShieldAlert } from 'lucide-react';
+import { WatchlistSeverity } from '@/types';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -11,6 +12,12 @@ import { authorityApi, SearchParams } from '@/api/authority';
 import { AuthorityGuest, ApiList } from '@/types';
 import { extractErrors } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
+
+const WATCHLIST_COLORS: Record<WatchlistSeverity, { bg: string; border: string; text: string; label: string }> = {
+  critique: { bg: '#FEF2F2', border: '#EF4444', text: '#991B1B', label: 'RECHERCHÉ — CRITIQUE' },
+  eleve:    { bg: '#FFFBEB', border: '#F59E0B', text: '#92400E', label: 'RECHERCHÉ — ÉLEVÉ'   },
+  moyen:    { bg: '#EFF6FF', border: '#3B82F6', text: '#1E40AF', label: 'SIGNALÉ'              },
+};
 
 export const SearchPage = () => {
   const navigate = useNavigate();
@@ -157,37 +164,49 @@ export const SearchPage = () => {
               )}
             </p>
 
-            {results.data.map((g) => (
-              <button
-                key={g.guest_id}
-                onClick={() => navigate(`/authority/guests/${g.guest_id}`)}
-                className="flex items-center justify-between rounded-card bg-white p-4 shadow-card hover:shadow-card-hover transition-shadow text-left w-full"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                    style={{ background: '#1B3A5F' }}
-                  >
-                    {[g.first_name[0], g.last_name[0]].join('').toUpperCase()}
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <p className="font-semibold text-gray-900">{g.first_name} {g.last_name}</p>
-                    <p className="text-xs text-gray-500">
-                      {g.date_of_birth} · {g.sex} · {g.nationality_code}
-                      {g.document_number && ` · ${g.document_number}`}
-                    </p>
-                    {g.last_stay && (
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        Dernier séjour : {g.last_stay.hotel_name} ({g.last_stay.check_in_date})
+            {results.data.map((g) => {
+              const hit = g.watchlist_hit;
+              const wl  = hit ? WATCHLIST_COLORS[hit.severity] : null;
+              return (
+                <button
+                  key={g.guest_id}
+                  onClick={() => navigate(`/authority/guests/${g.guest_id}`)}
+                  className="flex items-start justify-between rounded-card bg-white p-4 shadow-card hover:shadow-card-hover transition-shadow text-left w-full"
+                  style={wl ? { borderLeft: `4px solid ${wl.border}`, background: wl.bg } : undefined}
+                >
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                      style={{ background: wl ? wl.border : '#1B3A5F' }}
+                    >
+                      {hit ? <ShieldAlert className="h-5 w-5" /> : [g.first_name[0], g.last_name[0]].join('').toUpperCase()}
+                    </div>
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      {wl && (
+                        <span className="text-xs font-bold tracking-wide" style={{ color: wl.text }}>
+                          ⚠ {wl.label}
+                          {hit?.reason_code && <span className="ml-1 font-normal">· {hit.reason_code.replace('_', ' ')}</span>}
+                          {hit?.reason && <span className="ml-1 italic font-normal">"{hit.reason.slice(0, 50)}"</span>}
+                        </span>
+                      )}
+                      <p className="font-semibold text-gray-900">{g.first_name} {g.last_name}</p>
+                      <p className="text-xs text-gray-500">
+                        {g.date_of_birth} · {g.sex} · {g.nationality_code}
+                        {g.document_number && ` · ${g.document_number}`}
                       </p>
-                    )}
+                      {g.last_stay && (
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          Dernier séjour : {g.last_stay.hotel_name} ({g.last_stay.check_in_date})
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <Badge variant={(g.last_stay?.status as any) ?? 'default'}>
-                  {g.last_stay?.status ?? 'historique'}
-                </Badge>
-              </button>
-            ))}
+                  <Badge variant={(g.last_stay?.status as any) ?? 'default'}>
+                    {g.last_stay?.status ?? 'historique'}
+                  </Badge>
+                </button>
+              );
+            })}
 
             {results.data.length === 0 && (
               <div className="py-12 text-center">

@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Search, Building2, Bell, Activity, LogOut, Shield, MapPin,
+  LayoutDashboard, Search, Building2, Bell, Activity, LogOut, Shield, MapPin, ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/authStore';
@@ -131,7 +131,8 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
             <NavItem to="/authority/dashboard" icon={LayoutDashboard} label="Tableau de bord" end />
             <NavItem to="/authority/search"    icon={Search}          label="Voyageurs" />
             <NavItem to="/authority/hotels"    icon={Building2}       label="Hôtels" />
-            <NavItem to="/authority/alerts"    icon={Bell}            label="Alertes" />
+            <NavItem to="/authority/alerts"    icon={Bell}        label="Alertes" />
+            <NavItem to="/authority/watchlist" icon={ShieldAlert} label="Surveillance" />
             {/* Activity log: ministry only */}
             {isMinistry && (
               <NavItem to="/authority/activity" icon={Activity} label="Activité" />

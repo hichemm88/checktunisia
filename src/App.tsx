@@ -15,6 +15,7 @@ import { HotelsPage } from '@/pages/authority/HotelsPage';
 import { HotelDetailPage } from '@/pages/authority/HotelDetailPage';
 import { AlertsPage } from '@/pages/authority/AlertsPage';
 import { ActivityPage } from '@/pages/authority/ActivityPage';
+import { WatchlistPage } from '@/pages/authority/WatchlistPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
 
 // ─── Guards ─────────────────────────────────────────────────────────────────
@@ -61,8 +62,9 @@ export const App = () => (
         <Route path="/authority/guests/:id" element={<GuestProfilePage />} />
         <Route path="/authority/hotels"    element={<HotelsPage />} />
         <Route path="/authority/hotels/:id" element={<HotelDetailPage />} />
-        <Route path="/authority/alerts"    element={<AlertsPage />} />
-        <Route path="/authority/activity"  element={<ActivityPage />} />
+        <Route path="/authority/alerts"     element={<AlertsPage />} />
+        <Route path="/authority/watchlist"  element={<WatchlistPage />} />
+        <Route path="/authority/activity"   element={<ActivityPage />} />
       </Route>
 
       {/* Admin */}

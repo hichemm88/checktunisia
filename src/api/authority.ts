@@ -2,6 +2,7 @@ import { api } from '@/lib/api';
 import {
   AuthorityGuest, AuthorityGuestProfile, AuthorityHotel,
   AuthorityDashboard, AuthorityAlert, AuthorityActivity,
+  WatchlistEntry, WatchlistImportResult,
   ApiList,
 } from '@/types';
 
@@ -49,4 +50,28 @@ export const authorityApi = {
   // ── Hotel detail ──────────────────────────────────────────────────────────
   getHotel: (hotelId: string) =>
     api.get<{ data: AuthorityHotel }>(`/authority/hotels/${hotelId}`).then((r) => r.data.data),
+
+  // ── Watchlist ─────────────────────────────────────────────────────────────
+  getWatchlist: (params?: { severity?: string; status?: string; search?: string; page?: number }) =>
+    api.get<ApiList<WatchlistEntry>>('/authority/watchlist', { params }).then((r) => r.data),
+
+  addWatchlistEntry: (data: Partial<WatchlistEntry> & { severity: string; reason_code: string }) =>
+    api.post<{ data: WatchlistEntry }>('/authority/watchlist', data).then((r) => r.data.data),
+
+  updateWatchlistEntry: (id: string, data: Partial<WatchlistEntry>) =>
+    api.patch<{ data: WatchlistEntry }>(`/authority/watchlist/${id}`, data).then((r) => r.data.data),
+
+  deleteWatchlistEntry: (id: string) =>
+    api.delete(`/authority/watchlist/${id}`),
+
+  importWatchlist: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api.post<{ data: WatchlistImportResult }>('/authority/watchlist/import', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data.data);
+  },
+
+  downloadTemplate: () =>
+    api.get('/authority/watchlist/template', { responseType: 'blob' }),
 };

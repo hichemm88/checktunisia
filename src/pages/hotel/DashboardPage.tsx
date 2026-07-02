@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
   UserCheck, Users, DoorOpen, Calendar, ChevronRight,
-  TrendingUp, FileWarning, Percent, AlertCircle, Plus,
+  TrendingUp, FileWarning, Percent, AlertCircle, Plus, ShieldAlert,
 } from 'lucide-react';
 import { dashboardApi } from '@/api/dashboard';
 import { HotelLayout } from '@/components/layout/HotelLayout';
@@ -114,8 +114,9 @@ export const DashboardPage = () => {
 
   const d   = data ?? EMPTY_DASH;
   const sub = d.subscription;
-  const isSubWarning = sub.status !== 'none' && (sub.status !== 'active' || (sub.days_remaining ?? 99) <= 7);
-  const hasAlerts    = d.expiry_alerts.length > 0;
+  const isSubWarning       = sub.status !== 'none' && (sub.status !== 'active' || (sub.days_remaining ?? 99) <= 7);
+  const hasAlerts          = d.expiry_alerts.length > 0;
+  const securityHitCount   = d.pending_watchlist_hits ?? 0;
 
   return (
     <HotelLayout title="Tableau de bord">
@@ -156,6 +157,32 @@ export const DashboardPage = () => {
         </div>
 
         <div className="px-4 flex flex-col gap-4">
+
+          {/* Security alert banner */}
+          {securityHitCount > 0 && (
+            <div
+              className="flex items-start gap-3 rounded-xl p-4"
+              style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}
+            >
+              <div
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                style={{ background: '#EF444420' }}
+              >
+                <ShieldAlert className="h-5 w-5" style={{ color: '#DC2626' }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold" style={{ color: '#7F1D1D' }}>
+                  Notification de sécurité
+                </p>
+                <p className="text-sm font-semibold mt-0.5" style={{ color: '#991B1B' }}>
+                  {securityHitCount} alerte{securityHitCount > 1 ? 's' : ''} en attente
+                </p>
+                <p className="text-xs mt-1" style={{ color: '#B91C1C' }}>
+                  Veuillez contacter les autorités compétentes immédiatement.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Subscription warning */}
           {isSubWarning && (

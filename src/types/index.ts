@@ -92,12 +92,51 @@ export interface DashboardData {
   }>;
   subscription: { status: string; expires_at?: string; days_remaining?: number; plan?: string };
   recent_check_ins: Array<{ id: string; reference: string; room?: string; status: string; primary_guest?: string; check_in_date: string }>;
+  pending_watchlist_hits?: number;
+}
+
+// ─── Watchlist ────────────────────────────────────────────────────────────────
+export type WatchlistSeverity = 'critique' | 'eleve' | 'moyen';
+export type WatchlistReasonCode = 'MANDAT_ARRET' | 'FRAUDE' | 'MIGRATION' | 'AUTRE';
+
+export interface WatchlistHitInfo {
+  severity: WatchlistSeverity;
+  reason_code: WatchlistReasonCode;
+  hit_type: 'document' | 'name_dob' | 'name_nationality';
+  reason?: string | null; // ministry only
+}
+
+export interface WatchlistEntry {
+  id: string;
+  document_number?: string | null;
+  document_type?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  date_of_birth?: string | null;
+  nationality_code?: string | null;
+  severity: WatchlistSeverity;
+  reason_code: WatchlistReasonCode;
+  reason?: string | null; // ministry only
+  status: 'active' | 'inactive';
+  expires_at?: string | null;
+  source: 'manual' | 'import';
+  added_at?: string;
+  added_by_name?: string;
+  organization_name?: string;
+}
+
+export interface WatchlistImportResult {
+  created: number;
+  skipped: number;
+  errors: string[];
+  batch_id: string;
 }
 
 export interface AuthorityGuest {
   guest_id: string; first_name: string; last_name: string; date_of_birth: string;
   sex: string; nationality_code: string; document_number?: string; document_type?: string;
   last_stay?: { hotel_name: string; check_in_date: string; status: string } | null;
+  watchlist_hit?: WatchlistHitInfo | null;
 }
 
 export interface AuthorityGuestProfile {
