@@ -259,10 +259,10 @@ function extractMrzLines(
 function toMrzData(result: ReturnType<typeof mrzParse>): MrzData {
   const f = result.fields;
 
-  // Sex : le package retourne le char brut M, F ou < (ou null)
+  // Sex : le package mrz v3 retourne 'male' | 'female' | null (pas 'M'/'F')
   let sex: 'M' | 'F' | 'X' = 'X';
-  if (f.sex === 'M') sex = 'M';
-  else if (f.sex === 'F') sex = 'F';
+  if (f.sex === 'male')        sex = 'M';
+  else if (f.sex === 'female') sex = 'F';
 
   // Document type
   const code = (f.documentCode ?? '').toUpperCase();
