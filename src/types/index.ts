@@ -4,8 +4,34 @@ export interface Hotel {
   subscription?: { plan: string; status: string; expires_at: string } | null;
 }
 
+export type RoomType =
+  | 'single' | 'double' | 'twin' | 'triple' | 'quadruple'
+  | 'suite' | 'junior_suite' | 'apartment' | 'studio'
+  | 'family' | 'villa' | 'dormitory' | 'standard';
+
+export type RoomStatus = 'available' | 'occupied' | 'maintenance' | 'inactive';
+
 export interface Room {
-  id: string; number: string; floor?: number; type: string; capacity: number; status: string;
+  id: string; number: string; floor?: number | null;
+  type: RoomType; capacity: number; status: RoomStatus;
+}
+
+export interface HotelAddress {
+  line1?: string; line2?: string; city?: string; governorate?: string;
+  postal_code?: string; latitude?: number | null; longitude?: number | null;
+}
+
+export interface HotelProfile {
+  id: string; name: string; type?: string; stars?: number | null;
+  registration_number?: string; status: string;
+  address?: HotelAddress | null;
+  phone?: string | null; email?: string | null; website?: string | null;
+}
+
+export interface UpdateHotelPayload {
+  name?: string; type?: string; stars?: number | null;
+  address?: Partial<HotelAddress>;
+  phone?: string | null; email?: string | null; website?: string | null;
 }
 
 export interface TravelDocument {

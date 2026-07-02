@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { HotelUser, CreateUserPayload, UpdateProfilePayload, ChangePasswordPayload } from '@/types';
+import { HotelUser, CreateUserPayload, UpdateProfilePayload, ChangePasswordPayload, HotelProfile, UpdateHotelPayload } from '@/types';
 
 export const settingsApi = {
   // Profile
@@ -27,4 +27,11 @@ export const settingsApi = {
   getSubscription: () =>
     api.get<{ data: { status: string; plan: { name: string } | string | null; expires_at: string; days_remaining: number } }>('/hotel/subscription')
       .then((r) => r.data.data),
+
+  // Hotel profile (hotel_admin only)
+  getHotelProfile: () =>
+    api.get<{ data: HotelProfile }>('/hotel/profile').then((r) => r.data.data),
+
+  updateHotelProfile: (payload: UpdateHotelPayload) =>
+    api.patch<{ data: HotelProfile }>('/hotel/profile', payload).then((r) => r.data.data),
 };

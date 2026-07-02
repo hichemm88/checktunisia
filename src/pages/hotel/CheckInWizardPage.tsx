@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Upload, Camera, CheckCircle, User, UserPlus,
-  Loader2, ArrowLeft, ArrowRight,
+  Loader2, ArrowLeft, ArrowRight, Minus, Plus,
 } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { StepIndicator } from '@/components/ui/StepIndicator';
@@ -33,6 +33,38 @@ const SEX_OPTIONS = [
 
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString('fr-TN', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+
+// ─── Stepper component (+/-) ────────────────────────────────────────────────
+const Stepper = ({
+  label, value, min = 0, max = 20, onChange,
+}: {
+  label: string; value: number; min?: number; max?: number; onChange: (v: number) => void;
+}) => (
+  <div className="flex flex-col gap-1">
+    <label className="text-xs font-medium text-gray-600">{label}</label>
+    <div className="flex items-center gap-0 rounded-xl border border-gray-200 overflow-hidden h-11">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(min, value - 1))}
+        disabled={value <= min}
+        className="flex items-center justify-center w-11 h-full text-gray-500 hover:bg-gray-50 active:bg-gray-100 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors border-r border-gray-200 shrink-0"
+      >
+        <Minus className="h-4 w-4" />
+      </button>
+      <span className="flex-1 text-center text-sm font-semibold text-gray-900 tabular-nums select-none">
+        {value}
+      </span>
+      <button
+        type="button"
+        onClick={() => onChange(Math.min(max, value + 1))}
+        disabled={value >= max}
+        className="flex items-center justify-center w-11 h-full text-gray-500 hover:bg-gray-50 active:bg-gray-100 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors border-l border-gray-200 shrink-0"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
+    </div>
+  </div>
+);
 
 // ─── Step 1 : Réservation ───────────────────────────────────────────────────
 const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
@@ -89,19 +121,19 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
         />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <Input
+        <Stepper
           label="Adultes"
-          type="number"
-          min={1}
           value={form.adults_count ?? 1}
-          onChange={(e) => set('adults_count', Math.max(1, Number(e.target.value)))}
+          min={1}
+          max={20}
+          onChange={(v) => set('adults_count', v)}
         />
-        <Input
+        <Stepper
           label="Enfants"
-          type="number"
-          min={0}
           value={form.children_count ?? 0}
-          onChange={(e) => set('children_count', Math.max(0, Number(e.target.value)))}
+          min={0}
+          max={20}
+          onChange={(v) => set('children_count', v)}
         />
       </div>
       <Button
