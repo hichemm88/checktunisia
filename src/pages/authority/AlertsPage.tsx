@@ -126,7 +126,7 @@ export const AlertsPage = () => {
             <div>
               <p className="font-semibold" style={{ color: alerts.length > 0 ? '#92620A' : '#15803D' }}>
                 {alerts.length === 0
-                  ? 'Aucun document n'expire dans les 30 prochains jours.'
+                  ? "Aucun document n'expire dans les 30 prochains jours."
                   : `${alerts.length} document${alerts.length > 1 ? 's' : ''} expirant dans les 30 prochains jours`}
               </p>
               {data?.meta.governorate && (
