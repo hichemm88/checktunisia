@@ -11,9 +11,9 @@ const paddings = { sm: 'p-4', md: 'p-5', lg: 'p-6', none: '' };
 export const Card = ({ className, hoverable, padding = 'md', children, ...props }: CardProps) => (
   <div
     className={cn(
-      'card',
+      'bg-white rounded-card shadow-card overflow-hidden',
       paddings[padding],
-      hoverable && 'cursor-pointer transition-shadow hover:shadow-card-hover',
+      hoverable && 'cursor-pointer transition-shadow duration-200 hover:shadow-card-hover active:scale-[0.99]',
       className,
     )}
     {...props}
@@ -29,7 +29,7 @@ export const CardHeader = ({ className, children, ...props }: HTMLAttributes<HTM
 );
 
 export const CardTitle = ({ className, children, ...props }: HTMLAttributes<HTMLHeadingElement>) => (
-  <h3 className={cn('text-base font-semibold text-gray-900', className)} {...props}>
+  <h3 className={cn('text-base font-bold text-gray-900', className)} {...props}>
     {children}
   </h3>
 );

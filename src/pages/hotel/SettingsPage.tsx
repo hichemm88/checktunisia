@@ -9,6 +9,7 @@ import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
 import { settingsApi } from '@/api/settings';
@@ -322,15 +323,12 @@ const HotelInfoSection = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-gray-600">Type d'établissement</label>
-              <select
+              <Select
+                label="Type d'établissement"
                 value={form?.type ?? ''}
                 onChange={e => setForm(f => f ? { ...f, type: e.target.value } : f)}
-                className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">— Choisir —</option>
-                {HOTEL_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
+                options={[{ value: '', label: '— Choisir —' }, ...HOTEL_TYPES]}
+              />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-gray-600">Étoiles</label>
@@ -357,17 +355,12 @@ const HotelInfoSection = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <Input label="Ville" value={form?.address?.city ?? ''} onChange={e => setAddr('city', e.target.value)} />
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-gray-600">Gouvernorat</label>
-              <select
-                value={form?.address?.governorate ?? ''}
-                onChange={e => setAddr('governorate', e.target.value)}
-                className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">— Choisir —</option>
-                {GOVERNORATES.map(g => <option key={g} value={g}>{g}</option>)}
-              </select>
-            </div>
+            <Select
+              label="Gouvernorat"
+              value={form?.address?.governorate ?? ''}
+              onChange={e => setAddr('governorate', e.target.value)}
+              options={[{ value: '', label: '— Choisir —' }, ...GOVERNORATES.map(g => ({ value: g, label: g }))]}
+            />
           </div>
 
           <Input label="Code postal" value={form?.address?.postal_code ?? ''} onChange={e => setAddr('postal_code', e.target.value)} placeholder="ex. 1000" />
@@ -500,19 +493,12 @@ const RoomForm = ({
         />
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-600">Type de chambre</label>
-          <select
-            value={form.type}
-            onChange={e => set('type', e.target.value as RoomType)}
-            className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            <option value="">— Choisir —</option>
-            {Object.entries(ROOM_TYPE_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
-          </select>
-        </div>
+        <Select
+          label="Type de chambre"
+          value={form.type}
+          onChange={e => set('type', e.target.value as RoomType)}
+          options={[{ value: '', label: '— Choisir —' }, ...Object.entries(ROOM_TYPE_LABELS).map(([v, l]) => ({ value: v, label: l }))]}
+        />
         <Input
           label="Capacité (pers.)"
           type="number"
@@ -522,18 +508,12 @@ const RoomForm = ({
           onChange={e => set('capacity', Math.max(1, parseInt(e.target.value) || 1))}
         />
       </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-gray-600">Statut</label>
-        <select
-          value={form.status}
-          onChange={e => set('status', e.target.value as RoomStatus)}
-          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        >
-          {Object.entries(ROOM_STATUS_LABELS).map(([v, { label }]) => (
-            <option key={v} value={v}>{label}</option>
-          ))}
-        </select>
-      </div>
+      <Select
+        label="Statut"
+        value={form.status}
+        onChange={e => set('status', e.target.value as RoomStatus)}
+        options={Object.entries(ROOM_STATUS_LABELS).map(([v, { label }]) => ({ value: v, label }))}
+      />
       <div className="flex gap-2">
         <Button size="sm" onClick={() => onSave(form)} loading={saving} disabled={!form.number || !form.type}>
           Enregistrer
@@ -741,17 +721,15 @@ const AddUserForm = ({ onDone }: { onDone: () => void }) => {
       </div>
       <Input label="Email"           type="email"    value={form.email}    onChange={e => set('email', e.target.value)} />
       <Input label="Mot de passe"    type="password" value={form.password} onChange={e => set('password', e.target.value)} />
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-gray-600">Rôle</label>
-        <select
-          value={form.role}
-          onChange={e => set('role', e.target.value)}
-          className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        >
-          <option value="receptionist">Réceptionniste</option>
-          <option value="hotel_admin">Administrateur hôtel</option>
-        </select>
-      </div>
+      <Select
+        label="Rôle"
+        value={form.role}
+        onChange={e => set('role', e.target.value)}
+        options={[
+          { value: 'receptionist', label: 'Réceptionniste' },
+          { value: 'hotel_admin',  label: 'Administrateur hôtel' },
+        ]}
+      />
       {error && <Alert msg={error} type="error" />}
       <div className="flex gap-2">
         <Button size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending}
@@ -861,9 +839,14 @@ export const SettingsPage = () => {
           <SubscriptionCard />
         )}
 
-        <p className="text-center text-xs text-gray-400 mt-2">
-          CheckTunisia v1.0 · Conforme à la réglementation tunisienne
-        </p>
+        <div className="flex flex-col items-center gap-1 mt-2 mb-2">
+          <div
+            className="h-1 w-12 rounded-full mb-1"
+            style={{ background: 'linear-gradient(90deg, #1B3A5F, #C8943A)' }}
+          />
+          <p className="text-xs text-gray-400">CheckTunisia v1.0</p>
+          <p className="text-xs text-gray-300">Conforme à la réglementation tunisienne</p>
+        </div>
       </div>
     </HotelLayout>
   );

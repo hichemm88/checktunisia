@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, User, LogOut, CheckCircle } from 'lucide-react';
+import { ArrowLeft, LogOut, CheckCircle, FileText, MapPin, CalendarDays } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -10,19 +10,21 @@ import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 
 const DetailRow = ({ label, value }: { label: string; value?: string | number | null }) => (
-  <div className="flex justify-between py-2.5 text-sm border-b border-gray-50 last:border-0">
-    <span className="text-gray-500">{label}</span>
-    <span className="font-medium text-gray-900 text-right">{value ?? '—'}</span>
+  <div className="flex justify-between items-start py-3 border-b border-gray-50 last:border-0">
+    <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">{label}</span>
+    <span className="text-sm font-semibold text-gray-900 text-right max-w-[55%]">{value ?? '—'}</span>
   </div>
 );
 
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString('fr-TN', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
 
+const SEX_LABELS: Record<string, string> = { M: 'Masculin', F: 'Féminin', X: 'Autre' };
+
 export const HistoryDetailPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id }   = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const qc = useQueryClient();
+  const qc       = useQueryClient();
   const { toast } = useToast();
 
   const { data: ci, isLoading } = useQuery({
@@ -44,7 +46,7 @@ export const HistoryDetailPage = () => {
   });
 
   if (isLoading) return (
-    <HotelLayout title="Détail check-in">
+    <HotelLayout title="Détail">
       <div className="p-4 flex flex-col gap-4">
         {[1,2,3].map(i => <div key={i} className="h-32 animate-pulse rounded-card bg-gray-100" />)}
       </div>
@@ -53,90 +55,139 @@ export const HistoryDetailPage = () => {
 
   if (!ci) return null;
 
+  const pg = ci.primary_guest
+    ?? ci.guests?.find(g => g.is_primary)
+    ?? ci.guests?.[0];
+
+  const guestName = pg ? `${pg.first_name} ${pg.last_name}` : 'Sans voyageur';
+  const initials  = pg
+    ? `${pg.first_name?.[0] ?? ''}${pg.last_name?.[0] ?? ''}`.toUpperCase()
+    : '?';
+
   return (
     <HotelLayout title="Détail check-in">
-      <div className="p-4 flex flex-col gap-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 text-sm text-gray-500"
+      <div className="flex flex-col">
+
+        {/* ── Hero ── */}
+        <div
+          className="px-4 pt-4 pb-6 flex flex-col"
+          style={{ background: 'linear-gradient(135deg, #1B3A5F 0%, #2A5090 100%)' }}
         >
-          <ArrowLeft className="h-4 w-4" /> Retour
-        </button>
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1.5 text-sm text-blue-300 mb-4 self-start hover:text-white transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" /> Retour
+          </button>
 
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-mono text-xs text-gray-400">{ci.reference}</p>
-            <h2 className="text-base font-bold text-gray-900 mt-0.5">
-              {(() => {
-                // primary_guest is only in list endpoint; fallback to guests array
-                const pg = ci.primary_guest
-                  ?? ci.guests?.find(g => g.is_primary)
-                  ?? ci.guests?.[0];
-                return pg
-                  ? `${pg.first_name} ${pg.last_name}`
-                  : 'Sans voyageur principal';
-              })()}
-            </h2>
+          <div className="flex items-center gap-4">
+            {/* Avatar */}
+            <div
+              className="h-16 w-16 shrink-0 rounded-2xl flex items-center justify-center text-xl font-black"
+              style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', backdropFilter: 'blur(4px)' }}
+            >
+              {initials}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <h2 className="text-lg font-black text-white leading-tight">{guestName}</h2>
+              <p className="text-xs font-mono text-blue-300">{ci.reference}</p>
+              <Badge variant={ci.status as any} />
+            </div>
           </div>
-          <Badge variant={ci.status as any}>{ci.status}</Badge>
-        </div>
 
-        {/* Booking details */}
-        <Card>
-          <DetailRow label="Chambre" value={ci.room?.number} />
-          <DetailRow label="Arrivée" value={fmtDate(ci.check_in_date)} />
-          <DetailRow label="Départ prévu" value={fmtDate(ci.expected_check_out_date)} />
-          <DetailRow label="Départ réel" value={fmtDate(ci.actual_check_out_date)} />
-          <DetailRow label="Adultes" value={ci.adults_count} />
-          <DetailRow label="Enfants" value={ci.children_count} />
-          {ci.booking_reference && <DetailRow label="Réf. réservation" value={ci.booking_reference} />}
-          {ci.created_by && (
-            <DetailRow
-              label="Enregistré par"
-              value={`${ci.created_by.first_name} ${ci.created_by.last_name}`}
-            />
-          )}
-          {ci.notes && <DetailRow label="Notes" value={ci.notes} />}
-        </Card>
-
-        {/* Guests */}
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-gray-700">Voyageurs</p>
-          {ci.guests?.map((g) => (
-            <Card key={g.id} className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
-                <User className="h-5 w-5" />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-gray-900">{g.first_name} {g.last_name}</p>
-                  {g.is_primary && <Badge variant="active">Principal</Badge>}
+          {/* Quick stats row */}
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {[
+              { icon: MapPin,       label: 'Chambre',  val: ci.room?.number ?? '—' },
+              { icon: CalendarDays, label: 'Arrivée',  val: fmtDate(ci.check_in_date).split(' ').slice(0,2).join(' ') },
+              { icon: CalendarDays, label: 'Départ',   val: fmtDate(ci.expected_check_out_date).split(' ').slice(0,2).join(' ') },
+            ].map(({ icon: Icon, label, val }) => (
+              <div key={label} className="flex flex-col gap-1 rounded-xl p-2.5" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                <div className="flex items-center gap-1">
+                  <Icon className="h-3 w-3 text-blue-300" />
+                  <span className="text-[10px] text-blue-300 font-semibold uppercase tracking-widest">{label}</span>
                 </div>
-                <p className="text-xs text-gray-500">{fmtDate(g.date_of_birth)} · {g.sex} · {g.nationality_code}</p>
-                {g.document && (
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {g.document.type} {g.document.document_number} · expire {fmtDate(g.document.expiry_date)}
-                  </p>
-                )}
+                <span className="text-sm font-bold text-white">{val}</span>
               </div>
-            </Card>
-          ))}
-          {!ci.guests?.length && <p className="text-sm text-gray-400">Aucun voyageur enregistré</p>}
+            ))}
+          </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-col gap-2">
-          {ci.status === 'draft' && (
-            <Button fullWidth onClick={() => completeMutation.mutate()} loading={completeMutation.isPending}>
-              <CheckCircle className="h-4 w-4" /> Finaliser le check-in
-            </Button>
-          )}
-          {ci.status === 'active' && (
-            <Button variant="secondary" fullWidth onClick={() => checkoutMutation.mutate()} loading={checkoutMutation.isPending}>
-              <LogOut className="h-4 w-4" /> Enregistrer le check-out
-            </Button>
-          )}
+        {/* ── Content ── */}
+        <div className="p-4 flex flex-col gap-4 -mt-3">
+
+          {/* Booking details */}
+          <Card>
+            <p className="label mb-3">Réservation</p>
+            <DetailRow label="Adultes"      value={ci.adults_count} />
+            <DetailRow label="Enfants"      value={ci.children_count} />
+            <DetailRow label="Départ réel"  value={fmtDate(ci.actual_check_out_date)} />
+            {ci.booking_reference && <DetailRow label="Réf. réservation" value={ci.booking_reference} />}
+            {ci.booking_source    && <DetailRow label="Source" value={ci.booking_source} />}
+            {ci.created_by && (
+              <DetailRow label="Enregistré par" value={`${ci.created_by.first_name} ${ci.created_by.last_name}`} />
+            )}
+            {ci.notes && <DetailRow label="Notes" value={ci.notes} />}
+          </Card>
+
+          {/* Guests */}
+          <div className="flex flex-col gap-3">
+            <p className="label">Voyageurs · {ci.guests?.length ?? 0}</p>
+            {ci.guests?.map((g) => {
+              const gInitials = `${g.first_name?.[0] ?? ''}${g.last_name?.[0] ?? ''}`.toUpperCase();
+              return (
+                <Card key={g.id} className="flex items-start gap-3">
+                  <div
+                    className="h-11 w-11 shrink-0 rounded-xl flex items-center justify-center text-sm font-bold"
+                    style={{ background: g.is_primary ? '#1B3A5F' : '#E8EEFB', color: g.is_primary ? '#fff' : '#1B3A5F' }}
+                  >
+                    {gInitials}
+                  </div>
+                  <div className="flex flex-col gap-1 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-bold text-gray-900">{g.first_name} {g.last_name}</span>
+                      {g.is_primary && (
+                        <span
+                          className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
+                          style={{ background: '#E8EEFB', color: '#1B3A5F' }}
+                        >
+                          Principal
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {fmtDate(g.date_of_birth)} · {SEX_LABELS[g.sex] ?? g.sex} · {g.nationality_code}
+                    </p>
+                    {g.document && (
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <FileText className="h-3 w-3 text-gray-300" />
+                        <p className="text-xs text-gray-400">
+                          {g.document.type} {g.document.document_number}
+                          {g.document.expiry_date && ` · expire ${fmtDate(g.document.expiry_date)}`}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
+            {!ci.guests?.length && <p className="text-sm text-gray-400">Aucun voyageur enregistré</p>}
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col gap-2">
+            {ci.status === 'draft' && (
+              <Button fullWidth size="lg" onClick={() => completeMutation.mutate()} loading={completeMutation.isPending}>
+                <CheckCircle className="h-5 w-5" /> Finaliser le check-in
+              </Button>
+            )}
+            {ci.status === 'active' && (
+              <Button variant="secondary" fullWidth size="lg" onClick={() => checkoutMutation.mutate()} loading={checkoutMutation.isPending}>
+                <LogOut className="h-5 w-5" /> Enregistrer le check-out
+              </Button>
+            )}
+          </div>
+
         </div>
       </div>
     </HotelLayout>

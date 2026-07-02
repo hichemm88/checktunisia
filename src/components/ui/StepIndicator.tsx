@@ -2,32 +2,58 @@ import { Check } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 interface Step { label: string; description?: string }
-
 interface StepIndicatorProps { steps: Step[]; currentStep: number }
 
 export const StepIndicator = ({ steps, currentStep }: StepIndicatorProps) => (
-  <div className="flex items-center gap-0">
+  <div className="flex items-start">
     {steps.map((step, i) => {
-      const done = i < currentStep;
+      const done   = i < currentStep;
       const active = i === currentStep;
+
       return (
-        <div key={i} className="flex flex-1 items-center">
-          <div className="flex flex-col items-center gap-1">
-            <div className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors',
-              done && 'bg-primary-600 text-white',
-              active && 'border-2 border-primary-600 text-primary-600',
-              !done && !active && 'border-2 border-gray-200 text-gray-400',
-            )}>
-              {done ? <Check className="h-4 w-4" /> : i + 1}
+        <div key={i} className="flex flex-1 flex-col items-center">
+          <div className="flex w-full items-center">
+            {/* Left connector */}
+            {i > 0 && (
+              <div
+                className="h-0.5 flex-1 transition-colors duration-300"
+                style={{ background: i <= currentStep ? '#1B3A5F' : '#E5E7EB' }}
+              />
+            )}
+
+            {/* Dot */}
+            <div
+              className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
+              style={
+                done
+                  ? { background: '#1B3A5F', color: '#fff' }
+                  : active
+                  ? { background: '#fff', color: '#1B3A5F', border: '2px solid #1B3A5F', boxShadow: '0 0 0 4px rgba(27,58,95,0.1)' }
+                  : { background: '#fff', color: '#9CA3AF', border: '2px solid #E5E7EB' }
+              }
+            >
+              {done ? <Check className="h-4 w-4" strokeWidth={2.5} /> : i + 1}
             </div>
-            <span className={cn('text-xs font-medium', active ? 'text-primary-600' : done ? 'text-gray-700' : 'text-gray-400')}>
-              {step.label}
-            </span>
+
+            {/* Right connector */}
+            {i < steps.length - 1 && (
+              <div
+                className="h-0.5 flex-1 transition-colors duration-300"
+                style={{ background: done ? '#1B3A5F' : '#E5E7EB' }}
+              />
+            )}
           </div>
-          {i < steps.length - 1 && (
-            <div className={cn('mb-5 h-0.5 flex-1 transition-colors', done ? 'bg-primary-600' : 'bg-gray-200')} />
-          )}
+
+          {/* Label */}
+          <span
+            className={cn(
+              'mt-2 text-[10px] font-bold tracking-wide text-center transition-colors duration-200',
+              active ? '' : done ? 'text-gray-600' : 'text-gray-400',
+            )}
+            style={active ? { color: '#1B3A5F' } : undefined}
+          >
+            {step.label}
+          </span>
         </div>
       );
     })}

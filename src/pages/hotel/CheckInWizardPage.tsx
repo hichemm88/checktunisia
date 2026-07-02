@@ -2,8 +2,8 @@ import { useState, useRef, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
-  Upload, Camera, CheckCircle, User, UserPlus,
-  Loader2, ArrowLeft, ArrowRight, Minus, Plus,
+  Camera, CheckCircle, User, UserPlus,
+  Loader2, ArrowLeft, ArrowRight, Minus, Plus, ScanLine,
 } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { StepIndicator } from '@/components/ui/StepIndicator';
@@ -20,45 +20,50 @@ import { CheckIn } from '@/types';
 
 const STEPS = [
   { label: 'Réservation' },
-  { label: 'Documents' },
-  { label: 'Validation' },
+  { label: 'Documents'   },
+  { label: 'Validation'  },
 ];
 
 const SEX_OPTIONS = [
-  { value: '', label: 'Sexe' },
+  { value: '',  label: 'Sexe'     },
   { value: 'M', label: 'Masculin' },
-  { value: 'F', label: 'Féminin' },
-  { value: 'X', label: 'Autre' },
+  { value: 'F', label: 'Féminin'  },
+  { value: 'X', label: 'Autre'    },
 ];
 
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString('fr-TN', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
 
-// ─── Stepper component (+/-) ────────────────────────────────────────────────
+// ─── +/- Stepper ────────────────────────────────────────────────────────────
 const Stepper = ({
   label, value, min = 0, max = 20, onChange,
 }: {
   label: string; value: number; min?: number; max?: number; onChange: (v: number) => void;
 }) => (
-  <div className="flex flex-col gap-1">
-    <label className="text-xs font-medium text-gray-600">{label}</label>
-    <div className="flex items-center gap-0 rounded-xl border border-gray-200 overflow-hidden h-11">
+  <div className="flex flex-col gap-1.5">
+    <label className="label">{label}</label>
+    <div
+      className="flex items-center rounded-xl overflow-hidden h-[52px] bg-white"
+      style={{ border: '1.5px solid #E0DDD7' }}
+    >
       <button
         type="button"
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={value <= min}
-        className="flex items-center justify-center w-11 h-full text-gray-500 hover:bg-gray-50 active:bg-gray-100 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors border-r border-gray-200 shrink-0"
+        className="flex items-center justify-center w-[52px] h-full text-gray-500 hover:bg-warm-100 active:bg-warm-200 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors shrink-0"
+        style={{ borderRight: '1.5px solid #E0DDD7' }}
       >
         <Minus className="h-4 w-4" />
       </button>
-      <span className="flex-1 text-center text-sm font-semibold text-gray-900 tabular-nums select-none">
+      <span className="flex-1 text-center text-base font-black text-gray-900 tabular-nums select-none">
         {value}
       </span>
       <button
         type="button"
         onClick={() => onChange(Math.min(max, value + 1))}
         disabled={value >= max}
-        className="flex items-center justify-center w-11 h-full text-gray-500 hover:bg-gray-50 active:bg-gray-100 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors border-l border-gray-200 shrink-0"
+        className="flex items-center justify-center w-[52px] h-full text-gray-500 hover:bg-warm-100 active:bg-warm-200 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors shrink-0"
+        style={{ borderLeft: '1.5px solid #E0DDD7' }}
       >
         <Plus className="h-4 w-4" />
       </button>
@@ -91,7 +96,7 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
   const set = (k: string, v: string | number) => setForm((f) => ({ ...f, [k]: v }));
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <Select
         label="Chambre"
         options={roomOptions}
@@ -100,13 +105,13 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
       />
       <Input
         label="Référence réservation"
-        placeholder="Optionnel"
+        placeholder="Optionnel (ex. BOOKING-123)"
         value={form.booking_reference ?? ''}
         onChange={(e) => set('booking_reference', e.target.value)}
       />
       <div className="grid grid-cols-2 gap-3">
         <Input
-          label="Date d'arrivée"
+          label="Arrivée"
           type="date"
           value={form.check_in_date ?? ''}
           onChange={(e) => set('check_in_date', e.target.value)}
@@ -121,24 +126,11 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
         />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <Stepper
-          label="Adultes"
-          value={form.adults_count ?? 1}
-          min={1}
-          max={20}
-          onChange={(v) => set('adults_count', v)}
-        />
-        <Stepper
-          label="Enfants"
-          value={form.children_count ?? 0}
-          min={0}
-          max={20}
-          onChange={(v) => set('children_count', v)}
-        />
+        <Stepper label="Adultes" value={form.adults_count ?? 1} min={1} max={20} onChange={(v) => set('adults_count', v)} />
+        <Stepper label="Enfants" value={form.children_count ?? 0} min={0} max={20} onChange={(v) => set('children_count', v)} />
       </div>
       <Button
-        fullWidth
-        size="lg"
+        fullWidth size="lg"
         loading={createMutation.isPending}
         onClick={() => createMutation.mutate(form as CreateCheckInPayload)}
         disabled={!form.check_in_date || !form.expected_check_out_date}
@@ -149,26 +141,19 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
   );
 };
 
-// ─── Composant réutilisable : scan + formulaire pour 1 voyageur ─────────────
+// ─── Guest scan panel ────────────────────────────────────────────────────────
 const GuestScanPanel = ({
-  checkIn,
-  isPrimary,
-  label,
-  onSuccess,
-  onCancel,
+  checkIn, isPrimary, label, onSuccess, onCancel,
 }: {
-  checkIn: CheckIn;
-  isPrimary: boolean;
-  label: string;
-  onSuccess: () => void;
-  onCancel?: () => void;
+  checkIn: CheckIn; isPrimary: boolean; label: string;
+  onSuccess: () => void; onCancel?: () => void;
 }) => {
   const { toast } = useToast();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [scanState, setScanState] = useState<'idle' | 'scanning' | 'done' | 'error'>('idle');
+  const fileRef   = useRef<HTMLInputElement>(null);
+  const [scanState, setScanState]     = useState<'idle' | 'scanning' | 'done' | 'error'>('idle');
   const [ocrProgress, setOcrProgress] = useState(0);
-  const [extracted, setExtracted] = useState<MrzData | null>(null);
-  const [guestForm, setGuestForm] = useState<Partial<AddGuestPayload>>({ is_primary: isPrimary });
+  const [extracted, setExtracted]     = useState<MrzData | null>(null);
+  const [guestForm, setGuestForm]     = useState<Partial<AddGuestPayload>>({ is_primary: isPrimary });
 
   const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -195,7 +180,6 @@ const GuestScanPanel = ({
       const msg = err instanceof Error ? err.message : 'Scan échoué';
       toast(msg, 'error');
       setScanState('error');
-      // Reset input so same file can be re-selected
       if (fileRef.current) fileRef.current.value = '';
     }
   };
@@ -207,69 +191,86 @@ const GuestScanPanel = ({
   });
 
   const setG = (k: string, v: string) => setGuestForm((f) => ({ ...f, [k]: v }));
-  const reset = () => { setScanState('idle'); setExtracted(null); setGuestForm({ is_primary: isPrimary }); if (fileRef.current) fileRef.current.value = ''; };
+  const reset = () => {
+    setScanState('idle'); setExtracted(null);
+    setGuestForm({ is_primary: isPrimary });
+    if (fileRef.current) fileRef.current.value = '';
+  };
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+    <div
+      className="flex flex-col gap-4 rounded-2xl p-4"
+      style={{ background: '#F5F4EF', border: '1.5px solid #E0DDD7' }}
+    >
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-gray-700">{label}</p>
+        <p className="text-sm font-bold text-gray-800">{label}</p>
         {onCancel && (
-          <button className="text-xs text-gray-400 hover:text-gray-600" onClick={onCancel}>
+          <button className="text-xs text-gray-400 hover:text-gray-600 font-medium" onClick={onCancel}>
             Annuler
           </button>
         )}
       </div>
 
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={handleFile}
-      />
+      <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
 
-      {/* ── État : idle / error ── */}
+      {/* ── Idle / Error ── */}
       {(scanState === 'idle' || scanState === 'error') && (
-        <Card className="flex flex-col items-center gap-4 border-2 border-dashed border-gray-200 bg-white py-7">
+        <div
+          className="flex flex-col items-center gap-5 rounded-2xl bg-white py-8 px-4"
+          style={{ border: '2px dashed #D4E1F4' }}
+        >
           {scanState === 'error' && (
-            <p className="text-sm text-red-600">Scan échoué. Réessayez ou saisissez manuellement.</p>
+            <p className="text-sm text-red-600 font-medium text-center">Scan échoué. Réessayez ou saisissez manuellement.</p>
           )}
+          <div
+            className="flex h-16 w-16 items-center justify-center rounded-2xl"
+            style={{ background: 'linear-gradient(135deg, #1B3A5F 0%, #2A5090 100%)' }}
+          >
+            <ScanLine className="h-8 w-8 text-white" />
+          </div>
+          <p className="text-xs text-center text-gray-400">
+            Photographiez la page du passeport<br />avec la zone MRZ visible en bas
+          </p>
           <div className="flex gap-3">
-            <Button variant="secondary" onClick={() => fileRef.current?.click()}>
-              <Camera className="h-4 w-4" /> Scanner
+            <Button onClick={() => fileRef.current?.click()}>
+              <Camera className="h-4 w-4" /> Scanner le passeport
             </Button>
-            <Button variant="ghost" onClick={() => { setExtracted(null); setScanState('done'); }}>
-              <Upload className="h-4 w-4" /> Saisie manuelle
+            <Button variant="secondary" onClick={() => { setExtracted(null); setScanState('done'); }}>
+              Saisie manuelle
             </Button>
           </div>
-          <p className="text-xs text-gray-400">Photographiez la page du passeport (zone MRZ visible)</p>
-        </Card>
+        </div>
       )}
 
-      {/* ── État : scanning ── */}
+      {/* ── Scanning ── */}
       {scanState === 'scanning' && (
-        <Card className="flex flex-col items-center gap-4 bg-white py-9">
-          <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
-          <p className="text-sm font-medium text-gray-600">Lecture du MRZ en cours…</p>
+        <div className="flex flex-col items-center gap-4 rounded-2xl bg-white py-9">
+          <div
+            className="flex h-14 w-14 items-center justify-center rounded-2xl animate-pulse"
+            style={{ background: '#E8EEFB' }}
+          >
+            <Loader2 className="h-7 w-7 animate-spin" style={{ color: '#1B3A5F' }} />
+          </div>
+          <p className="text-sm font-semibold text-gray-700">Lecture MRZ en cours…</p>
           <div className="w-full max-w-xs rounded-full bg-gray-100 h-2">
             <div
-              className="bg-primary-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${ocrProgress}%` }}
+              className="h-2 rounded-full transition-all duration-300"
+              style={{ width: `${ocrProgress}%`, background: 'linear-gradient(90deg, #1B3A5F, #2A5090)' }}
             />
           </div>
           <p className="text-xs text-gray-400">{ocrProgress}%</p>
-        </Card>
+        </div>
       )}
 
-      {/* ── État : done — formulaire ── */}
+      {/* ── Done — form ── */}
       {scanState === 'done' && (
         <>
           {extracted && (
-            <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2">
-              <CheckCircle className="h-4 w-4 shrink-0 text-green-600" />
-              <p className="text-xs font-medium text-green-800">
-                Document lu avec succès — vérifiez les données ci-dessous
+            <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-emerald-50 border border-emerald-200">
+              <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" />
+              <p className="text-xs font-semibold text-emerald-800">
+                Document lu avec succès — vérifiez les données
               </p>
             </div>
           )}
@@ -277,7 +278,7 @@ const GuestScanPanel = ({
           <div className="flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-3">
               <Input label="Prénom" value={guestForm.first_name ?? ''} onChange={(e) => setG('first_name', e.target.value)} required />
-              <Input label="Nom" value={guestForm.last_name ?? ''} onChange={(e) => setG('last_name', e.target.value)} required />
+              <Input label="Nom"    value={guestForm.last_name  ?? ''} onChange={(e) => setG('last_name',  e.target.value)} required />
             </div>
             <Input label="Date de naissance" type="date" value={guestForm.date_of_birth ?? ''} onChange={(e) => setG('date_of_birth', e.target.value)} required />
             <div className="grid grid-cols-2 gap-3">
@@ -292,7 +293,7 @@ const GuestScanPanel = ({
           </div>
 
           <Button
-            fullWidth
+            fullWidth size="lg"
             loading={addGuestMutation.isPending}
             onClick={() => addGuestMutation.mutate()}
             disabled={!guestForm.first_name || !guestForm.last_name || !guestForm.date_of_birth}
@@ -300,7 +301,7 @@ const GuestScanPanel = ({
             Confirmer le voyageur <ArrowRight className="h-4 w-4" />
           </Button>
 
-          <button className="text-center text-sm text-primary-600" onClick={reset}>
+          <button className="text-center text-sm font-medium" style={{ color: '#1B3A5F' }} onClick={reset}>
             ↩ Rescanner ou corriger
           </button>
         </>
@@ -309,22 +310,17 @@ const GuestScanPanel = ({
   );
 };
 
-// ─── Step 2 : Voyageur principal ────────────────────────────────────────────
+// ─── Step 2 : Document voyageur principal ───────────────────────────────────
 const DocumentStep = ({ checkIn, onNext }: { checkIn: CheckIn; onNext: () => void }) => (
   <div className="flex flex-col gap-5">
-    <GuestScanPanel
-      checkIn={checkIn}
-      isPrimary
-      label="Voyageur principal (adulte)"
-      onSuccess={onNext}
-    />
+    <GuestScanPanel checkIn={checkIn} isPrimary label="Voyageur principal (adulte)" onSuccess={onNext} />
   </div>
 );
 
 // ─── Step 3 : Validation + voyageurs supplémentaires ────────────────────────
 const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => void }) => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
+  const { toast }  = useToast();
+  const navigate   = useNavigate();
   const [addingSlot, setAddingSlot] = useState<number | null>(null);
 
   const { data: current, isLoading: fetching, refetch } = useQuery({
@@ -339,7 +335,6 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
   const childrenN = ci.children_count ?? 0;
   const totalN    = adultsN + childrenN;
 
-  // Construire les slots attendus : adultes (requis) puis enfants (optionnel)
   const slots = Array.from({ length: totalN }, (_, i) => {
     const isChild    = i >= adultsN;
     const isRequired = !isChild;
@@ -363,53 +358,63 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Résumé réservation */}
+      {/* Résumé */}
       <Card>
-        <div className="flex flex-col gap-3">
-          {[
-            ['Référence', ci.reference],
-            ['Chambre',   ci.room?.number ?? '—'],
-            ['Arrivée',   fmtDate(ci.check_in_date)],
+        <p className="label mb-3">Résumé réservation</p>
+        <div className="flex flex-col gap-2">
+          {([
+            ['Référence',    ci.reference],
+            ['Chambre',      ci.room?.number ?? '—'],
+            ['Arrivée',      fmtDate(ci.check_in_date)],
             ['Départ prévu', fmtDate(ci.expected_check_out_date)],
-          ].map(([label, value]) => (
+            ['Adultes',      String(adultsN)],
+            ['Enfants',      String(childrenN)],
+          ] as const).map(([label, value]) => (
             <div key={label} className="flex justify-between text-sm">
               <span className="text-gray-500">{label}</span>
-              <span className="font-medium text-gray-900 font-mono">{value}</span>
+              <span className="font-semibold text-gray-900">{value}</span>
             </div>
           ))}
         </div>
       </Card>
 
-      {/* Slots voyageurs */}
+      {/* Voyageur slots */}
       <div className="flex flex-col gap-3">
-        <p className="text-sm font-semibold text-gray-700">
+        <p className="label">
           Voyageurs ({fetching ? '…' : guests.length}/{totalN})
         </p>
 
-        {fetching && <div className="h-14 animate-pulse rounded-xl bg-gray-100" />}
+        {fetching && <div className="h-14 animate-pulse rounded-2xl bg-gray-100" />}
 
         {!fetching && slots.map((slot) => {
-          // ── Slot rempli ──────────────────────────────────────────────────
+          // Slot rempli
           if (slot.guest) {
+            const gInitials = `${slot.guest.first_name?.[0] ?? ''}${slot.guest.last_name?.[0] ?? ''}`.toUpperCase();
             return (
-              <Card key={slot.index} className="flex items-center gap-3 py-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
-                  <User className="h-4 w-4" />
+              <div
+                key={slot.index}
+                className="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-card"
+              >
+                <div
+                  className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center text-sm font-bold"
+                  style={{ background: '#1B3A5F', color: '#fff' }}
+                >
+                  {gInitials}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-semibold text-gray-900 truncate">
                     {slot.guest.first_name} {slot.guest.last_name}
                   </p>
                   <p className="text-xs text-gray-500">
                     {slot.labelBase} · {slot.guest.nationality_code} · {fmtDate(slot.guest.date_of_birth)}
                   </p>
                 </div>
-                <CheckCircle className="h-4 w-4 shrink-0 text-green-500" />
-              </Card>
+                <CheckCircle className="h-5 w-5 shrink-0 text-emerald-500" />
+              </div>
             );
           }
 
-          // ── Slot en cours d'ajout : affiche le panel inline ──────────────
+          // Slot ouvert en saisie
           if (addingSlot === slot.index) {
             return (
               <GuestScanPanel
@@ -423,30 +428,32 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
             );
           }
 
-          // ── Slot vide : bouton d'ajout ────────────────────────────────────
+          // Slot vide — bouton
           return (
             <button
               key={slot.index}
               onClick={() => setAddingSlot(slot.index)}
-              className={`flex items-center gap-3 rounded-xl border-2 border-dashed p-3 text-left transition-colors ${
-                slot.isRequired
-                  ? 'border-red-200 bg-red-50 hover:border-red-300 hover:bg-red-100'
-                  : 'border-gray-200 bg-gray-50 hover:border-gray-300'
-              }`}
+              className="flex items-center gap-3 rounded-2xl p-3.5 text-left transition-all"
+              style={{
+                border: `2px dashed ${slot.isRequired ? '#fca5a5' : '#D4E1F4'}`,
+                background: slot.isRequired ? '#FFF5F5' : '#F5F4EF',
+              }}
             >
-              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                slot.isRequired ? 'bg-red-100 text-red-500' : 'bg-gray-100 text-gray-400'
-              }`}>
+              <div
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                style={{
+                  background: slot.isRequired ? '#fee2e2' : '#E8EEFB',
+                  color: slot.isRequired ? '#ef4444' : '#1B3A5F',
+                }}
+              >
                 <UserPlus className="h-4 w-4" />
               </div>
               <div>
-                <p className={`text-sm font-medium ${slot.isRequired ? 'text-red-700' : 'text-gray-600'}`}>
+                <p className="text-sm font-semibold" style={{ color: slot.isRequired ? '#b91c1c' : '#374151' }}>
                   {slot.labelBase}
                 </p>
-                <p className={`text-xs ${slot.isRequired ? 'text-red-400' : 'text-gray-400'}`}>
-                  {slot.isRequired
-                    ? 'Document requis — Appuyer pour scanner / saisir'
-                    : 'Optionnel — Appuyer pour scanner / saisir'}
+                <p className="text-xs" style={{ color: slot.isRequired ? '#f87171' : '#9CA3AF' }}>
+                  {slot.isRequired ? 'Document requis — Appuyer pour scanner' : 'Optionnel — Appuyer pour scanner'}
                 </p>
               </div>
             </button>
@@ -454,16 +461,14 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
         })}
       </div>
 
-      {/* Message si adultes manquants */}
       {!fetching && !allAdultsFilled && (
-        <p className="text-xs text-red-500 text-center">
+        <p className="text-xs text-red-500 text-center font-medium">
           Les documents des adultes sont obligatoires pour finaliser.
         </p>
       )}
 
       <Button
-        fullWidth
-        size="lg"
+        fullWidth size="lg"
         loading={completeMutation.isPending}
         disabled={fetching || !allAdultsFilled}
         onClick={() => completeMutation.mutate()}
@@ -475,9 +480,9 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
   );
 };
 
-// ─── Wizard principal ────────────────────────────────────────────────────────
+// ─── Main Wizard ─────────────────────────────────────────────────────────────
 export const CheckInWizardPage = () => {
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
   const [step, setStep]       = useState(0);
   const [checkIn, setCheckIn] = useState<CheckIn | null>(null);
 
@@ -494,10 +499,11 @@ export const CheckInWizardPage = () => {
           <>
             <DocumentStep checkIn={checkIn} onNext={() => setStep(2)} />
             <button
-              className="flex items-center gap-1.5 text-sm text-gray-500"
+              className="flex items-center justify-center gap-1.5 text-sm font-medium"
+              style={{ color: '#1B3A5F' }}
               onClick={() => setStep(2)}
             >
-              <ArrowRight className="h-4 w-4" /> Passer (pas de scan)
+              Passer <ArrowRight className="h-4 w-4" />
             </button>
           </>
         )}
@@ -508,7 +514,7 @@ export const CheckInWizardPage = () => {
 
         {step > 0 && (
           <button
-            className="flex items-center gap-1.5 text-sm text-gray-400"
+            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
             onClick={() => {
               if (step === 1) navigate(-1);
               else setStep((s) => s - 1);

@@ -4,43 +4,58 @@
 
 @layer base {
   * { box-sizing: border-box; }
-  body { @apply bg-slate-50 text-slate-900 font-sans antialiased; }
-  input, textarea { font-size: 16px !important; } /* prevent iOS zoom */
+
+  body {
+    background-color: #F5F4EF;
+    color: #1a1a2e;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Prevent iOS zoom on inputs */
+  input, textarea, select { font-size: 16px !important; }
 }
 
 @layer components {
-  .btn-primary {
-    @apply h-btn-lg w-full flex items-center justify-center gap-2 
-           bg-primary-600 text-white font-semibold rounded-btn 
-           transition-all duration-100 shadow-btn
-           hover:bg-primary-700 active:scale-[0.97] 
-           disabled:opacity-40 disabled:cursor-not-allowed;
-  }
-  .btn-secondary {
-    @apply h-btn-md flex items-center justify-center gap-2 px-6
-           border border-slate-200 bg-white text-slate-700 font-medium rounded-btn
-           transition-all duration-100
-           hover:border-slate-300 hover:bg-slate-50 active:scale-[0.97]
-           disabled:opacity-40 disabled:cursor-not-allowed;
-  }
+
+  /* ── Input ── */
   .input-field {
-    @apply h-input w-full px-4 bg-white border border-slate-200 rounded-input
-           text-slate-900 placeholder:text-slate-400
-           focus:outline-none focus:border-primary-600 focus:ring-2 focus:ring-primary-50
-           transition-colors duration-100;
+    @apply h-input w-full px-4 bg-white border border-warm-300 rounded-input
+           text-gray-900 placeholder:text-gray-400
+           focus:outline-none focus:border-navy-700
+           focus:ring-4 focus:ring-navy-600/10
+           transition-all duration-150;
   }
+
+  /* ── Card ── */
   .card {
-    @apply bg-white border border-slate-200 rounded-card shadow-card p-5;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+    padding: 20px;
   }
+
+  /* ── Label ── */
   .label {
-    @apply block text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1.5;
+    @apply block text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2;
   }
+
+  /* ── Badges ── */
   .badge {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase;
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide;
   }
-  .badge-active   { @apply badge bg-green-50 text-green-700; }
-  .badge-draft    { @apply badge bg-blue-50 text-blue-700; }
-  .badge-completed { @apply badge bg-slate-100 text-slate-500; }
-  .badge-suspended { @apply badge bg-red-50 text-red-700; }
-  .badge-expired  { @apply badge bg-amber-50 text-amber-700; }
+  .badge-active    { @apply badge bg-emerald-50  text-emerald-700  ring-1 ring-emerald-200; }
+  .badge-draft     { @apply badge bg-blue-50     text-blue-700     ring-1 ring-blue-200; }
+  .badge-completed { @apply badge bg-gray-100    text-gray-500; }
+  .badge-suspended { @apply badge bg-red-50      text-red-700      ring-1 ring-red-200; }
+  .badge-expired   { @apply badge bg-amber-50    text-amber-700    ring-1 ring-amber-200; }
+  .badge-cancelled { @apply badge bg-gray-100    text-gray-500; }
+  .badge-no_show   { @apply badge bg-orange-50   text-orange-700   ring-1 ring-orange-200; }
+}
+
+@layer utilities {
+  .scrollbar-none { scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
 }

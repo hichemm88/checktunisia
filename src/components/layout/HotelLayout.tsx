@@ -8,10 +8,10 @@ import { authApi } from '@/api/auth';
 interface HotelLayoutProps { children: ReactNode; title?: string; backHref?: string }
 
 const navItems = [
-  { to: '/hotel/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/hotel/check-ins/new', icon: ClipboardList, label: 'Check-in' },
-  { to: '/hotel/history', icon: History, label: 'History' },
-  { to: '/hotel/settings', icon: Settings, label: 'Settings' },
+  { to: '/hotel/dashboard',     icon: LayoutDashboard, label: 'Accueil'    },
+  { to: '/hotel/check-ins/new', icon: ClipboardList,   label: 'Check-in'  },
+  { to: '/hotel/history',       icon: History,         label: 'Historique' },
+  { to: '/hotel/settings',      icon: Settings,        label: 'Paramètres' },
 ];
 
 export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
@@ -24,39 +24,91 @@ export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
     navigate('/login');
   };
 
+  const initials = user
+    ? `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase()
+    : '?';
+
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
-      {/* Header */}
-      <header className="sticky top-0 z-30 flex h-header items-center justify-between border-b border-gray-200 bg-white px-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy-900 text-xs font-bold text-gold-500">CT</div>
-          <div>
-            <p className="text-xs text-gray-500">{user?.hotel?.name ?? 'CheckTunisia'}</p>
-            {title && <h1 className="text-sm font-semibold text-gray-900">{title}</h1>}
+    <div className="flex min-h-screen flex-col" style={{ background: '#F5F4EF' }}>
+
+      {/* ── Header ─────────────────────────────────────────────────── */}
+      <header className="fixed top-0 inset-x-0 z-30 bg-white shadow-header">
+        {/* Gradient accent bar */}
+        <div
+          className="h-1"
+          style={{ background: 'linear-gradient(90deg, #1B3A5F 0%, #2A5090 60%, #C8943A 100%)' }}
+        />
+        <div className="flex h-[60px] items-center justify-between px-4">
+          {/* Brand */}
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0"
+              style={{ background: '#1B3A5F' }}
+            >
+              <span className="text-[11px] font-black tracking-tighter" style={{ color: '#C8943A' }}>CT</span>
+            </div>
+            <div className="flex flex-col justify-center min-w-0">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 leading-none truncate">
+                {user?.hotel?.name ?? 'CheckTunisia'}
+              </span>
+              {title && (
+                <span className="text-sm font-bold text-gray-900 leading-snug mt-0.5 truncate">{title}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Right: avatar + logout */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <div
+              className="h-9 w-9 rounded-full flex items-center justify-center shrink-0"
+              style={{ background: '#E8EEFB' }}
+            >
+              <span className="text-xs font-bold" style={{ color: '#1B3A5F' }}>{initials}</span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="h-9 w-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"
+              title="Se déconnecter"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
-        <button onClick={handleLogout} className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-600">
-          <LogOut className="h-4 w-4" />
-          Logout
-        </button>
       </header>
 
-      {/* Content */}
-      <main className="flex-1 pb-20">{children}</main>
+      {/* ── Content ─────────────────────────────────────────────────── */}
+      <main className="flex-1 pt-[73px] pb-[80px]">{children}</main>
 
-      {/* Bottom Nav */}
-      <nav className="fixed bottom-0 inset-x-0 z-30 flex h-nav border-t border-gray-200 bg-white shadow-lg">
+      {/* ── Bottom Nav ──────────────────────────────────────────────── */}
+      <nav className="fixed bottom-0 inset-x-0 z-30 h-[72px] bg-white flex items-center px-2 shadow-nav">
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
-            className={({ isActive }) => cn(
-              'flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors',
-              isActive ? 'text-primary-600' : 'text-gray-400 hover:text-gray-600',
-            )}
+            end={to === '/hotel/check-ins/new'}
+            className="flex flex-1 flex-col items-center justify-center gap-0.5"
           >
-            <Icon className="h-5 w-5" />
-            {label}
+            {({ isActive }) => (
+              <>
+                <div
+                  className="h-11 w-11 flex items-center justify-center rounded-2xl transition-all duration-200"
+                  style={isActive ? { background: '#1B3A5F', boxShadow: '0 4px 14px rgba(27,54,84,0.35)' } : undefined}
+                >
+                  <Icon
+                    className={cn(
+                      'h-[22px] w-[22px] transition-colors duration-200 stroke-[1.8]',
+                      isActive ? 'text-white' : 'text-gray-400'
+                    )}
+                  />
+                </div>
+                <span
+                  className="text-[10px] font-bold tracking-tight transition-colors duration-200"
+                  style={isActive ? { color: '#1B3A5F' } : { color: '#9ca3af' }}
+                >
+                  {label}
+                </span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
