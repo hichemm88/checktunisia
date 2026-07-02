@@ -3,6 +3,16 @@ import { persist } from 'zustand/middleware';
 
 export type Role = 'platform_admin' | 'hotel_admin' | 'receptionist' | 'authority_user';
 
+export interface AuthorityProfile {
+  org_id: number;
+  org_name: string;
+  org_type: 'ministry' | 'police';
+  governorate: string | null;
+  badge_number: string | null;
+  rank: string | null;
+  expires_at: string | null;
+}
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -16,6 +26,7 @@ export interface AuthUser {
     subscription_status: string;
     subscription_expires_at?: string;
   } | null;
+  authority_profile?: AuthorityProfile | null;
   permissions: string[];
 }
 

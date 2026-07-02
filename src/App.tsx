@@ -8,10 +8,13 @@ import { CheckInWizardPage } from '@/pages/hotel/CheckInWizardPage';
 import { HistoryPage } from '@/pages/hotel/HistoryPage';
 import { HistoryDetailPage } from '@/pages/hotel/HistoryDetailPage';
 import { SettingsPage } from '@/pages/hotel/SettingsPage';
+import { AuthorityDashboardPage } from '@/pages/authority/AuthorityDashboardPage';
 import { SearchPage } from '@/pages/authority/SearchPage';
 import { GuestProfilePage } from '@/pages/authority/GuestProfilePage';
 import { HotelsPage } from '@/pages/authority/HotelsPage';
 import { HotelDetailPage } from '@/pages/authority/HotelDetailPage';
+import { AlertsPage } from '@/pages/authority/AlertsPage';
+import { ActivityPage } from '@/pages/authority/ActivityPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
 
 // ─── Guards ─────────────────────────────────────────────────────────────────
@@ -27,7 +30,7 @@ const RequireRole = ({ roles }: { roles: Role[] }) => {
 
 const RoleRedirect = () => {
   const role = useAuthStore((s) => s.user?.role);
-  if (role === 'authority_user') return <Navigate to="/authority/search" replace />;
+  if (role === 'authority_user') return <Navigate to="/authority/dashboard" replace />;
   if (role === 'platform_admin') return <Navigate to="/admin/hotels" replace />;
   return <Navigate to="/hotel/dashboard" replace />;
 };
@@ -53,10 +56,13 @@ export const App = () => (
 
       {/* Authority */}
       <Route element={<RequireRole roles={['authority_user']} />}>
-        <Route path="/authority/search" element={<SearchPage />} />
+        <Route path="/authority/dashboard" element={<AuthorityDashboardPage />} />
+        <Route path="/authority/search"    element={<SearchPage />} />
         <Route path="/authority/guests/:id" element={<GuestProfilePage />} />
-        <Route path="/authority/hotels" element={<HotelsPage />} />
+        <Route path="/authority/hotels"    element={<HotelsPage />} />
         <Route path="/authority/hotels/:id" element={<HotelDetailPage />} />
+        <Route path="/authority/alerts"    element={<AlertsPage />} />
+        <Route path="/authority/activity"  element={<ActivityPage />} />
       </Route>
 
       {/* Admin */}

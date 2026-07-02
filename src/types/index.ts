@@ -122,6 +122,65 @@ export interface AuthorityHotel {
 export interface ApiList<T> { data: T[]; meta: { total: number; current_page: number; per_page: number } }
 export interface ApiItem<T> { data: T }
 
+// ─── Authority dashboard ──────────────────────────────────────────────────────
+export interface AuthorityDashboardMinistry {
+  type: 'ministry';
+  active_guests: number;
+  check_ins_today: number;
+  check_outs_today: number;
+  active_hotels: number;
+  expiring_docs_30d: number;
+  by_governorate: Array<{ governorate: string; active_guests: number; hotels: number }>;
+  top_nationalities: Array<{ nationality_code: string; count: number }>;
+  weekly_trend: Array<{ date: string; label: string; count: number }>;
+}
+
+export interface AuthorityDashboardPolice {
+  type: 'police';
+  governorate: string | null;
+  active_guests: number;
+  check_ins_today: number;
+  check_outs_today: number;
+  hotels_in_zone: number;
+  expiring_docs_30d: number;
+  nationalities: Array<{ nationality_code: string; count: number }>;
+  recent_arrivals: Array<{
+    check_in_id: string;
+    guest_name: string;
+    nationality: string | null;
+    hotel: string;
+    room: string | null;
+    check_in_date: string;
+    guests_count: number;
+  }>;
+}
+
+export type AuthorityDashboard = AuthorityDashboardMinistry | AuthorityDashboardPolice;
+
+export interface AuthorityAlert {
+  doc_id: string;
+  guest_id: string;
+  guest_name: string | null;
+  nationality_code: string | null;
+  document_type: string;
+  document_number: string;
+  expiry_date: string;
+  days_until_expiry: number;
+  hotel: { name: string; city?: string; governorate?: string } | null;
+  room_number: string | null;
+  check_in_id: string | null;
+}
+
+export interface AuthorityActivity {
+  id: string;
+  action: string;
+  actor_name: string;
+  actor_role: string;
+  new_values: Record<string, unknown> | null;
+  ip_address: string | null;
+  created_at: string;
+}
+
 // Settings / Profile
 export interface UpdateProfilePayload { first_name?: string; last_name?: string; phone?: string }
 export interface ChangePasswordPayload { current_password: string; new_password: string; new_password_confirmation: string }
