@@ -158,12 +158,13 @@ function extractMrzLines(
   const candidates: string[] = [];
 
   for (const raw of rawText.split('\n')) {
-    // 2+ espaces consécutifs → '<' (tesseract peut sortir des espaces pour <<)
-    // espaces restants → supprimés
+    // 2+ espaces consécutifs → '<<' (le double-filler MRZ peut être rendu par tesseract
+    // comme 2 espaces quand le whitelist ne contient pas d'espace)
+    // espace simple restant → supprimé (artefact de séparation de mots)
     // chars non-MRZ → supprimés
     const clean = raw
       .toUpperCase()
-      .replace(/[ \t]{2,}/g, '<')
+      .replace(/[ \t]{2,}/g, '<<')
       .replace(/[ \t]/g, '')
       .replace(/[^A-Z0-9<]/g, '');
 
@@ -219,6 +220,33 @@ function extractMrzLines(
     if (td2L1.length >= 1 && td2L2.length >= 1) {
       console.log('[MRZ] TD2 détecté');
       return { lines: [td2L1[0], td2L2[0]], format: 'TD2' };
+    }
+  }
+
+  // ── Fallback : lignes MRZ concaténées en une seule chaîne ───────────────
+  // Certains modèles ou PSM retournent les 2 lignes MRZ collées l'une à l'autre.
+  // On essaie de découper une ligne de ~88 chars en deux moitiés de 44.
+  {
+    const allText = rawText
+      .toUpperCase()
+      .replace(/\s+/g, '')
+      .replace(/[^A-Z0-9<]/g, '');
+
+    if (allText.length >= 80 && allText.length <= 96) {
+      const mid = Math.floor(allText.length / 2);
+      for (const cut of [44, mid, 43, 45]) {
+        if (cut < 30 || cut > allText.length - 30) continue;
+        const h1 = allText.slice(0, cut).padEnd(44, '<');
+        const h2 = allText.slice(cut, cut + 44).padEnd(44, '<');
+        if (
+          /^[PIVA]/.test(h1) &&
+          /^\d{6}$/.test(h2.slice(13, 19)) &&
+          /^\d{6}$/.test(h2.slice(21, 27))
+        ) {
+          console.log('[MRZ] TD3 détecté via ligne concaténée, coupure à', cut);
+          return { lines: [h1, h2], format: 'TD3' };
+        }
+      }
     }
   }
 
@@ -286,18 +314,18 @@ async function runOcr(
 // ─── API publique ───────────────────────────────────────────────────────────────
 
 /**
- * URL du modèle OCRB via jsDelivr CDN.
+ * Modèle OCR-B via jsDelivr CDN — Shreeshrii/tessdata_ocrb (ocrb_int)
  *
- * DaanVanVugt/tesseract-mrz est entraîné spécifiquement sur la police OCR-B
- * utilisée dans tous les documents MRZ (ICAO Doc 9303 §4 Partie 3).
+ * Pourquoi ocrb_int et non le modèle DaanVanVugt ?
+ * - DaanVanVugt/tesseract-mrz : 77 KB compressé → modèle trop minimal,
+ *   entraîné sur des données synthétiques parfaites, peu robuste sur photos mobiles.
+ * - Shreeshrii/tessdata_ocrb (ocrb_int) : 1.4 MB, fine-tuné sur la vraie police
+ *   OCR-B ISO 1073-2, texte MRZ réel inclus dans l'entraînement.
  *
- * Avantages vs modèle 'eng' :
- * - Reconnaît '<' correctement (ne confond pas avec K, L, X)
- * - Taille : ~1.4 MB compressé (vs ~10 MB pour 'eng') → 1er scan plus rapide
- * - Le navigateur met le fichier en cache → scans suivants quasi instantanés
+ * gzip: false → le fichier est non-compressé (.traineddata, pas .traineddata.gz)
  */
-const OCRB_LANG_PATH = 'https://cdn.jsdelivr.net/gh/DaanVanVugt/tesseract-mrz@master/lang';
-const OCRB_LANG      = 'OCRB';
+const OCRB_LANG_PATH = 'https://cdn.jsdelivr.net/gh/Shreeshrii/tessdata_ocrb@master';
+const OCRB_LANG      = 'ocrb_int';
 
 export async function scanMrz(
   file: File,
@@ -312,8 +340,9 @@ export async function scanMrz(
   let usingOcrb = true;
 
   try {
-    worker = await createWorker(OCRB_LANG, 1, {
+    worker = await createWorker(OCRB_LANG, 3, {
       langPath: OCRB_LANG_PATH,
+      gzip: false, // ocrb_int.traineddata est non compressé
       logger: (m: { status: string; progress: number }) => {
         if (m.status === 'loading tesseract core')        report(5  + m.progress * 15);
         else if (m.status === 'loading language traineddata') report(20 + m.progress * 25);
