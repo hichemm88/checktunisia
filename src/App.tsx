@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore, Role } from '@/stores/authStore';
+import { useIdleTimeout } from '@/hooks/useIdleTimeout';
+import { IdleWarningModal } from '@/components/IdleWarningModal';
 
 // Pages
 import { LoginPage } from '@/pages/auth/LoginPage';
@@ -8,6 +10,7 @@ import { CheckInWizardPage } from '@/pages/hotel/CheckInWizardPage';
 import { HistoryPage } from '@/pages/hotel/HistoryPage';
 import { HistoryDetailPage } from '@/pages/hotel/HistoryDetailPage';
 import { SettingsPage } from '@/pages/hotel/SettingsPage';
+import { SecurityPage } from '@/pages/hotel/SecurityPage';
 import { AuthorityDashboardPage } from '@/pages/authority/AuthorityDashboardPage';
 import { SearchPage } from '@/pages/authority/SearchPage';
 import { GuestProfilePage } from '@/pages/authority/GuestProfilePage';
@@ -36,8 +39,16 @@ const RoleRedirect = () => {
   return <Navigate to="/hotel/dashboard" replace />;
 };
 
+// ─── Idle session guard ───────────────────────────────────────────────────────
+const IdleGuard = () => {
+  const { showWarning, stayActive, logout } = useIdleTimeout();
+  return showWarning ? <IdleWarningModal onStay={stayActive} onLogout={logout} /> : null;
+};
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 export const App = () => (
+  <>
+  <IdleGuard />
   <Routes>
     {/* Public */}
     <Route path="/login" element={<LoginPage />} />
@@ -52,7 +63,8 @@ export const App = () => (
         <Route path="/hotel/check-ins/new" element={<CheckInWizardPage />} />
         <Route path="/hotel/history" element={<HistoryPage />} />
         <Route path="/hotel/history/:id" element={<HistoryDetailPage />} />
-        <Route path="/hotel/settings" element={<SettingsPage />} />
+        <Route path="/hotel/settings"    element={<SettingsPage />} />
+        <Route path="/hotel/security"    element={<SecurityPage />} />
       </Route>
 
       {/* Authority */}
@@ -76,4 +88,5 @@ export const App = () => (
     {/* Fallback */}
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>
+  </>
 );

@@ -160,8 +160,9 @@ export const DashboardPage = () => {
 
           {/* Security alert banner */}
           {securityHitCount > 0 && (
-            <div
-              className="flex items-start gap-3 rounded-xl p-4"
+            <button
+              onClick={() => navigate('/hotel/security')}
+              className="flex items-start gap-3 rounded-xl p-4 w-full text-left transition-opacity hover:opacity-90 active:scale-[.99]"
               style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}
             >
               <div
@@ -175,13 +176,14 @@ export const DashboardPage = () => {
                   Notification de sécurité
                 </p>
                 <p className="text-sm font-semibold mt-0.5" style={{ color: '#991B1B' }}>
-                  {securityHitCount} alerte{securityHitCount > 1 ? 's' : ''} en attente
+                  {securityHitCount} alerte{securityHitCount > 1 ? 's' : ''} en attente — Appuyer pour voir
                 </p>
                 <p className="text-xs mt-1" style={{ color: '#B91C1C' }}>
-                  Veuillez contacter les autorités compétentes immédiatement.
+                  Contactez les autorités compétentes immédiatement.
                 </p>
               </div>
-            </div>
+              <ChevronRight className="h-5 w-5 shrink-0 mt-1" style={{ color: '#DC2626' }} />
+            </button>
           )}
 
           {/* Subscription warning */}
