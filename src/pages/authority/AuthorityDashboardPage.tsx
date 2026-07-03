@@ -92,7 +92,7 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
         <KpiTile icon={Users}          label="Voyageurs présents" value={data.active_guests}    color="#1B3A5F" />
         <KpiTile icon={ArrowDownToLine} label="Arrivées aujourd'hui" value={data.check_ins_today}  color="#16A34A" />
         <KpiTile icon={ArrowUpFromLine} label="Départs aujourd'hui" value={data.check_outs_today} color="#9333EA" />
-        <KpiTile icon={Building2}      label="Hôtels actifs"       value={data.active_hotels}    color="#0EA5E9" />
+        <KpiTile icon={Building2}      label="Établissements actifs" value={data.active_hotels}   color="#0EA5E9" />
         <KpiTile
           icon={AlertTriangle}
           label="Docs expirant ≤ 30j"
@@ -137,7 +137,7 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="py-2 text-left text-xs font-medium text-gray-400">Gouvernorat</th>
-                <th className="py-2 text-right text-xs font-medium text-gray-400">Hôtels</th>
+                <th className="py-2 text-right text-xs font-medium text-gray-400">Établissements</th>
                 <th className="py-2 text-right text-xs font-medium text-gray-400">Voyageurs présents</th>
               </tr>
             </thead>
@@ -200,7 +200,7 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
         <KpiTile icon={Users}          label="Voyageurs présents" value={data.active_guests}    color="#1B3A5F" />
         <KpiTile icon={ArrowDownToLine} label="Arrivées aujourd'hui" value={data.check_ins_today}  color="#16A34A" />
         <KpiTile icon={ArrowUpFromLine} label="Départs aujourd'hui" value={data.check_outs_today} color="#9333EA" />
-        <KpiTile icon={Building2}      label="Hôtels dans la zone" value={data.hotels_in_zone}   color="#0EA5E9" />
+        <KpiTile icon={Building2}      label="Établissements zone" value={data.hotels_in_zone}   color="#0EA5E9" />
       </div>
 
       {/* Alert card for expiring docs */}

@@ -86,7 +86,7 @@ export const AdminDashboardPage = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Tabs */}
         <div className="flex gap-1 mb-6 p-1 rounded-xl w-fit" style={{ background: '#E0DDD7' }}>
-          {([['dashboard', 'Tableau de bord', TrendingUp], ['hotels', 'Hôtels', Building2]] as const).map(([id, label, Icon]) => (
+          {([['dashboard', 'Tableau de bord', TrendingUp], ['hotels', 'Établissements', Building2]] as const).map(([id, label, Icon]) => (
             <button key={id} onClick={() => setTab(id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === id ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
               <Icon className="h-4 w-4" /> {label}
@@ -98,7 +98,7 @@ export const AdminDashboardPage = () => {
         {tab === 'dashboard' && stats && (
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <Stat icon={Building2}    label="Total hôtels"   value={stats.hotels.total}     color="#1B3A5F" />
+              <Stat icon={Building2}    label="Établissements" value={stats.hotels.total}     color="#1B3A5F" />
               <Stat icon={CheckCircle2} label="Actifs"         value={stats.hotels.active}    color="#22c55e" />
               <Stat icon={XCircle}      label="Suspendus"      value={stats.hotels.suspended} color="#ef4444" />
               <Stat icon={Clock}        label="En attente"     value={stats.hotels.pending}   color="#f59e0b" />
@@ -162,7 +162,7 @@ export const AdminDashboardPage = () => {
 
               {meta && meta.total > meta.per_page && (
                 <div className="flex items-center justify-between text-sm text-gray-500">
-                  <span>{meta.total} hôtels</span>
+                  <span>{meta.total} établissements</span>
                   <div className="flex gap-2 items-center">
                     <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="p-1 rounded hover:bg-gray-200 disabled:opacity-40">
                       <ChevronLeft className="h-4 w-4" />
@@ -181,7 +181,7 @@ export const AdminDashboardPage = () => {
               {!selected ? (
                 <div className="card p-8 text-center text-sm text-gray-400">
                   <Building2 className="h-8 w-8 mx-auto mb-3 text-gray-200" />
-                  Sélectionnez un hôtel
+                  Sélectionnez un établissement
                 </div>
               ) : (
                 <div className="card p-5 flex flex-col gap-4">

@@ -15,6 +15,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { settingsApi } from '@/api/settings';
 import { extractErrors } from '@/lib/api';
 import { HotelUser, CreateUserPayload, HotelProfile } from '@/types';
+import { getPropertyTypeName } from '@/api/organization';
 
 // ── Inline alert ─────────────────────────────────────────────────────────────
 const Alert = ({ msg, type }: { msg: string; type: 'success' | 'error' }) => (
@@ -36,12 +37,17 @@ const GOVERNORATES = [
 ];
 
 const HOTEL_TYPES = [
-  { value: 'hotel',      label: 'Hôtel' },
-  { value: 'residence',  label: 'Résidence hôtelière' },
-  { value: 'hostel',     label: 'Auberge de jeunesse' },
-  { value: 'guesthouse', label: 'Maison d\'hôtes' },
-  { value: 'villa',      label: 'Villa' },
-  { value: 'riad',       label: 'Riad' },
+  { value: 'hotel',        label: 'Hôtel' },
+  { value: 'appartement',  label: 'Appartement' },
+  { value: 'villa',        label: 'Villa' },
+  { value: 'riad',         label: 'Riad' },
+  { value: 'maison_hotes', label: "Maison d'hôtes" },
+  { value: 'guesthouse',   label: 'Guesthouse' },
+  { value: 'hostel',       label: 'Auberge de jeunesse' },
+  { value: 'resort',       label: 'Resort' },
+  { value: 'bungalow',     label: 'Bungalow' },
+  { value: 'rental',       label: 'Location saisonnière' },
+  { value: 'residence',    label: 'Résidence hôtelière' },
 ];
 
 // ── Profile section ───────────────────────────────────────────────────────────
@@ -196,7 +202,7 @@ const HotelInfoSection = () => {
       <CardHeader>
         <CardTitle>
           <div className="flex items-center gap-2">
-            <Building className="h-4 w-4 text-gray-400" /> Informations de l'hôtel
+            <Building className="h-4 w-4 text-gray-400" /> Informations de l'établissement
           </div>
         </CardTitle>
         {!editing && (
@@ -294,7 +300,7 @@ const HotelInfoSection = () => {
       ) : (
         /* ── Edit form ── */
         <div className="flex flex-col gap-3 mt-3">
-          <Input label="Nom de l'hôtel" value={form?.name ?? ''} onChange={e => setForm(f => f ? { ...f, name: e.target.value } : f)} />
+          <Input label="Nom de l'établissement" value={form?.name ?? ''} onChange={e => setForm(f => f ? { ...f, name: e.target.value } : f)} />
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
@@ -350,7 +356,7 @@ const HotelInfoSection = () => {
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contacts</p>
 
           <Input label="Téléphone" type="tel" value={form?.phone ?? ''} onChange={e => setForm(f => f ? { ...f, phone: e.target.value } : f)} placeholder="+216 xx xxx xxx" />
-          <Input label="Email de l'hôtel" type="email" value={form?.email ?? ''} onChange={e => setForm(f => f ? { ...f, email: e.target.value } : f)} placeholder="contact@hotel.tn" />
+          <Input label="Email de l'établissement" type="email" value={form?.email ?? ''} onChange={e => setForm(f => f ? { ...f, email: e.target.value } : f)} placeholder="contact@etablissement.tn" />
           <Input label="Site web" type="url" value={form?.website ?? ''} onChange={e => setForm(f => f ? { ...f, website: e.target.value } : f)} placeholder="https://www.monhotel.tn" />
 
           {feedback && <Alert msg={feedback.msg} type={feedback.type} />}
@@ -367,31 +373,30 @@ const HotelInfoSection = () => {
   );
 };
 
-// ── Subscription card ─────────────────────────────────────────────────────────
+// ── Subscription card (used by receptionists and admins) ─────────────────────
 const SubscriptionCard = () => {
   const { data: sub } = useQuery({
     queryKey: ['subscription'],
     queryFn: settingsApi.getSubscription,
   });
   const { user } = useAuthStore();
+  const propertyLabel = getPropertyTypeName(user?.hotel?.type ?? undefined);
 
   return (
     <div className="flex flex-col gap-3">
       {user?.hotel && (
         <Card>
           <CardHeader>
-            <CardTitle><div className="flex items-center gap-2"><Building className="h-4 w-4 text-gray-400" /> Hôtel</div></CardTitle>
+            <CardTitle>
+              <div className="flex items-center gap-2">
+                <Building className="h-4 w-4 text-gray-400" /> {propertyLabel}
+              </div>
+            </CardTitle>
           </CardHeader>
           <div className="flex flex-col gap-2 mt-2">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-500">Nom</span>
               <span className="text-sm font-medium">{user.hotel.name}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Statut</span>
-              <Badge variant={user.hotel.subscription_status === 'active' ? 'active' : 'suspended'}>
-                {user.hotel.subscription_status ?? '—'}
-              </Badge>
             </div>
           </div>
         </Card>
@@ -400,7 +405,7 @@ const SubscriptionCard = () => {
       {sub && (
         <Card>
           <CardHeader>
-            <CardTitle><div className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-gray-400" /> Abonnement</div></CardTitle>
+            <CardTitle><div className="flex items-center gap-2"><CreditCard className="h-4 w-4 text-gray-400" /> Abonnement société</div></CardTitle>
           </CardHeader>
           <div className="flex flex-col gap-2 mt-2">
             <div className="flex justify-between items-center">
@@ -571,6 +576,7 @@ export const SettingsPage = () => {
           <>
             <HotelInfoSection />
             <UsersSection />
+            <SubscriptionCard />
           </>
         ) : (
           <SubscriptionCard />

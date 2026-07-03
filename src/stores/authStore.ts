@@ -23,6 +23,7 @@ export interface AuthUser {
     id: string;
     name: string;
     slug: string;
+    type?: string;
     subscription_status: string;
     subscription_expires_at?: string;
   } | null;

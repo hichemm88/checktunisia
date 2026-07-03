@@ -68,7 +68,7 @@ export const LoginPage = () => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="vous@hotel.tn"
+            placeholder="vous@exemple.tn"
             required
             autoComplete="email"
           />

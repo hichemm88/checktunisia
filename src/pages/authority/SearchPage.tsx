@@ -103,7 +103,7 @@ export const SearchPage = () => {
             {/* Governorate field — locked for police */}
             <div className="relative">
               <Input
-                label="Gouvernorat hôtel"
+                label="Gouvernorat établissement"
                 placeholder="Tunis"
                 value={params.hotel_governorate ?? ''}
                 onChange={(e) => !isPolice && set('hotel_governorate', e.target.value)}

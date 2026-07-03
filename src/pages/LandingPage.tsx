@@ -23,7 +23,7 @@ const FEATURES = [
   {
     icon: Users,
     title: 'Multi-utilisateurs',
-    desc: 'Rôles distincts : administrateur hôtel et réceptionniste. Accès cloisonné par établissement.',
+    desc: 'Rôles distincts : administrateur et réceptionniste. Accès cloisonné par établissement.',
   },
   {
     icon: BarChart3,
@@ -111,7 +111,7 @@ export const LandingPage = () => (
       </h1>
 
       <p className="text-lg text-gray-500 max-w-xl mb-10 leading-relaxed">
-        CheckTunisia permet aux hôtels tunisiens de gérer les check-ins, scanner les documents
+        CheckTunisia permet aux établissements tunisiens de gérer les check-ins, scanner les documents
         de voyage et rester en conformité avec la législation — le tout depuis un smartphone.
       </p>
 
@@ -137,7 +137,7 @@ export const LandingPage = () => (
           {[
             { label: 'Check-ins aujourd\'hui', value: '247', icon: '📋' },
             { label: 'Alertes actives', value: '3', icon: '🔔' },
-            { label: 'Hôtels connectés', value: '89', icon: '🏨' },
+            { label: 'Établissements', value: '89', icon: '🏨' },
             { label: 'Scans MRZ', value: '12 450', icon: '🛂' },
           ].map((s) => (
             <div key={s.label} className="rounded-2xl p-4 text-left" style={{ background: 'rgba(255,255,255,0.08)' }}>
@@ -154,7 +154,7 @@ export const LandingPage = () => (
     <section className="px-6 md:px-12 py-20 max-w-6xl mx-auto">
       <div className="text-center mb-14">
         <h2 className="text-3xl font-bold mb-3" style={{ color: '#1B3A5F' }}>Tout ce qu'il faut pour rester conforme</h2>
-        <p className="text-gray-500">Une plateforme pensée pour les hôteliers, pas pour les informaticiens.</p>
+        <p className="text-gray-500">Une plateforme pensée pour les gestionnaires d'hébergement, pas pour les informaticiens.</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {FEATURES.map((f) => (
@@ -237,7 +237,7 @@ export const LandingPage = () => (
         <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
           Prêt à simplifier vos check-ins ?
         </h2>
-        <p className="text-blue-200 mb-8">Rejoignez les hôtels tunisiens déjà conformes et connectés.</p>
+        <p className="text-blue-200 mb-8">Rejoignez les établissements tunisiens déjà conformes et connectés.</p>
         <Link to="/register">
           <Button variant="gold" size="lg" className="gap-2">
             Créer mon compte gratuitement <ArrowRight className="h-4 w-4" />

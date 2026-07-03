@@ -45,7 +45,12 @@ export const PROPERTY_TYPE_LABELS: Record<string, string> = {
   resort:       'Resort',
   bungalow:     'Bungalow',
   rental:       'Location saisonnière',
+  residence:    'Résidence hôtelière',
 };
+
+/** Returns the human-readable label for a property type, defaulting to 'Établissement'. */
+export const getPropertyTypeName = (type?: string | null): string =>
+  PROPERTY_TYPE_LABELS[type ?? ''] ?? 'Établissement';
 
 export const ROOM_TYPE_LABELS: Record<string, string> = {
   single:       'Chambre simple',

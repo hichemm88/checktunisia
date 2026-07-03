@@ -132,7 +132,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
           <nav className="flex items-center gap-1 h-10 overflow-x-auto scrollbar-none">
             <NavItem to="/authority/dashboard" icon={LayoutDashboard} label="Tableau de bord" end />
             <NavItem to="/authority/search"    icon={Search}          label="Voyageurs" />
-            <NavItem to="/authority/hotels"    icon={Building2}       label="Hôtels" />
+            <NavItem to="/authority/hotels"    icon={Building2}       label="Établissements" />
             <NavItem to="/authority/alerts"    icon={Bell}        label="Alertes" />
             <NavItem to="/authority/watchlist" icon={ShieldAlert} label="Surveillance" />
             {/* Activity log: ministry only */}
