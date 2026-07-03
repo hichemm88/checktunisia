@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuthStore, Role } from '@/stores/authStore';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import { IdleWarningModal } from '@/components/IdleWarningModal';
-import api from '@/lib/api';
+import { api } from '@/lib/api';
 
 // Pages
 import { LoginPage } from '@/pages/auth/LoginPage';

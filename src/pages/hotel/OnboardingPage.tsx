@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ShieldCheck, CheckCircle2, Building2, BedDouble, ArrowRight, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import api from '@/lib/api';
+import { api } from '@/lib/api';
 
 const ROOM_TYPES = ['standard','double','suite','twin','family','single','deluxe','presidential'];
 

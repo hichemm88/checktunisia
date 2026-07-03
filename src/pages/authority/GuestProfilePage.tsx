@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { authorityApi } from '@/api/authority';
-import api from '@/lib/api';
+import { api } from '@/lib/api';
 
 const DetailRow = ({ label, value }: { label: string; value?: string | null }) => (
   <div className="flex justify-between py-2 text-sm border-b border-gray-50 last:border-0">
