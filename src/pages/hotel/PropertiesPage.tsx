@@ -572,12 +572,16 @@ const AddPropertyForm = ({
 
 export const PropertiesPage = () => {
   const [showForm, setShowForm] = useState(false);
+  const { user } = useAuthStore();
 
-  const { data: org, isLoading } = useQuery({
+  const { data: org, isLoading, isError, refetch } = useQuery({
     queryKey: ['org-info'],
     queryFn: organizationApi.get,
-    retry: 1,
+    retry: 2,
   });
+
+  // Derive display name: prefer org name, fallback to hotel name from auth store
+  const displayName = org?.name ?? user?.hotel?.name ?? 'Mon organisation';
 
   return (
     <HotelLayout title="Mes biens">
@@ -593,7 +597,7 @@ export const PropertiesPage = () => {
             {isLoading ? (
               <div className="h-4 w-32 animate-pulse rounded bg-gray-100 mb-1" />
             ) : (
-              <h2 className="font-bold text-gray-900 truncate">{org?.name ?? 'Mon organisation'}</h2>
+              <h2 className="font-bold text-gray-900 truncate">{displayName}</h2>
             )}
             <p className="text-sm text-gray-400">
               {org ? (
@@ -604,8 +608,14 @@ export const PropertiesPage = () => {
                   {' · '}
                   {org.total_rooms} unité{org.total_rooms !== 1 ? 's' : ''} au total
                 </>
+              ) : isLoading ? (
+                'Chargement…'
+              ) : isError ? (
+                <button onClick={() => refetch()} className="underline hover:text-gray-600">
+                  Erreur — cliquer pour réessayer
+                </button>
               ) : (
-                isLoading ? '...' : 'Chargement…'
+                'Aucun bien enregistré'
               )}
             </p>
           </div>
