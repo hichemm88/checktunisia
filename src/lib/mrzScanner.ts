@@ -326,7 +326,8 @@ async function runOcr(
  */
 const TESSERACT_VER  = '5.1.1';
 const CDN            = 'https://cdn.jsdelivr.net/npm';
-const WORKER_PATH    = `${CDN}/tesseract.js@${TESSERACT_VER}/dist/worker.min.js`;
+// worker.min.js est copié dans public/ → servi en same-origin → pas de contrainte worker-src
+const WORKER_PATH    = '/worker.min.js';
 const CORE_PATH      = `${CDN}/tesseract.js-core@${TESSERACT_VER}`;
 const ENG_LANG_PATH  = `${CDN}/tesseract.js-data@4.0.0_best_int/dist`;
 const OCRB_LANG_PATH = 'https://cdn.jsdelivr.net/gh/Shreeshrii/tessdata_ocrb@master';
