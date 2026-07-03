@@ -8,6 +8,33 @@ import { checkInsApi } from '@/api/checkIns';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 
+// Parse only the date part (YYYY-MM-DD) to avoid UTC/local timezone shifts
+const fmtDate = (iso: string): string => {
+  if (!iso) return '—';
+  const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('fr-FR', {
+    day: 'numeric', month: 'short', year: 'numeric',
+  });
+};
+
+// "3 juil. → 17 juil. 2026" or "3 → 17 juil. 2026" when same month/year
+const fmtRange = (from: string, to: string): string => {
+  const f = from.slice(0, 10).split('-').map(Number);
+  const t = to.slice(0, 10).split('-').map(Number);
+  const dFrom = new Date(f[0], f[1] - 1, f[2]);
+  const dTo   = new Date(t[0], t[1] - 1, t[2]);
+  const sameYear  = f[0] === t[0];
+  const sameMonth = sameYear && f[1] === t[1];
+
+  if (sameMonth) {
+    return `${f[2]} → ${dTo.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  }
+  if (sameYear) {
+    return `${dFrom.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} → ${dTo.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  }
+  return `${fmtDate(from)} → ${fmtDate(to)}`;
+};
+
 const STATUS_FILTERS = ['all', 'draft', 'active', 'completed'] as const;
 
 const STATUS_FILTER_LABELS: Record<string, string> = {
@@ -119,9 +146,11 @@ export const HistoryPage = () => {
                   <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                     <span className="text-sm font-semibold text-gray-900 truncate">{guestName}</span>
                     <span className="text-xs text-gray-500 truncate">
-                      {ci.room ? `Ch. ${ci.room.number}` : 'Sans chambre'} · {ci.reference}
+                      {ci.room ? ci.room.number : 'Sans unité'} · {ci.reference}
                     </span>
-                    <span className="text-xs text-gray-400">{ci.check_in_date}</span>
+                    <span className="text-xs text-gray-400">
+                      {fmtRange(ci.check_in_date, ci.expected_check_out_date)}
+                    </span>
                   </div>
                   {/* Status dot + label + chevron */}
                   <div className="flex items-center gap-2 shrink-0">
