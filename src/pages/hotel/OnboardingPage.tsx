@@ -29,7 +29,16 @@ export const OnboardingPage = () => {
 
   const completeMut = useMutation({
     mutationFn: () => api.post('/hotel/onboarding/complete'),
-    onSuccess:  () => { qc.invalidateQueries({ queryKey: ['hotel-profile'] }); navigate('/hotel/dashboard'); },
+    onSuccess: () => {
+      // Immediately update ALL onboarding-status cache entries so HotelOnboardingGuard
+      // doesn't redirect back to /hotel/onboarding before the refetch completes.
+      qc.setQueriesData(
+        { queryKey: ['onboarding-status'] },
+        { setup_completed: true, setup_completed_at: new Date().toISOString() },
+      );
+      qc.invalidateQueries({ queryKey: ['hotel-profile'] });
+      navigate('/hotel/dashboard');
+    },
   });
 
   const addRoom = () => setRooms((r) => [...r, { ...INIT_ROOM }]);
