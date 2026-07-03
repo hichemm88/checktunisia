@@ -314,16 +314,21 @@ async function runOcr(
 // ─── API publique ───────────────────────────────────────────────────────────────
 
 /**
- * Modèle OCR-B via jsDelivr CDN — Shreeshrii/tessdata_ocrb (ocrb_int)
+ * Chemins CDN explicites — nécessaire en production Vite.
  *
- * Pourquoi ocrb_int et non le modèle DaanVanVugt ?
- * - DaanVanVugt/tesseract-mrz : 77 KB compressé → modèle trop minimal,
- *   entraîné sur des données synthétiques parfaites, peu robuste sur photos mobiles.
- * - Shreeshrii/tessdata_ocrb (ocrb_int) : 1.4 MB, fine-tuné sur la vraie police
- *   OCR-B ISO 1073-2, texte MRZ réel inclus dans l'entraînement.
+ * Vite ne copie PAS worker.min.js ni les WASM de tesseract.js dans dist/.
+ * Sans workerPath/corePath explicites, Tesseract cherche ces fichiers de façon
+ * relative au bundle → introuvables → createWorker() rejette avec un objet non-Error
+ * → le catch remonte 'Scan échoué'.
  *
- * gzip: false → le fichier est non-compressé (.traineddata, pas .traineddata.gz)
+ * Solution : pointer vers jsDelivr pour le worker, le core WASM et les modèles.
+ * La CSP vercel.json autorise cdn.jsdelivr.net dans connect-src ET worker-src.
  */
+const TESSERACT_VER  = '5.1.1';
+const CDN            = 'https://cdn.jsdelivr.net/npm';
+const WORKER_PATH    = `${CDN}/tesseract.js@${TESSERACT_VER}/dist/worker.min.js`;
+const CORE_PATH      = `${CDN}/tesseract.js-core@${TESSERACT_VER}`;
+const ENG_LANG_PATH  = `${CDN}/tesseract.js-data@4.0.0_best_int/dist`;
 const OCRB_LANG_PATH = 'https://cdn.jsdelivr.net/gh/Shreeshrii/tessdata_ocrb@master';
 const OCRB_LANG      = 'ocrb_int';
 
@@ -341,7 +346,9 @@ export async function scanMrz(
 
   try {
     worker = await createWorker(OCRB_LANG, 3, {
-      langPath: OCRB_LANG_PATH,
+      workerPath: WORKER_PATH,
+      corePath:   CORE_PATH,
+      langPath:   OCRB_LANG_PATH,
       gzip: false, // ocrb_int.traineddata est non compressé
       logger: (m: { status: string; progress: number }) => {
         if (m.status === 'loading tesseract core')        report(5  + m.progress * 15);
@@ -356,6 +363,9 @@ export async function scanMrz(
     console.warn('[MRZ] Modèle OCRB indisponible, fallback eng:', e);
     usingOcrb = false;
     worker = await createWorker('eng', 1, {
+      workerPath: WORKER_PATH,
+      corePath:   CORE_PATH,
+      langPath:   ENG_LANG_PATH,
       logger: (m: { status: string; progress: number }) => {
         if (m.status === 'loading language traineddata') report(20 + m.progress * 30);
         else if (m.status === 'recognizing text')        report(60 + m.progress * 20);
