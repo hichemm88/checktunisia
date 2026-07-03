@@ -13,6 +13,8 @@ import { HistoryPage } from '@/pages/hotel/HistoryPage';
 import { HistoryDetailPage } from '@/pages/hotel/HistoryDetailPage';
 import { SettingsPage } from '@/pages/hotel/SettingsPage';
 import { SecurityPage } from '@/pages/hotel/SecurityPage';
+import { PaymentSuccessPage } from '@/pages/hotel/PaymentSuccessPage';
+import { PaymentFailedPage } from '@/pages/hotel/PaymentFailedPage';
 import { AuthorityDashboardPage } from '@/pages/authority/AuthorityDashboardPage';
 import { SearchPage } from '@/pages/authority/SearchPage';
 import { GuestProfilePage } from '@/pages/authority/GuestProfilePage';
@@ -71,8 +73,10 @@ export const App = () => (
         <Route path="/hotel/check-ins/new" element={<CheckInWizardPage />} />
         <Route path="/hotel/history" element={<HistoryPage />} />
         <Route path="/hotel/history/:id" element={<HistoryDetailPage />} />
-        <Route path="/hotel/settings"    element={<SettingsPage />} />
-        <Route path="/hotel/security"    element={<SecurityPage />} />
+        <Route path="/hotel/settings"          element={<SettingsPage />} />
+        <Route path="/hotel/security"          element={<SecurityPage />} />
+        <Route path="/hotel/payment/success"   element={<PaymentSuccessPage />} />
+        <Route path="/hotel/payment/failed"    element={<PaymentFailedPage />} />
       </Route>
 
       {/* Authority */}
