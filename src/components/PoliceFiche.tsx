@@ -1,18 +1,19 @@
 /**
- * PoliceFiche — Fiche de police imprimable.
+ * PoliceFiche — Fiche de police imprimable (1 page A4, max 5 voyageurs).
  *
- * Caché hors-écran en mode normal (position: absolute; left: -9999px).
- * NE PAS utiliser display:none — ça empêche le navigateur de l'inclure à
- * l'impression. L'élément doit être dans le layout pour que la visibilité
- * @media print fonctionne.
+ * ARCHITECTURE PRINT :
+ * - Ce composant est rendu via createPortal dans document.body (pas dans #root)
+ * - En mode écran : caché avec position:fixed hors viewport
+ * - En impression : body > *:not(#police-fiche-root) { display:none } supprime
+ *   le layout de toute l'app React, la fiche s'imprime seule depuis le haut de page
  *
- * window.print() → @media print masque tout sauf #police-fiche-root.
- * Contenu optimisé pour tenir sur 1 page A4 avec jusqu'à 5 voyageurs.
+ * ⚠️  NE JAMAIS utiliser display:none sur l'élément racine — ça l'exclut du layout
+ *     et le navigateur ne peut plus l'imprimer même avec @media print.
  */
 
 import type { CheckIn, HotelProfile } from '@/types';
 
-// ── helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const fmtDate = (iso?: string | null): string => {
   if (!iso) return '—';
@@ -24,7 +25,7 @@ const fmtDate = (iso?: string | null): string => {
 
 const SEX_LABELS: Record<string, string> = { M: 'M', F: 'F', X: 'X' };
 
-const DOC_TYPE_LABELS: Record<string, string> = {
+const DOC_LABELS: Record<string, string> = {
   passport:         'Passeport',
   national_id:      'Carte nat.',
   residence_permit: 'Titre séjour',
@@ -32,7 +33,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
   other:            'Autre',
 };
 
-const HOTEL_TYPE_LABELS: Record<string, string> = {
+const TYPE_LABELS: Record<string, string> = {
   hotel:       'Hôtel',
   guesthouse:  "Maison d'hôtes",
   appartement: 'Appartement',
@@ -42,53 +43,62 @@ const HOTEL_TYPE_LABELS: Record<string, string> = {
   motel:       'Motel',
   residence:   'Résidence',
   studio:      'Studio',
+  resort:      'Resort',
+  bungalow:    'Bungalow',
+  rental:      'Location saisonnière',
+  maison_hotes:"Maison d'hôtes",
   maison_hote: "Maison d'hôtes",
   autre:       'Autre',
 };
 
-// ── styles partagés ───────────────────────────────────────────────────────────
+// ── Styles ────────────────────────────────────────────────────────────────────
 
-const TH: React.CSSProperties = {
-  padding: '4px 6px',
-  textAlign: 'left',
-  fontWeight: 'bold',
-  fontSize: '7.5pt',
-  background: '#E8EEFB',
-  color: '#1B3A5F',
-  borderBottom: '1px solid #ccc',
-  borderRight: '1px solid #ddd',
-  whiteSpace: 'nowrap',
-};
+const C = '#1B3A5F'; // bleu principal
 
-const TD: React.CSSProperties = {
-  padding: '3px 6px',
+const cell = (extra?: React.CSSProperties): React.CSSProperties => ({
+  padding: '3px 7px',
   fontSize: '8pt',
-  borderBottom: '1px solid #eee',
-  borderRight: '1px solid #eee',
+  borderBottom: '1px solid #e5e7eb',
+  borderRight: '1px solid #e5e7eb',
   verticalAlign: 'middle',
-};
+  ...extra,
+});
 
-const LABEL: React.CSSProperties = {
-  padding: '3px 6px',
+const lbl = (extra?: React.CSSProperties): React.CSSProperties => ({
+  ...cell(),
   fontSize: '7.5pt',
   fontWeight: 'bold',
-  color: '#555',
-  textTransform: 'uppercase',
-  letterSpacing: '0.3px',
-  background: '#f8f8f8',
-  borderBottom: '1px solid #eee',
-  borderRight: '1px solid #eee',
-  whiteSpace: 'nowrap',
-};
+  color: '#6b7280',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.4px',
+  background: '#f9fafb',
+  whiteSpace: 'nowrap' as const,
+  ...extra,
+});
 
-const VALUE: React.CSSProperties = {
-  padding: '3px 6px',
-  fontSize: '8.5pt',
-  borderBottom: '1px solid #eee',
-  borderRight: '1px solid #eee',
-};
+const th = (extra?: React.CSSProperties): React.CSSProperties => ({
+  padding: '4px 7px',
+  fontSize: '7.5pt',
+  fontWeight: 'bold',
+  textAlign: 'left' as const,
+  background: '#f0f4fb',
+  color: C,
+  borderBottom: `1.5px solid ${C}`,
+  borderRight: '1px solid #dde4f0',
+  whiteSpace: 'nowrap' as const,
+  ...extra,
+});
 
-// ── component ─────────────────────────────────────────────────────────────────
+const td = (extra?: React.CSSProperties): React.CSSProperties => ({
+  padding: '3px 7px',
+  fontSize: '8pt',
+  borderBottom: '1px solid #f0f0f0',
+  borderRight: '1px solid #f0f0f0',
+  verticalAlign: 'middle' as const,
+  ...extra,
+});
+
+// ── Composant ─────────────────────────────────────────────────────────────────
 
 interface Props {
   id?: string;
@@ -102,176 +112,234 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
     hour: '2-digit', minute: '2-digit',
   });
 
-  const typeLabel = hotel.type ? (HOTEL_TYPE_LABELS[hotel.type] ?? hotel.type) : '';
+  const typeLabel = hotel.type ? (TYPE_LABELS[hotel.type] ?? hotel.type) : '';
   const stars     = hotel.stars ? '★'.repeat(hotel.stars) : '';
+  const addr      = [hotel.address?.line1, hotel.address?.city, hotel.address?.governorate]
+                      .filter(Boolean).join(', ');
+  const contacts  = [hotel.phone, hotel.email].filter(Boolean).join(' · ');
 
-  const addr = [
-    hotel.address?.line1,
-    hotel.address?.city,
-    hotel.address?.governorate,
-  ].filter(Boolean).join(', ');
-
-  // Limit to 5 guests max per page constraint
+  // Max 5 voyageurs sur 1 page
   const guests = (ci.guests ?? []).slice(0, 5);
+  const extra  = (ci.guests?.length ?? 0) - guests.length;
 
   return (
     <>
-      {/* ── CSS print ─────────────────────────────────────────────────────── */}
+      {/* ── CSS ─────────────────────────────────────────────────────── */}
       <style>{`
+        /* Écran : caché hors-viewport, jamais display:none */
         @media screen {
-          /* Hors-écran mais dans le layout — JAMAIS display:none */
-          #${id} { position: absolute; left: -9999px; top: 0; width: 210mm; }
+          #${id} {
+            position: fixed;
+            top: -9999px;
+            left: -9999px;
+            width: 210mm;
+            height: auto;
+            pointer-events: none;
+            visibility: hidden;
+          }
         }
+
+        /* Impression : cacher TOUT sauf la fiche (display:none supprime le layout) */
         @media print {
-          @page { size: A4 portrait; margin: 8mm 10mm; }
-          /* Masquer tout le reste de la page */
-          body > * { visibility: hidden !important; }
-          /* Afficher uniquement la fiche */
-          #${id} { visibility: visible !important; position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; }
-          #${id} * { visibility: visible !important; }
+          @page { size: A4 portrait; margin: 7mm 9mm; }
+          body { margin: 0 !important; padding: 0 !important; }
+          body > *:not(#${id}) { display: none !important; }
+          #${id} {
+            visibility: visible !important;
+            position: static !important;
+            top: auto !important; left: auto !important;
+            width: 100% !important;
+            height: auto !important;
+            pointer-events: auto !important;
+          }
         }
       `}</style>
 
-      {/* ── Fiche ─────────────────────────────────────────────────────────── */}
+      {/* ── Fiche ───────────────────────────────────────────────────── */}
       <div
         id={id}
         style={{
-          fontFamily: '"Times New Roman", Times, serif',
-          fontSize: '9pt',
+          fontFamily: '"Helvetica Neue", Arial, sans-serif',
+          fontSize: '8.5pt',
           color: '#111',
-          lineHeight: 1.3,
+          lineHeight: 1.35,
           background: '#fff',
         }}
       >
 
-        {/* ══ EN-TÊTE ══════════════════════════════════════════════════════ */}
-        <table width="100%" cellPadding={0} cellSpacing={0}
-          style={{ borderBottom: '2.5px solid #1B3A5F', paddingBottom: '6px', marginBottom: '8px' }}>
+        {/* ══ EN-TÊTE ════════════════════════════════════════════════ */}
+        <table width="100%" cellPadding={0} cellSpacing={0} style={{ marginBottom: '9px' }}>
           <tbody>
             <tr>
-              <td style={{ verticalAlign: 'top', width: '65%' }}>
-                <div style={{ fontSize: '13pt', fontWeight: 'bold', color: '#1B3A5F' }}>
+              {/* Bandeau bleu gauche */}
+              <td style={{ width: '4px', background: C, borderRadius: '2px' }} />
+              <td style={{ width: '12px' }} />
+              {/* Infos établissement */}
+              <td style={{ verticalAlign: 'top', paddingTop: '2px' }}>
+                <div style={{ fontSize: '13pt', fontWeight: '700', color: C, letterSpacing: '0.3px' }}>
                   {hotel.name}
                 </div>
                 {(typeLabel || stars) && (
-                  <div style={{ fontSize: '8.5pt', color: '#555' }}>
+                  <div style={{ fontSize: '8pt', color: '#6b7280', marginTop: '1px' }}>
                     {typeLabel}{stars ? ` · ${stars}` : ''}
                   </div>
                 )}
                 {addr && (
-                  <div style={{ fontSize: '8pt', color: '#444', marginTop: '2px' }}>{addr}</div>
+                  <div style={{ fontSize: '7.5pt', color: '#374151', marginTop: '2px' }}>{addr}</div>
                 )}
-                {(hotel.phone || hotel.email) && (
-                  <div style={{ fontSize: '8pt', color: '#444' }}>
-                    {[hotel.phone, hotel.email].filter(Boolean).join(' · ')}
-                  </div>
+                {contacts && (
+                  <div style={{ fontSize: '7.5pt', color: '#374151' }}>{contacts}</div>
                 )}
                 {hotel.registration_number && (
-                  <div style={{ fontSize: '7.5pt', color: '#777' }}>
+                  <div style={{ fontSize: '7pt', color: '#9ca3af' }}>
                     RC / Matricule : {hotel.registration_number}
                   </div>
                 )}
               </td>
-              <td style={{ verticalAlign: 'top', textAlign: 'right', width: '35%' }}>
-                <div style={{ fontSize: '7.5pt', color: '#aaa' }}>CheckTunisia</div>
-                <div style={{ fontSize: '7.5pt', color: '#aaa' }}>Imprimé le {now}</div>
+              {/* Date + logo droit */}
+              <td style={{ textAlign: 'right', verticalAlign: 'top', paddingTop: '2px' }}>
+                <div style={{
+                  display: 'inline-block',
+                  background: C,
+                  color: '#fff',
+                  fontSize: '7pt',
+                  fontWeight: '600',
+                  letterSpacing: '1.5px',
+                  padding: '2px 8px',
+                  borderRadius: '3px',
+                  marginBottom: '4px',
+                }}>
+                  CHECKTUNISIA
+                </div>
+                <div style={{ fontSize: '7pt', color: '#9ca3af' }}>Imprimé le {now}</div>
               </td>
             </tr>
           </tbody>
         </table>
 
-        {/* ══ TITRE ═════════════════════════════════════════════════════════ */}
-        <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-          <span style={{
-            fontSize: '12pt',
-            fontWeight: 'bold',
-            letterSpacing: '3px',
-            textTransform: 'uppercase' as const,
-            color: '#1B3A5F',
-            borderBottom: '1.5px solid #1B3A5F',
-            paddingBottom: '2px',
-          }}>
-            Fiche de Police
-          </span>
+        {/* ══ TITRE ══════════════════════════════════════════════════ */}
+        <div style={{
+          textAlign: 'center',
+          margin: '0 0 9px 0',
+          padding: '5px 0',
+          background: C,
+          color: '#fff',
+          fontSize: '10pt',
+          fontWeight: '700',
+          letterSpacing: '4px',
+          textTransform: 'uppercase' as const,
+          borderRadius: '2px',
+        }}>
+          Fiche de Police
         </div>
 
-        {/* ══ SÉJOUR ════════════════════════════════════════════════════════ */}
+        {/* ══ SÉJOUR ═════════════════════════════════════════════════ */}
         <table width="100%" cellPadding={0} cellSpacing={0}
-          style={{ border: '1px solid #ccc', borderCollapse: 'collapse', marginBottom: '10px' }}>
+          style={{ border: '1px solid #e5e7eb', borderCollapse: 'collapse', marginBottom: '9px', borderRadius: '3px', overflow: 'hidden' }}>
           <thead>
-            <tr style={{ background: '#1B3A5F' }}>
-              <th colSpan={6} style={{ padding: '4px 8px', color: '#fff', fontSize: '8.5pt', textAlign: 'left', letterSpacing: '1px' }}>
-                SÉJOUR
+            <tr>
+              <th colSpan={6} style={{
+                padding: '4px 8px',
+                background: '#f9fafb',
+                color: C,
+                fontSize: '7.5pt',
+                fontWeight: '700',
+                textAlign: 'left',
+                borderBottom: '1px solid #e5e7eb',
+                letterSpacing: '1px',
+                textTransform: 'uppercase' as const,
+              }}>
+                Séjour
               </th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style={LABEL}>Référence</td>
-              <td style={{ ...VALUE, fontFamily: 'monospace' }}>{ci.reference}</td>
-              <td style={LABEL}>Unité</td>
-              <td style={VALUE}>{ci.room?.number ?? '—'}</td>
-              <td style={LABEL}>Adultes / Enfants</td>
-              <td style={VALUE}>{ci.adults_count} / {ci.children_count}</td>
+              <td style={lbl()}>Référence</td>
+              <td style={cell({ fontFamily: 'monospace', fontWeight: 'bold', color: C, fontSize: '8pt', whiteSpace: 'nowrap' })}>
+                {ci.reference}
+              </td>
+              <td style={lbl()}>Unité</td>
+              <td style={cell()}>{ci.room?.number ?? '—'}</td>
+              <td style={lbl()}>Adultes / Enfants</td>
+              <td style={cell({ borderRight: 'none' })}>{ci.adults_count} / {ci.children_count}</td>
             </tr>
             <tr>
-              <td style={LABEL}>Arrivée</td>
-              <td style={VALUE}>{fmtDate(ci.check_in_date)}</td>
-              <td style={LABEL}>Départ prévu</td>
-              <td style={VALUE}>{fmtDate(ci.expected_check_out_date)}</td>
-              <td style={LABEL}>Départ réel</td>
-              <td style={VALUE}>{ci.actual_check_out_date ? fmtDate(ci.actual_check_out_date) : '—'}</td>
+              <td style={lbl()}>Arrivée</td>
+              <td style={cell()}>{fmtDate(ci.check_in_date)}</td>
+              <td style={lbl()}>Départ prévu</td>
+              <td style={cell()}>{fmtDate(ci.expected_check_out_date)}</td>
+              <td style={lbl()}>Départ réel</td>
+              <td style={cell({ borderRight: 'none' })}>
+                {ci.actual_check_out_date ? fmtDate(ci.actual_check_out_date) : '—'}
+              </td>
             </tr>
             {ci.booking_reference && (
               <tr>
-                <td style={LABEL}>Réf. réservation</td>
-                <td colSpan={5} style={VALUE}>{ci.booking_reference}{ci.booking_source ? ` (${ci.booking_source})` : ''}</td>
+                <td style={lbl()}>Réf. réservation</td>
+                <td colSpan={5} style={cell({ borderRight: 'none' })}>
+                  {ci.booking_reference}{ci.booking_source ? ` · ${ci.booking_source}` : ''}
+                </td>
               </tr>
             )}
           </tbody>
         </table>
 
-        {/* ══ VOYAGEURS ═════════════════════════════════════════════════════ */}
+        {/* ══ VOYAGEURS ══════════════════════════════════════════════ */}
         <table width="100%" cellPadding={0} cellSpacing={0}
-          style={{ border: '1px solid #ccc', borderCollapse: 'collapse', marginBottom: '10px' }}>
+          style={{ border: '1px solid #e5e7eb', borderCollapse: 'collapse', marginBottom: '10px', borderRadius: '3px', overflow: 'hidden' }}>
           <thead>
-            <tr style={{ background: '#1B3A5F' }}>
-              <th colSpan={8} style={{ padding: '4px 8px', color: '#fff', fontSize: '8.5pt', textAlign: 'left', letterSpacing: '1px' }}>
-                VOYAGEURS — {ci.guests?.length ?? 0} personne{(ci.guests?.length ?? 0) > 1 ? 's' : ''}
-                {(ci.guests?.length ?? 0) > 5 && ' (5 premiers affichés)'}
+            <tr>
+              <th colSpan={8} style={{
+                padding: '4px 8px',
+                background: '#f9fafb',
+                color: C,
+                fontSize: '7.5pt',
+                fontWeight: '700',
+                textAlign: 'left',
+                borderBottom: '1px solid #e5e7eb',
+                letterSpacing: '1px',
+                textTransform: 'uppercase' as const,
+              }}>
+                Voyageurs — {ci.guests?.length ?? 0} personne{(ci.guests?.length ?? 0) > 1 ? 's' : ''}
+                {extra > 0 && <span style={{ fontWeight: 'normal', fontSize: '7pt' }}> (5 premiers · {extra} non affich{extra > 1 ? 'és' : 'é'})</span>}
               </th>
             </tr>
             <tr>
-              <th style={TH}>Nom & Prénom</th>
-              <th style={TH}>Naissance</th>
-              <th style={TH}>Sexe</th>
-              <th style={TH}>Nationalité</th>
-              <th style={TH}>Type pièce</th>
-              <th style={TH}>N° document</th>
-              <th style={TH}>Pays émet.</th>
-              <th style={{ ...TH, borderRight: 'none' }}>Expiration</th>
+              <th style={th()}>Nom &amp; Prénom</th>
+              <th style={th()}>Naissance</th>
+              <th style={th()}>Sexe</th>
+              <th style={th()}>Nationalité</th>
+              <th style={th()}>Type pièce</th>
+              <th style={th()}>N° document</th>
+              <th style={th()}>Pays émet.</th>
+              <th style={th({ borderRight: 'none' })}>Expiration</th>
             </tr>
           </thead>
           <tbody>
-            {guests.length > 0 ? guests.map((g, idx) => (
-              <tr key={g.id} style={{ background: idx % 2 === 0 ? '#fff' : '#fafafa' }}>
-                <td style={{ ...TD, fontWeight: g.is_primary ? 'bold' : 'normal' }}>
+            {guests.length > 0 ? guests.map((g, i) => (
+              <tr key={g.id} style={{ background: i % 2 === 0 ? '#fff' : '#f9fafb' }}>
+                <td style={td({ fontWeight: g.is_primary ? '700' : '400' })}>
                   {g.last_name.toUpperCase()} {g.first_name}
-                  {g.is_primary && <span style={{ fontSize: '7pt', color: '#1B3A5F' }}> ★</span>}
+                  {g.is_primary && (
+                    <span style={{ marginLeft: '4px', fontSize: '7pt', color: C }}>★</span>
+                  )}
                 </td>
-                <td style={{ ...TD, whiteSpace: 'nowrap' as const }}>{fmtDate(g.date_of_birth)}</td>
-                <td style={TD}>{SEX_LABELS[g.sex] ?? g.sex}</td>
-                <td style={TD}>{g.nationality_code}</td>
-                <td style={TD}>{g.document ? (DOC_TYPE_LABELS[g.document.type] ?? g.document.type) : '—'}</td>
-                <td style={{ ...TD, fontFamily: 'monospace', fontSize: '7.5pt' }}>{g.document?.document_number ?? '—'}</td>
-                <td style={TD}>{g.document?.issuing_country_code ?? '—'}</td>
-                <td style={{ ...TD, borderRight: 'none', whiteSpace: 'nowrap' as const }}>
+                <td style={td({ whiteSpace: 'nowrap' as const })}>{fmtDate(g.date_of_birth)}</td>
+                <td style={td({ textAlign: 'center' as const })}>{SEX_LABELS[g.sex] ?? g.sex}</td>
+                <td style={td({ textAlign: 'center' as const })}>{g.nationality_code}</td>
+                <td style={td()}>{g.document ? (DOC_LABELS[g.document.type] ?? g.document.type) : '—'}</td>
+                <td style={td({ fontFamily: 'monospace', fontSize: '7.5pt', whiteSpace: 'nowrap' as const })}>
+                  {g.document?.document_number ?? '—'}
+                </td>
+                <td style={td({ textAlign: 'center' as const })}>{g.document?.issuing_country_code ?? '—'}</td>
+                <td style={td({ borderRight: 'none', whiteSpace: 'nowrap' as const })}>
                   {g.document?.expiry_date ? fmtDate(g.document.expiry_date) : '—'}
                 </td>
               </tr>
             )) : (
               <tr>
-                <td colSpan={8} style={{ padding: '8px', textAlign: 'center', color: '#aaa', fontStyle: 'italic', fontSize: '8pt' }}>
+                <td colSpan={8} style={{ padding: '10px', textAlign: 'center', color: '#9ca3af', fontStyle: 'italic', fontSize: '8pt' }}>
                   Aucun voyageur enregistré
                 </td>
               </tr>
@@ -279,37 +347,40 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
           </tbody>
         </table>
 
-        {/* ══ SIGNATURES ════════════════════════════════════════════════════ */}
-        <table width="100%" cellPadding={0} cellSpacing={0} style={{ marginTop: '14px' }}>
+        {/* ══ SIGNATURES ═════════════════════════════════════════════ */}
+        <table width="100%" cellPadding={0} cellSpacing={0}>
           <tbody>
             <tr>
-              <td style={{ width: '48%', verticalAlign: 'top', paddingRight: '8px' }}>
-                <div style={{ borderTop: '1px solid #bbb', paddingTop: '4px' }}>
-                  <span style={{ fontSize: '7.5pt', color: '#666' }}>Signature & cachet de l'établissement</span>
-                  <div style={{ height: '28px' }} />
+              <td style={{ width: '47%', verticalAlign: 'top' }}>
+                <div style={{ borderTop: `1px solid #d1d5db`, paddingTop: '4px' }}>
+                  <div style={{ fontSize: '7.5pt', color: '#6b7280', marginBottom: '22px' }}>
+                    Signature &amp; cachet de l'établissement
+                  </div>
                 </div>
               </td>
-              <td style={{ width: '4%' }} />
-              <td style={{ width: '48%', verticalAlign: 'top', paddingLeft: '8px' }}>
-                <div style={{ borderTop: '1px solid #bbb', paddingTop: '4px' }}>
-                  <span style={{ fontSize: '7.5pt', color: '#666' }}>Signature du client principal (★)</span>
-                  <div style={{ height: '28px' }} />
+              <td style={{ width: '6%' }} />
+              <td style={{ width: '47%', verticalAlign: 'top' }}>
+                <div style={{ borderTop: `1px solid #d1d5db`, paddingTop: '4px' }}>
+                  <div style={{ fontSize: '7.5pt', color: '#6b7280', marginBottom: '22px' }}>
+                    Signature du client principal (★)
+                  </div>
                 </div>
               </td>
             </tr>
           </tbody>
         </table>
 
-        {/* ══ PIED DE PAGE ══════════════════════════════════════════════════ */}
+        {/* ══ PIED DE PAGE ═══════════════════════════════════════════ */}
         <div style={{
-          marginTop: '6px',
-          borderTop: '1px solid #ddd',
-          paddingTop: '4px',
+          marginTop: '5px',
+          borderTop: '1px solid #f3f4f6',
+          paddingTop: '3px',
           textAlign: 'center',
-          fontSize: '7pt',
-          color: '#aaa',
+          fontSize: '6.5pt',
+          color: '#d1d5db',
+          letterSpacing: '0.5px',
         }}>
-          Document généré par CheckTunisia · {hotel.name} · Réf. {ci.reference}
+          CheckTunisia · {hotel.name} · {ci.reference}
         </div>
 
       </div>

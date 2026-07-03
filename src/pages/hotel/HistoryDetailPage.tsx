@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, LogOut, CheckCircle, FileText, MapPin, CalendarDays, Printer } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
@@ -209,9 +210,10 @@ export const HistoryDetailPage = () => {
         </div>
       </div>
 
-      {/* Print-only police fiche — invisible on screen, shown when window.print() is called */}
-      {hotel && <PoliceFiche checkIn={ci} hotel={hotel} />}
-
     </HotelLayout>
+
+      {/* Portal vers document.body pour que body > *:not(#police-fiche-root)
+          puisse cacher le reste de l'app sans toucher la fiche elle-même */}
+      {hotel && createPortal(<PoliceFiche checkIn={ci} hotel={hotel} />, document.body)}
   );
 };
