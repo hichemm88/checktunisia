@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Search, Building2, Bell, Activity, LogOut, Shield, MapPin, ShieldAlert,
 } from 'lucide-react';
@@ -103,13 +103,15 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
               )}
             </div>
 
-            {/* Avatar */}
-            <div
-              className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white shrink-0"
+            {/* Avatar → profile page */}
+            <Link
+              to="/profile"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white shrink-0 hover:opacity-80 transition-opacity"
               style={{ background: '#2A5090' }}
+              title="Mon profil"
             >
               {initials || '?'}
-            </div>
+            </Link>
 
             <button
               onClick={handleLogout}

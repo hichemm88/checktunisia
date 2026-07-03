@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, ClipboardList, History, Settings, LogOut } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/authStore';
@@ -59,12 +59,14 @@ export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
 
           {/* Right: avatar + logout */}
           <div className="flex items-center gap-1.5 shrink-0">
-            <div
-              className="h-9 w-9 rounded-full flex items-center justify-center shrink-0"
+            <Link
+              to="/profile"
+              className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity"
               style={{ background: '#E8EEFB' }}
+              title="Mon profil"
             >
               <span className="text-xs font-bold" style={{ color: '#1B3A5F' }}>{initials}</span>
-            </div>
+            </Link>
             <button
               onClick={handleLogout}
               className="h-9 w-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"

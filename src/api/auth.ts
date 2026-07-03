@@ -56,4 +56,19 @@ export const authApi = {
     api
       .delete<{ data: { disabled: boolean } }>('/auth/2fa/setup', { data: { code } })
       .then((r) => r.data.data),
+
+  // Profile — update name/phone
+  updateProfile: (data: { first_name?: string; last_name?: string; phone?: string }) =>
+    api
+      .patch<{ data: { id: string; email: string; first_name: string; last_name: string; phone: string | null } }>(
+        '/profile',
+        data,
+      )
+      .then((r) => r.data.data),
+
+  // Profile — change password (revokes other sessions)
+  changePassword: (data: { current_password: string; password: string; password_confirmation: string }) =>
+    api
+      .post<{ data: { message: string } }>('/profile/password', data)
+      .then((r) => r.data.data),
 };

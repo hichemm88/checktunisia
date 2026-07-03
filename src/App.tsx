@@ -22,6 +22,7 @@ import { AlertsPage } from '@/pages/authority/AlertsPage';
 import { ActivityPage } from '@/pages/authority/ActivityPage';
 import { WatchlistPage } from '@/pages/authority/WatchlistPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
+import { ProfilePage } from '@/pages/profile/ProfilePage';
 
 // ─── Guards ─────────────────────────────────────────────────────────────────
 const RequireAuth = () => {
@@ -60,6 +61,9 @@ export const App = () => (
     {/* Authenticated */}
     <Route element={<RequireAuth />}>
       <Route path="/" element={<RoleRedirect />} />
+
+      {/* Profile — accessible to all roles */}
+      <Route path="/profile" element={<ProfilePage />} />
 
       {/* Hotel staff */}
       <Route element={<RequireRole roles={['hotel_admin', 'receptionist']} />}>
