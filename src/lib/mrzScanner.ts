@@ -332,7 +332,10 @@ const CDN            = 'https://cdn.jsdelivr.net/npm';
 const WORKER_PATH    = '/worker.min.js';
 const CORE_PATH      = `${CDN}/tesseract.js-core@${TESSERACT_VER}`;
 const ENG_LANG_PATH  = `${CDN}/tesseract.js-data@4.0.0_best_int/dist`;
-const OCRB_LANG_PATH = 'https://cdn.jsdelivr.net/gh/Shreeshrii/tessdata_ocrb@master';
+// Modèle bundlé dans public/tessdata/ — servi en same-origin, pas de CDN GitHub.
+// Fichier à placer : frontend/public/tessdata/ocrb_int.traineddata (1.4 MB)
+// Source : https://cdn.jsdelivr.net/gh/Shreeshrii/tessdata_ocrb@master/ocrb_int.traineddata
+const OCRB_LANG_PATH = '/tessdata';
 const OCRB_LANG      = 'ocrb_int';
 
 export async function scanMrz(
