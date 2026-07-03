@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, User, FileText, MapPin } from 'lucide-react';
+import { ArrowLeft, User, FileText, MapPin, Download } from 'lucide-react';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { authorityApi } from '@/api/authority';
+import api from '@/lib/api';
 
 const DetailRow = ({ label, value }: { label: string; value?: string | null }) => (
   <div className="flex justify-between py-2 text-sm border-b border-gray-50 last:border-0">
@@ -13,9 +16,39 @@ const DetailRow = ({ label, value }: { label: string; value?: string | null }) =
   </div>
 );
 
+const downloadBlob = (blob: Blob, filename: string) => {
+  const url = URL.createObjectURL(blob);
+  const a   = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+};
+
 export const GuestProfilePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null);
+
+  const exportPdf = async () => {
+    if (!id) return;
+    setExporting('pdf');
+    try {
+      const res = await api.get(`/guests/${id}/export/pdf`, { responseType: 'blob' });
+      const html = await res.data.text();
+      const win  = window.open('', '_blank');
+      if (win) { win.document.write(html); win.document.close(); win.print(); }
+    } finally { setExporting(null); }
+  };
+
+  const exportCsv = async () => {
+    if (!id) return;
+    setExporting('csv');
+    try {
+      const res = await api.get('/export/stays', { responseType: 'blob' });
+      downloadBlob(res.data, `sejours-${new Date().toISOString().split('T')[0]}.csv`);
+    } finally { setExporting(null); }
+  };
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ['authority-guest', id],
@@ -36,12 +69,22 @@ export const GuestProfilePage = () => {
   return (
     <AuthorityLayout title="Profil voyageur">
       <div className="flex flex-col gap-5">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 text-sm text-gray-500"
-        >
-          <ArrowLeft className="h-4 w-4" /> Retour à la recherche
-        </button>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1.5 text-sm text-gray-500"
+          >
+            <ArrowLeft className="h-4 w-4" /> Retour à la recherche
+          </button>
+          <div className="flex gap-2">
+            <Button variant="secondary" size="sm" loading={exporting === 'pdf'} onClick={exportPdf} className="gap-1.5">
+              <Download className="h-3.5 w-3.5" /> Fiche PDF
+            </Button>
+            <Button variant="secondary" size="sm" loading={exporting === 'csv'} onClick={exportCsv} className="gap-1.5">
+              <Download className="h-3.5 w-3.5" /> CSV séjours
+            </Button>
+          </div>
+        </div>
 
         {/* Identity card */}
         <Card>
