@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building, CreditCard, User, Lock, Users, Plus, Trash2, Save,
-  Eye, EyeOff, Pencil, X, BedDouble, MapPin, Phone, Globe, Star,
+  Eye, EyeOff, Pencil, X, MapPin, Phone, Globe, Star,
   CheckCircle, AlertCircle, ExternalLink,
 } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
@@ -13,9 +13,8 @@ import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
 import { settingsApi } from '@/api/settings';
-import { roomsApi } from '@/api/rooms';
 import { extractErrors } from '@/lib/api';
-import { HotelUser, CreateUserPayload, Room, RoomType, RoomStatus, HotelProfile } from '@/types';
+import { HotelUser, CreateUserPayload, HotelProfile } from '@/types';
 
 // ── Inline alert ─────────────────────────────────────────────────────────────
 const Alert = ({ msg, type }: { msg: string; type: 'success' | 'error' }) => (
@@ -28,30 +27,6 @@ const Alert = ({ msg, type }: { msg: string; type: 'success' | 'error' }) => (
     {msg}
   </div>
 );
-
-// ── Room type labels ──────────────────────────────────────────────────────────
-const ROOM_TYPE_LABELS: Record<RoomType | string, string> = {
-  single:      'Chambre simple',
-  double:      'Chambre double',
-  twin:        'Chambre twin',
-  triple:      'Chambre triple',
-  quadruple:   'Chambre quadruple',
-  suite:       'Suite',
-  junior_suite:'Suite junior',
-  apartment:   'Appartement',
-  studio:      'Studio',
-  family:      'Chambre familiale',
-  villa:       'Villa',
-  dormitory:   'Dortoir',
-  standard:    'Standard',
-};
-
-const ROOM_STATUS_LABELS: Record<RoomStatus | string, { label: string; color: string }> = {
-  available:   { label: 'Disponible',   color: 'bg-green-100 text-green-700' },
-  occupied:    { label: 'Occupée',      color: 'bg-blue-100 text-blue-700' },
-  maintenance: { label: 'Maintenance',  color: 'bg-orange-100 text-orange-700' },
-  inactive:    { label: 'Inactive',     color: 'bg-gray-100 text-gray-500' },
-};
 
 const GOVERNORATES = [
   'Ariana', 'Béja', 'Ben Arous', 'Bizerte', 'Gabès', 'Gafsa', 'Jendouba',
@@ -460,243 +435,6 @@ const SubscriptionCard = () => {
   );
 };
 
-// ── Room form (add / edit) ────────────────────────────────────────────────────
-type RoomFormData = { number: string; floor: string; type: RoomType | ''; capacity: number; status: RoomStatus };
-const EMPTY_ROOM: RoomFormData = { number: '', floor: '', type: '', capacity: 1, status: 'available' };
-
-const RoomForm = ({
-  initial, onSave, onCancel, saving,
-}: {
-  initial: RoomFormData;
-  onSave: (d: RoomFormData) => void;
-  onCancel: () => void;
-  saving: boolean;
-}) => {
-  const [form, setForm] = useState(initial);
-  const set = <K extends keyof RoomFormData>(k: K, v: RoomFormData[K]) => setForm(f => ({ ...f, [k]: v }));
-
-  return (
-    <div className="flex flex-col gap-3 border-t border-gray-100 pt-3 mt-2">
-      <div className="grid grid-cols-2 gap-2">
-        <Input
-          label="N° / Nom chambre"
-          value={form.number}
-          onChange={e => set('number', e.target.value)}
-          placeholder="ex. 101, Suite Jasmine…"
-        />
-        <Input
-          label="Étage"
-          type="number"
-          value={form.floor}
-          onChange={e => set('floor', e.target.value)}
-          placeholder="ex. 1"
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        <Select
-          label="Type de chambre"
-          value={form.type}
-          onChange={e => set('type', e.target.value as RoomType)}
-          options={[{ value: '', label: '— Choisir —' }, ...Object.entries(ROOM_TYPE_LABELS).map(([v, l]) => ({ value: v, label: l }))]}
-        />
-        <Input
-          label="Capacité (pers.)"
-          type="number"
-          min={1}
-          max={20}
-          value={form.capacity}
-          onChange={e => set('capacity', Math.max(1, parseInt(e.target.value) || 1))}
-        />
-      </div>
-      <Select
-        label="Statut"
-        value={form.status}
-        onChange={e => set('status', e.target.value as RoomStatus)}
-        options={Object.entries(ROOM_STATUS_LABELS).map(([v, { label }]) => ({ value: v, label }))}
-      />
-      <div className="flex gap-2">
-        <Button size="sm" onClick={() => onSave(form)} loading={saving} disabled={!form.number || !form.type}>
-          Enregistrer
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onCancel}>Annuler</Button>
-      </div>
-    </div>
-  );
-};
-
-// ── Rooms section ─────────────────────────────────────────────────────────────
-const RoomsSection = () => {
-  const qc = useQueryClient();
-  const [showAdd, setShowAdd]     = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [error, setError] = useState('');
-
-  const { data: rooms, isLoading } = useQuery({
-    queryKey: ['rooms'],
-    queryFn: () => roomsApi.list(),
-  });
-  const list: Room[] = rooms?.data ?? [];
-
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['rooms'] });
-
-  const addMutation = useMutation({
-    mutationFn: (d: RoomFormData) => roomsApi.create({
-      number: d.number,
-      floor: d.floor !== '' ? parseInt(d.floor) : undefined,
-      type: d.type as RoomType,
-      capacity: d.capacity,
-      status: d.status,
-    } as any),
-    onSuccess: () => { invalidate(); setShowAdd(false); setError(''); },
-    onError: (err) => setError(extractErrors(err)),
-  });
-
-  const editMutation = useMutation({
-    mutationFn: ({ id, d }: { id: string; d: RoomFormData }) => roomsApi.update(id, {
-      number: d.number,
-      floor: d.floor !== '' ? parseInt(d.floor) : null,
-      type: d.type as RoomType,
-      capacity: d.capacity,
-      status: d.status,
-    } as any),
-    onSuccess: () => { invalidate(); setEditingId(null); setError(''); },
-    onError: (err) => setError(extractErrors(err)),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => roomsApi.delete(id),
-    onSuccess: () => { invalidate(); setDeletingId(null); },
-    onError: (err) => setError(extractErrors(err)),
-  });
-
-  const grouped = list.reduce<Record<number | string, Room[]>>((acc, r) => {
-    const key = r.floor != null ? r.floor : '—';
-    (acc[key] ??= []).push(r);
-    return acc;
-  }, {});
-
-  const floors = Object.keys(grouped).sort((a, b) => {
-    const na = parseInt(a as string), nb = parseInt(b as string);
-    if (isNaN(na) && isNaN(nb)) return 0;
-    if (isNaN(na)) return 1;
-    if (isNaN(nb)) return -1;
-    return na - nb;
-  });
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          <div className="flex items-center gap-2">
-            <BedDouble className="h-4 w-4 text-gray-400" />
-            Chambres {list.length > 0 && <span className="text-xs text-gray-400 font-normal">({list.length})</span>}
-          </div>
-        </CardTitle>
-        <button
-          onClick={() => { setShowAdd(s => !s); setEditingId(null); setError(''); }}
-          className="flex items-center gap-1 text-xs text-primary-600 font-medium hover:text-primary-700"
-        >
-          <Plus className="h-3.5 w-3.5" /> Ajouter
-        </button>
-      </CardHeader>
-
-      {showAdd && (
-        <RoomForm
-          initial={EMPTY_ROOM}
-          onSave={d => addMutation.mutate(d)}
-          onCancel={() => { setShowAdd(false); setError(''); }}
-          saving={addMutation.isPending}
-        />
-      )}
-
-      {error && <Alert msg={error} type="error" />}
-
-      <div className="flex flex-col gap-0 mt-2">
-        {isLoading && [1, 2, 3].map(i => (
-          <div key={i} className="h-12 animate-pulse rounded-lg bg-gray-50 my-1" />
-        ))}
-
-        {!isLoading && list.length === 0 && (
-          <p className="py-6 text-center text-sm text-gray-400">
-            Aucune chambre — commencez par en ajouter une.
-          </p>
-        )}
-
-        {floors.map(floor => (
-          <div key={floor}>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide pt-3 pb-1">
-              {floor === '—' ? 'Étage non défini' : `Étage ${floor}`}
-            </p>
-            <div className="flex flex-col divide-y divide-gray-50">
-              {grouped[floor as any].map(room => (
-                <div key={room.id}>
-                  {editingId === room.id ? (
-                    <RoomForm
-                      initial={{
-                        number: room.number,
-                        floor: room.floor != null ? String(room.floor) : '',
-                        type: room.type,
-                        capacity: room.capacity,
-                        status: room.status,
-                      }}
-                      onSave={d => editMutation.mutate({ id: room.id, d })}
-                      onCancel={() => { setEditingId(null); setError(''); }}
-                      saving={editMutation.isPending}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-between py-3">
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-gray-900">
-                            {room.number}
-                          </span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ROOM_STATUS_LABELS[room.status]?.color ?? 'bg-gray-100 text-gray-500'}`}>
-                            {ROOM_STATUS_LABELS[room.status]?.label ?? room.status}
-                          </span>
-                        </div>
-                        <span className="text-xs text-gray-400">
-                          {ROOM_TYPE_LABELS[room.type] ?? room.type} · {room.capacity} pers.
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => { setEditingId(room.id); setShowAdd(false); setError(''); }}
-                          className="rounded-lg p-1.5 text-gray-300 hover:bg-primary-50 hover:text-primary-500 transition-colors"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        {deletingId === room.id ? (
-                          <div className="flex gap-1 ml-1">
-                            <button
-                              onClick={() => deleteMutation.mutate(room.id)}
-                              className="text-xs text-red-600 font-medium hover:text-red-700"
-                            >
-                              Confirmer
-                            </button>
-                            <button onClick={() => setDeletingId(null)} className="text-xs text-gray-400">Annuler</button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setDeletingId(room.id)}
-                            className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </Card>
-  );
-};
-
 // ── Add user form ─────────────────────────────────────────────────────────────
 const AddUserForm = ({ onDone }: { onDone: () => void }) => {
   const qc = useQueryClient();
@@ -832,7 +570,6 @@ export const SettingsPage = () => {
         {isAdmin ? (
           <>
             <HotelInfoSection />
-            <RoomsSection />
             <UsersSection />
           </>
         ) : (
