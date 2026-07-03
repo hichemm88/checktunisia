@@ -11,14 +11,6 @@ export interface RegisterPayload {
   org_registration_number?: string;
   org_phone?: string;
 
-  // First property
-  property_name: string;
-  property_type: string;
-  room_count: number;
-  stars?: number | null;
-  registration_number?: string;
-  address: { line1: string; city: string; governorate: string; postal_code?: string };
-
   // Admin account
   first_name: string;
   last_name: string;
@@ -46,7 +38,6 @@ export const registerOrganization = (payload: RegisterPayload) =>
   publicApi.post<{
     data: {
       organization: { id: string; name: string };
-      property: { id: string; name: string; slug: string };
       user: { id: string; email: string; name: string };
       trial_ends_at: string;
       plan: string;
