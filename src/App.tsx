@@ -61,13 +61,15 @@ const PublicRoute = ({ element }: { element: React.ReactElement }) => {
  * to /hotel/onboarding. Receptionists are unaffected.
  */
 const HotelOnboardingGuard = () => {
-  const role             = useAuthStore((s) => s.user?.role);
-  const activePropertyId = useAuthStore((s) => s.activePropertyId);
+  const role = useAuthStore((s) => s.user?.role);
   const { data, isLoading } = useQuery({
-    queryKey: ['onboarding-status', activePropertyId],
+    // Stable key — no activePropertyId so removeQueries(['onboarding-status'])
+    // in OnboardingPage.completeMut reliably clears this exact key and triggers
+    // a fresh fetch when the user navigates to /hotel/dashboard.
+    queryKey: ['onboarding-status'],
     queryFn: () => api.get('/hotel/onboarding/status').then((r) => r.data.data),
     enabled: role === 'hotel_admin',
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0, // Always re-validate; it's a cheap call and correctness matters
   });
 
   if (role === 'hotel_admin' && !isLoading && data && !data.setup_completed) {

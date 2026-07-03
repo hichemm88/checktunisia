@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -81,8 +81,16 @@ export const OnboardingPage = () => {
   // ── Determine wizard shape based on whether property already exists ──────────
   //  • hasProperty = false → 4 steps: Bienvenue, Premier établissement, Unités, C'est parti
   //  • hasProperty = true  → 3 steps: Bienvenue, Unités, C'est parti
-
-  const hasProperty = status?.has_property ?? false;
+  //
+  // IMPORTANT: Freeze hasProperty once the initial status is loaded.
+  // If we let it change mid-wizard (e.g. after creating a property), the STEPS
+  // array shrinks from 4 to 3, STEP_DONE changes from 3 to 2, and the current
+  // step (2) accidentally matches the done screen — skipping the rooms step entirely.
+  const hasPropertyRef = useRef<boolean | null>(null);
+  if (hasPropertyRef.current === null && status !== undefined) {
+    hasPropertyRef.current = status.has_property ?? false;
+  }
+  const hasProperty = hasPropertyRef.current ?? false;
 
   const STEPS = hasProperty
     ? [
@@ -109,10 +117,12 @@ export const OnboardingPage = () => {
       api.post<{ data: { id: string; name: string; type: string } }>('/hotel/organization/properties', data)
         .then((r) => r.data.data),
     onSuccess: (newProp) => {
-      // Make the new property the active one
+      // Make the new property the active one immediately so subsequent
+      // tenant-scoped requests (e.g. POST /hotel/rooms) send X-Property-Id.
+      // Do NOT invalidate onboarding-status here — that would flip hasProperty
+      // from false to true mid-wizard, collapsing STEPS from 4 to 3 items and
+      // making step 2 match STEP_DONE (skipping the rooms step entirely).
       setActiveProperty(newProp.id, newProp.name);
-      qc.invalidateQueries({ queryKey: ['onboarding-status'] });
-      qc.invalidateQueries({ queryKey: ['hotel-profile'] });
       setStep(STEP_ROOMS);
     },
     onError: (err: any) => {
@@ -140,10 +150,11 @@ export const OnboardingPage = () => {
   const completeMut = useMutation({
     mutationFn: () => api.post('/hotel/onboarding/complete'),
     onSuccess: () => {
-      qc.setQueriesData(
-        { queryKey: ['onboarding-status'] },
-        { setup_completed: true, setup_completed_at: new Date().toISOString(), has_property: true },
-      );
+      // Invalidate everything so HotelOnboardingGuard refetches with fresh data.
+      // Use removeQueries (not just setQueriesData) so both cache key variants
+      // (['onboarding-status'] and ['onboarding-status', activePropertyId]) are
+      // cleared — the next read will refetch and see setup_completed: true.
+      qc.removeQueries({ queryKey: ['onboarding-status'] });
       qc.invalidateQueries({ queryKey: ['hotel-profile'] });
       navigate('/hotel/dashboard');
     },
