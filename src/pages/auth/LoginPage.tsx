@@ -26,7 +26,8 @@ export const LoginPage = () => {
         navigate('/auth/2fa/verify', { state: { partialToken: result.partial_token } });
         return;
       }
-      setAuth(result.token, result.user);
+      // Store token expiry so auto-refresh can trigger before the 8h token expires
+      setAuth(result.token, { ...result.user, _token_expires_at: result.expires_at });
       // Role-based redirect
       if (result.user.role === 'authority_user') navigate('/authority/search');
       else if (result.user.role === 'platform_admin') navigate('/admin/hotels');

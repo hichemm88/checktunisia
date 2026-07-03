@@ -41,7 +41,7 @@ export const TwoFactorVerifyPage = () => {
     setLoading(true);
     try {
       const result = await authApi.verify2FA(partialToken, otp);
-      setAuth(result.token, result.user);
+      setAuth(result.token, { ...result.user, _token_expires_at: result.expires_at });
       navigate('/authority/search', { replace: true });
     } catch (err) {
       setError(extractErrors(err));
