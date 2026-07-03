@@ -20,6 +20,7 @@ import { SecurityPage } from '@/pages/hotel/SecurityPage';
 import { PaymentSuccessPage } from '@/pages/hotel/PaymentSuccessPage';
 import { PaymentFailedPage } from '@/pages/hotel/PaymentFailedPage';
 import { OnboardingPage } from '@/pages/hotel/OnboardingPage';
+import { PropertiesPage } from '@/pages/hotel/PropertiesPage';
 import { AuthorityDashboardPage } from '@/pages/authority/AuthorityDashboardPage';
 import { SearchPage } from '@/pages/authority/SearchPage';
 import { GuestProfilePage } from '@/pages/authority/GuestProfilePage';
@@ -107,6 +108,7 @@ export const App = () => (
 
         {/* Main hotel routes — guarded by onboarding check */}
         <Route element={<HotelOnboardingGuard />}>
+          <Route path="/hotel/properties"       element={<PropertiesPage />} />
           <Route path="/hotel/dashboard"        element={<DashboardPage />} />
           <Route path="/hotel/check-ins/new"    element={<CheckInWizardPage />} />
           <Route path="/hotel/history"          element={<HistoryPage />} />

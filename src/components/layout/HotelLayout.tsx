@@ -1,22 +1,25 @@
 import { ReactNode } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, History, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, History, Settings, LogOut, Layers } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
 
 interface HotelLayoutProps { children: ReactNode; title?: string; backHref?: string }
 
-const navItems = [
+const getNavItems = (isAdmin: boolean) => [
   { to: '/hotel/dashboard',     icon: LayoutDashboard, label: 'Accueil'    },
   { to: '/hotel/check-ins/new', icon: ClipboardList,   label: 'Check-in'  },
   { to: '/hotel/history',       icon: History,         label: 'Historique' },
+  ...(isAdmin ? [{ to: '/hotel/properties', icon: Layers, label: 'Mes biens' }] : []),
   { to: '/hotel/settings',      icon: Settings,        label: 'Paramètres' },
 ];
 
 export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const isAdmin  = user?.role === 'hotel_admin';
+  const navItems = getNavItems(isAdmin);
 
   const handleLogout = async () => {
     try { await authApi.logout(); } catch { /* ignore */ }
@@ -48,9 +51,16 @@ export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
               <span className="text-[11px] font-black tracking-tighter" style={{ color: '#C8943A' }}>CT</span>
             </div>
             <div className="flex flex-col justify-center min-w-0">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 leading-none truncate">
-                {user?.hotel?.name ?? 'CheckTunisia'}
-              </span>
+              {isAdmin ? (
+                <Link to="/hotel/properties"
+                  className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 leading-none truncate hover:underline">
+                  {user?.hotel?.name ?? 'CheckTunisia'}
+                </Link>
+              ) : (
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 leading-none truncate">
+                  {user?.hotel?.name ?? 'CheckTunisia'}
+                </span>
+              )}
               {title && (
                 <span className="text-sm font-bold text-gray-900 leading-snug mt-0.5 truncate">{title}</span>
               )}

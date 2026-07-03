@@ -5,18 +5,29 @@ const BASE = import.meta.env.VITE_API_URL ?? 'https://checktunisia-backend-produ
 const publicApi = axios.create({ baseURL: BASE });
 
 export interface RegisterPayload {
-  hotel_name: string;
-  hotel_type: string;
+  // Organization
+  entity_type: 'company' | 'individual';
+  org_name: string;
+  org_registration_number?: string;
+  org_phone?: string;
+
+  // First property
+  property_name: string;
+  property_type: string;
   room_count: number;
   stars?: number | null;
   registration_number?: string;
   address: { line1: string; city: string; governorate: string; postal_code?: string };
+
+  // Admin account
   first_name: string;
   last_name: string;
   email: string;
   phone?: string;
   password: string;
   password_confirmation: string;
+
+  // Subscription
   plan_slug: string;
 }
 
@@ -31,11 +42,19 @@ export interface SubscriptionPlan {
   features: { max_users: number; ocr_scans_per_month: number };
 }
 
-export const registerHotel = (payload: RegisterPayload) =>
-  publicApi.post<{ data: { hotel: { id: string; name: string }; user: { email: string }; trial_ends_at: string; plan: string }; message: string }>(
-    '/public/register',
-    payload,
-  ).then((r) => r.data);
+export const registerOrganization = (payload: RegisterPayload) =>
+  publicApi.post<{
+    data: {
+      organization: { id: string; name: string };
+      property: { id: string; name: string; slug: string };
+      user: { id: string; email: string; name: string };
+      trial_ends_at: string;
+      plan: string;
+    };
+    message: string;
+  }>('/public/register', payload).then((r) => r.data);
+
+export const registerHotel = registerOrganization;
 
 export const fetchPlans = () =>
   publicApi.get<{ data: SubscriptionPlan[] }>('/subscriptions/plans').then((r) => r.data.data);

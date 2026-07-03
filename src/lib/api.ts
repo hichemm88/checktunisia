@@ -6,10 +6,11 @@ export const api = axios.create({
   headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
 });
 
-// Attach token on every request
+// Attach token + active property on every request
 api.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token;
+  const { token, activePropertyId } = useAuthStore.getState();
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (activePropertyId) config.headers['X-Property-Id'] = activePropertyId;
   return config;
 });
 

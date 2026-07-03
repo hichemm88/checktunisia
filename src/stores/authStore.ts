@@ -34,8 +34,11 @@ interface AuthState {
   token: string | null;
   user: AuthUser | null;
   isAuthenticated: boolean;
+  /** UUID of the currently active property (hotel). null = first property (default). */
+  activePropertyId: string | null;
   setAuth: (token: string, user: AuthUser) => void;
   setUser: (user: AuthUser) => void;
+  setActiveProperty: (propertyId: string | null) => void;
   logout: () => void;
 }
 
@@ -45,10 +48,20 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       user: null,
       isAuthenticated: false,
+      activePropertyId: null,
       setAuth: (token, user) => set({ token, user, isAuthenticated: true }),
       setUser: (user) => set({ user }),
-      logout: () => set({ token: null, user: null, isAuthenticated: false }),
+      setActiveProperty: (propertyId) => set({ activePropertyId: propertyId }),
+      logout: () => set({ token: null, user: null, isAuthenticated: false, activePropertyId: null }),
     }),
-    { name: 'checktunisia-auth', partialize: (s) => ({ token: s.token, user: s.user, isAuthenticated: s.isAuthenticated }) },
+    {
+      name: 'checktunisia-auth',
+      partialize: (s) => ({
+        token: s.token,
+        user: s.user,
+        isAuthenticated: s.isAuthenticated,
+        activePropertyId: s.activePropertyId,
+      }),
+    },
   ),
 );
