@@ -280,7 +280,9 @@ function toMrzData(result: ReturnType<typeof mrzParse>): MrzData {
     first_name:           cleanName(f.firstName),
     date_of_birth:        mrzDateToISO(f.birthDate,      true),
     sex,
-    nationality_code:     f.nationality      || null,
+    // f.nationality peut être null si ce champ MRZ n'est pas reconnu par l'OCR.
+    // Fallback sur issuingState (même pays dans la quasi-totalité des cas).
+    nationality_code:     f.nationality || f.issuingState || null,
     document_number:      f.documentNumber   || null,
     issuing_country_code: f.issuingState     || null,
     expiry_date:          mrzDateToISO(f.expirationDate, false),
