@@ -1,15 +1,59 @@
 import { api } from '@/lib/api';
 import { AuthUser } from '@/stores/authStore';
 
-export interface LoginResponse {
-  data: { token: string; token_type: string; expires_at: string; user: AuthUser };
+export interface LoginResult {
+  token: string;
+  token_type: string;
+  expires_at: string;
+  user: AuthUser;
+  requires_2fa?: false;
 }
+
+export interface Login2FAResult {
+  requires_2fa: true;
+  partial_token: string;
+  token_type: string;
+  expires_in: number;
+  user: null;
+}
+
+export type LoginResponse = LoginResult | Login2FAResult;
 
 export const authApi = {
   login: (email: string, password: string) =>
-    api.post<LoginResponse>('/auth/login', { email, password }).then((r) => r.data.data),
+    api
+      .post<{ data: LoginResponse }>('/auth/login', { email, password })
+      .then((r) => r.data.data),
 
   logout: () => api.post('/auth/logout'),
 
   me: () => api.get<{ data: AuthUser }>('/auth/me').then((r) => r.data.data),
+
+  // 2FA — verify partial token with TOTP code → returns full token + user
+  verify2FA: (partialToken: string, code: string) =>
+    api
+      .post<{ data: LoginResult }>(
+        '/auth/2fa/verify',
+        { code },
+        { headers: { Authorization: `Bearer ${partialToken}` } }
+      )
+      .then((r) => r.data.data),
+
+  // 2FA setup — get secret + QR URI
+  get2FASetup: () =>
+    api
+      .get<{ data: { secret: string; qr_uri: string; already_enabled: boolean } }>('/auth/2fa/setup')
+      .then((r) => r.data.data),
+
+  // 2FA setup — confirm with first TOTP code
+  confirm2FASetup: (code: string) =>
+    api
+      .post<{ data: { enabled: boolean } }>('/auth/2fa/setup/confirm', { code })
+      .then((r) => r.data.data),
+
+  // 2FA disable
+  disable2FA: (code: string) =>
+    api
+      .delete<{ data: { disabled: boolean } }>('/auth/2fa/setup', { data: { code } })
+      .then((r) => r.data.data),
 };

@@ -48,13 +48,20 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-// ── Global 401 handler → logout ───────────────────────────────────────────────
+// ── Global error handlers ─────────────────────────────────────────────────────
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    const status = err.response?.status;
+    const errors: Array<{ code: string }> = err.response?.data?.errors ?? [];
+    const code = errors[0]?.code;
+
+    if (status === 401) {
       useAuthStore.getState().logout();
       window.location.href = '/login';
+    } else if (status === 403 && code === '2FA_SETUP_REQUIRED') {
+      // Authority user hasn't set up 2FA yet — redirect to mandatory setup page
+      window.location.href = '/authority/2fa/setup';
     }
     return Promise.reject(err);
   },

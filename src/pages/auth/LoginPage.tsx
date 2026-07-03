@@ -20,11 +20,16 @@ export const LoginPage = () => {
     setError('');
     setLoading(true);
     try {
-      const { token, user } = await authApi.login(email, password);
-      setAuth(token, user);
+      const result = await authApi.login(email, password);
+      // Authority user with 2FA enabled → go to TOTP verification step
+      if (result.requires_2fa) {
+        navigate('/auth/2fa/verify', { state: { partialToken: result.partial_token } });
+        return;
+      }
+      setAuth(result.token, result.user);
       // Role-based redirect
-      if (user.role === 'authority_user') navigate('/authority/search');
-      else if (user.role === 'platform_admin') navigate('/admin/hotels');
+      if (result.user.role === 'authority_user') navigate('/authority/search');
+      else if (result.user.role === 'platform_admin') navigate('/admin/hotels');
       else navigate('/hotel/dashboard');
     } catch (err) {
       setError(extractErrors(err));

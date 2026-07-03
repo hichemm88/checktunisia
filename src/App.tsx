@@ -5,6 +5,8 @@ import { IdleWarningModal } from '@/components/IdleWarningModal';
 
 // Pages
 import { LoginPage } from '@/pages/auth/LoginPage';
+import { TwoFactorVerifyPage } from '@/pages/auth/TwoFactorVerifyPage';
+import { TwoFactorSetupPage } from '@/pages/authority/TwoFactorSetupPage';
 import { DashboardPage } from '@/pages/hotel/DashboardPage';
 import { CheckInWizardPage } from '@/pages/hotel/CheckInWizardPage';
 import { HistoryPage } from '@/pages/hotel/HistoryPage';
@@ -52,6 +54,8 @@ export const App = () => (
   <Routes>
     {/* Public */}
     <Route path="/login" element={<LoginPage />} />
+    <Route path="/auth/2fa/verify" element={<TwoFactorVerifyPage />} />
+    <Route path="/authority/2fa/setup" element={<TwoFactorSetupPage />} />
 
     {/* Authenticated */}
     <Route element={<RequireAuth />}>
