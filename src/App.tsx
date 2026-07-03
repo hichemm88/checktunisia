@@ -61,9 +61,10 @@ const PublicRoute = ({ element }: { element: React.ReactElement }) => {
  * to /hotel/onboarding. Receptionists are unaffected.
  */
 const HotelOnboardingGuard = () => {
-  const role = useAuthStore((s) => s.user?.role);
+  const role             = useAuthStore((s) => s.user?.role);
+  const activePropertyId = useAuthStore((s) => s.activePropertyId);
   const { data, isLoading } = useQuery({
-    queryKey: ['onboarding-status'],
+    queryKey: ['onboarding-status', activePropertyId],
     queryFn: () => api.get('/hotel/onboarding/status').then((r) => r.data.data),
     enabled: role === 'hotel_admin',
     staleTime: 5 * 60 * 1000,

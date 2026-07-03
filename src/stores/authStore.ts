@@ -36,9 +36,11 @@ interface AuthState {
   isAuthenticated: boolean;
   /** UUID of the currently active property (hotel). null = first property (default). */
   activePropertyId: string | null;
+  /** Display name of the active property. Kept in sync with activePropertyId. */
+  activePropertyName: string | null;
   setAuth: (token: string, user: AuthUser) => void;
   setUser: (user: AuthUser) => void;
-  setActiveProperty: (propertyId: string | null) => void;
+  setActiveProperty: (propertyId: string | null, propertyName?: string | null) => void;
   logout: () => void;
 }
 
@@ -49,10 +51,13 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       activePropertyId: null,
+      activePropertyName: null,
       setAuth: (token, user) => set({ token, user, isAuthenticated: true }),
       setUser: (user) => set({ user }),
-      setActiveProperty: (propertyId) => set({ activePropertyId: propertyId }),
-      logout: () => set({ token: null, user: null, isAuthenticated: false, activePropertyId: null }),
+      setActiveProperty: (propertyId, propertyName = null) =>
+        set({ activePropertyId: propertyId, activePropertyName: propertyName }),
+      logout: () =>
+        set({ token: null, user: null, isAuthenticated: false, activePropertyId: null, activePropertyName: null }),
     }),
     {
       name: 'checktunisia-auth',
@@ -61,6 +66,7 @@ export const useAuthStore = create<AuthState>()(
         user: s.user,
         isAuthenticated: s.isAuthenticated,
         activePropertyId: s.activePropertyId,
+        activePropertyName: s.activePropertyName,
       }),
     },
   ),

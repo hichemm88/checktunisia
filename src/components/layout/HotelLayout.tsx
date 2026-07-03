@@ -16,7 +16,7 @@ const getNavItems = (isAdmin: boolean) => [
 ];
 
 export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
-  const { user, logout } = useAuthStore();
+  const { user, logout, activePropertyName } = useAuthStore();
   const navigate = useNavigate();
   const isAdmin  = user?.role === 'hotel_admin';
   const navItems = getNavItems(isAdmin);
@@ -54,11 +54,11 @@ export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
               {isAdmin ? (
                 <Link to="/hotel/properties"
                   className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 leading-none truncate hover:underline">
-                  {user?.hotel?.name ?? 'CheckTunisia'}
+                  {activePropertyName ?? user?.hotel?.name ?? 'CheckTunisia'}
                 </Link>
               ) : (
                 <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 leading-none truncate">
-                  {user?.hotel?.name ?? 'CheckTunisia'}
+                  {activePropertyName ?? user?.hotel?.name ?? 'CheckTunisia'}
                 </span>
               )}
               {title && (

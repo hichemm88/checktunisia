@@ -105,9 +105,9 @@ const EMPTY_DASH: DashboardData = {
 
 export const DashboardPage = () => {
   const navigate    = useNavigate();
-  const { user }    = useAuthStore();
+  const { user, activePropertyId } = useAuthStore();
   const { data, isLoading } = useQuery({
-    queryKey: ['dashboard'],
+    queryKey: ['dashboard', activePropertyId],
     queryFn: dashboardApi.get,
     refetchInterval: 60_000,
   });

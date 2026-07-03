@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Building2, MapPin, CheckCircle2, Layers, ChevronDown, ChevronUp,
@@ -371,14 +371,21 @@ const EditPropertyForm = ({
 
 // ── Property card ─────────────────────────────────────────────────────────────
 
-const PropertyCard = ({ property }: { property: Property }) => {
+const PropertyCard = ({
+  property,
+  isDefault,
+}: {
+  property: Property;
+  isDefault: boolean;
+}) => {
   const qc = useQueryClient();
   const { activePropertyId, setActiveProperty } = useAuthStore();
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing]   = useState(false);
   const [error, setError]       = useState('');
 
-  const isActive = activePropertyId === property.id;
+  // isActive: either explicitly selected OR it's the first property and nothing is selected (default)
+  const isActive = activePropertyId ? activePropertyId === property.id : isDefault;
 
   const editMut = useMutation({
     mutationFn: (data: object) => organizationApi.updateProperty(property.id, data),
@@ -446,7 +453,12 @@ const PropertyCard = ({ property }: { property: Property }) => {
           {/* Sélectionner / Actif */}
           {!isActive ? (
             <button
-              onClick={() => setActiveProperty(property.id)}
+              onClick={() => {
+                setActiveProperty(property.id, property.name);
+                // Invalidate property-specific queries so they refetch for the new context
+                qc.invalidateQueries({ queryKey: ['dashboard'] });
+                qc.invalidateQueries({ queryKey: ['onboarding-status'] });
+              }}
               className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all hover:bg-gray-50"
               style={{ borderColor: '#1B3A5F', color: '#1B3A5F' }}
             >
@@ -572,13 +584,22 @@ const AddPropertyForm = ({
 
 export const PropertiesPage = () => {
   const [showForm, setShowForm] = useState(false);
-  const { user } = useAuthStore();
+  const { user, activePropertyId, setActiveProperty } = useAuthStore();
 
   const { data: org, isLoading, isError, refetch } = useQuery({
     queryKey: ['org-info'],
     queryFn: organizationApi.get,
     retry: 2,
   });
+
+  // Auto-initialize activePropertyId to the first property when not yet set.
+  // This keeps the UI in sync with what ResolveTenant uses as the default.
+  useEffect(() => {
+    if (!activePropertyId && org?.properties?.length) {
+      const first = org.properties[0];
+      setActiveProperty(first.id, first.name);
+    }
+  }, [org?.properties, activePropertyId, setActiveProperty]);
 
   // Derive display name: prefer org name, fallback to hotel name from auth store
   const displayName = org?.name ?? user?.hotel?.name ?? 'Mon organisation';
@@ -639,8 +660,8 @@ export const PropertiesPage = () => {
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {(org?.properties ?? []).map((p: Property) => (
-              <PropertyCard key={p.id} property={p} />
+            {(org?.properties ?? []).map((p: Property, idx: number) => (
+              <PropertyCard key={p.id} property={p} isDefault={idx === 0} />
             ))}
             {!isLoading && (org?.properties ?? []).length === 0 && !showForm && (
               <div className="flex flex-col items-center gap-3 py-10 text-gray-400">
