@@ -1,13 +1,15 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, LogOut, CheckCircle, FileText, MapPin, CalendarDays } from 'lucide-react';
+import { ArrowLeft, LogOut, CheckCircle, FileText, MapPin, CalendarDays, Printer } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { checkInsApi } from '@/api/checkIns';
+import { settingsApi } from '@/api/settings';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
+import { PoliceFiche } from '@/components/PoliceFiche';
 
 const DetailRow = ({ label, value }: { label: string; value?: string | number | null }) => (
   <div className="flex justify-between items-start py-3 border-b border-gray-50 last:border-0">
@@ -31,6 +33,11 @@ export const HistoryDetailPage = () => {
     queryKey: ['check-in', id],
     queryFn: () => checkInsApi.get(id!),
     enabled: !!id,
+  });
+
+  const { data: hotel } = useQuery({
+    queryKey: ['hotel-profile'],
+    queryFn: () => settingsApi.getHotelProfile(),
   });
 
   const completeMutation = useMutation({
@@ -186,10 +193,25 @@ export const HistoryDetailPage = () => {
                 <LogOut className="h-5 w-5" /> Enregistrer le check-out
               </Button>
             )}
+            {hotel && (
+              <Button
+                variant="secondary"
+                fullWidth
+                size="lg"
+                onClick={() => window.print()}
+                className="gap-2"
+              >
+                <Printer className="h-5 w-5" /> Imprimer fiche de police
+              </Button>
+            )}
           </div>
 
         </div>
       </div>
+
+      {/* Print-only police fiche — invisible on screen, shown when window.print() is called */}
+      {hotel && <PoliceFiche checkIn={ci} hotel={hotel} />}
+
     </HotelLayout>
   );
 };
