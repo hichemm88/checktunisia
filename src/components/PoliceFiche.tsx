@@ -11,6 +11,7 @@
  *     et le navigateur ne peut plus l'imprimer même avec @media print.
  */
 
+import type { CSSProperties } from 'react';
 import type { CheckIn, HotelProfile } from '@/types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -55,7 +56,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 const C = '#1B3A5F'; // bleu principal
 
-const cell = (extra?: React.CSSProperties): React.CSSProperties => ({
+const cell = (extra?: CSSProperties): CSSProperties => ({
   padding: '3px 7px',
   fontSize: '8pt',
   borderBottom: '1px solid #e5e7eb',
@@ -64,7 +65,7 @@ const cell = (extra?: React.CSSProperties): React.CSSProperties => ({
   ...extra,
 });
 
-const lbl = (extra?: React.CSSProperties): React.CSSProperties => ({
+const lbl = (extra?: CSSProperties): CSSProperties => ({
   ...cell(),
   fontSize: '7.5pt',
   fontWeight: 'bold',
@@ -76,7 +77,7 @@ const lbl = (extra?: React.CSSProperties): React.CSSProperties => ({
   ...extra,
 });
 
-const th = (extra?: React.CSSProperties): React.CSSProperties => ({
+const th = (extra?: CSSProperties): CSSProperties => ({
   padding: '4px 7px',
   fontSize: '7.5pt',
   fontWeight: 'bold',
@@ -89,7 +90,7 @@ const th = (extra?: React.CSSProperties): React.CSSProperties => ({
   ...extra,
 });
 
-const td = (extra?: React.CSSProperties): React.CSSProperties => ({
+const td = (extra?: CSSProperties): CSSProperties => ({
   padding: '3px 7px',
   fontSize: '8pt',
   borderBottom: '1px solid #f0f0f0',
