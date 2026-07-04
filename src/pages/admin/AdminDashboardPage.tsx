@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import {
   Building2, ShieldCheck, TrendingUp, Search,
-  CheckCircle2, XCircle, Clock, LogOut, RefreshCw, ChevronLeft, ChevronRight, Users,
+  CheckCircle2, XCircle, Clock, LogOut, RefreshCw, ChevronLeft, ChevronRight, Users, Settings,
 } from 'lucide-react';
 import { adminApi, AdminHotel } from '@/api/admin';
 import { useAuthStore } from '@/stores/authStore';
@@ -77,6 +78,9 @@ export const AdminDashboardPage = () => {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-500 hidden sm:block">{user?.first_name} {user?.last_name}</span>
+          <Link to="/admin/settings" className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700" title="Paramètres plateforme">
+            <Settings className="h-4 w-4" />
+          </Link>
           <button onClick={logout} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700">
             <LogOut className="h-4 w-4" />
           </button>

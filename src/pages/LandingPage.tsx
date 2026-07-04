@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { fetchPlans, fetchPlatformSettings, PlatformSettings, SubscriptionPlan } from '@/api/public';
 import { Link } from 'react-router-dom';
 import {
   ShieldCheck, ScanLine, Archive, Building2, BarChart3, Bell,
@@ -201,15 +202,25 @@ const STATS = [
 
 // ─────────────────────────────────────────────────────────────────────────────
 export const LandingPage = () => {
-  const [audience,  setAudience]  = useState<'hebergeurs' | 'autorites'>('hebergeurs');
-  const [menuOpen,  setMenuOpen]  = useState(false);
-  const [scrolled,  setScrolled]  = useState(false);
-  const [billing,   setBilling]   = useState<'monthly' | 'yearly'>('monthly');
+  const [audience,    setAudience]    = useState<'hebergeurs' | 'autorites'>('hebergeurs');
+  const [menuOpen,    setMenuOpen]    = useState(false);
+  const [scrolled,    setScrolled]    = useState(false);
+  const [billing,     setBilling]     = useState<'monthly' | 'yearly'>('monthly');
+  const [apiPlans,    setApiPlans]    = useState<SubscriptionPlan[] | null>(null);
+  const [apiSettings, setApiSettings] = useState<PlatformSettings | null>(null);
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll);
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+    fetchPlans().then(setApiPlans).catch(() => {/* fallback to hardcoded PLANS */});
+    fetchPlatformSettings().then(setApiSettings).catch(() => {/* show both methods by default */});
   }, []);
 
   const scrollTo = (id: string) => {
@@ -218,6 +229,32 @@ export const LandingPage = () => {
   };
 
   const items = audience === 'hebergeurs' ? HEBERGEURS : AUTORITES;
+
+  // Merge API prices into hardcoded plans (API is source of truth for prices/rooms)
+  const displayPlans = PLANS.map((p) => {
+    const api = apiPlans?.find((a) => a.slug === p.slug);
+    if (!api) return p;
+    const monthly = Math.round(parseFloat(api.price_monthly));
+    const yearly  = api.price_yearly ? Math.round(parseFloat(api.price_yearly)) : null;
+    const maxR = api.max_rooms;
+    const minR = api.min_rooms;
+    const rooms = maxR == null
+      ? `${minR}+ chambres`
+      : minR === 1
+        ? `Jusqu'à ${maxR} chambres`
+        : `${minR} à ${maxR} chambres`;
+    const perRoom = maxR == null
+      ? `< ${Math.round(monthly / Math.max(minR, 30))} TND / chambre`
+      : `${(monthly / ((minR + maxR) / 2)).toFixed(1)} TND / chambre`;
+    return { ...p, price: monthly, yearPrice: yearly, rooms, perRoom };
+  });
+
+  // Payment settings: default both enabled while loading
+  const showFlouci   = apiSettings == null ? true  : apiSettings.flouci_enabled;
+  const showVirement = apiSettings == null ? true  : apiSettings.virement_enabled;
+  const rib          = apiSettings?.virement_rib   ?? null;
+  const bankName     = apiSettings?.virement_bank_name ?? 'Banque de Tunisie';
+  const beneficiary  = apiSettings?.virement_beneficiary ?? 'CHECKTUNISIA';
 
   return (
     <div style={{ background: C.cream, color: C.text, fontFamily: '"Inter", system-ui, sans-serif' }}>
@@ -547,7 +584,7 @@ export const LandingPage = () => {
 
         {/* Plans */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 24, marginBottom: 64 }}>
-          {PLANS.map((p) => {
+          {displayPlans.map((p) => {
             const displayPrice = billing === 'monthly'
               ? `${p.price} TND`
               : p.yearPrice
@@ -630,60 +667,74 @@ export const LandingPage = () => {
         </div>
 
         {/* ── Payment methods ── */}
-        <div style={{ background: '#fff', border: `1.5px solid ${C.border}`, borderRadius: 24, padding: '40px 32px' }}>
-          <div style={{ textAlign: 'center', marginBottom: 36 }}>
-            <h3 style={{ fontSize: 22, fontWeight: 900, color: C.navy, marginBottom: 8, letterSpacing: '-0.3px' }}>Comment régler votre abonnement ?</h3>
-            <p style={{ color: C.muted, fontSize: 15 }}>Deux modes de paiement acceptés. Vous choisissez à la fin de votre essai gratuit.</p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
-
-            {/* Flouci */}
-            <div style={{ border: `2px solid rgba(27,58,95,0.15)`, borderRadius: 20, padding: '28px 24px', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, right: 0, background: `linear-gradient(135deg,${C.gold},${C.goldLt})`, color: '#fff', fontSize: 10, fontWeight: 800, padding: '4px 14px', borderRadius: '0 20px 0 12px', letterSpacing: '0.5px' }}>
-                RECOMMANDÉ
-              </div>
-              <div style={{ height: 52, width: 52, borderRadius: 16, background: `rgba(200,148,58,0.12)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                <CreditCard style={{ height: 26, width: 26, color: C.gold }} />
-              </div>
-              <h4 style={{ fontWeight: 800, fontSize: 17, color: C.navy, marginBottom: 8 }}>Paiement en ligne — Flouci</h4>
-              <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.65, marginBottom: 20 }}>
-                Paiement immédiat et sécurisé par carte bancaire tunisienne, D17 ou wallet Flouci.
-                Votre abonnement est activé instantanément après confirmation.
+        {(showFlouci || showVirement) && (
+          <div style={{ background: '#fff', border: `1.5px solid ${C.border}`, borderRadius: 24, padding: '40px 32px' }}>
+            <div style={{ textAlign: 'center', marginBottom: 36 }}>
+              <h3 style={{ fontSize: 22, fontWeight: 900, color: C.navy, marginBottom: 8, letterSpacing: '-0.3px' }}>Comment régler votre abonnement ?</h3>
+              <p style={{ color: C.muted, fontSize: 15 }}>
+                {showFlouci && showVirement
+                  ? 'Deux modes de paiement acceptés. Vous choisissez à la fin de votre essai gratuit.'
+                  : 'Vous choisissez votre mode de paiement à la fin de votre essai gratuit.'}
               </p>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {['Activation immédiate', 'Reçu par email automatique', 'Renouvellement automatique possible'].map((f) => (
-                  <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#374151' }}>
-                    <CheckCircle2 style={{ height: 14, width: 14, color: '#22c55e', flexShrink: 0 }} /> {f}
-                  </li>
-                ))}
-              </ul>
             </div>
 
-            {/* Virement */}
-            <div style={{ border: `1.5px solid ${C.border}`, borderRadius: 20, padding: '28px 24px' }}>
-              <div style={{ height: 52, width: 52, borderRadius: 16, background: `rgba(27,58,95,0.07)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                <Landmark style={{ height: 26, width: 26, color: C.navy }} />
-              </div>
-              <h4 style={{ fontWeight: 800, fontSize: 17, color: C.navy, marginBottom: 8 }}>Virement bancaire</h4>
-              <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.65, marginBottom: 20 }}>
-                Effectuez un virement sur notre compte bancaire. Votre abonnement est activé manuellement
-                sous 24 à 48h ouvrées après réception et vérification du virement.
-              </p>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {['RIB communiqué après inscription', 'Confirmation par email', 'Facturation sur 30 jours'].map((f) => (
-                  <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#374151' }}>
-                    <CheckCircle2 style={{ height: 14, width: 14, color: '#6b7280', flexShrink: 0 }} /> {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
 
-          <p style={{ textAlign: 'center', marginTop: 28, fontSize: 13, color: C.mutedLt }}>
-            💡 Aucune carte bancaire requise pendant les 30 jours d'essai. Vous choisissez votre mode de paiement uniquement si vous souhaitez continuer.
-          </p>
-        </div>
+              {/* Flouci */}
+              {showFlouci && (
+                <div style={{ border: `2px solid rgba(27,58,95,0.15)`, borderRadius: 20, padding: '28px 24px', position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: 0, right: 0, background: `linear-gradient(135deg,${C.gold},${C.goldLt})`, color: '#fff', fontSize: 10, fontWeight: 800, padding: '4px 14px', borderRadius: '0 20px 0 12px', letterSpacing: '0.5px' }}>
+                    RECOMMANDÉ
+                  </div>
+                  <div style={{ height: 52, width: 52, borderRadius: 16, background: `rgba(200,148,58,0.12)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                    <CreditCard style={{ height: 26, width: 26, color: C.gold }} />
+                  </div>
+                  <h4 style={{ fontWeight: 800, fontSize: 17, color: C.navy, marginBottom: 8 }}>Paiement en ligne — Flouci</h4>
+                  <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.65, marginBottom: 20 }}>
+                    Paiement immédiat et sécurisé par carte bancaire tunisienne, D17 ou wallet Flouci.
+                    Votre abonnement est activé instantanément après confirmation.
+                  </p>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {['Activation immédiate', 'Reçu par email automatique', 'Renouvellement automatique possible'].map((f) => (
+                      <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#374151' }}>
+                        <CheckCircle2 style={{ height: 14, width: 14, color: '#22c55e', flexShrink: 0 }} /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Virement */}
+              {showVirement && (
+                <div style={{ border: `1.5px solid ${C.border}`, borderRadius: 20, padding: '28px 24px' }}>
+                  <div style={{ height: 52, width: 52, borderRadius: 16, background: `rgba(27,58,95,0.07)`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                    <Landmark style={{ height: 26, width: 26, color: C.navy }} />
+                  </div>
+                  <h4 style={{ fontWeight: 800, fontSize: 17, color: C.navy, marginBottom: 8 }}>Virement bancaire</h4>
+                  <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.65, marginBottom: 20 }}>
+                    Effectuez un virement sur notre compte bancaire ({bankName}).
+                    Votre abonnement est activé manuellement sous 24 à 48h ouvrées.
+                  </p>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {[
+                      rib ? `RIB : ${rib}` : 'RIB communiqué après inscription',
+                      beneficiary ? `Bénéficiaire : ${beneficiary}` : 'Confirmation par email',
+                      'Facturation sur 30 jours',
+                    ].map((f) => (
+                      <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#374151' }}>
+                        <CheckCircle2 style={{ height: 14, width: 14, color: '#6b7280', flexShrink: 0 }} /> {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <p style={{ textAlign: 'center', marginTop: 28, fontSize: 13, color: C.mutedLt }}>
+              💡 Aucune carte bancaire requise pendant les 30 jours d'essai. Vous choisissez votre mode de paiement uniquement si vous souhaitez continuer.
+            </p>
+          </div>
+        )}
       </section>
 
       {/* ══ CTA BANNER ══════════════════════════════════════════════════════ */}

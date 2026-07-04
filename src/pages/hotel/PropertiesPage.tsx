@@ -403,79 +403,90 @@ const PropertyCard = ({
       style={{ outline: isActive ? '2px solid #1B3A5F' : 'none' }}
     >
       {/* ── Header ── */}
-      <div className="p-4 flex items-center gap-3">
+      <div className="p-4 flex items-start gap-3">
+        {/* Icon */}
         <div
-          className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 transition-colors"
+          className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 mt-0.5 transition-colors"
           style={{ background: isActive ? '#1B3A5F' : '#F5F4EF' }}
         >
           <Building2 className={`h-5 w-5 transition-colors ${isActive ? 'text-white' : 'text-gray-400'}`} />
         </div>
 
+        {/* Main content — prend tout l'espace disponible */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-semibold text-gray-900 truncate">{property.name}</p>
-            {isActive && (
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                style={{ background: '#1B3A5F18', color: '#1B3A5F' }}>
-                Actif
-              </span>
-            )}
-            {property.stars && (
-              <div className="flex gap-0.5">
-                {Array.from({ length: property.stars }).map((_, i) => (
-                  <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />
-                ))}
+          {/* Ligne 1 : nom + badges + actions icon */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              {/* Nom — toujours visible */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="font-bold text-gray-900 leading-snug break-words">{property.name}</p>
+                {isActive && (
+                  <span className="inline-flex shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                    style={{ background: '#1B3A5F18', color: '#1B3A5F' }}>
+                    Actif
+                  </span>
+                )}
               </div>
-            )}
+              {/* Infos secondaires */}
+              <p className="text-xs text-gray-400 mt-0.5">
+                <span className="font-medium" style={{ color: STATUS_COLOR[property.status] ?? '#9ca3af' }}>
+                  ●
+                </span>
+                {' '}
+                {PROPERTY_TYPE_LABELS[property.type] ?? property.type}
+                {' · '}
+                {property.room_count} unité{property.room_count !== 1 ? 's' : ''}
+                {property.address?.city && ` · ${property.address.city}`}
+              </p>
+              {/* Étoiles */}
+              {property.stars ? (
+                <div className="flex gap-0.5 mt-1">
+                  {Array.from({ length: property.stars }).map((_, i) => (
+                    <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            {/* Boutons icon seulement — 2 max, ne prennent pas beaucoup de place */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button
+                onClick={() => { setEditing((e) => !e); setExpanded(false); setError(''); }}
+                className="rounded-lg p-2 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors"
+                title="Modifier"
+              >
+                {editing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+              </button>
+              <button
+                onClick={() => { setExpanded((e) => !e); setEditing(false); }}
+                className="rounded-lg p-2 text-gray-400 hover:text-gray-700 transition-colors"
+                title={expanded ? 'Réduire' : 'Voir les chambres'}
+              >
+                {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
-          <p className="text-xs text-gray-400">
-            {PROPERTY_TYPE_LABELS[property.type] ?? property.type}
-            {' · '}
-            {property.room_count} unité{property.room_count !== 1 ? 's' : ''}
-            {property.address && ` · ${property.address.city}, ${property.address.governorate}`}
-          </p>
-        </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-xs font-semibold" style={{ color: STATUS_COLOR[property.status] ?? '#9ca3af' }}>
-            ● {property.status}
-          </span>
-
-          {/* Modifier */}
-          <button
-            onClick={() => { setEditing((e) => !e); setExpanded(false); setError(''); }}
-            className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors"
-            title="Modifier"
-          >
-            {editing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
-          </button>
-
-          {/* Sélectionner / Actif */}
+          {/* Ligne 2 : bouton Sélectionner pleine largeur (si pas actif) */}
           {!isActive ? (
             <button
               onClick={() => {
                 setActiveProperty(property.id, property.name);
-                // Invalidate property-specific queries so they refetch for the new context
                 qc.invalidateQueries({ queryKey: ['dashboard'] });
                 qc.invalidateQueries({ queryKey: ['onboarding-status'] });
               }}
-              className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all hover:bg-gray-50"
+              className="mt-3 w-full flex items-center justify-center gap-2 text-sm font-semibold py-2 rounded-xl border transition-all hover:bg-blue-50 active:scale-[0.98]"
               style={{ borderColor: '#1B3A5F', color: '#1B3A5F' }}
             >
-              Sélectionner
+              <CheckCircle2 className="h-4 w-4" />
+              Définir comme établissement actif
             </button>
           ) : (
-            <CheckCircle2 className="h-5 w-5" style={{ color: '#1B3A5F' }} />
+            <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#1B3A5F' }}>
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Établissement sélectionné
+            </div>
           )}
-
-          {/* Expand rooms */}
-          <button
-            onClick={() => { setExpanded((e) => !e); setEditing(false); }}
-            className="rounded-lg p-1.5 text-gray-400 hover:text-gray-700 transition-colors"
-            title={expanded ? 'Réduire' : 'Voir les chambres'}
-          >
-            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
         </div>
       </div>
 

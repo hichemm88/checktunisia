@@ -53,11 +53,11 @@ export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
             <div className="flex flex-col justify-center min-w-0">
               {isAdmin ? (
                 <Link to="/hotel/properties"
-                  className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 leading-none truncate hover:underline">
+                  className="text-xs font-semibold text-gray-500 leading-none truncate hover:underline">
                   {activePropertyName ?? user?.hotel?.name ?? 'Qayed'}
                 </Link>
               ) : (
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 leading-none truncate">
+                <span className="text-xs font-semibold text-gray-500 leading-none truncate">
                   {activePropertyName ?? user?.hotel?.name ?? 'Qayed'}
                 </span>
               )}

@@ -48,4 +48,17 @@ export const registerOrganization = (payload: RegisterPayload) =>
 export const registerHotel = registerOrganization;
 
 export const fetchPlans = () =>
-  publicApi.get<{ data: SubscriptionPlan[] }>('/subscriptions/plans').then((r) => r.data.data);
+  publicApi.get<{ data: SubscriptionPlan[] }>('/public/plans').then((r) => r.data.data);
+
+export interface PlatformSettings {
+  flouci_enabled:       boolean;
+  virement_enabled:     boolean;
+  virement_rib:         string | null;
+  virement_iban:        string | null;
+  virement_bank_name:   string | null;
+  virement_beneficiary: string | null;
+  virement_details:     string | null;
+}
+
+export const fetchPlatformSettings = () =>
+  publicApi.get<{ data: PlatformSettings }>('/public/settings').then((r) => r.data.data);

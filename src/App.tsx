@@ -30,6 +30,7 @@ import { AlertsPage } from '@/pages/authority/AlertsPage';
 import { ActivityPage } from '@/pages/authority/ActivityPage';
 import { WatchlistPage } from '@/pages/authority/WatchlistPage';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
+import { AdminPlatformSettingsPage } from '@/pages/admin/AdminPlatformSettingsPage';
 import { ProfilePage } from '@/pages/profile/ProfilePage';
 
 // ─── Guards ─────────────────────────────────────────────────────────────────
@@ -137,7 +138,8 @@ export const App = () => (
 
       {/* Admin */}
       <Route element={<RequireRole roles={['platform_admin']} />}>
-        <Route path="/admin/hotels" element={<AdminDashboardPage />} />
+        <Route path="/admin/hotels"    element={<AdminDashboardPage />} />
+        <Route path="/admin/settings"  element={<AdminPlatformSettingsPage />} />
       </Route>
     </Route>
 

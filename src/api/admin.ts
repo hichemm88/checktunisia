@@ -27,5 +27,10 @@ export const adminApi = {
   addSub:       (hotelId: string, data: object) => api.post(`/admin/hotels/${hotelId}/subscriptions`, data),
   getSubs:      (hotelId: string) => api.get(`/admin/hotels/${hotelId}/subscriptions`).then((r) => r.data.data),
   getInvoices:  (hotelId: string) => api.get(`/admin/hotels/${hotelId}/invoices`).then((r) => r.data.data),
-  plans:        () => api.get('/subscriptions/plans').then((r) => r.data.data),
+  plans:        () => api.get('/admin/plans').then((r) => r.data.data),
+  updatePlan:   (id: number, data: object) => api.patch(`/admin/plans/${id}`, data).then((r) => r.data.data),
+
+  // Platform settings (payment methods, Flouci config, RIB)
+  getPlatformSettings:    () => api.get('/admin/platform-settings').then((r) => r.data.data),
+  updatePlatformSettings: (data: object) => api.patch('/admin/platform-settings', data).then((r) => r.data.data),
 };
