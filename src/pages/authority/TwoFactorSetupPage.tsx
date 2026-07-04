@@ -199,7 +199,7 @@ export const TwoFactorSetupPage = () => {
         </div>
 
         <p className="mt-4 text-center text-xs text-gray-400">
-          © {new Date().getFullYear()} CheckTunisia — Plateforme agréée MdI
+          © {new Date().getFullYear()} Qayed — Plateforme agréée MdI
         </p>
       </div>
     </div>

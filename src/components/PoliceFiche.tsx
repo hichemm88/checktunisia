@@ -210,7 +210,7 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
                   borderRadius: '3px',
                   marginBottom: '4px',
                 }}>
-                  CHECKTUNISIA
+                  QAYED
                 </div>
                 <div style={{ fontSize: '7pt', color: '#9ca3af' }}>Imprimé le {now}</div>
               </td>
@@ -381,7 +381,7 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
           color: '#d1d5db',
           letterSpacing: '0.5px',
         }}>
-          CheckTunisia · {hotel.name} · {ci.reference}
+          Qayed · {hotel.name} · {ci.reference}
         </div>
 
       </div>

@@ -48,7 +48,7 @@ export const LoginPage = () => {
             <Shield className="h-7 w-7 text-gold-500" />
           </div>
           <div className="text-center">
-            <h1 className="text-xl font-bold text-gray-900">CheckTunisia</h1>
+            <h1 className="text-xl font-bold text-gray-900">Qayed</h1>
             <p className="text-sm text-gray-500">Enregistrement numérique des hôtes</p>
           </div>
         </div>
@@ -89,7 +89,7 @@ export const LoginPage = () => {
         </form>
 
         <p className="mt-4 text-center text-xs text-gray-400">
-          © {new Date().getFullYear()} CheckTunisia — Plateforme agréée MdI
+          © {new Date().getFullYear()} Qayed — Plateforme agréée MdI
         </p>
       </div>
     </div>

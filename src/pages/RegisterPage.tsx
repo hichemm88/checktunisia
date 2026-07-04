@@ -70,7 +70,7 @@ export const RegisterPage = () => {
         </div>
         <h2 className="text-xl font-bold text-gray-900 mb-2">Inscription réussie !</h2>
         <p className="text-gray-500 text-sm mb-1">
-          <strong>{done.orgName}</strong> est maintenant sur CheckTunisia.
+          <strong>{done.orgName}</strong> est maintenant sur Qayed.
         </p>
         <p className="text-gray-400 text-sm mb-6">
           Essai gratuit actif jusqu'au <strong>{done.trialEnds}</strong>.
@@ -98,7 +98,7 @@ export const RegisterPage = () => {
           <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: '#1B3A5F' }}>
             <ShieldCheck className="h-4 w-4 text-white" />
           </div>
-          <span className="font-bold text-sm" style={{ color: '#1B3A5F' }}>CheckTunisia</span>
+          <span className="font-bold text-sm" style={{ color: '#1B3A5F' }}>Qayed</span>
         </div>
       </div>
 

@@ -64,7 +64,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
 
             <div className="hidden sm:flex flex-col leading-tight min-w-0">
               <span className="text-xs font-bold text-white/90 truncate">
-                {profile?.org_name ?? 'CheckTunisia'}
+                {profile?.org_name ?? 'Qayed'}
               </span>
               {isPolice && profile?.governorate && (
                 <span className="flex items-center gap-1 text-[10px] text-white/50">

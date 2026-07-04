@@ -196,7 +196,7 @@ export const DashboardPage = () => {
                     ? 'Abonnement inactif'
                     : `Expire dans ${sub.days_remaining} jour${sub.days_remaining !== 1 ? 's' : ''}`}
                 </p>
-                <p className="text-xs text-amber-600 mt-0.5">Contactez support@checktunisia.tn</p>
+                <p className="text-xs text-amber-600 mt-0.5">Contactez support@qayed.tn</p>
               </div>
             </div>
           )}

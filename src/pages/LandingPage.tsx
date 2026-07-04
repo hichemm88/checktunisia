@@ -246,7 +246,7 @@ export const LandingPage = () => {
           <div style={{ height: 34, width: 34, borderRadius: 10, background: `linear-gradient(135deg,${C.navy},${C.navyMid})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ShieldCheck style={{ height: 18, width: 18, color: '#fff' }} />
           </div>
-          <span style={{ fontWeight: 800, fontSize: 16, color: C.navy, letterSpacing: '-0.3px' }}>CheckTunisia</span>
+          <span style={{ fontWeight: 800, fontSize: 16, color: C.navy, letterSpacing: '-0.3px' }}>Qayed</span>
         </div>
 
         {/* Desktop links */}
@@ -366,7 +366,7 @@ export const LandingPage = () => {
         </h1>
 
         <p style={{ fontSize: 18, color: C.muted, maxWidth: 560, marginBottom: 40, lineHeight: 1.7 }}>
-          CheckTunisia permet aux hébergements tunisiens de gérer les check-ins, scanner les
+          Qayed permet aux hébergements tunisiens de gérer les check-ins, scanner les
           documents de voyage et rester en conformité — le tout depuis un smartphone, en moins
           de 5 secondes par voyageur.
         </p>
@@ -412,7 +412,7 @@ export const LandingPage = () => {
             Conçu pour deux publics, indispensable pour les deux.
           </h2>
           <p style={{ color: C.muted, fontSize: 16, marginBottom: 32 }}>
-            CheckTunisia sert à la fois les hébergeurs qui cherchent la simplicité,
+            Qayed sert à la fois les hébergeurs qui cherchent la simplicité,
             et les autorités qui ont besoin de données fiables.
           </p>
 
@@ -725,7 +725,7 @@ export const LandingPage = () => {
                 <div style={{ height: 32, width: 32, borderRadius: 10, background: C.navy, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <ShieldCheck style={{ height: 16, width: 16, color: '#fff' }} />
                 </div>
-                <span style={{ fontWeight: 800, fontSize: 15, color: C.navy }}>CheckTunisia</span>
+                <span style={{ fontWeight: 800, fontSize: 15, color: C.navy }}>Qayed</span>
               </div>
               <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.7 }}>
                 Plateforme de conformité hôtelière pour les établissements tunisiens.
@@ -747,7 +747,7 @@ export const LandingPage = () => {
             <div>
               <p style={{ fontWeight: 700, fontSize: 13, color: C.navy, marginBottom: 16, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Contact</p>
               <p style={{ fontSize: 14, color: C.muted, marginBottom: 8 }}>
-                <a href="mailto:contact@checktunisia.com" style={{ color: C.navy, textDecoration: 'none', fontWeight: 600 }}>contact@checktunisia.com</a>
+                <a href="mailto:contact@qayed.com" style={{ color: C.navy, textDecoration: 'none', fontWeight: 600 }}>contact@qayed.com</a>
               </p>
               <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6 }}>
                 Tunis, Tunisie<br />
@@ -758,7 +758,7 @@ export const LandingPage = () => {
 
           {/* Bottom bar */}
           <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-            <p style={{ fontSize: 13, color: C.mutedLt }}>© {new Date().getFullYear()} CheckTunisia. Tous droits réservés.</p>
+            <p style={{ fontSize: 13, color: C.mutedLt }}>© {new Date().getFullYear()} Qayed. Tous droits réservés.</p>
             <div style={{ display: 'flex', gap: 24 }}>
               {['Mentions légales', 'Politique de confidentialité', 'CGU'].map((l) => (
                 <a key={l} href="#" style={{ fontSize: 13, color: C.mutedLt, textDecoration: 'none', transition: 'color .15s' }}

@@ -48,17 +48,17 @@ export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
               className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0"
               style={{ background: '#1B3A5F' }}
             >
-              <span className="text-[11px] font-black tracking-tighter" style={{ color: '#C8943A' }}>CT</span>
+              <span className="text-[11px] font-black tracking-tighter" style={{ color: '#C8943A' }}>QY</span>
             </div>
             <div className="flex flex-col justify-center min-w-0">
               {isAdmin ? (
                 <Link to="/hotel/properties"
                   className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 leading-none truncate hover:underline">
-                  {activePropertyName ?? user?.hotel?.name ?? 'CheckTunisia'}
+                  {activePropertyName ?? user?.hotel?.name ?? 'Qayed'}
                 </Link>
               ) : (
                 <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 leading-none truncate">
-                  {activePropertyName ?? user?.hotel?.name ?? 'CheckTunisia'}
+                  {activePropertyName ?? user?.hotel?.name ?? 'Qayed'}
                 </span>
               )}
               {title && (

@@ -73,7 +73,7 @@ export const AdminDashboardPage = () => {
           <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: '#1B3A5F' }}>
             <ShieldCheck className="h-4 w-4 text-white" />
           </div>
-          <span className="font-bold text-gray-900">CheckTunisia <span className="text-xs font-normal text-gray-400">Admin</span></span>
+          <span className="font-bold text-gray-900">Qayed <span className="text-xs font-normal text-gray-400">Admin</span></span>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-500 hidden sm:block">{user?.first_name} {user?.last_name}</span>

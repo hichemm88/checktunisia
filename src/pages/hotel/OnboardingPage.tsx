@@ -220,7 +220,7 @@ export const OnboardingPage = () => {
         <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: '#1B3A5F' }}>
           <ShieldCheck className="h-5 w-5 text-white" />
         </div>
-        <span className="font-bold text-lg" style={{ color: '#1B3A5F' }}>CheckTunisia</span>
+        <span className="font-bold text-lg" style={{ color: '#1B3A5F' }}>Qayed</span>
       </div>
 
       {/* Step indicator */}
@@ -256,7 +256,7 @@ export const OnboardingPage = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900 mb-2">
-                {hasProperty && profile ? `Bienvenue, ${profile.name} !` : 'Bienvenue sur CheckTunisia !'}
+                {hasProperty && profile ? `Bienvenue, ${profile.name} !` : 'Bienvenue sur Qayed !'}
               </h1>
               <p className="text-sm text-gray-500 leading-relaxed">
                 {hasProperty

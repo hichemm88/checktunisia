@@ -61,7 +61,7 @@ export const useAuthStore = create<AuthState>()(
         set({ token: null, user: null, isAuthenticated: false, activePropertyId: null, activePropertyName: null }),
     }),
     {
-      name: 'checktunisia-auth',
+      name: 'qayed-auth',
       partialize: (s) => ({
         token: s.token,
         user: s.user,

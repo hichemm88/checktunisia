@@ -432,7 +432,7 @@ const SubscriptionCard = () => {
             </div>
           </div>
           <p className="text-xs text-gray-400 mt-3">
-            Pour renouveler: <a href="mailto:support@checktunisia.tn" className="text-primary-600 underline">support@checktunisia.tn</a>
+            Pour renouveler: <a href="mailto:support@qayed.tn" className="text-primary-600 underline">support@qayed.tn</a>
           </p>
         </Card>
       )}
@@ -587,7 +587,7 @@ export const SettingsPage = () => {
             className="h-1 w-12 rounded-full mb-1"
             style={{ background: 'linear-gradient(90deg, #1B3A5F, #C8943A)' }}
           />
-          <p className="text-xs text-gray-400">CheckTunisia v1.0</p>
+          <p className="text-xs text-gray-400">Qayed v1.0</p>
           <p className="text-xs text-gray-300">Conforme à la réglementation tunisienne</p>
         </div>
       </div>
