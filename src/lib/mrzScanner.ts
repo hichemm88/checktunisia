@@ -326,12 +326,23 @@ async function runOcr(
  * Solution : pointer vers jsDelivr pour le worker, le core WASM et les modèles.
  * La CSP vercel.json autorise cdn.jsdelivr.net dans connect-src ET worker-src.
  */
-const TESSERACT_VER  = '5.1.1';
-const CDN            = 'https://cdn.jsdelivr.net/npm';
+export const TESSERACT_VER  = '5.1.1';
+export const CDN            = 'https://cdn.jsdelivr.net/npm';
 // worker.min.js est copié dans public/ → servi en same-origin → pas de contrainte worker-src
-const WORKER_PATH    = '/worker.min.js';
-const CORE_PATH      = `${CDN}/tesseract.js-core@${TESSERACT_VER}`;
-const ENG_LANG_PATH  = `${CDN}/tesseract.js-data@4.0.0_best_int/dist`;
+export const WORKER_PATH    = '/worker.min.js';
+export const CORE_PATH      = `${CDN}/tesseract.js-core@${TESSERACT_VER}`;
+/**
+ * Dossier CDN par langue pour les modèles tesseract.js standards (eng, ara, ...).
+ *
+ * ATTENTION : le package npm générique "tesseract.js-data" n'existe PAS
+ * (vérifié sur le registre npm — 404). Le vrai schéma, repris du code source de
+ * tesseract.js (worker-script/index.js), est un package scope PAR LANGUE :
+ *   https://cdn.jsdelivr.net/npm/@tesseract.js-data/<lang>/4.0.0_best_int/<lang>.traineddata.gz
+ * `langPath` doit pointer sur le dossier (sans le nom de fichier) — tesseract
+ * ajoute lui-même `/${lang}.traineddata(.gz)`.
+ */
+export const langDataPath = (lang: string) => `${CDN}/@tesseract.js-data/${lang}/4.0.0_best_int`;
+const ENG_LANG_PATH  = langDataPath('eng');
 // Modèle bundlé dans public/tessdata/ — servi en same-origin, pas de CDN GitHub.
 // Fichier à placer : frontend/public/tessdata/ocrb_int.traineddata (1.4 MB)
 // Source : https://cdn.jsdelivr.net/gh/Shreeshrii/tessdata_ocrb@master/ocrb_int.traineddata
@@ -355,6 +366,7 @@ export async function scanMrz(
       workerPath: WORKER_PATH,
       corePath:   CORE_PATH,
       langPath:   OCRB_LANG_PATH,
+      workerBlobURL: false,
       gzip: false, // ocrb_int.traineddata est non compressé
       logger: (m: { status: string; progress: number }) => {
         if (m.status === 'loading tesseract core')        report(5  + m.progress * 15);
@@ -372,6 +384,7 @@ export async function scanMrz(
       workerPath: WORKER_PATH,
       corePath:   CORE_PATH,
       langPath:   ENG_LANG_PATH,
+      workerBlobURL: false,
       logger: (m: { status: string; progress: number }) => {
         if (m.status === 'loading language traineddata') report(20 + m.progress * 30);
         else if (m.status === 'recognizing text')        report(60 + m.progress * 20);

@@ -2,7 +2,7 @@ import { useState, useRef, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
-  Camera, CheckCircle, User, UserPlus,
+  Camera, CheckCircle, User, UserPlus, IdCard,
   Loader2, ArrowLeft, ArrowRight, Minus, Plus, ScanLine,
 } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
@@ -15,7 +15,8 @@ import { checkInsApi, AddGuestPayload, CreateCheckInPayload } from '@/api/checkI
 import { roomsApi } from '@/api/rooms';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
-import { scanMrz, MrzData } from '@/lib/mrzScanner';
+import { scanMrz } from '@/lib/mrzScanner';
+import { scanCin } from '@/lib/cinScanner';
 import { CheckIn } from '@/types';
 
 const STEPS = [
@@ -30,6 +31,8 @@ const SEX_OPTIONS = [
   { value: 'F', label: 'Féminin'  },
   { value: 'X', label: 'Autre'    },
 ];
+
+type ScanDocType = 'passport' | 'national_id';
 
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString('fr-TN', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
@@ -151,9 +154,17 @@ const GuestScanPanel = ({
   const { toast } = useToast();
   const fileRef   = useRef<HTMLInputElement>(null);
   const [scanState, setScanState]     = useState<'idle' | 'scanning' | 'done' | 'error'>('idle');
+  const [scanDocType, setScanDocType] = useState<ScanDocType>('passport');
   const [ocrProgress, setOcrProgress] = useState(0);
-  const [extracted, setExtracted]     = useState<MrzData | null>(null);
+  const [extractedOk, setExtractedOk] = useState(false);
+  // Texte arabe brut détecté sur la CIN — aide l'utilisateur à juger/corriger la translittération.
+  const [rawArabic, setRawArabic]     = useState<{ first: string | null; last: string | null } | null>(null);
   const [guestForm, setGuestForm]     = useState<Partial<AddGuestPayload>>({ is_primary: isPrimary });
+
+  const startScan = (docType: ScanDocType) => {
+    setScanDocType(docType);
+    fileRef.current?.click();
+  };
 
   const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -161,20 +172,38 @@ const GuestScanPanel = ({
     setScanState('scanning');
     setOcrProgress(0);
     try {
-      const mrz = await scanMrz(file, setOcrProgress);
-      setExtracted(mrz);
-      setGuestForm({
-        first_name: mrz.first_name ?? '',
-        last_name: mrz.last_name ?? '',
-        date_of_birth: mrz.date_of_birth ?? '',
-        sex: mrz.sex ?? 'M',
-        nationality_code: mrz.nationality_code ?? '',
-        document_type: mrz.document_type,
-        document_number: mrz.document_number ?? '',
-        issuing_country_code: mrz.issuing_country_code ?? '',
-        expiry_date: mrz.expiry_date ?? '',
-        is_primary: isPrimary,
-      });
+      if (scanDocType === 'national_id') {
+        const cin = await scanCin(file, setOcrProgress);
+        setRawArabic({ first: cin.raw_first_name_ar, last: cin.raw_last_name_ar });
+        setGuestForm({
+          first_name: cin.first_name ?? '',
+          last_name: cin.last_name ?? '',
+          date_of_birth: cin.date_of_birth ?? '',
+          sex: 'M',
+          nationality_code: cin.nationality_code,
+          document_type: cin.document_type,
+          document_number: cin.document_number ?? '',
+          issuing_country_code: cin.issuing_country_code,
+          expiry_date: '',
+          is_primary: isPrimary,
+        });
+      } else {
+        const mrz = await scanMrz(file, setOcrProgress);
+        setRawArabic(null);
+        setGuestForm({
+          first_name: mrz.first_name ?? '',
+          last_name: mrz.last_name ?? '',
+          date_of_birth: mrz.date_of_birth ?? '',
+          sex: mrz.sex ?? 'M',
+          nationality_code: mrz.nationality_code ?? '',
+          document_type: mrz.document_type,
+          document_number: mrz.document_number ?? '',
+          issuing_country_code: mrz.issuing_country_code ?? '',
+          expiry_date: mrz.expiry_date ?? '',
+          is_primary: isPrimary,
+        });
+      }
+      setExtractedOk(true);
       setScanState('done');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Scan échoué';
@@ -192,7 +221,7 @@ const GuestScanPanel = ({
 
   const setG = (k: string, v: string) => setGuestForm((f) => ({ ...f, [k]: v }));
   const reset = () => {
-    setScanState('idle'); setExtracted(null);
+    setScanState('idle'); setExtractedOk(false); setRawArabic(null);
     setGuestForm({ is_primary: isPrimary });
     if (fileRef.current) fileRef.current.value = '';
   };
@@ -230,13 +259,17 @@ const GuestScanPanel = ({
             <ScanLine className="h-8 w-8 text-white" />
           </div>
           <p className="text-xs text-center text-gray-400">
-            Photographiez la page du passeport<br />avec la zone MRZ visible en bas
+            Passeport : photographiez la page avec la zone MRZ visible en bas.<br />
+            CIN : photographiez le recto bien à plat, numéro et nom visibles.
           </p>
-          <div className="flex gap-3">
-            <Button onClick={() => fileRef.current?.click()}>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button onClick={() => startScan('passport')}>
               <Camera className="h-4 w-4" /> Scanner le passeport
             </Button>
-            <Button variant="secondary" onClick={() => { setExtracted(null); setScanState('done'); }}>
+            <Button onClick={() => startScan('national_id')}>
+              <IdCard className="h-4 w-4" /> Scanner la CIN
+            </Button>
+            <Button variant="secondary" onClick={() => { setRawArabic(null); setExtractedOk(false); setScanState('done'); }}>
               Saisie manuelle
             </Button>
           </div>
@@ -252,7 +285,9 @@ const GuestScanPanel = ({
           >
             <Loader2 className="h-7 w-7 animate-spin" style={{ color: '#1B3A5F' }} />
           </div>
-          <p className="text-sm font-semibold text-gray-700">Lecture MRZ en cours…</p>
+          <p className="text-sm font-semibold text-gray-700">
+            {scanDocType === 'national_id' ? 'Lecture CIN en cours…' : 'Lecture MRZ en cours…'}
+          </p>
           <div className="w-full max-w-xs rounded-full bg-gray-100 h-2">
             <div
               className="h-2 rounded-full transition-all duration-300"
@@ -266,7 +301,7 @@ const GuestScanPanel = ({
       {/* ── Done — form ── */}
       {scanState === 'done' && (
         <>
-          {extracted && (
+          {extractedOk && (
             <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-emerald-50 border border-emerald-200">
               <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" />
               <p className="text-xs font-semibold text-emerald-800">
@@ -274,8 +309,25 @@ const GuestScanPanel = ({
               </p>
             </div>
           )}
+          {guestForm.document_type === 'national_id' && (rawArabic?.first || rawArabic?.last) && (
+            <div className="rounded-xl px-3 py-2.5 bg-amber-50 border border-amber-200">
+              <p className="text-xs font-semibold text-amber-800 mb-0.5">Texte arabe détecté (à vérifier)</p>
+              <p className="text-xs text-amber-700" dir="rtl">
+                {rawArabic.last ?? '—'} · {rawArabic.first ?? '—'}
+              </p>
+            </div>
+          )}
 
           <div className="flex flex-col gap-3">
+            <Select
+              label="Type de document"
+              options={[
+                { value: 'passport', label: 'Passeport' },
+                { value: 'national_id', label: 'CIN (Carte d’identité nationale)' },
+              ]}
+              value={guestForm.document_type ?? 'passport'}
+              onChange={(e) => setG('document_type', e.target.value)}
+            />
             <div className="grid grid-cols-2 gap-3">
               <Input label="Prénom" value={guestForm.first_name ?? ''} onChange={(e) => setG('first_name', e.target.value)} required />
               <Input label="Nom"    value={guestForm.last_name  ?? ''} onChange={(e) => setG('last_name',  e.target.value)} required />
