@@ -73,6 +73,7 @@ export const HistoryDetailPage = () => {
     : '?';
 
   return (
+    <>
     <HotelLayout title="Détail check-in">
       <div className="flex flex-col">
 
@@ -212,8 +213,9 @@ export const HistoryDetailPage = () => {
 
     </HotelLayout>
 
-      {/* Portal vers document.body pour que body > *:not(#police-fiche-root)
-          puisse cacher le reste de l'app sans toucher la fiche elle-même */}
+      {/* Portal vers document.body — body > *:not(#police-fiche-root) { display:none }
+          isole la fiche sans layout de l'app React */}
       {hotel && createPortal(<PoliceFiche checkIn={ci} hotel={hotel} />, document.body)}
+    </>
   );
 };
