@@ -2,7 +2,7 @@ import { useState, useRef, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
-  Camera, CheckCircle, User, UserPlus, IdCard,
+  Camera, CheckCircle, User, UserPlus, IdCard, AlertTriangle,
   Loader2, ArrowLeft, ArrowRight, Minus, Plus, ScanLine,
 } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
@@ -159,6 +159,9 @@ const GuestScanPanel = ({
   const [extractedOk, setExtractedOk] = useState(false);
   // Texte arabe brut détecté sur la CIN — aide l'utilisateur à juger/corriger la translittération.
   const [rawArabic, setRawArabic]     = useState<{ first: string | null; last: string | null } | null>(null);
+  const [cinReliability, setCinReliability] = useState<{
+    cardDetected: boolean; numberReliable: boolean; dobReliable: boolean;
+  } | null>(null);
   const [guestForm, setGuestForm]     = useState<Partial<AddGuestPayload>>({ is_primary: isPrimary });
 
   const startScan = (docType: ScanDocType) => {
@@ -175,6 +178,11 @@ const GuestScanPanel = ({
       if (scanDocType === 'national_id') {
         const cin = await scanCin(file, setOcrProgress);
         setRawArabic({ first: cin.raw_first_name_ar, last: cin.raw_last_name_ar });
+        setCinReliability({
+          cardDetected: cin.card_detected,
+          numberReliable: cin.document_number_reliable,
+          dobReliable: cin.date_of_birth_reliable,
+        });
         setGuestForm({
           first_name: cin.first_name ?? '',
           last_name: cin.last_name ?? '',
@@ -190,6 +198,7 @@ const GuestScanPanel = ({
       } else {
         const mrz = await scanMrz(file, setOcrProgress);
         setRawArabic(null);
+        setCinReliability(null);
         setGuestForm({
           first_name: mrz.first_name ?? '',
           last_name: mrz.last_name ?? '',
@@ -221,7 +230,7 @@ const GuestScanPanel = ({
 
   const setG = (k: string, v: string) => setGuestForm((f) => ({ ...f, [k]: v }));
   const reset = () => {
-    setScanState('idle'); setExtractedOk(false); setRawArabic(null);
+    setScanState('idle'); setExtractedOk(false); setRawArabic(null); setCinReliability(null);
     setGuestForm({ is_primary: isPrimary });
     if (fileRef.current) fileRef.current.value = '';
   };
@@ -269,7 +278,7 @@ const GuestScanPanel = ({
             <Button onClick={() => startScan('national_id')}>
               <IdCard className="h-4 w-4" /> Scanner la CIN
             </Button>
-            <Button variant="secondary" onClick={() => { setRawArabic(null); setExtractedOk(false); setScanState('done'); }}>
+            <Button variant="secondary" onClick={() => { setRawArabic(null); setCinReliability(null); setExtractedOk(false); setScanState('done'); }}>
               Saisie manuelle
             </Button>
           </div>
@@ -307,6 +316,24 @@ const GuestScanPanel = ({
               <p className="text-xs font-semibold text-emerald-800">
                 Document lu avec succès — vérifiez les données
               </p>
+            </div>
+          )}
+          {guestForm.document_type === 'national_id' && cinReliability && (
+            !cinReliability.cardDetected || !cinReliability.numberReliable || !cinReliability.dobReliable
+          ) && (
+            <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 bg-red-50 border border-red-200">
+              <AlertTriangle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
+              <div className="text-xs text-red-800 font-medium space-y-0.5">
+                {!cinReliability.cardDetected && (
+                  <p>Carte non détectée automatiquement (fond inclus) — vérifiez tous les champs avec attention.</p>
+                )}
+                {!cinReliability.numberReliable && (
+                  <p>N° document non fiable — non pré-rempli, à saisir depuis la carte.</p>
+                )}
+                {!cinReliability.dobReliable && (
+                  <p>Date de naissance non fiable — non pré-remplie, à saisir depuis la carte.</p>
+                )}
+              </div>
             </div>
           )}
           {guestForm.document_type === 'national_id' && (rawArabic?.first || rawArabic?.last) && (
