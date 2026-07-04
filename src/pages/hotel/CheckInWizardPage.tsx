@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Camera, CheckCircle, User, UserPlus,
-  Loader2, ArrowLeft, ArrowRight, Minus, Plus, ScanLine,
+  Loader2, ArrowLeft, ArrowRight, Minus, Plus, ScanLine, Upload,
 } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { StepIndicator } from '@/components/ui/StepIndicator';
@@ -150,7 +150,8 @@ const GuestScanPanel = ({
   onSuccess: () => void; onCancel?: () => void;
 }) => {
   const { toast } = useToast();
-  const fileRef   = useRef<HTMLInputElement>(null);
+  const fileRef       = useRef<HTMLInputElement>(null); // caméra
+  const uploadRef     = useRef<HTMLInputElement>(null); // galerie / fichier
   const [scanState, setScanState] = useState<'idle' | 'scanning' | 'done' | 'error'>('idle');
   const [ocrProgress, setOcrProgress] = useState(0);
   const [extractedOk, setExtractedOk] = useState(false);
@@ -195,7 +196,8 @@ const GuestScanPanel = ({
   const reset = () => {
     setScanState('idle'); setExtractedOk(false);
     setGuestForm({ is_primary: isPrimary });
-    if (fileRef.current) fileRef.current.value = '';
+    if (fileRef.current)   fileRef.current.value = '';
+    if (uploadRef.current) uploadRef.current.value = '';
   };
 
   return (
@@ -213,7 +215,10 @@ const GuestScanPanel = ({
         )}
       </div>
 
-      <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
+      {/* Caméra — capture directe */}
+      <input ref={fileRef}   type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
+      {/* Upload — galerie ou fichier existant */}
+      <input ref={uploadRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
 
       {/* ── Idle / Error ── */}
       {(scanState === 'idle' || scanState === 'error') && (
@@ -235,7 +240,10 @@ const GuestScanPanel = ({
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Button onClick={() => fileRef.current?.click()}>
-              <Camera className="h-4 w-4" /> Scanner le passeport
+              <Camera className="h-4 w-4" /> Prendre une photo
+            </Button>
+            <Button variant="secondary" onClick={() => uploadRef.current?.click()}>
+              <Upload className="h-4 w-4" /> Importer une photo
             </Button>
             <Button variant="secondary" onClick={() => { setExtractedOk(false); setScanState('done'); }}>
               Saisie manuelle
