@@ -119,7 +119,7 @@ const PLANS = [
   {
     slug:      'starter',
     name:      'Essentiel',
-    rooms:     'Jusqu'à 10 chambres',
+    rooms:     "Jusqu'à 10 chambres",
     badge:     null,
     price:     39,
     yearPrice: 390,
