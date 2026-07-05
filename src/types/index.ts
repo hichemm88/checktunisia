@@ -168,14 +168,44 @@ export interface AuthorityCheckIn {
     nationality_code?: string | null;
     date_of_birth?: string | null;
   } | null;
+  guests?: Array<{
+    id: string;
+    first_name: string;
+    last_name: string;
+    nationality_code?: string | null;
+    is_primary: boolean;
+  }>;
+}
+
+export interface AuthorityHotelOwner {
+  entity_type: 'company' | 'individual';
+  name?: string | null;
+  registration_number?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  address?: Record<string, string> | null;
+}
+
+export interface AuthorityHotelStaff {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email?: string | null;
+  phone?: string | null;
+  role: string;
 }
 
 export interface AuthorityHotel {
   id: string; name: string; slug: string; type: string; stars?: number;
   city?: string; governorate?: string; address?: string;
+  address_full?: string | null;
+  address_structured?: { line1?: string; line2?: string; city?: string; governorate?: string; postal_code?: string } | null;
+  type_label?: string | null;
   registration_number?: string; room_count: number; status: string;
   subscription_status?: string; subscription_expires_at?: string;
   active_guests_count?: number; total_check_ins?: number;
+  owner?: AuthorityHotelOwner | null;
+  staff?: AuthorityHotelStaff[];
 }
 
 export interface ApiList<T> { data: T[]; meta: { total: number; current_page: number; per_page: number; last_page: number } }

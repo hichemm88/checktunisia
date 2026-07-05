@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Search, ChevronRight, Trash2 } from 'lucide-react';
-import { getFlag } from '@/lib/flags';
+import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Input } from '@/components/ui/Input';
 import { checkInsApi } from '@/api/checkIns';
@@ -124,7 +124,7 @@ export const HistoryPage = () => {
             const initials = ci.primary_guest
               ? `${ci.primary_guest.first_name?.[0] ?? ''}${ci.primary_guest.last_name?.[0] ?? ''}`.toUpperCase()
               : '?';
-            const flag = getFlag((ci.primary_guest as any)?.nationality_code);
+            const flagUrl = getFlagUrl((ci.primary_guest as any)?.nationality_code);
 
             return (
               <div
@@ -145,8 +145,14 @@ export const HistoryPage = () => {
                     >
                       {initials}
                     </div>
-                    {flag && (
-                      <span className="absolute -bottom-1 -right-1 text-sm leading-none">{flag}</span>
+                    {flagUrl && (
+                      <img
+                        src={flagUrl}
+                        alt={(ci.primary_guest as any)?.nationality_code ?? ''}
+                        width={15}
+                        className="absolute -bottom-1 -right-1 rounded-sm shadow-sm"
+                        style={{ border: '1px solid rgba(0,0,0,0.1)' }}
+                      />
                     )}
                   </div>
                   {/* Info */}

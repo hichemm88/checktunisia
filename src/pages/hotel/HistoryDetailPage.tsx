@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, LogOut, CheckCircle, FileText, MapPin, CalendarDays, Printer } from 'lucide-react';
-import { getFlag } from '@/lib/flags';
+import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -154,7 +154,7 @@ export const HistoryDetailPage = () => {
             <p className="label">Voyageurs · {ci.guests?.length ?? 0}</p>
             {ci.guests?.map((g) => {
               const gInitials = `${g.first_name?.[0] ?? ''}${g.last_name?.[0] ?? ''}`.toUpperCase();
-              const gFlag = getFlag(g.nationality_code);
+              const gFlagUrl = getFlagUrl(g.nationality_code);
               return (
                 <Card key={g.id} className="flex items-start gap-3">
                   <div className="relative shrink-0">
@@ -164,8 +164,14 @@ export const HistoryDetailPage = () => {
                     >
                       {gInitials}
                     </div>
-                    {gFlag && (
-                      <span className="absolute -bottom-1 -right-1 text-base leading-none">{gFlag}</span>
+                    {gFlagUrl && (
+                      <img
+                        src={gFlagUrl}
+                        alt={g.nationality_code}
+                        width={16}
+                        className="absolute -bottom-1 -right-1 rounded-sm shadow-sm"
+                        style={{ border: '1px solid rgba(0,0,0,0.1)' }}
+                      />
                     )}
                   </div>
                   <div className="flex flex-col gap-1 flex-1 min-w-0">

@@ -55,3 +55,16 @@ export const getFlag = (alpha3?: string | null): string => {
   const a2 = A3_TO_A2[alpha3.toUpperCase()];
   return a2 ? alpha2ToEmoji(a2) : alpha3;
 };
+
+/**
+ * Returns a flagcdn.com image URL for an ISO 3166-1 alpha-3 country code.
+ * Returns null if unmapped.
+ *
+ * @example getFlagUrl('TUN') → 'https://flagcdn.com/w20/tn.png'
+ * @example getFlagUrl('FRA') → 'https://flagcdn.com/w20/fr.png'
+ */
+export const getFlagUrl = (alpha3?: string | null): string | null => {
+  if (!alpha3) return null;
+  const a2 = A3_TO_A2[alpha3.toUpperCase()];
+  return a2 ? `https://flagcdn.com/w20/${a2.toLowerCase()}.png` : null;
+};

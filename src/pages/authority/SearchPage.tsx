@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { Search, User, MapPin, Lock, ShieldAlert } from 'lucide-react';
-import { getFlag } from '@/lib/flags';
+import { getFlagUrl } from '@/lib/flags';
 import { WatchlistSeverity } from '@/types';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Card } from '@/components/ui/Card';
@@ -192,11 +192,15 @@ export const SearchPage = () => {
                       )}
                       <p className="font-semibold text-gray-900 flex items-center gap-2">
                         {g.first_name} {g.last_name}
-                        {g.nationality_code && (
-                          <span className="text-base leading-none" title={g.nationality_code}>
-                            {getFlag(g.nationality_code)}
-                          </span>
-                        )}
+                        {g.nationality_code && (() => {
+                          const url = getFlagUrl(g.nationality_code);
+                          return url ? (
+                            <img src={url} alt={g.nationality_code} width={18}
+                              className="rounded-sm inline-block"
+                              style={{ border: '1px solid rgba(0,0,0,0.08)', verticalAlign: 'middle' }}
+                            />
+                          ) : null;
+                        })()}
                       </p>
                       <p className="text-xs text-gray-500">
                         {g.date_of_birth} · {g.sex} · {g.nationality_code}
