@@ -254,9 +254,28 @@ function extractMrzLines(
   return null;
 }
 
+// ─── Secours extraction directe des dates (TD3) ────────────────────────────────
+//
+// Le package 'mrz' met un champ à `null` dès que son propre parseur `throw` —
+// notamment si un caractère résiduel non couvert par son autocorrect (B/G/O/I/S/Z
+// uniquement) traîne dans la zone date après OCR. Résultat observé en prod : nom,
+// prénom et nationalité correctement extraits, mais date de naissance/expiration
+// vides alors que la zone MRZ elle-même contient bien 6 chiffres à cet endroit.
+//
+// On retente donc une extraction tolérante directement depuis la ligne brute
+// (même correspondances lettre→chiffre que le package) plutôt que d'abandonner
+// dès que son parseur interne échoue.
+const OCR_DIGIT_FIX: Record<string, string> = { O: '0', I: '1', B: '8', G: '6', S: '5', Z: '2' };
+
+function fallbackTd3Date(line2: string, start: number): string | null {
+  const raw = line2.slice(start, start + 6);
+  const digits = raw.split('').map(c => (/[0-9]/.test(c) ? c : (OCR_DIGIT_FIX[c] ?? c))).join('');
+  return /^\d{6}$/.test(digits) ? digits : null;
+}
+
 // ─── Conversion résultat mrz → MrzData ─────────────────────────────────────────
 
-function toMrzData(result: ReturnType<typeof mrzParse>): MrzData {
+function toMrzData(result: ReturnType<typeof mrzParse>, td3Line2: string | null): MrzData {
   const f = result.fields;
 
   // Sex : le package mrz v3 retourne 'male' | 'female' | null (pas 'M'/'F')
@@ -275,17 +294,22 @@ function toMrzData(result: ReturnType<typeof mrzParse>): MrzData {
   const cleanName = (s: string | null | undefined): string | null =>
     s ? s.replace(/<+/g, ' ').replace(/\s+/g, ' ').trim() || null : null;
 
+  // Si le champ mrz est vide (parseur interne ayant `throw`) et qu'on a la ligne
+  // brute TD3 sous la main, on retente une extraction tolérante avant d'abandonner.
+  const birthRaw  = f.birthDate      ?? (td3Line2 ? fallbackTd3Date(td3Line2, 13) : null);
+  const expiryRaw = f.expirationDate ?? (td3Line2 ? fallbackTd3Date(td3Line2, 21) : null);
+
   return {
     last_name:            cleanName(f.lastName),
     first_name:           cleanName(f.firstName),
-    date_of_birth:        mrzDateToISO(f.birthDate,      true),
+    date_of_birth:        mrzDateToISO(birthRaw,  true),
     sex,
     // f.nationality peut être null si ce champ MRZ n'est pas reconnu par l'OCR.
     // Fallback sur issuingState (même pays dans la quasi-totalité des cas).
     nationality_code:     f.nationality || f.issuingState || null,
     document_number:      f.documentNumber   || null,
     issuing_country_code: f.issuingState     || null,
-    expiry_date:          mrzDateToISO(f.expirationDate, false),
+    expiry_date:          mrzDateToISO(expiryRaw, false),
     document_type,
   };
 }
@@ -395,9 +419,10 @@ export async function scanMrz(
 
   report(55);
 
-  // ── 3 tentatives de crop : serré → large ────────────────────────────────────
-  // Avec un worker partagé, les 2e/3e tentatives ne coûtent que le temps OCR (3-5s).
+  // ── 4 tentatives de crop : serré → large ────────────────────────────────────
+  // Avec un worker partagé, les tentatives suivantes ne coûtent que le temps OCR (3-5s).
   const crops: Array<{ fraction: number; psm: '6' | '11' }> = [
+    { fraction: 0.12, psm: '6'  }, // Photo avec beaucoup de marge autour du document
     { fraction: 0.22, psm: '6'  }, // Photo page entière — MRZ dans la bande du bas
     { fraction: 0.42, psm: '11' }, // Photo rapprochée du bas du passeport
     { fraction: 0.60, psm: '11' }, // Très rapprochée / passeport hors cadre
@@ -426,7 +451,15 @@ export async function scanMrz(
         const result = mrzParse(extracted.lines, { autocorrect: true });
         console.log('[MRZ] Parsing valid:', result.valid, '— champs:', result.fields);
 
-        const data = toMrzData(result);
+        const td3Line2 = extracted.format === 'TD3' ? extracted.lines[1] : null;
+        const data = toMrzData(result, td3Line2);
+        if (!result.fields.birthDate || !result.fields.expirationDate) {
+          console.warn(
+            '[MRZ] Date(s) rejetée(s) par le package mrz, secours appliqué —',
+            'birthDate brut:', result.fields.birthDate, '→', data.date_of_birth,
+            '| expirationDate brut:', result.fields.expirationDate, '→', data.expiry_date,
+          );
+        }
 
         // On n'exige PAS result.valid === true : un mauvais check digit ne doit pas
         // bloquer la saisie si les champs importants (nom, DOB, numéro) sont corrects.
@@ -453,5 +486,5 @@ export async function scanMrz(
   const baseMsg = lastError?.message ?? 'Zone MRZ non détectée';
   // Garder seulement la première ligne du message d'erreur (sans les bullets \n)
   const firstLine = baseMsg.split('\n')[0];
-  throw new Error(firstLine);
+  throw new Error(`${firstLine} — reprenez la photo cadrée sur la page du passeport, sans reflet ni marge autour.`);
 }
