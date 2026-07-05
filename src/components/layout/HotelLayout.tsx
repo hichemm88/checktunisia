@@ -7,18 +7,18 @@ import { authApi } from '@/api/auth';
 
 interface HotelLayoutProps { children: ReactNode; title?: string; backHref?: string }
 
-const getNavItems = () => [
+const getNavItems = (isAdmin: boolean) => [
   { to: '/hotel/dashboard',     icon: LayoutDashboard, label: 'Accueil'    },
   { to: '/hotel/check-ins/new', icon: ClipboardList,   label: 'Check-in'  },
   { to: '/hotel/history',       icon: History,         label: 'Historique' },
   { to: '/hotel/properties',    icon: Layers,          label: 'Mes biens' },
-  { to: '/hotel/settings',      icon: Settings,        label: 'Paramètres' },
+  ...(isAdmin ? [{ to: '/hotel/settings', icon: Settings, label: 'Paramètres' }] : []),
 ];
 
 export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
   const { user, logout, activePropertyName } = useAuthStore();
   const navigate = useNavigate();
-  const navItems = getNavItems();
+  const navItems = getNavItems(user?.role === 'hotel_admin');
 
   const handleLogout = async () => {
     try { await authApi.logout(); } catch { /* ignore */ }

@@ -12,7 +12,7 @@
  */
 
 import type { CSSProperties } from 'react';
-import type { CheckIn, HotelProfile } from '@/types';
+import type { CheckIn, HotelProfile, OrganizationInfo } from '@/types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -119,6 +119,12 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
                       .filter(Boolean).join(', ');
   const contacts  = [hotel.phone, hotel.email].filter(Boolean).join(' · ');
 
+  const org: OrganizationInfo | null | undefined = hotel.organization;
+  const orgAddr = org?.address
+    ? [org.address.line1, org.address.city, org.address.governorate].filter(Boolean).join(', ')
+    : '';
+  const orgContacts = org ? [org.contact_phone, org.contact_email].filter(Boolean).join(' · ') : '';
+
   // Max 5 voyageurs sur 1 page
   const guests = (ci.guests ?? []).slice(0, 5);
   const extra  = (ci.guests?.length ?? 0) - guests.length;
@@ -197,22 +203,43 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
                   </div>
                 )}
               </td>
-              {/* Date + logo droit */}
+              {/* Infos société / particulier */}
               <td style={{ textAlign: 'right', verticalAlign: 'top', paddingTop: '2px' }}>
-                <div style={{
-                  display: 'inline-block',
-                  background: C,
-                  color: '#fff',
-                  fontSize: '7pt',
-                  fontWeight: '600',
-                  letterSpacing: '1.5px',
-                  padding: '2px 8px',
-                  borderRadius: '3px',
-                  marginBottom: '4px',
-                }}>
-                  QAYED
-                </div>
-                <div style={{ fontSize: '7pt', color: '#9ca3af' }}>Imprimé le {now}</div>
+                {org ? (
+                  <>
+                    <div style={{ fontSize: '7.5pt', color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>
+                      {org.entity_type === 'individual' ? 'Particulier' : 'Société'}
+                    </div>
+                    <div style={{ fontSize: '10.5pt', fontWeight: '700', color: C, marginTop: '1px' }}>
+                      {org.name}
+                    </div>
+                    {orgAddr && (
+                      <div style={{ fontSize: '7.5pt', color: '#374151', marginTop: '2px' }}>{orgAddr}</div>
+                    )}
+                    {orgContacts && (
+                      <div style={{ fontSize: '7.5pt', color: '#374151' }}>{orgContacts}</div>
+                    )}
+                    {org.registration_number && (
+                      <div style={{ fontSize: '7pt', color: '#9ca3af' }}>
+                        {org.entity_type === 'individual' ? 'CIN' : 'RC / Matricule'} : {org.registration_number}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div style={{
+                    display: 'inline-block',
+                    background: C,
+                    color: '#fff',
+                    fontSize: '7pt',
+                    fontWeight: '600',
+                    letterSpacing: '1.5px',
+                    padding: '2px 8px',
+                    borderRadius: '3px',
+                  }}>
+                    QAYED
+                  </div>
+                )}
+                <div style={{ fontSize: '7pt', color: '#9ca3af', marginTop: '4px' }}>Imprimé le {now}</div>
               </td>
             </tr>
           </tbody>

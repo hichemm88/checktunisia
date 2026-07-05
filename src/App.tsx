@@ -117,7 +117,9 @@ export const App = () => (
           <Route path="/hotel/check-ins/new"    element={<CheckInWizardPage />} />
           <Route path="/hotel/history"          element={<HistoryPage />} />
           <Route path="/hotel/history/:id"      element={<HistoryDetailPage />} />
-          <Route path="/hotel/settings"         element={<SettingsPage />} />
+          <Route element={<RequireRole roles={['hotel_admin']} />}>
+            <Route path="/hotel/settings"       element={<SettingsPage />} />
+          </Route>
           <Route path="/hotel/security"         element={<SecurityPage />} />
           <Route path="/hotel/payment/success"  element={<PaymentSuccessPage />} />
           <Route path="/hotel/payment/failed"   element={<PaymentFailedPage />} />

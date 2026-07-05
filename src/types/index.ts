@@ -21,11 +21,21 @@ export interface HotelAddress {
   postal_code?: string; latitude?: number | null; longitude?: number | null;
 }
 
+export interface OrganizationInfo {
+  name: string;
+  entity_type: 'company' | 'individual';
+  registration_number?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  address?: { line1?: string; city?: string; governorate?: string; postal_code?: string } | null;
+}
+
 export interface HotelProfile {
   id: string; name: string; type?: string; stars?: number | null;
   registration_number?: string; status: string;
   address?: HotelAddress | null;
   phone?: string | null; email?: string | null; website?: string | null;
+  organization?: OrganizationInfo | null;
 }
 
 export interface UpdateHotelPayload {
