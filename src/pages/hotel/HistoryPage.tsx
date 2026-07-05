@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState, ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Search, ChevronRight, Trash2 } from 'lucide-react';
@@ -8,6 +8,77 @@ import { Input } from '@/components/ui/Input';
 import { checkInsApi } from '@/api/checkIns';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
+import { useAuthStore } from '@/stores/authStore';
+
+// ─── Swipe-to-delete row (admin only) ──────────────────────────────────────────
+
+const REVEAL_WIDTH = 76;
+
+const SwipeableRow = ({ children, onDelete, deleting }: { children: ReactNode; onDelete: () => void; deleting: boolean }) => {
+  const [dragX, setDragX] = useState(0);
+  const [revealed, setRevealed] = useState(false);
+  const dragging = useRef(false);
+  const moved = useRef(false);
+  const startX = useRef(0);
+  const baseX = useRef(0);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    dragging.current = true;
+    moved.current = false;
+    startX.current = e.clientX;
+    baseX.current = dragX;
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    const delta = e.clientX - startX.current;
+    if (Math.abs(delta) > 4) moved.current = true;
+    setDragX(Math.min(0, Math.max(-REVEAL_WIDTH, baseX.current + delta)));
+  };
+  const endDrag = () => {
+    if (!dragging.current) return;
+    dragging.current = false;
+    if (dragX < -REVEAL_WIDTH / 2) { setDragX(-REVEAL_WIDTH); setRevealed(true); }
+    else { setDragX(0); setRevealed(false); }
+  };
+  // While revealed (or right after a drag), swallow the click instead of letting it
+  // reach the row's own navigation button — first tap just closes the reveal.
+  const onClickCapture = (e: React.MouseEvent) => {
+    if (moved.current || revealed) {
+      e.stopPropagation();
+      e.preventDefault();
+      moved.current = false;
+      if (revealed) { setDragX(0); setRevealed(false); }
+    }
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-card">
+      <button
+        onClick={onDelete}
+        disabled={deleting}
+        className="absolute inset-y-0 right-0 flex items-center justify-center bg-red-500 text-white disabled:opacity-60"
+        style={{ width: REVEAL_WIDTH }}
+      >
+        <Trash2 className="h-5 w-5" />
+      </button>
+      <div
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onClickCapture={onClickCapture}
+        style={{
+          transform: `translateX(${dragX}px)`,
+          transition: dragging.current ? 'none' : 'transform 0.2s ease',
+          touchAction: 'pan-y',
+        }}
+        className="relative bg-white"
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
 
 // Parse only the date part (YYYY-MM-DD) to avoid UTC/local timezone shifts
 const fmtDate = (iso: string): string => {
@@ -60,10 +131,10 @@ export const HistoryPage = () => {
   const navigate   = useNavigate();
   const qc         = useQueryClient();
   const { toast }  = useToast();
-  const [search, setSearch]       = useState('');
-  const [status, setStatus]       = useState<string>('all');
-  const [page, setPage]           = useState(1);
-  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const isAdmin    = useAuthStore((s) => s.user?.role === 'hotel_admin');
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<string>('all');
+  const [page, setPage]     = useState(1);
 
   const { data, isLoading } = useQuery({
     queryKey: ['check-ins', { search, status, page }],
@@ -71,11 +142,10 @@ export const HistoryPage = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => checkInsApi.deleteDraft(id),
+    mutationFn: (id: string) => checkInsApi.deleteCheckIn(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['check-ins'] });
-      setConfirmId(null);
-      toast('Brouillon supprimé', 'success');
+      toast('Check-in supprimé', 'success');
     },
     onError: (err) => toast(extractErrors(err), 'error'),
   });
@@ -126,13 +196,11 @@ export const HistoryPage = () => {
               : '?';
             const flagUrl = getFlagUrl((ci.primary_guest as any)?.nationality_code);
 
-            return (
+            const row = (
               <div
-                key={ci.id}
                 className="flex items-center bg-white rounded-card shadow-card overflow-hidden"
                 style={{ borderLeft: `4px solid ${style.border}` }}
               >
-                {/* Main row */}
                 <button
                   onClick={() => navigate(`/hotel/history/${ci.id}`)}
                   className="flex flex-1 items-center gap-3 p-3.5 text-left hover:bg-warm-100 transition-colors min-w-0"
@@ -176,37 +244,20 @@ export const HistoryPage = () => {
                     <ChevronRight className="h-4 w-4 text-gray-300" />
                   </div>
                 </button>
-
-                {/* Delete — drafts only */}
-                {ci.status === 'draft' && (
-                  <div className="flex items-center border-l border-gray-100 px-3 shrink-0">
-                    {confirmId === ci.id ? (
-                      <div className="flex flex-col items-center gap-1 py-1">
-                        <button
-                          onClick={() => deleteMutation.mutate(ci.id)}
-                          disabled={deleteMutation.isPending}
-                          className="text-xs font-bold text-red-600 hover:text-red-700 whitespace-nowrap"
-                        >
-                          Confirmer
-                        </button>
-                        <button
-                          onClick={() => setConfirmId(null)}
-                          className="text-xs text-gray-400 hover:text-gray-600"
-                        >
-                          Annuler
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setConfirmId(ci.id); }}
-                        className="rounded-xl p-2.5 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                )}
               </div>
+            );
+
+            // Admin only — swipe left to reveal delete. Receptionists get the plain row.
+            return isAdmin ? (
+              <SwipeableRow
+                key={ci.id}
+                deleting={deleteMutation.isPending && deleteMutation.variables === ci.id}
+                onDelete={() => deleteMutation.mutate(ci.id)}
+              >
+                {row}
+              </SwipeableRow>
+            ) : (
+              <div key={ci.id}>{row}</div>
             );
           })}
 
