@@ -374,15 +374,18 @@ const EditPropertyForm = ({
 const PropertyCard = ({
   property,
   isDefault,
+  isOnly,
 }: {
   property: Property;
   isDefault: boolean;
+  isOnly: boolean;
 }) => {
   const qc = useQueryClient();
   const { activePropertyId, setActiveProperty } = useAuthStore();
-  const [expanded, setExpanded] = useState(false);
-  const [editing, setEditing]   = useState(false);
-  const [error, setError]       = useState('');
+  const [expanded, setExpanded]   = useState(false);
+  const [editing, setEditing]     = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [error, setError]         = useState('');
 
   // isActive: either explicitly selected OR it's the first property and nothing is selected (default)
   const isActive = activePropertyId ? activePropertyId === property.id : isDefault;
@@ -395,6 +398,15 @@ const PropertyCard = ({
       setError('');
     },
     onError: (e: any) => setError(e?.response?.data?.message ?? 'Erreur lors de la mise à jour.'),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: () => organizationApi.deleteProperty(property.id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['org-info'] });
+      setConfirmDelete(false);
+    },
+    onError: (e: any) => setError(e?.response?.data?.message ?? 'Impossible de supprimer ce bien.'),
   });
 
   return (
@@ -448,17 +460,26 @@ const PropertyCard = ({
               ) : null}
             </div>
 
-            {/* Boutons icon seulement — 2 max, ne prennent pas beaucoup de place */}
+            {/* Action buttons */}
             <div className="flex items-center gap-1 flex-shrink-0">
               <button
-                onClick={() => { setEditing((e) => !e); setExpanded(false); setError(''); }}
+                onClick={() => { setEditing((e) => !e); setExpanded(false); setConfirmDelete(false); setError(''); }}
                 className="rounded-lg p-2 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors"
                 title="Modifier"
               >
                 {editing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
               </button>
+              {!isOnly && (
+                <button
+                  onClick={() => { setConfirmDelete((s) => !s); setEditing(false); setExpanded(false); setError(''); }}
+                  className="rounded-lg p-2 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                  title="Supprimer ce bien"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
               <button
-                onClick={() => { setExpanded((e) => !e); setEditing(false); }}
+                onClick={() => { setExpanded((e) => !e); setEditing(false); setConfirmDelete(false); }}
                 className="rounded-lg p-2 text-gray-400 hover:text-gray-700 transition-colors"
                 title={expanded ? 'Réduire' : 'Voir les chambres'}
               >
@@ -489,6 +510,32 @@ const PropertyCard = ({
           )}
         </div>
       </div>
+
+      {/* ── Confirm delete ── */}
+      {confirmDelete && (
+        <div className="mx-4 mb-4 rounded-xl border border-red-100 bg-red-50 p-4 flex flex-col gap-3">
+          <p className="text-sm font-semibold text-red-800">
+            Supprimer «&nbsp;{property.name}&nbsp;» ?
+          </p>
+          <p className="text-xs text-red-600">
+            Cette action est irréversible. Toutes les unités et données associées seront supprimées.
+          </p>
+          {error && <p className="text-xs text-red-700 font-medium">{error}</p>}
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              loading={deleteMut.isPending}
+              onClick={() => deleteMut.mutate()}
+              className="!bg-red-600 hover:!bg-red-700 gap-1.5"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Confirmer la suppression
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => { setConfirmDelete(false); setError(''); }}>
+              Annuler
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* ── Edit form ── */}
       {editing && (
@@ -672,7 +719,7 @@ export const PropertiesPage = () => {
         ) : (
           <div className="flex flex-col gap-3">
             {(org?.properties ?? []).map((p: Property, idx: number) => (
-              <PropertyCard key={p.id} property={p} isDefault={idx === 0} />
+              <PropertyCard key={p.id} property={p} isDefault={idx === 0} isOnly={(org?.properties ?? []).length === 1} />
             ))}
             {!isLoading && (org?.properties ?? []).length === 0 && !showForm && (
               <div className="flex flex-col items-center gap-3 py-10 text-gray-400">

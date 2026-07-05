@@ -77,6 +77,7 @@ export const organizationApi = {
   properties:    () => api.get<{ data: Property[] }>('/hotel/organization/properties').then((r) => r.data.data),
   addProperty:   (data: object) => api.post<{ data: Property }>('/hotel/organization/properties', data).then((r) => r.data.data),
   updateProperty:(id: string, data: object) => api.patch<{ data: Property }>(`/hotel/organization/properties/${id}`, data).then((r) => r.data.data),
+  deleteProperty:(id: string) => api.delete(`/hotel/organization/properties/${id}`),
 
   // ── Rooms per property ────────────────────────────────────────────────
   rooms:             (propertyId: string) =>

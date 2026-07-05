@@ -13,28 +13,39 @@ import { useAuthStore } from '@/stores/authStore';
 import type { DashboardData } from '@/types';
 
 // ── SVG occupancy ring ───────────────────────────────────────────────────────
-const OccupancyRing = ({ pct }: { pct: number }) => {
-  const r = 44, circ = 2 * Math.PI * r;
+const OccupancyRing = ({ pct, present, total }: { pct: number; present: number; total?: number }) => {
+  const r = 42, circ = 2 * Math.PI * r;
   const filled = ((Math.min(pct, 100)) / 100) * circ;
-  const color  = pct >= 80 ? '#22c55e' : pct >= 50 ? '#C8943A' : '#1B3A5F';
+  const color  = pct >= 80 ? '#4ade80' : pct >= 50 ? '#fbbf24' : '#93c5fd';
   return (
-    <svg width="110" height="110" viewBox="0 0 110 110">
-      <circle cx="55" cy="55" r={r} fill="none" stroke="#E5E7EB" strokeWidth="10" />
-      <circle
-        cx="55" cy="55" r={r} fill="none"
-        stroke={color} strokeWidth="10"
-        strokeDasharray={`${filled} ${circ - filled}`}
-        strokeLinecap="round"
-        transform="rotate(-90 55 55)"
-        style={{ transition: 'stroke-dasharray 1s ease' }}
-      />
-      <text x="55" y="51" textAnchor="middle" className="font-bold" fill="#111827" style={{ fontSize: 18, fontWeight: 800 }}>
-        {pct}%
-      </text>
-      <text x="55" y="65" textAnchor="middle" fill="#9CA3AF" style={{ fontSize: 10 }}>
-        occupation
-      </text>
-    </svg>
+    <div className="flex flex-col items-center gap-1.5">
+      <svg width="106" height="106" viewBox="0 0 106 106">
+        {/* Track */}
+        <circle cx="53" cy="53" r={r} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="9" />
+        {/* Fill */}
+        <circle
+          cx="53" cy="53" r={r} fill="none"
+          stroke={color} strokeWidth="9"
+          strokeDasharray={`${filled} ${circ - filled}`}
+          strokeLinecap="round"
+          transform="rotate(-90 53 53)"
+          style={{ transition: 'stroke-dasharray 1s ease', filter: `drop-shadow(0 0 6px ${color}80)` }}
+        />
+        {/* Percentage */}
+        <text x="53" y="48" textAnchor="middle" fill="white" style={{ fontSize: 20, fontWeight: 800 }}>
+          {pct}%
+        </text>
+        {/* Present count */}
+        <text x="53" y="63" textAnchor="middle" fill="rgba(255,255,255,0.7)" style={{ fontSize: 11 }}>
+          {present} présent{present !== 1 ? 's' : ''}
+        </text>
+      </svg>
+      {total != null && (
+        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          sur {total} unité{total !== 1 ? 's' : ''}
+        </span>
+      )}
+    </div>
   );
 };
 
@@ -124,34 +135,52 @@ export const DashboardPage = () => {
 
         {/* ── Hero: greeting + occupancy ring ── */}
         <div
-          className="px-4 pt-5 pb-4 flex items-center justify-between"
-          style={{
-            background: 'linear-gradient(135deg, #1B3A5F 0%, #2A5090 100%)',
-          }}
+          className="px-4 pt-5 pb-5 flex items-center justify-between gap-4"
+          style={{ background: 'linear-gradient(135deg, #1B3A5F 0%, #2A5090 100%)' }}
         >
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 flex-1 min-w-0">
             <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#C8943A' }}>
               {greeting()}
             </p>
-            <h1 className="text-xl font-black text-white leading-tight">
+            <h1 className="text-xl font-black text-white leading-tight truncate">
               {user?.first_name ?? 'Bienvenue'}
             </h1>
-            <p className="text-sm text-blue-200 mt-1">
+            <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
               {new Date().toLocaleDateString('fr-TN', { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
+
+            {/* Quick stats row */}
+            <div className="flex gap-3 mt-3">
+              <div className="flex flex-col" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                <span className="text-lg font-black leading-none">{d.today.arrivals_expected}</span>
+                <span className="text-[10px] font-medium uppercase tracking-wide mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>arrivées</span>
+              </div>
+              <div className="w-px self-stretch" style={{ background: 'rgba(255,255,255,0.15)' }} />
+              <div className="flex flex-col" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                <span className="text-lg font-black leading-none">{d.today.departures_today}</span>
+                <span className="text-[10px] font-medium uppercase tracking-wide mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>départs</span>
+              </div>
+            </div>
+
             <button
               onClick={() => navigate('/hotel/check-ins/new')}
-              className="mt-3 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all active:scale-95"
-              style={{ background: '#C8943A', color: '#fff', boxShadow: '0 4px 14px rgba(200,148,58,0.50)' }}
+              className="mt-3 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all active:scale-95 self-start"
+              style={{ background: '#C8943A', color: '#fff', boxShadow: '0 4px 14px rgba(200,148,58,0.45)' }}
             >
               <Plus className="h-4 w-4" />
               Nouveau check-in
             </button>
           </div>
+
+          {/* Occupancy ring */}
           <div className="shrink-0">
             {isLoading
-              ? <div className="h-[110px] w-[110px] rounded-full animate-pulse bg-white/10" />
-              : <OccupancyRing pct={d.today.occupancy_rate} />
+              ? <div className="h-[106px] w-[106px] rounded-full animate-pulse" style={{ background: 'rgba(255,255,255,0.1)' }} />
+              : <OccupancyRing
+                  pct={d.today.occupancy_rate}
+                  present={d.today.currently_present}
+                  total={user?.hotel?.room_count ?? undefined}
+                />
             }
           </div>
         </div>
