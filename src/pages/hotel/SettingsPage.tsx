@@ -535,6 +535,7 @@ const ACTION_LABELS: Record<string, string> = {
   'check_in.completed':        'a finalisé un check-in',
   'check_in.checked_out':      'a enregistré un départ',
   'check_in.cancelled':        'a annulé un check-in',
+  'check_in.deleted':          'a supprimé un check-in',
   'guest.added':                'a ajouté un voyageur',
   'guest.updated':              'a modifié un voyageur',
   'guest.removed':              'a supprimé un voyageur',
