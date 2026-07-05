@@ -68,10 +68,15 @@ export const ROOM_TYPE_LABELS: Record<string, string> = {
   standard:     'Standard',
 };
 
+export interface MyProperty { id: string; name: string; status: string }
+
 export const organizationApi = {
   // ── Org ──────────────────────────────────────────────────────────────
   get:          () => api.get<{ data: OrgInfo }>('/hotel/organization').then((r) => r.data.data),
   update:       (data: Partial<OrgInfo>) => api.patch('/hotel/organization', data).then((r) => r.data),
+
+  // Properties the current account (admin or receptionist) is attached to — for the switcher.
+  myProperties: () => api.get<{ data: MyProperty[] }>('/hotel/my-properties').then((r) => r.data.data),
 
   // ── Properties ───────────────────────────────────────────────────────
   properties:    () => api.get<{ data: Property[] }>('/hotel/organization/properties').then((r) => r.data.data),

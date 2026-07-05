@@ -283,4 +283,5 @@ export interface HotelUser {
 export interface CreateUserPayload {
   first_name: string; last_name: string; email: string;
   role: 'hotel_admin' | 'receptionist';
+  hotel_ids?: string[];
 }

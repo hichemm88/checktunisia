@@ -196,14 +196,27 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
     first_name: u.first_name,
     last_name:  u.last_name,
     role:       u.role as 'hotel_admin' | 'receptionist',
+    hotel_ids:  (u.properties ?? []).map(p => p.id),
   });
   const [error, setError] = useState('');
+
+  const { data: allProperties } = useQuery({
+    queryKey: ['my-properties'],
+    queryFn: organizationApi.myProperties,
+    enabled: mode === 'edit',
+  });
+
+  const toggleEditPropertyId = (id: string) => setEditForm(f => ({
+    ...f,
+    hotel_ids: f.hotel_ids.includes(id) ? f.hotel_ids.filter(x => x !== id) : [...f.hotel_ids, id],
+  }));
 
   const editMut = useMutation({
     mutationFn: () => settingsApi.updateUser(u.id, {
       first_name: editForm.first_name,
       last_name:  editForm.last_name,
       role:       editForm.role,
+      hotel_ids:  editForm.hotel_ids,
     }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['hotel-users'] }); setMode('view'); setError(''); },
     onError: (err) => setError(extractErrors(err)),
@@ -237,9 +250,23 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
               { value: 'hotel_admin',  label: 'Administrateur' },
             ]}
           />
+          {allProperties && allProperties.length > 1 && (
+            <div className="flex flex-col gap-1.5">
+              <label className="label">Biens accessibles</label>
+              <div className="flex flex-col gap-1.5 rounded-lg border border-gray-100 p-2.5 max-h-36 overflow-y-auto">
+                {allProperties.map(p => (
+                  <label key={p.id} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                    <input type="checkbox" checked={editForm.hotel_ids.includes(p.id)} onChange={() => toggleEditPropertyId(p.id)} />
+                    {p.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
           {error && <Alert msg={error} type="error" />}
           <div className="flex gap-2">
-            <Button size="sm" onClick={() => editMut.mutate()} loading={editMut.isPending} className="gap-1.5">
+            <Button size="sm" onClick={() => editMut.mutate()} loading={editMut.isPending}
+              disabled={editForm.hotel_ids.length === 0} className="gap-1.5">
               <Save className="h-3.5 w-3.5" /> Enregistrer
             </Button>
             <Button size="sm" variant="ghost" onClick={() => { setMode('view'); setError(''); }}>Annuler</Button>
@@ -330,13 +357,20 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
 const AddUserForm = ({ onDone }: { onDone: () => void }) => {
   const qc = useQueryClient();
   const [form, setForm] = useState<CreateUserPayload>({
-    first_name: '', last_name: '', email: '', role: 'receptionist',
+    first_name: '', last_name: '', email: '', role: 'receptionist', hotel_ids: [],
   });
   const [error, setError] = useState('');
   const set = (k: keyof CreateUserPayload, v: string) => setForm(f => ({ ...f, [k]: v }));
 
+  const { data: properties } = useQuery({ queryKey: ['my-properties'], queryFn: organizationApi.myProperties });
+
+  const togglePropertyId = (id: string) => setForm(f => {
+    const current = f.hotel_ids ?? [];
+    return { ...f, hotel_ids: current.includes(id) ? current.filter(x => x !== id) : [...current, id] };
+  });
+
   const mutation = useMutation({
-    mutationFn: () => settingsApi.createUser(form),
+    mutationFn: () => settingsApi.createUser({ ...form, hotel_ids: form.hotel_ids?.length ? form.hotel_ids : undefined }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['hotel-users'] }); onDone(); },
     onError: (err) => setError(extractErrors(err)),
   });
@@ -355,6 +389,20 @@ const AddUserForm = ({ onDone }: { onDone: () => void }) => {
           { value: 'hotel_admin',  label: 'Administrateur' },
         ]}
       />
+      {properties && properties.length > 1 && (
+        <div className="flex flex-col gap-1.5">
+          <label className="label">Biens accessibles</label>
+          <div className="flex flex-col gap-1.5 rounded-lg border border-gray-100 p-2.5 max-h-36 overflow-y-auto">
+            {properties.map(p => (
+              <label key={p.id} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <input type="checkbox" checked={(form.hotel_ids ?? []).includes(p.id)} onChange={() => togglePropertyId(p.id)} />
+                {p.name}
+              </label>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400">Laisser vide pour n'assigner que le bien actif.</p>
+        </div>
+      )}
       <p className="text-xs text-gray-400">Un email avec un mot de passe temporaire sera envoyé automatiquement.</p>
       {error && <Alert msg={error} type="error" />}
       <div className="flex gap-2">

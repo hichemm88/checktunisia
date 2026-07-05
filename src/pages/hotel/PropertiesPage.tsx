@@ -638,17 +638,85 @@ const AddPropertyForm = ({
   );
 };
 
+// ── Receptionist view (read-only switcher — no add/edit/delete) ────────────────
+
+const ReceptionistPropertiesView = () => {
+  const { activePropertyId, setActiveProperty } = useAuthStore();
+  const qc = useQueryClient();
+
+  const { data: properties, isLoading } = useQuery({
+    queryKey: ['my-properties'],
+    queryFn: organizationApi.myProperties,
+  });
+
+  useEffect(() => {
+    if (!activePropertyId && properties?.length) {
+      setActiveProperty(properties[0].id, properties[0].name);
+    }
+  }, [properties, activePropertyId]);
+
+  return (
+    <HotelLayout title="Mes biens">
+      <div className="p-4 flex flex-col gap-3">
+        <p className="text-sm text-gray-500">
+          Sélectionnez le bien sur lequel vous travaillez actuellement.
+        </p>
+        {isLoading && [1, 2].map((i) => <div key={i} className="h-16 animate-pulse rounded-2xl bg-gray-100" />)}
+        {(properties ?? []).map((p) => {
+          const isActive = activePropertyId ? activePropertyId === p.id : properties?.[0]?.id === p.id;
+          return (
+            <div key={p.id} className="card p-4 flex items-center justify-between"
+              style={{ outline: isActive ? '2px solid #1B3A5F' : 'none' }}>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl flex-shrink-0"
+                  style={{ background: isActive ? '#1B3A5F' : '#F5F4EF' }}>
+                  <Building2 className={`h-4 w-4 ${isActive ? 'text-white' : 'text-gray-400'}`} />
+                </div>
+                <p className="font-semibold text-gray-900 truncate">{p.name}</p>
+              </div>
+              {isActive ? (
+                <span className="flex items-center gap-1.5 text-xs font-semibold shrink-0" style={{ color: '#1B3A5F' }}>
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Actif
+                </span>
+              ) : (
+                <Button size="sm" variant="secondary" onClick={() => {
+                  setActiveProperty(p.id, p.name);
+                  qc.invalidateQueries({ queryKey: ['dashboard'] });
+                }}>
+                  Sélectionner
+                </Button>
+              )}
+            </div>
+          );
+        })}
+        {!isLoading && !properties?.length && (
+          <div className="flex flex-col items-center gap-3 py-10 text-gray-400">
+            <Building2 className="h-10 w-10 text-gray-200" />
+            <p className="text-sm font-medium">Aucun bien ne vous est encore assigné.</p>
+          </div>
+        )}
+      </div>
+    </HotelLayout>
+  );
+};
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export const PropertiesPage = () => {
   const [showForm, setShowForm] = useState(false);
   const { user, activePropertyId, setActiveProperty } = useAuthStore();
+  const isAdmin = user?.role === 'hotel_admin';
 
   const { data: org, isLoading, isError, refetch } = useQuery({
     queryKey: ['org-info'],
     queryFn: organizationApi.get,
     retry: 2,
+    enabled: isAdmin,
   });
+
+  if (!isAdmin) {
+    return <ReceptionistPropertiesView />;
+  }
 
   // Auto-initialize activePropertyId to the first property when not yet set.
   // This keeps the UI in sync with what ResolveTenant uses as the default.

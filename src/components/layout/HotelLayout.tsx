@@ -7,19 +7,18 @@ import { authApi } from '@/api/auth';
 
 interface HotelLayoutProps { children: ReactNode; title?: string; backHref?: string }
 
-const getNavItems = (isAdmin: boolean) => [
+const getNavItems = () => [
   { to: '/hotel/dashboard',     icon: LayoutDashboard, label: 'Accueil'    },
   { to: '/hotel/check-ins/new', icon: ClipboardList,   label: 'Check-in'  },
   { to: '/hotel/history',       icon: History,         label: 'Historique' },
-  ...(isAdmin ? [{ to: '/hotel/properties', icon: Layers, label: 'Mes biens' }] : []),
+  { to: '/hotel/properties',    icon: Layers,          label: 'Mes biens' },
   { to: '/hotel/settings',      icon: Settings,        label: 'Paramètres' },
 ];
 
 export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
   const { user, logout, activePropertyName } = useAuthStore();
   const navigate = useNavigate();
-  const isAdmin  = user?.role === 'hotel_admin';
-  const navItems = getNavItems(isAdmin);
+  const navItems = getNavItems();
 
   const handleLogout = async () => {
     try { await authApi.logout(); } catch { /* ignore */ }
@@ -51,16 +50,10 @@ export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
               <span className="text-[11px] font-black tracking-tighter" style={{ color: '#C8943A' }}>QY</span>
             </div>
             <div className="flex flex-col justify-center min-w-0">
-              {isAdmin ? (
-                <Link to="/hotel/properties"
-                  className="text-xs font-semibold text-gray-500 leading-none truncate hover:underline">
-                  {activePropertyName ?? user?.hotel?.name ?? 'Qayed'}
-                </Link>
-              ) : (
-                <span className="text-xs font-semibold text-gray-500 leading-none truncate">
-                  {activePropertyName ?? user?.hotel?.name ?? 'Qayed'}
-                </span>
-              )}
+              <Link to="/hotel/properties"
+                className="text-xs font-semibold text-gray-500 leading-none truncate hover:underline">
+                {activePropertyName ?? user?.hotel?.name ?? 'Qayed'}
+              </Link>
               {title && (
                 <span className="text-sm font-bold text-gray-900 leading-snug mt-0.5 truncate">{title}</span>
               )}
