@@ -1,6 +1,6 @@
 import { api } from '@/lib/api';
 import {
-  AuthorityGuest, AuthorityGuestProfile, AuthorityHotel,
+  AuthorityGuest, AuthorityGuestProfile, AuthorityHotel, AuthorityCheckIn,
   AuthorityDashboard, AuthorityAlert, AuthorityActivity,
   WatchlistEntry, WatchlistImportResult,
   ApiList,
@@ -50,6 +50,10 @@ export const authorityApi = {
   // ── Hotel detail ──────────────────────────────────────────────────────────
   getHotel: (hotelId: string) =>
     api.get<{ data: AuthorityHotel }>(`/authority/hotels/${hotelId}`).then((r) => r.data.data),
+
+  // ── Hotel check-ins (ministry view) ──────────────────────────────────────
+  getHotelCheckIns: (hotelId: string, params?: { search?: string; status?: string; page?: number }) =>
+    api.get<ApiList<AuthorityCheckIn>>(`/authority/hotels/${hotelId}/check-ins`, { params }).then((r) => r.data),
 
   // ── Watchlist ─────────────────────────────────────────────────────────────
   getWatchlist: (params?: { severity?: string; status?: string; search?: string; page?: number }) =>

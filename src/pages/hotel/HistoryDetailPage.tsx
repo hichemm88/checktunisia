@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, LogOut, CheckCircle, FileText, MapPin, CalendarDays, Printer } from 'lucide-react';
+import { getFlag } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -153,13 +154,19 @@ export const HistoryDetailPage = () => {
             <p className="label">Voyageurs · {ci.guests?.length ?? 0}</p>
             {ci.guests?.map((g) => {
               const gInitials = `${g.first_name?.[0] ?? ''}${g.last_name?.[0] ?? ''}`.toUpperCase();
+              const gFlag = getFlag(g.nationality_code);
               return (
                 <Card key={g.id} className="flex items-start gap-3">
-                  <div
-                    className="h-11 w-11 shrink-0 rounded-xl flex items-center justify-center text-sm font-bold"
-                    style={{ background: g.is_primary ? '#1B3A5F' : '#E8EEFB', color: g.is_primary ? '#fff' : '#1B3A5F' }}
-                  >
-                    {gInitials}
+                  <div className="relative shrink-0">
+                    <div
+                      className="h-11 w-11 rounded-xl flex items-center justify-center text-sm font-bold"
+                      style={{ background: g.is_primary ? '#1B3A5F' : '#E8EEFB', color: g.is_primary ? '#fff' : '#1B3A5F' }}
+                    >
+                      {gInitials}
+                    </div>
+                    {gFlag && (
+                      <span className="absolute -bottom-1 -right-1 text-base leading-none">{gFlag}</span>
+                    )}
                   </div>
                   <div className="flex flex-col gap-1 flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">

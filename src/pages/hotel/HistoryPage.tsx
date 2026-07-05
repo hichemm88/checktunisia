@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Search, ChevronRight, Trash2 } from 'lucide-react';
+import { getFlag } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Input } from '@/components/ui/Input';
 import { checkInsApi } from '@/api/checkIns';
@@ -123,6 +124,7 @@ export const HistoryPage = () => {
             const initials = ci.primary_guest
               ? `${ci.primary_guest.first_name?.[0] ?? ''}${ci.primary_guest.last_name?.[0] ?? ''}`.toUpperCase()
               : '?';
+            const flag = getFlag((ci.primary_guest as any)?.nationality_code);
 
             return (
               <div
@@ -135,12 +137,17 @@ export const HistoryPage = () => {
                   onClick={() => navigate(`/hotel/history/${ci.id}`)}
                   className="flex flex-1 items-center gap-3 p-3.5 text-left hover:bg-warm-100 transition-colors min-w-0"
                 >
-                  {/* Avatar */}
-                  <div
-                    className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
-                    style={{ background: '#E8EEFB', color: '#1B3A5F' }}
-                  >
-                    {initials}
+                  {/* Avatar + flag */}
+                  <div className="relative shrink-0">
+                    <div
+                      className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-bold"
+                      style={{ background: '#E8EEFB', color: '#1B3A5F' }}
+                    >
+                      {initials}
+                    </div>
+                    {flag && (
+                      <span className="absolute -bottom-1 -right-1 text-sm leading-none">{flag}</span>
+                    )}
                   </div>
                   {/* Info */}
                   <div className="flex flex-col gap-0.5 min-w-0 flex-1">

@@ -150,6 +150,26 @@ export interface AuthorityGuestProfile {
   }>;
 }
 
+export interface AuthorityCheckIn {
+  id: string;
+  reference: string;
+  status: string;
+  check_in_date: string;
+  expected_check_out_date: string;
+  actual_check_out_date?: string | null;
+  adults_count: number;
+  children_count: number;
+  room_number?: string | null;
+  guests_count: number;
+  primary_guest?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    nationality_code?: string | null;
+    date_of_birth?: string | null;
+  } | null;
+}
+
 export interface AuthorityHotel {
   id: string; name: string; slug: string; type: string; stars?: number;
   city?: string; governorate?: string; address?: string;

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { Search, User, MapPin, Lock, ShieldAlert } from 'lucide-react';
+import { getFlag } from '@/lib/flags';
 import { WatchlistSeverity } from '@/types';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Card } from '@/components/ui/Card';
@@ -189,7 +190,14 @@ export const SearchPage = () => {
                           {hit?.reason && <span className="ml-1 italic font-normal">"{hit.reason.slice(0, 50)}"</span>}
                         </span>
                       )}
-                      <p className="font-semibold text-gray-900">{g.first_name} {g.last_name}</p>
+                      <p className="font-semibold text-gray-900 flex items-center gap-2">
+                        {g.first_name} {g.last_name}
+                        {g.nationality_code && (
+                          <span className="text-base leading-none" title={g.nationality_code}>
+                            {getFlag(g.nationality_code)}
+                          </span>
+                        )}
+                      </p>
                       <p className="text-xs text-gray-500">
                         {g.date_of_birth} · {g.sex} · {g.nationality_code}
                         {g.document_number && ` · ${g.document_number}`}
