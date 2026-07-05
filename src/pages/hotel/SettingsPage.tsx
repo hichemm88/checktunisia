@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building, CreditCard, Users, Plus, Trash2, Save,
-  Pencil, X, MapPin, Send,
+  Pencil, X, MapPin, Send, Activity,
   CheckCircle, AlertCircle,
 } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
@@ -527,13 +527,141 @@ const AbonnementTab = () => {
   );
 };
 
+// ─── Tab: Activité ──────────────────────────────────────────────────────────────
+
+const ACTION_LABELS: Record<string, string> = {
+  'check_in.created':          'a créé un check-in',
+  'check_in.updated':          'a modifié un check-in',
+  'check_in.completed':        'a finalisé un check-in',
+  'check_in.checked_out':      'a enregistré un départ',
+  'check_in.cancelled':        'a annulé un check-in',
+  'guest.added':                'a ajouté un voyageur',
+  'guest.updated':              'a modifié un voyageur',
+  'guest.removed':              'a supprimé un voyageur',
+  'scan.uploaded':               'a scanné un document',
+  'room.created':               'a créé une unité',
+  'room.updated':               'a modifié une unité',
+  'room.deleted':               'a supprimé une unité',
+  'watchlist.hits_viewed':      'a consulté les alertes de surveillance',
+  'watchlist.hit_acknowledged': 'a traité une alerte de surveillance',
+  'user.login':                 's\'est connecté(e)',
+  'user.logout':                's\'est déconnecté(e)',
+  'user.created':                'a créé un compte membre',
+  'user.updated':                'a modifié un compte membre',
+  'user.deleted':                'a supprimé un compte membre',
+  'user.invite_resent':          'a renvoyé une invitation',
+  'profile.updated':             'a modifié son profil',
+  'profile.password_changed':    'a changé son mot de passe',
+};
+
+const actionLabel = (action: string): string => ACTION_LABELS[action] ?? action.replace(/[._]/g, ' ');
+
+const ActiviteTab = () => {
+  const [page, setPage] = useState(1);
+  const [role, setRole] = useState<string>('');
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['hotel-activity', page, role],
+    queryFn: () => settingsApi.getActivity({ page, role: role || undefined }),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-gray-400" /> Activité
+          </div>
+        </CardTitle>
+      </CardHeader>
+
+      <div className="flex gap-1.5 mb-3">
+        {[
+          { value: '',             label: 'Tous' },
+          { value: 'receptionist', label: 'Réceptionnistes' },
+          { value: 'hotel_admin',  label: 'Administrateurs' },
+        ].map((f) => (
+          <button
+            key={f.value}
+            onClick={() => { setRole(f.value); setPage(1); }}
+            className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+            style={role === f.value
+              ? { background: '#1B3A5F', color: '#fff' }
+              : { background: '#F5F4EF', color: '#6B7280' }}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-col">
+        {isLoading && [1, 2, 3].map((i) => (
+          <div key={i} className="h-14 animate-pulse rounded-lg bg-gray-50 my-1" />
+        ))}
+
+        {data?.data.map((entry) => (
+          <div key={entry.id} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold mt-0.5"
+              style={{ background: '#E8EEFB', color: '#1B3A5F' }}
+            >
+              {entry.actor?.name?.[0] ?? '?'}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm text-gray-800">
+                <span className="font-semibold">{entry.actor?.name ?? 'Compte supprimé'}</span>
+                {entry.actor && (
+                  <span className="text-xs text-gray-400"> ({ROLE_LABELS[entry.actor.role] ?? entry.actor.role})</span>
+                )}
+                {' '}{actionLabel(entry.action)}
+              </p>
+              <p className="text-xs text-gray-400">
+                {new Date(entry.created_at).toLocaleString('fr-FR', {
+                  day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+                })}
+              </p>
+            </div>
+          </div>
+        ))}
+
+        {!isLoading && !data?.data.length && (
+          <p className="py-6 text-center text-sm text-gray-400">Aucune activité</p>
+        )}
+      </div>
+
+      {data && data.meta.last_page > 1 && (
+        <div className="flex justify-center items-center gap-3 mt-3">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage((p) => p - 1)}
+            className="rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40 hover:bg-warm-100 transition-colors"
+          >
+            ← Préc.
+          </button>
+          <span className="text-xs text-gray-500 font-medium">
+            {data.meta.current_page} / {data.meta.last_page}
+          </span>
+          <button
+            disabled={page >= data.meta.last_page}
+            onClick={() => setPage((p) => p + 1)}
+            className="rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40 hover:bg-warm-100 transition-colors"
+          >
+            Suiv. →
+          </button>
+        </div>
+      )}
+    </Card>
+  );
+};
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-type Tab = 'societe' | 'equipe' | 'abonnement';
+type Tab = 'societe' | 'equipe' | 'activite' | 'abonnement';
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'societe',     label: 'Société',      icon: Building   },
   { id: 'equipe',      label: 'Équipe',        icon: Users      },
+  { id: 'activite',    label: 'Activité',      icon: Activity   },
   { id: 'abonnement',  label: 'Abonnement',    icon: CreditCard },
 ];
 
@@ -551,7 +679,7 @@ export const SettingsPage = () => {
           className="sticky top-0 z-10 flex border-b px-4"
           style={{ background: '#fff', borderColor: '#E5E7EB' }}
         >
-          {(isAdmin ? TABS : TABS.filter(t => t.id !== 'societe' && t.id !== 'equipe')).map(t => (
+          {(isAdmin ? TABS : TABS.filter(t => t.id !== 'societe' && t.id !== 'equipe' && t.id !== 'activite')).map(t => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
@@ -571,6 +699,7 @@ export const SettingsPage = () => {
         <div className="p-4 flex flex-col gap-4">
           {tab === 'societe'    && isAdmin && <SocieteTab />}
           {tab === 'equipe'     && isAdmin && <EquipeTab />}
+          {tab === 'activite'   && isAdmin && <ActiviteTab />}
           {tab === 'abonnement' && <AbonnementTab />}
         </div>
 

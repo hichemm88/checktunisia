@@ -290,6 +290,15 @@ export interface HotelUser {
   properties?: { id: string; name: string }[];
 }
 
+export interface ActivityLogEntry {
+  id: number;
+  action: string;
+  subject_type?: string | null;
+  subject_id?: string | null;
+  actor: { id: string; name: string; role: string } | null;
+  created_at: string;
+}
+
 export interface CreateUserPayload {
   first_name: string; last_name: string; email: string;
   role: 'hotel_admin' | 'receptionist';

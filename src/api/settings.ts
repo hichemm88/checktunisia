@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { HotelUser, CreateUserPayload, UpdateProfilePayload, ChangePasswordPayload, HotelProfile, UpdateHotelPayload } from '@/types';
+import { HotelUser, CreateUserPayload, UpdateProfilePayload, ChangePasswordPayload, HotelProfile, UpdateHotelPayload, ActivityLogEntry } from '@/types';
 
 export const settingsApi = {
   // Profile
@@ -37,4 +37,9 @@ export const settingsApi = {
 
   updateHotelProfile: (payload: UpdateHotelPayload) =>
     api.patch<{ data: HotelProfile }>('/hotel/profile', payload).then((r) => r.data.data),
+
+  // Staff activity feed (hotel_admin only)
+  getActivity: (params: { page?: number; role?: string }) =>
+    api.get<{ data: ActivityLogEntry[]; meta: { total: number; current_page: number; last_page: number } }>('/hotel/activity', { params })
+      .then((r) => r.data),
 };
