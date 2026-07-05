@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Shield, Plus, Upload, Download, Trash2, ToggleLeft, ToggleRight, Search, AlertTriangle, X } from 'lucide-react';
+import { Shield, Plus, Upload, Download, Trash2, ToggleLeft, ToggleRight, Search, AlertTriangle, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -218,12 +218,17 @@ export const WatchlistPage = () => {
 
   const [search, setSearch] = useState('');
   const [severity, setSeverity] = useState('');
+  const [page, setPage] = useState(1);
   const [showAdd, setShowAdd] = useState(false);
   const [showImport, setShowImport] = useState(false);
 
+  // Reset to page 1 when filters change
+  const handleSearch = (val: string) => { setSearch(val); setPage(1); };
+  const handleSeverity = (val: string) => { setSeverity(val); setPage(1); };
+
   const { data, isLoading } = useQuery({
-    queryKey: ['watchlist', search, severity],
-    queryFn: () => authorityApi.getWatchlist({ search: search || undefined, severity: severity || undefined }),
+    queryKey: ['watchlist', search, severity, page],
+    queryFn: () => authorityApi.getWatchlist({ search: search || undefined, severity: severity || undefined, page }),
   });
 
   const toggleMutation = useMutation({
@@ -266,13 +271,13 @@ export const WatchlistPage = () => {
                 label="Rechercher"
                 placeholder="Nom, prénom, numéro de document..."
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={e => handleSearch(e.target.value)}
                 leftIcon={<Search className="h-3.5 w-3.5 text-gray-400" />}
               />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-gray-600">Degré</label>
-              <select className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none" value={severity} onChange={e => setSeverity(e.target.value)}>
+              <select className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none" value={severity} onChange={e => handleSeverity(e.target.value)}>
                 <option value="">Tous</option>
                 <option value="critique">🔴 Critique</option>
                 <option value="eleve">🟠 Élevé</option>
@@ -329,32 +334,93 @@ export const WatchlistPage = () => {
                   </div>
 
                   {/* Source */}
-                  <span className="text-xs text-gray-300 shrink-0">
-                    {entry.source === 'import' ? 'Import' : 'Manuel'}
+                  <span className="text-xs shrink-0 px-2 py-0.5 rounded-full"
+                    style={entry.source === 'opensanctions'
+                      ? { background: '#FEF2F2', color: '#991B1B' }
+                      : { background: '#F3F4F6', color: '#9CA3AF' }
+                    }
+                  >
+                    {entry.source === 'opensanctions' ? '🌐 Interpol/ONU' : entry.source === 'import' ? 'Import' : 'Manuel'}
                   </span>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => toggleMutation.mutate(entry)}
-                      title={entry.status === 'active' ? 'Désactiver' : 'Activer'}
-                      className="text-gray-400 hover:text-gray-700"
-                    >
-                      {entry.status === 'active'
-                        ? <ToggleRight className="h-5 w-5 text-green-500" />
-                        : <ToggleLeft className="h-5 w-5" />
-                      }
-                    </button>
-                    <button
-                      onClick={() => { if (confirm('Supprimer cette entrée ?')) deleteMutation.mutate(entry.id); }}
-                      className="text-gray-300 hover:text-red-500"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
+                  {/* Actions — disabled for OpenSanctions entries (managed automatically) */}
+                  {entry.source !== 'opensanctions' && (
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => toggleMutation.mutate(entry)}
+                        title={entry.status === 'active' ? 'Désactiver' : 'Activer'}
+                        className="text-gray-400 hover:text-gray-700"
+                      >
+                        {entry.status === 'active'
+                          ? <ToggleRight className="h-5 w-5 text-green-500" />
+                          : <ToggleLeft className="h-5 w-5" />
+                        }
+                      </button>
+                      <button
+                        onClick={() => { if (confirm('Supprimer cette entrée ?')) deleteMutation.mutate(entry.id); }}
+                        className="text-gray-300 hover:text-red-500"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {data && data.meta.last_page > 1 && (
+          <div className="flex items-center justify-between pt-2">
+            <p className="text-xs text-gray-400">
+              Page {data.meta.current_page} / {data.meta.last_page}
+              <span className="ml-2">· {data.meta.total} entrée{data.meta.total !== 1 ? 's' : ''}</span>
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              {/* Page numbers */}
+              {Array.from({ length: data.meta.last_page }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === data.meta.last_page || Math.abs(p - page) <= 1)
+                .reduce<(number | '...')[]>((acc, p, idx, arr) => {
+                  if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push('...');
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((p, i) =>
+                  p === '...'
+                    ? <span key={`dots-${i}`} className="px-1 text-gray-300 text-sm">…</span>
+                    : (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p as number)}
+                        className="h-8 w-8 rounded-lg text-sm font-medium border transition-colors"
+                        style={page === p
+                          ? { background: '#1B3A5F', color: '#fff', borderColor: '#1B3A5F' }
+                          : { borderColor: '#E5E7EB', color: '#6B7280' }
+                        }
+                      >
+                        {p}
+                      </button>
+                    )
+                )
+              }
+
+              <button
+                onClick={() => setPage(p => Math.min(data.meta.last_page, p + 1))}
+                disabled={page === data.meta.last_page}
+                className="flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         )}
 
