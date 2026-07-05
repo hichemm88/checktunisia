@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building, CreditCard, Users, Plus, Trash2, Save,
-  Pencil, X, MapPin, Phone, Globe, Star,
-  CheckCircle, AlertCircle, ExternalLink, Mail,
+  Pencil, X, MapPin,
+  CheckCircle, AlertCircle,
 } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -14,8 +14,8 @@ import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
 import { settingsApi } from '@/api/settings';
 import { extractErrors } from '@/lib/api';
-import { HotelUser, CreateUserPayload, HotelProfile } from '@/types';
-import { getPropertyTypeName } from '@/api/organization';
+import { HotelUser, CreateUserPayload } from '@/types';
+import { organizationApi, OrgInfo } from '@/api/organization';
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -39,19 +39,6 @@ const GOVERNORATES = [
   'Sousse', 'Tataouine', 'Tozeur', 'Tunis', 'Zaghouan',
 ];
 
-const HOTEL_TYPES = [
-  { value: 'hotel',        label: 'Hôtel' },
-  { value: 'appartement',  label: 'Appartement' },
-  { value: 'villa',        label: 'Villa' },
-  { value: 'riad',         label: 'Riad' },
-  { value: 'maison_hotes', label: "Maison d'hôtes" },
-  { value: 'guesthouse',   label: 'Guesthouse' },
-  { value: 'hostel',       label: 'Auberge de jeunesse' },
-  { value: 'resort',       label: 'Resort' },
-  { value: 'bungalow',     label: 'Bungalow' },
-  { value: 'rental',       label: 'Location saisonnière' },
-  { value: 'residence',    label: 'Résidence hôtelière' },
-];
 
 const ROLE_LABELS: Record<string, string> = {
   hotel_admin:  'Administrateur',
@@ -60,43 +47,43 @@ const ROLE_LABELS: Record<string, string> = {
 
 // ─── Tab: Société ─────────────────────────────────────────────────────────────
 
+const ENTITY_TYPE_LABELS: Record<string, string> = {
+  company:    'Société',
+  individual: 'Particulier',
+};
+
 const SocieteTab = () => {
   const qc = useQueryClient();
   const [editing, setEditing]   = useState(false);
   const [feedback, setFeedback] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
-  const { data: profile, isLoading } = useQuery({
-    queryKey: ['hotel-profile'],
-    queryFn: settingsApi.getHotelProfile,
+  const { data: org, isLoading } = useQuery({
+    queryKey: ['org-info'],
+    queryFn: organizationApi.get,
   });
 
-  const [form, setForm] = useState<HotelProfile | null>(null);
+  const [form, setForm] = useState<Partial<OrgInfo> | null>(null);
 
-  const startEdit = () => { setForm(profile ?? null); setFeedback(null); setEditing(true); };
+  const startEdit = () => { setForm(org ?? null); setFeedback(null); setEditing(true); };
   const cancelEdit = () => { setEditing(false); setForm(null); };
-
-  const setAddr = (k: string, v: string | number | null) =>
+  const setAddr = (k: string, v: string) =>
     setForm(f => f ? { ...f, address: { ...f.address, [k]: v } } : f);
 
   const mutation = useMutation({
-    mutationFn: () => settingsApi.updateHotelProfile({
-      name: form?.name, type: form?.type, stars: form?.stars,
-      phone: form?.phone, email: form?.email, website: form?.website,
-      address: form?.address ?? undefined,
-    }),
+    mutationFn: () => organizationApi.update({
+      name:                form?.name,
+      registration_number: form?.registration_number ?? null,
+      contact_email:       form?.contact_email,
+      contact_phone:       form?.contact_phone ?? null,
+      address:             form?.address ?? null,
+    } as any),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['hotel-profile'] });
+      qc.invalidateQueries({ queryKey: ['org-info'] });
       setFeedback({ msg: 'Informations mises à jour', type: 'success' });
       setEditing(false);
     },
     onError: (err) => setFeedback({ msg: extractErrors(err), type: 'error' }),
   });
-
-  const mapsUrl = profile?.address?.latitude && profile?.address?.longitude
-    ? `https://www.openstreetmap.org/?mlat=${profile.address.latitude}&mlon=${profile.address.longitude}#map=16/${profile.address.latitude}/${profile.address.longitude}`
-    : profile?.address?.city
-      ? `https://www.openstreetmap.org/search?query=${encodeURIComponent([profile.address.line1, profile.address.city, 'Tunisie'].filter(Boolean).join(', '))}`
-      : null;
 
   if (isLoading) return <div className="h-40 animate-pulse rounded-2xl bg-gray-100" />;
 
@@ -105,7 +92,7 @@ const SocieteTab = () => {
       <CardHeader>
         <CardTitle>
           <div className="flex items-center gap-2">
-            <Building className="h-4 w-4 text-gray-400" /> Informations de l'établissement
+            <Building className="h-4 w-4 text-gray-400" /> Informations de la société
           </div>
         </CardTitle>
         {!editing
@@ -121,106 +108,66 @@ const SocieteTab = () => {
       {feedback && <div className="mt-2"><Alert msg={feedback.msg} type={feedback.type} /></div>}
 
       {!editing ? (
-        <div className="flex flex-col gap-2 mt-3">
-          <div className="flex justify-between items-center py-1.5 border-b border-gray-50">
-            <span className="text-sm text-gray-500">Nom</span>
-            <span className="text-sm font-semibold text-gray-900">{profile?.name ?? '—'}</span>
-          </div>
-          <div className="flex justify-between items-center py-1.5 border-b border-gray-50">
-            <span className="text-sm text-gray-500">Type</span>
-            <span className="text-sm font-medium">
-              {HOTEL_TYPES.find(t => t.value === profile?.type)?.label ?? profile?.type ?? '—'}
-            </span>
-          </div>
-          {profile?.stars != null && (
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-50">
-              <span className="text-sm text-gray-500">Classement</span>
-              <div className="flex gap-0.5">
-                {Array.from({ length: profile.stars }).map((_, i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                ))}
-              </div>
+        <div className="flex flex-col gap-0 mt-3">
+          {[
+            { label: 'Type',               value: ENTITY_TYPE_LABELS[org?.entity_type ?? ''] ?? org?.entity_type },
+            { label: 'Raison sociale',     value: org?.name },
+            { label: 'N° registre (RC)',   value: org?.registration_number },
+            { label: 'Email contact',      value: org?.contact_email },
+            { label: 'Téléphone',          value: org?.contact_phone },
+          ].map(({ label, value }) => value ? (
+            <div key={label} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
+              <span className="text-sm text-gray-500">{label}</span>
+              <span className="text-sm font-medium text-gray-900 text-right max-w-[60%]">{value}</span>
             </div>
-          )}
-          {profile?.registration_number && (
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-50">
-              <span className="text-sm text-gray-500">N° d'enregistrement</span>
-              <span className="text-sm font-mono text-gray-700">{profile.registration_number}</span>
-            </div>
-          )}
+          ) : null)}
 
-          {profile?.address && (
-            <div className="flex items-start gap-2 py-2 border-b border-gray-50">
+          {org?.address && (
+            <div className="flex items-start gap-2 py-2">
               <MapPin className="h-3.5 w-3.5 text-gray-400 mt-0.5 shrink-0" />
-              <div className="text-sm text-gray-700 flex-1">
-                {profile.address.line1 && <p>{profile.address.line1}</p>}
-                {profile.address.line2 && <p>{profile.address.line2}</p>}
-                <p>{[profile.address.postal_code, profile.address.city, profile.address.governorate].filter(Boolean).join(', ')}</p>
-              </div>
-              {mapsUrl && (
-                <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0" style={{ color: '#1B3A5F' }}>
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-              )}
+              <span className="text-sm text-gray-700">
+                {[org.address.line1, org.address.city, org.address.governorate].filter(Boolean).join(', ')}
+              </span>
             </div>
           )}
-
-          <div className="flex flex-col gap-2 pt-1">
-            {profile?.phone && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Phone className="h-3.5 w-3.5 text-gray-400" /> {profile.phone}
-              </div>
-            )}
-            {profile?.email && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Mail className="h-3.5 w-3.5 text-gray-400" /> {profile.email}
-              </div>
-            )}
-            {profile?.website && (
-              <div className="flex items-center gap-2 text-sm">
-                <Globe className="h-3.5 w-3.5 text-gray-400" />
-                <a
-                  href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="truncate" style={{ color: '#1B3A5F' }}
-                >
-                  {profile.website}
-                </a>
-              </div>
-            )}
-          </div>
         </div>
       ) : (
         <div className="flex flex-col gap-3 mt-3">
-          <Input label="Nom de l'établissement"
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Type d'entité</label>
+            <Select
+              value={form?.entity_type ?? 'company'}
+              onChange={e => setForm(f => f ? { ...f, entity_type: e.target.value as any } : f)}
+              options={[
+                { value: 'company',    label: 'Société' },
+                { value: 'individual', label: 'Particulier' },
+              ]}
+            />
+          </div>
+          <Input label="Raison sociale / Nom"
             value={form?.name ?? ''}
             onChange={e => setForm(f => f ? { ...f, name: e.target.value } : f)}
           />
-          <div className="grid grid-cols-2 gap-3">
-            <Select
-              label="Type"
-              value={form?.type ?? ''}
-              onChange={e => setForm(f => f ? { ...f, type: e.target.value } : f)}
-              options={[{ value: '', label: '— Choisir —' }, ...HOTEL_TYPES]}
-            />
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Étoiles</label>
-              <div className="flex gap-1 pt-1">
-                {[1,2,3,4,5].map(n => (
-                  <button key={n} type="button"
-                    onClick={() => setForm(f => f ? { ...f, stars: f.stars === n ? null : n } : f)}
-                  >
-                    <Star className={`h-5 w-5 ${(form?.stars ?? 0) >= n ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`} />
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
+          <Input label="N° Registre du commerce"
+            value={form?.registration_number ?? ''}
+            onChange={e => setForm(f => f ? { ...f, registration_number: e.target.value } : f)}
+            placeholder="B123456789"
+          />
+          <hr className="border-gray-100" />
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contacts</p>
+          <Input label="Email" type="email"
+            value={form?.contact_email ?? ''}
+            onChange={e => setForm(f => f ? { ...f, contact_email: e.target.value } : f)}
+            placeholder="contact@societe.tn"
+          />
+          <Input label="Téléphone" type="tel"
+            value={form?.contact_phone ?? ''}
+            onChange={e => setForm(f => f ? { ...f, contact_phone: e.target.value } : f)}
+            placeholder="+216 xx xxx xxx"
+          />
           <hr className="border-gray-100" />
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Adresse</p>
-          <Input label="Ligne 1" value={form?.address?.line1 ?? ''} onChange={e => setAddr('line1', e.target.value)} placeholder="N° et nom de rue" />
-          <Input label="Ligne 2" value={form?.address?.line2 ?? ''} onChange={e => setAddr('line2', e.target.value)} placeholder="Bâtiment, BP…" />
+          <Input label="Adresse" value={form?.address?.line1 ?? ''} onChange={e => setAddr('line1', e.target.value)} />
           <div className="grid grid-cols-2 gap-3">
             <Input label="Ville" value={form?.address?.city ?? ''} onChange={e => setAddr('city', e.target.value)} />
             <Select label="Gouvernorat" value={form?.address?.governorate ?? ''}
@@ -228,20 +175,6 @@ const SocieteTab = () => {
               options={[{ value: '', label: '— Choisir —' }, ...GOVERNORATES.map(g => ({ value: g, label: g }))]}
             />
           </div>
-          <Input label="Code postal" value={form?.address?.postal_code ?? ''} onChange={e => setAddr('postal_code', e.target.value)} placeholder="1000" />
-          <div className="grid grid-cols-2 gap-3">
-            <Input label="Latitude" type="number" step="any" value={form?.address?.latitude ?? ''}
-              onChange={e => setAddr('latitude', e.target.value ? parseFloat(e.target.value) : null)} placeholder="36.8065" />
-            <Input label="Longitude" type="number" step="any" value={form?.address?.longitude ?? ''}
-              onChange={e => setAddr('longitude', e.target.value ? parseFloat(e.target.value) : null)} placeholder="10.1815" />
-          </div>
-
-          <hr className="border-gray-100" />
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contacts</p>
-          <Input label="Téléphone" type="tel" value={form?.phone ?? ''} onChange={e => setForm(f => f ? { ...f, phone: e.target.value } : f)} placeholder="+216 xx xxx xxx" />
-          <Input label="Email" type="email" value={form?.email ?? ''} onChange={e => setForm(f => f ? { ...f, email: e.target.value } : f)} placeholder="contact@etablissement.tn" />
-          <Input label="Site web" type="url" value={form?.website ?? ''} onChange={e => setForm(f => f ? { ...f, website: e.target.value } : f)} placeholder="https://monhotel.tn" />
-
           <div className="flex gap-2 pt-1">
             <Button size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending} className="gap-2">
               <Save className="h-4 w-4" /> Enregistrer
@@ -371,7 +304,7 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
 const AddUserForm = ({ onDone }: { onDone: () => void }) => {
   const qc = useQueryClient();
   const [form, setForm] = useState<CreateUserPayload>({
-    first_name: '', last_name: '', email: '', password: '', role: 'receptionist',
+    first_name: '', last_name: '', email: '', role: 'receptionist',
   });
   const [error, setError] = useState('');
   const set = (k: keyof CreateUserPayload, v: string) => setForm(f => ({ ...f, [k]: v }));
@@ -389,19 +322,19 @@ const AddUserForm = ({ onDone }: { onDone: () => void }) => {
         <Input label="Prénom" value={form.first_name} onChange={e => set('first_name', e.target.value)} />
         <Input label="Nom"    value={form.last_name}  onChange={e => set('last_name',  e.target.value)} />
       </div>
-      <Input label="Email"        type="email"    value={form.email}    onChange={e => set('email',    e.target.value)} />
-      <Input label="Mot de passe" type="password" value={form.password} onChange={e => set('password', e.target.value)} />
+      <Input label="Email" type="email" value={form.email} onChange={e => set('email', e.target.value)} />
       <Select label="Rôle" value={form.role} onChange={e => set('role', e.target.value)}
         options={[
           { value: 'receptionist', label: 'Réceptionniste' },
           { value: 'hotel_admin',  label: 'Administrateur' },
         ]}
       />
+      <p className="text-xs text-gray-400">Un email avec un mot de passe temporaire sera envoyé automatiquement.</p>
       {error && <Alert msg={error} type="error" />}
       <div className="flex gap-2">
         <Button size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending}
-          disabled={!form.first_name || !form.email || !form.password}>
-          Créer
+          disabled={!form.first_name || !form.last_name || !form.email}>
+          Créer et envoyer l'invitation
         </Button>
         <Button size="sm" variant="ghost" onClick={onDone}>Annuler</Button>
       </div>
@@ -459,9 +392,6 @@ const EquipeTab = () => {
 // ─── Tab: Abonnement ──────────────────────────────────────────────────────────
 
 const AbonnementTab = () => {
-  const { user } = useAuthStore();
-  const propertyLabel = getPropertyTypeName(user?.hotel?.type ?? undefined);
-
   const { data: sub } = useQuery({
     queryKey: ['subscription'],
     queryFn: settingsApi.getSubscription,
@@ -469,35 +399,6 @@ const AbonnementTab = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Établissement summary */}
-      {user?.hotel && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <div className="flex items-center gap-2">
-                <Building className="h-4 w-4 text-gray-400" /> {propertyLabel}
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <div className="mt-3 flex flex-col gap-2">
-            <div className="flex justify-between py-1.5 border-b border-gray-50">
-              <span className="text-sm text-gray-500">Nom</span>
-              <span className="text-sm font-semibold text-gray-900">{user.hotel.name}</span>
-            </div>
-            <div className="flex justify-between py-1.5 border-b border-gray-50">
-              <span className="text-sm text-gray-500">Statut</span>
-              <Badge variant={user.hotel.status === 'active' ? 'active' : 'suspended'}>
-                {user.hotel.status === 'active' ? 'Actif' : user.hotel.status}
-              </Badge>
-            </div>
-            <div className="flex justify-between py-1.5">
-              <span className="text-sm text-gray-500">Chambres</span>
-              <span className="text-sm font-medium text-gray-900">{user.hotel.room_count} unités</span>
-            </div>
-          </div>
-        </Card>
-      )}
-
       {/* Subscription details */}
       {sub ? (
         <Card>

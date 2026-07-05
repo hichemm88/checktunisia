@@ -281,5 +281,5 @@ export interface HotelUser {
 
 export interface CreateUserPayload {
   first_name: string; last_name: string; email: string;
-  password: string; role: 'hotel_admin' | 'receptionist';
+  role: 'hotel_admin' | 'receptionist';
 }
