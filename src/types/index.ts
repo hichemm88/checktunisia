@@ -158,7 +158,7 @@ export interface AuthorityHotel {
   active_guests_count?: number; total_check_ins?: number;
 }
 
-export interface ApiList<T> { data: T[]; meta: { total: number; current_page: number; per_page: number } }
+export interface ApiList<T> { data: T[]; meta: { total: number; current_page: number; per_page: number; last_page: number } }
 export interface ApiItem<T> { data: T }
 
 // ─── Authority dashboard ──────────────────────────────────────────────────────

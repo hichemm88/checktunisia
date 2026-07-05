@@ -297,73 +297,109 @@ export const WatchlistPage = () => {
             <p className="text-sm text-gray-400 mt-1">Ajoutez des personnes manuellement ou importez un fichier CSV.</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             {data?.data.map((entry) => {
               const cfg = SEVERITY_CONFIG[entry.severity];
+              const isGlobal = entry.source === 'opensanctions';
+              const fmtDob = entry.date_of_birth
+                ? new Date(entry.date_of_birth + 'T00:00:00').toLocaleDateString('fr-TN', { day: '2-digit', month: 'short', year: 'numeric' })
+                : null;
+
               return (
-                <div key={entry.id} className="flex items-center gap-4 rounded-xl bg-white px-5 py-4 shadow-sm border" style={{ borderColor: cfg.border, borderLeftWidth: 4, borderLeftColor: cfg.color }}>
-                  {/* Severity badge */}
-                  <span className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold tracking-wide" style={{ color: cfg.color, background: cfg.bg }}>
-                    {cfg.label}
-                  </span>
+                <div
+                  key={entry.id}
+                  className="rounded-xl bg-white shadow-sm border overflow-hidden"
+                  style={{ borderColor: '#E5E7EB', borderLeftWidth: 4, borderLeftColor: cfg.color }}
+                >
+                  <div className="flex items-start gap-3 px-4 py-3">
 
-                  {/* Identity */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm">
-                      {entry.last_name || '—'}{entry.first_name ? `, ${entry.first_name}` : ''}
-                      {entry.nationality_code && <span className="ml-2 text-xs font-normal text-gray-400">· {entry.nationality_code}</span>}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mt-0.5">
-                      {entry.document_number && (
-                        <span className="text-xs text-gray-500">📄 {entry.document_number}</span>
+                    {/* Severity chip */}
+                    <span
+                      className="shrink-0 mt-0.5 rounded-md px-2 py-0.5 text-[10px] font-black tracking-widest uppercase"
+                      style={{ color: cfg.color, background: cfg.bg }}
+                    >
+                      {cfg.label}
+                    </span>
+
+                    {/* Identity block */}
+                    <div className="flex-1 min-w-0">
+                      {/* Name row */}
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="text-sm font-bold text-gray-900">
+                          {entry.last_name || '—'}
+                          {entry.first_name && <span className="font-normal text-gray-600">, {entry.first_name}</span>}
+                        </span>
+                        {entry.nationality_code && (
+                          <span className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase bg-gray-100 px-1.5 py-0.5 rounded">
+                            {entry.nationality_code}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Details row */}
+                      <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1">
+                        {fmtDob && (
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <span className="text-gray-300">Né(e)</span> {fmtDob}
+                          </span>
+                        )}
+                        {entry.document_number && (
+                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                            <span className="text-gray-300">Doc.</span> {entry.document_number}
+                          </span>
+                        )}
+                        <span className="text-xs text-gray-400">{REASON_LABELS[entry.reason_code]}</span>
+                      </div>
+
+                      {/* Optional rows */}
+                      {entry.expires_at && (
+                        <p className="text-xs text-orange-500 mt-0.5">Expire le {entry.expires_at}</p>
                       )}
-                      {entry.date_of_birth && (
-                        <span className="text-xs text-gray-500">🎂 {entry.date_of_birth}</span>
-                      )}
-                      <span className="text-xs text-gray-400">{REASON_LABELS[entry.reason_code]}</span>
                       {isMinistry && entry.reason && (
-                        <span className="text-xs italic text-gray-400">"…{entry.reason.slice(0, 40)}{entry.reason.length > 40 ? '…' : ''}"</span>
+                        <p className="text-xs italic text-gray-400 mt-0.5 line-clamp-1">"{entry.reason}"</p>
+                      )}
+                      {isMinistry && entry.organization_name && (
+                        <p className="text-xs text-gray-300 mt-0.5">↳ {entry.organization_name}</p>
                       )}
                     </div>
-                    {entry.expires_at && (
-                      <p className="text-xs text-orange-500 mt-0.5">Expire le {entry.expires_at}</p>
-                    )}
-                    {isMinistry && entry.organization_name && (
-                      <p className="text-xs text-gray-300 mt-0.5">Ajouté par {entry.organization_name}</p>
-                    )}
-                  </div>
 
-                  {/* Source */}
-                  <span className="text-xs shrink-0 px-2 py-0.5 rounded-full"
-                    style={entry.source === 'opensanctions'
-                      ? { background: '#FEF2F2', color: '#991B1B' }
-                      : { background: '#F3F4F6', color: '#9CA3AF' }
-                    }
-                  >
-                    {entry.source === 'opensanctions' ? '🌐 Interpol/ONU' : entry.source === 'import' ? 'Import' : 'Manuel'}
-                  </span>
-
-                  {/* Actions — disabled for OpenSanctions entries (managed automatically) */}
-                  {entry.source !== 'opensanctions' && (
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => toggleMutation.mutate(entry)}
-                        title={entry.status === 'active' ? 'Désactiver' : 'Activer'}
-                        className="text-gray-400 hover:text-gray-700"
-                      >
-                        {entry.status === 'active'
-                          ? <ToggleRight className="h-5 w-5 text-green-500" />
-                          : <ToggleLeft className="h-5 w-5" />
+                    {/* Right column */}
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      {/* Source badge */}
+                      <span
+                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                        style={isGlobal
+                          ? { background: '#FEF2F2', color: '#991B1B' }
+                          : { background: '#F3F4F6', color: '#9CA3AF' }
                         }
-                      </button>
-                      <button
-                        onClick={() => { if (confirm('Supprimer cette entrée ?')) deleteMutation.mutate(entry.id); }}
-                        className="text-gray-300 hover:text-red-500"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                        {isGlobal ? '🌐 Interpol/ONU' : entry.source === 'import' ? 'Import CSV' : 'Manuel'}
+                      </span>
+
+                      {/* Actions */}
+                      {!isGlobal && (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => toggleMutation.mutate(entry)}
+                            title={entry.status === 'active' ? 'Désactiver' : 'Activer'}
+                            className="text-gray-300 hover:text-gray-600 transition-colors"
+                          >
+                            {entry.status === 'active'
+                              ? <ToggleRight className="h-5 w-5 text-green-500" />
+                              : <ToggleLeft className="h-5 w-5" />
+                            }
+                          </button>
+                          <button
+                            onClick={() => { if (confirm('Supprimer cette entrée ?')) deleteMutation.mutate(entry.id); }}
+                            className="text-gray-200 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
+
+                  </div>
                 </div>
               );
             })}
