@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, LogOut, CheckCircle, FileText, MapPin, CalendarDays, Printer } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
@@ -30,6 +31,10 @@ export const HistoryDetailPage = () => {
   const qc       = useQueryClient();
   const { toast } = useToast();
 
+  const todayISO = new Date().toISOString().split('T')[0];
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [checkoutDate, setCheckoutDate] = useState(todayISO);
+
   const { data: ci, isLoading } = useQuery({
     queryKey: ['check-in', id],
     queryFn: () => checkInsApi.get(id!),
@@ -48,8 +53,12 @@ export const HistoryDetailPage = () => {
   });
 
   const checkoutMutation = useMutation({
-    mutationFn: () => checkInsApi.checkout(id!),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['check-in', id] }); toast('Check-out enregistré', 'success'); },
+    mutationFn: (date: string) => checkInsApi.checkout(id!, date),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['check-in', id] });
+      setShowCheckoutModal(false);
+      toast('Check-out enregistré', 'success');
+    },
     onError: (err) => toast(extractErrors(err), 'error'),
   });
 
@@ -191,7 +200,10 @@ export const HistoryDetailPage = () => {
               </Button>
             )}
             {ci.status === 'active' && (
-              <Button variant="secondary" fullWidth size="lg" onClick={() => checkoutMutation.mutate()} loading={checkoutMutation.isPending}>
+              <Button
+                variant="secondary" fullWidth size="lg"
+                onClick={() => { setCheckoutDate(todayISO); setShowCheckoutModal(true); }}
+              >
                 <LogOut className="h-5 w-5" /> Enregistrer le check-out
               </Button>
             )}
@@ -212,6 +224,52 @@ export const HistoryDetailPage = () => {
       </div>
 
     </HotelLayout>
+
+      {/* Checkout date modal */}
+      {showCheckoutModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.5)' }}
+          onClick={() => setShowCheckoutModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 w-full max-w-sm flex flex-col gap-4 shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-base font-black text-gray-900">Confirmer le check-out</h3>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                Date de départ réelle
+              </label>
+              <input
+                type="date"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={checkoutDate}
+                min={ci.check_in_date}
+                max={todayISO}
+                onChange={e => setCheckoutDate(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="secondary" fullWidth
+                onClick={() => setShowCheckoutModal(false)}
+                disabled={checkoutMutation.isPending}
+              >
+                Annuler
+              </Button>
+              <Button
+                fullWidth
+                onClick={() => checkoutMutation.mutate(checkoutDate)}
+                loading={checkoutMutation.isPending}
+                disabled={!checkoutDate}
+              >
+                Confirmer
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Portal vers document.body — body > *:not(#police-fiche-root) { display:none }
           isole la fiche sans layout de l'app React */}

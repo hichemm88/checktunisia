@@ -31,8 +31,8 @@ export const checkInsApi = {
   complete: (id: string) =>
     api.post<ApiItem<CheckIn>>(`/hotel/check-ins/${id}/complete`).then((r) => r.data.data),
 
-  checkout: (id: string) =>
-    api.post<ApiItem<CheckIn>>(`/hotel/check-ins/${id}/checkout`).then((r) => r.data.data),
+  checkout: (id: string, actual_check_out_date: string) =>
+    api.post<ApiItem<CheckIn>>(`/hotel/check-ins/${id}/checkout`, { actual_check_out_date }).then((r) => r.data.data),
 
   addGuest: (checkInId: string, payload: AddGuestPayload) => {
     // Backend expects document fields nested under a "document" key
