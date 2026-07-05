@@ -276,7 +276,8 @@ export interface ChangePasswordPayload { current_password: string; new_password:
 
 export interface HotelUser {
   id: string; first_name: string; last_name: string; email: string;
-  role: string; is_active: boolean; last_login_at?: string; created_at: string;
+  role: string; status: string; last_login_at?: string;
+  properties?: { id: string; name: string }[];
 }
 
 export interface CreateUserPayload {

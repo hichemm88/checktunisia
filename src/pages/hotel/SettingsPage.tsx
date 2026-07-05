@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building, CreditCard, Users, Plus, Trash2, Save,
-  Pencil, X, MapPin,
+  Pencil, X, MapPin, Send,
   CheckCircle, AlertCircle,
 } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
@@ -215,6 +215,11 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
     onError: (err) => setError(extractErrors(err)),
   });
 
+  const resendMut = useMutation({
+    mutationFn: () => settingsApi.resendInvite(u.id),
+    onError: (err) => setError(extractErrors(err)),
+  });
+
   if (mode === 'edit') {
     return (
       <div className="py-3 border-b border-gray-50 last:border-0">
@@ -263,7 +268,8 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
   }
 
   return (
-    <div className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
+    <div className="py-3 border-b border-gray-50 last:border-0">
+    <div className="flex items-center justify-between">
       <div className="flex items-center gap-3 min-w-0">
         <div
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold"
@@ -274,12 +280,25 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900 truncate">{u.first_name} {u.last_name}</p>
           <p className="text-xs text-gray-500 truncate">{u.email}</p>
+          {u.properties && u.properties.length > 0 && (
+            <p className="text-xs text-gray-400 truncate">{u.properties.map(p => p.name).join(', ')}</p>
+          )}
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0 ml-2">
-        <Badge variant={u.is_active ? 'active' : 'suspended'}>
+        <Badge variant={u.status === 'active' ? 'active' : 'suspended'}>
           {ROLE_LABELS[u.role] ?? u.role}
         </Badge>
+        {!u.last_login_at && (
+          <button
+            onClick={() => resendMut.mutate()}
+            disabled={resendMut.isPending}
+            className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors disabled:opacity-50"
+            title={resendMut.isSuccess ? 'Invitation renvoyée' : "Renvoyer l'invitation"}
+          >
+            <Send className="h-3.5 w-3.5" />
+          </button>
+        )}
         <button
           onClick={() => setMode('edit')}
           className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors"
@@ -295,6 +314,13 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
           <Trash2 className="h-3.5 w-3.5" />
         </button>
       </div>
+    </div>
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+      {resendMut.isSuccess && !error && (
+        <p className="text-xs text-green-600 mt-1">
+          {resendMut.data.email_sent ? 'Invitation renvoyée.' : "Mot de passe régénéré, mais l'email n'a pas pu être envoyé (contactez le support)."}
+        </p>
+      )}
     </div>
   );
 };

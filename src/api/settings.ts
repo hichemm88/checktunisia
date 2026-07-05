@@ -23,6 +23,9 @@ export const settingsApi = {
   deleteUser: (id: string) =>
     api.delete(`/hotel/users/${id}`),
 
+  resendInvite: (id: string) =>
+    api.post<{ data: { id: string; email_sent: boolean } }>(`/hotel/users/${id}/resend-invite`).then((r) => r.data.data),
+
   // Subscription info — backend returns plan as nested SubscriptionPlan object
   getSubscription: () =>
     api.get<{ data: { status: string; plan: { name: string } | string | null; expires_at: string; days_remaining: number } }>('/hotel/subscription')
