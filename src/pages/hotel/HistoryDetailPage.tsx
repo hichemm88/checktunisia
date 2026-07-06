@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, LogOut, CheckCircle, FileText, MapPin, CalendarDays, Printer } from 'lucide-react';
+import { ArrowLeft, LogOut, CheckCircle, FileText, MapPin, CalendarDays, Printer, UserPlus } from 'lucide-react';
 import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card } from '@/components/ui/Card';
@@ -13,6 +13,7 @@ import { settingsApi } from '@/api/settings';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { PoliceFiche } from '@/components/PoliceFiche';
+import { GuestScanPanel } from '@/components/hotel/GuestScanPanel';
 
 const DetailRow = ({ label, value }: { label: string; value?: string | number | null }) => (
   <div className="flex justify-between items-start py-3 border-b border-gray-50 last:border-0">
@@ -35,6 +36,7 @@ export const HistoryDetailPage = () => {
   const todayISO = new Date().toISOString().split('T')[0];
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [checkoutDate, setCheckoutDate] = useState(todayISO);
+  const [addingSlot, setAddingSlot] = useState<number | null>(null);
 
   const { data: ci, isLoading } = useQuery({
     queryKey: ['check-in', id],
@@ -81,6 +83,21 @@ export const HistoryDetailPage = () => {
   const initials  = pg
     ? `${pg.first_name?.[0] ?? ''}${pg.last_name?.[0] ?? ''}`.toUpperCase()
     : '?';
+
+  const canEdit    = ci.status === 'draft' || ci.status === 'active';
+  const adultsN    = ci.adults_count ?? 1;
+  const childrenN  = ci.children_count ?? 0;
+  const totalSlots = adultsN + childrenN;
+  const guestCount = ci.guests?.length ?? 0;
+  const emptySlots = Array.from({ length: Math.max(0, totalSlots - guestCount) }, (_, i) => {
+    const index      = guestCount + i;
+    const isChild     = index >= adultsN;
+    const isRequired  = !isChild;
+    const labelBase   = isChild
+      ? `Enfant ${index - adultsN + 1}`
+      : index === 0 ? 'Adulte — voyageur principal' : `Adulte ${index + 1}`;
+    return { index, isRequired, labelBase };
+  });
 
   return (
     <>
@@ -151,7 +168,9 @@ export const HistoryDetailPage = () => {
 
           {/* Guests */}
           <div className="flex flex-col gap-3">
-            <p className="label">Voyageurs · {ci.guests?.length ?? 0}</p>
+            <p className="label">
+              Voyageurs · {ci.guests?.length ?? 0}{canEdit ? `/${totalSlots}` : ''}
+            </p>
             {ci.guests?.map((g) => {
               const gInitials = `${g.first_name?.[0] ?? ''}${g.last_name?.[0] ?? ''}`.toUpperCase();
               const gFlagUrl = getFlagUrl(g.nationality_code);
@@ -202,7 +221,48 @@ export const HistoryDetailPage = () => {
                 </Card>
               );
             })}
-            {!ci.guests?.length && <p className="text-sm text-gray-400">Aucun voyageur enregistré</p>}
+            {!ci.guests?.length && !canEdit && <p className="text-sm text-gray-400">Aucun voyageur enregistré</p>}
+
+            {canEdit && emptySlots.map((slot) => (
+              addingSlot === slot.index ? (
+                <GuestScanPanel
+                  key={slot.index}
+                  checkIn={ci}
+                  isPrimary={slot.index === 0}
+                  label={`${slot.labelBase}${slot.isRequired ? ' — Obligatoire' : ' — Optionnel'}`}
+                  onSuccess={() => { setAddingSlot(null); qc.invalidateQueries({ queryKey: ['check-in', id] }); }}
+                  onCancel={() => setAddingSlot(null)}
+                />
+              ) : (
+                <button
+                  key={slot.index}
+                  onClick={() => setAddingSlot(slot.index)}
+                  className="flex items-center gap-3 rounded-2xl p-3.5 text-left transition-all"
+                  style={{
+                    border: `2px dashed ${slot.isRequired ? '#fca5a5' : '#D4E1F4'}`,
+                    background: slot.isRequired ? '#FFF5F5' : '#F5F4EF',
+                  }}
+                >
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                    style={{
+                      background: slot.isRequired ? '#fee2e2' : '#E8EEFB',
+                      color: slot.isRequired ? '#ef4444' : '#1B3A5F',
+                    }}
+                  >
+                    <UserPlus className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: slot.isRequired ? '#b91c1c' : '#374151' }}>
+                      {slot.labelBase}
+                    </p>
+                    <p className="text-xs" style={{ color: slot.isRequired ? '#f87171' : '#9CA3AF' }}>
+                      {slot.isRequired ? 'Document requis — Appuyer pour scanner' : 'Optionnel — Appuyer pour scanner'}
+                    </p>
+                  </div>
+                </button>
+              )
+            ))}
           </div>
 
           {/* Actions */}
