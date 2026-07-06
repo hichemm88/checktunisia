@@ -15,7 +15,10 @@ export interface AdminHost {
 
 export interface AdminHostDetail extends Omit<AdminHost, 'properties_count' | 'subscription'> {
   properties: { id: string; name: string; status: string }[];
-  active_subscription: { id: string; status: string; expires_at: string; plan?: { name: string } } | null;
+  active_subscription: {
+    id: string; status: string; expires_at: string; plan_id: number; custom_price: string | null;
+    plan?: { id: number; name: string; price_monthly: string; price_yearly: string | null };
+  } | null;
   users: { id: string; first_name: string; last_name: string; email: string; role: string; status: string }[];
 }
 

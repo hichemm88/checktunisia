@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building2, Search, CheckCircle2, XCircle, Plus, X, ChevronLeft, ChevronRight, Trash2,
+  Pencil, Check, FileText, Download,
 } from 'lucide-react';
-import { adminHostsApi, AdminHost } from '@/api/admin/hosts';
+import { adminHostsApi, AdminHost, AdminHostDetail } from '@/api/admin/hosts';
+import { adminSubscriptionsApi, adminPlansApi, AdminInvoice } from '@/api/admin/subscriptions';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -42,6 +44,187 @@ const CreateHostForm = ({ onDone }: { onDone: () => void }) => {
         <Button size="sm" loading={mut.isPending} disabled={!form.name || !form.contact_email} onClick={() => mut.mutate()}>Créer</Button>
         <Button size="sm" variant="ghost" onClick={onDone}>Annuler</Button>
       </div>
+    </div>
+  );
+};
+
+// ─── Abonnement (éditable) ──────────────────────────────────────────────────────
+
+const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [editing, setEditing] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const sub = host.active_subscription;
+
+  const { data: plans } = useQuery({ queryKey: ['admin-plans'], queryFn: adminPlansApi.list });
+
+  const [form, setForm] = useState({
+    plan_id: sub?.plan_id ? String(sub.plan_id) : '',
+    expires_at: sub?.expires_at ? sub.expires_at.slice(0, 10) : '',
+    custom_price: sub?.custom_price ?? '',
+  });
+
+  const updateMut = useMutation({
+    mutationFn: () => adminSubscriptionsApi.updateForHost(host.id, sub!.id, {
+      plan_id: form.plan_id ? parseInt(form.plan_id) : undefined,
+      expires_at: form.expires_at || undefined,
+      custom_price: form.custom_price === '' ? null : parseFloat(String(form.custom_price)),
+    }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-detail', host.id] }); setEditing(false); toast('Abonnement mis à jour', 'success'); },
+  });
+
+  const [newSub, setNewSub] = useState({ plan_id: '', billing_cycle: 'monthly', started_at: new Date().toISOString().slice(0, 10), expires_at: '', custom_price: '' });
+  const createMut = useMutation({
+    mutationFn: () => adminSubscriptionsApi.createForHost(host.id, {
+      ...newSub,
+      plan_id: parseInt(newSub.plan_id),
+      custom_price: newSub.custom_price === '' ? null : parseFloat(String(newSub.custom_price)),
+    }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-detail', host.id] }); setCreating(false); toast('Abonnement créé', 'success'); },
+  });
+
+  if (!sub) {
+    return (
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Abonnement</p>
+        {!creating ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-gray-400">Aucun abonnement</p>
+            <Button size="sm" variant="secondary" onClick={() => setCreating(true)} className="gap-1.5 w-fit"><Plus className="h-3.5 w-3.5" /> Nouvel abonnement</Button>
+          </div>
+        ) : (
+          <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F5F4EF' }}>
+            <Select label="Pack" value={newSub.plan_id} onChange={(e) => setNewSub((f) => ({ ...f, plan_id: e.target.value }))}
+              options={[{ value: '', label: 'Choisir…' }, ...(plans ?? []).map((p) => ({ value: String(p.id), label: p.name }))]} />
+            <div className="grid grid-cols-2 gap-2">
+              <Input label="Début" type="date" value={newSub.started_at} onChange={(e) => setNewSub((f) => ({ ...f, started_at: e.target.value }))} />
+              <Input label="Expiration" type="date" value={newSub.expires_at} onChange={(e) => setNewSub((f) => ({ ...f, expires_at: e.target.value }))} />
+            </div>
+            <Input label="Prix personnalisé (optionnel)" type="number" value={newSub.custom_price} onChange={(e) => setNewSub((f) => ({ ...f, custom_price: e.target.value }))} />
+            <div className="flex gap-2">
+              <Button size="sm" loading={createMut.isPending} disabled={!newSub.plan_id || !newSub.expires_at} onClick={() => createMut.mutate()}>Créer</Button>
+              <Button size="sm" variant="ghost" onClick={() => setCreating(false)}>Annuler</Button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Abonnement</p>
+        {!editing && <button onClick={() => setEditing(true)} className="text-gray-300 hover:text-blue-500"><Pencil className="h-3.5 w-3.5" /></button>}
+      </div>
+      {!editing ? (
+        <div className="rounded-xl p-3 text-sm" style={{ background: '#F5F4EF' }}>
+          <p className="font-semibold">{sub.plan?.name}</p>
+          <p className="text-xs text-gray-400">Expire le {fmtDate(sub.expires_at)}</p>
+          {sub.custom_price && <p className="text-xs text-gray-400">Prix négocié : {sub.custom_price} TND</p>}
+        </div>
+      ) : (
+        <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F5F4EF' }}>
+          <Select label="Pack" value={form.plan_id} onChange={(e) => setForm((f) => ({ ...f, plan_id: e.target.value }))}
+            options={(plans ?? []).map((p) => ({ value: String(p.id), label: p.name }))} />
+          <Input label="Expiration" type="date" value={form.expires_at} onChange={(e) => setForm((f) => ({ ...f, expires_at: e.target.value }))} />
+          <Input label="Prix personnalisé (optionnel)" type="number" value={String(form.custom_price)} onChange={(e) => setForm((f) => ({ ...f, custom_price: e.target.value }))} />
+          <div className="flex gap-2">
+            <Button size="sm" loading={updateMut.isPending} onClick={() => updateMut.mutate()} className="gap-1.5"><Check className="h-3.5 w-3.5" /> Enregistrer</Button>
+            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Annuler</Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Factures ───────────────────────────────────────────────────────────────────
+
+const InvoiceRow = ({ hostId, invoice }: { hostId: string; invoice: AdminInvoice }) => {
+  const qc = useQueryClient();
+  const statusMut = useMutation({
+    mutationFn: (status: string) => adminSubscriptionsApi.updateInvoiceForHost(hostId, invoice.id, {
+      status, paid_at: status === 'paid' ? new Date().toISOString().slice(0, 10) : undefined,
+    }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-host-invoices', hostId] }),
+  });
+
+  return (
+    <div className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0 text-sm">
+      <div className="min-w-0">
+        <p className="font-mono text-xs font-semibold">{invoice.invoice_number}</p>
+        <p className="text-xs text-gray-400">{invoice.total_amount} {invoice.currency}</p>
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${invoice.status === 'paid' ? 'bg-green-50 text-green-700' : invoice.status === 'overdue' ? 'bg-red-50 text-red-600' : invoice.status === 'void' ? 'bg-gray-100 text-gray-400' : 'bg-amber-50 text-amber-700'}`}>
+          {invoice.status}
+        </span>
+        {invoice.status !== 'paid' && invoice.status !== 'void' && (
+          <button onClick={() => statusMut.mutate('paid')} className="text-xs font-semibold text-green-600">Marquer payée</button>
+        )}
+        <button onClick={() => adminSubscriptionsApi.downloadInvoicePdf(hostId, invoice.id, `facture-${invoice.invoice_number}.pdf`)}
+          className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500">
+          <Download className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [showCreate, setShowCreate] = useState(false);
+  const sub = host.active_subscription;
+
+  const { data: invoices, isLoading } = useQuery({
+    queryKey: ['admin-host-invoices', host.id],
+    queryFn: () => adminSubscriptionsApi.invoicesForHost(host.id),
+  });
+
+  const [form, setForm] = useState({ amount: '', tax_amount: '0', due_at: '' });
+  const createMut = useMutation({
+    mutationFn: () => adminSubscriptionsApi.createInvoiceForHost(host.id, {
+      subscription_id: sub!.id,
+      amount: form.amount === '' ? undefined : parseFloat(form.amount),
+      tax_amount: parseFloat(form.tax_amount) || 0,
+      due_at: form.due_at || undefined,
+    }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-invoices', host.id] }); setShowCreate(false); toast('Facture créée', 'success'); },
+    onError: (err) => toast(extractErrors(err), 'error'),
+  });
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Factures</p>
+        {sub && (
+          <button onClick={() => setShowCreate((s) => !s)} className="text-gray-300 hover:text-blue-500">
+            {showCreate ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+          </button>
+        )}
+      </div>
+
+      {showCreate && sub && (
+        <div className="rounded-xl p-3 flex flex-col gap-2 mb-2" style={{ background: '#F5F4EF' }}>
+          <Input label={`Montant (vide = ${sub.custom_price ?? sub.plan?.price_monthly ?? '—'} TND)`} type="number" value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} />
+          <div className="grid grid-cols-2 gap-2">
+            <Input label="TVA" type="number" value={form.tax_amount} onChange={(e) => setForm((f) => ({ ...f, tax_amount: e.target.value }))} />
+            <Input label="Échéance" type="date" value={form.due_at} onChange={(e) => setForm((f) => ({ ...f, due_at: e.target.value }))} />
+          </div>
+          <Button size="sm" loading={createMut.isPending} onClick={() => createMut.mutate()}>Créer la facture</Button>
+        </div>
+      )}
+
+      {isLoading && <p className="text-xs text-gray-400">Chargement…</p>}
+      {!isLoading && !invoices?.length && (
+        <div className="flex items-center gap-2 text-xs text-gray-400">
+          <FileText className="h-3.5 w-3.5" /> Aucune facture
+        </div>
+      )}
+      {invoices?.map((inv) => <InvoiceRow key={inv.id} hostId={host.id} invoice={inv} />)}
     </div>
   );
 };
@@ -205,15 +388,9 @@ export const AdminHostsPage = () => {
 
               {detail && (
                 <>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Abonnement</p>
-                    {detail.active_subscription ? (
-                      <div className="rounded-xl p-3 text-sm" style={{ background: '#F5F4EF' }}>
-                        <p className="font-semibold">{detail.active_subscription.plan?.name}</p>
-                        <p className="text-xs text-gray-400">Expire le {fmtDate(detail.active_subscription.expires_at)}</p>
-                      </div>
-                    ) : <p className="text-sm text-gray-400">Aucun abonnement</p>}
-                  </div>
+                  <SubscriptionSection host={detail} />
+
+                  <InvoicesSection host={detail} />
 
                   <div>
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Biens ({detail.properties.length})</p>

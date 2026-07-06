@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Package, CreditCard, Plus, X, Pencil, Check, Trash2, Search } from 'lucide-react';
+import { Package, CreditCard, Plus, X, Pencil, Check, Trash2, Search, Download } from 'lucide-react';
 import { adminPlansApi, adminSubscriptionsApi, AdminPlan } from '@/api/admin/subscriptions';
-import { adminHotelsApi } from '@/api/admin/hotels';
+import { adminHostsApi } from '@/api/admin/hosts';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -152,53 +152,58 @@ const PacksTab = () => {
   );
 };
 
-// ─── Abonnements actifs tab ─────────────────────────────────────────────────────
+// ─── Abonnements (par hébergeur) tab ────────────────────────────────────────────
 
 const AbonnementsActifsTab = () => {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [search, setSearch] = useState('');
-  const [selectedHotel, setSelectedHotel] = useState<{ id: string; name: string } | null>(null);
+  const [selectedHost, setSelectedHost] = useState<{ id: string; name: string } | null>(null);
   const [showNewSub, setShowNewSub] = useState(false);
+  const [editingExpiry, setEditingExpiry] = useState(false);
 
-  const { data: hotels } = useQuery({
-    queryKey: ['admin-hotels-search', search],
-    queryFn: () => adminHotelsApi.list({ search: search || undefined, per_page: 8 }),
+  const { data: hosts } = useQuery({
+    queryKey: ['admin-hosts-search', search],
+    queryFn: () => adminHostsApi.list({ search: search || undefined, per_page: 8 }),
     enabled: search.length >= 2,
   });
 
   const { data: subs } = useQuery({
-    queryKey: ['admin-subs', selectedHotel?.id],
-    queryFn: () => adminSubscriptionsApi.list(selectedHotel!.id),
-    enabled: !!selectedHotel,
+    queryKey: ['admin-subs-host', selectedHost?.id],
+    queryFn: () => adminSubscriptionsApi.listForHost(selectedHost!.id),
+    enabled: !!selectedHost,
   });
   const { data: invoices } = useQuery({
-    queryKey: ['admin-invoices', selectedHotel?.id],
-    queryFn: () => adminSubscriptionsApi.invoices(selectedHotel!.id),
-    enabled: !!selectedHotel,
+    queryKey: ['admin-invoices-host', selectedHost?.id],
+    queryFn: () => adminSubscriptionsApi.invoicesForHost(selectedHost!.id),
+    enabled: !!selectedHost,
   });
   const { data: plans } = useQuery({ queryKey: ['admin-plans'], queryFn: adminPlansApi.list });
 
-  const [newSub, setNewSub] = useState({ plan_id: '', billing_cycle: 'monthly', started_at: new Date().toISOString().slice(0, 10), expires_at: '' });
+  const [newSub, setNewSub] = useState({ plan_id: '', billing_cycle: 'monthly', started_at: new Date().toISOString().slice(0, 10), expires_at: '', custom_price: '' });
   const createSubMut = useMutation({
-    mutationFn: () => adminSubscriptionsApi.create(selectedHotel!.id, { ...newSub, plan_id: parseInt(newSub.plan_id) }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-subs', selectedHotel?.id] }); setShowNewSub(false); toast('Abonnement créé', 'success'); },
+    mutationFn: () => adminSubscriptionsApi.createForHost(selectedHost!.id, {
+      ...newSub, plan_id: parseInt(newSub.plan_id), custom_price: newSub.custom_price === '' ? null : parseFloat(newSub.custom_price),
+    }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-subs-host', selectedHost?.id] }); setShowNewSub(false); toast('Abonnement créé', 'success'); },
   });
   const updateSubMut = useMutation({
-    mutationFn: (vars: { id: string; status: string }) => adminSubscriptionsApi.update(selectedHotel!.id, vars.id, { status: vars.status }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-subs', selectedHotel?.id] }),
+    mutationFn: (vars: { id: string; data: object }) => adminSubscriptionsApi.updateForHost(selectedHost!.id, vars.id, vars.data),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-subs-host', selectedHost?.id] }); setEditingExpiry(false); },
   });
+
+  const [expiryForm, setExpiryForm] = useState({ expires_at: '', custom_price: '' });
 
   return (
     <div className="flex flex-col gap-4">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <input className="input w-full pl-9" placeholder="Chercher un établissement…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        {hotels?.data?.length ? (
+        <input className="input w-full pl-9" placeholder="Chercher un hébergeur…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        {hosts?.data?.length ? (
           <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-100 bg-white shadow-lg">
-            {hotels.data.map((h) => (
+            {hosts.data.map((h) => (
               <button key={h.id} className="flex w-full items-center px-3 py-2 text-left text-sm hover:bg-warm-100"
-                onClick={() => { setSelectedHotel({ id: h.id, name: h.name }); setSearch(''); }}>
+                onClick={() => { setSelectedHost({ id: h.id, name: h.name }); setSearch(''); }}>
                 {h.name}
               </button>
             ))}
@@ -206,15 +211,15 @@ const AbonnementsActifsTab = () => {
         ) : null}
       </div>
 
-      {!selectedHotel ? (
+      {!selectedHost ? (
         <div className="card p-8 text-center text-sm text-gray-400">
           <CreditCard className="h-8 w-8 mx-auto mb-3 text-gray-200" />
-          Cherchez un établissement pour voir/gérer son abonnement
+          Cherchez un hébergeur pour voir/gérer son abonnement
         </div>
       ) : (
         <>
           <div className="flex items-center justify-between">
-            <p className="font-bold text-gray-900">{selectedHotel.name}</p>
+            <p className="font-bold text-gray-900">{selectedHost.name}</p>
             <Button size="sm" onClick={() => setShowNewSub((s) => !s)} className="gap-1.5">
               {showNewSub ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} Nouvel abonnement
             </Button>
@@ -228,6 +233,7 @@ const AbonnementsActifsTab = () => {
                 <Input label="Début" type="date" value={newSub.started_at} onChange={(e) => setNewSub((f) => ({ ...f, started_at: e.target.value }))} />
                 <Input label="Expiration" type="date" value={newSub.expires_at} onChange={(e) => setNewSub((f) => ({ ...f, expires_at: e.target.value }))} />
               </div>
+              <Input label="Prix personnalisé (optionnel)" type="number" value={newSub.custom_price} onChange={(e) => setNewSub((f) => ({ ...f, custom_price: e.target.value }))} />
               <Button size="sm" loading={createSubMut.isPending} disabled={!newSub.plan_id || !newSub.expires_at} onClick={() => createSubMut.mutate()}>Créer</Button>
             </div>
           )}
@@ -235,19 +241,34 @@ const AbonnementsActifsTab = () => {
           <div className="card p-4">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Abonnements</p>
             {subs?.map((s) => (
-              <div key={s.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0 text-sm">
-                <div>
-                  <span className="font-medium">{s.plan?.name ?? `Pack #${s.plan_id}`}</span>
-                  <span className="text-xs text-gray-400 ml-2">jusqu'au {fmtDate(s.expires_at)}</span>
+              <div key={s.id} className="flex flex-col gap-1.5 py-2 border-b border-gray-50 last:border-0 text-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-medium">{s.plan?.name ?? `Pack #${s.plan_id}`}</span>
+                    <span className="text-xs text-gray-400 ml-2">jusqu'au {fmtDate(s.expires_at)}</span>
+                    {s.custom_price && <span className="text-xs text-gray-400 ml-2">· {s.custom_price} TND</span>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-semibold ${s.status === 'active' ? 'text-green-600' : 'text-gray-400'}`}>{s.status}</span>
+                    {s.status === 'active' && (
+                      <button onClick={() => { setEditingExpiry(!editingExpiry); setExpiryForm({ expires_at: s.expires_at.slice(0, 10), custom_price: s.custom_price ?? '' }); }} className="text-gray-300 hover:text-blue-500">
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    {s.status === 'active' ? (
+                      <button onClick={() => updateSubMut.mutate({ id: s.id, data: { status: 'cancelled' } })} className="text-xs text-red-500">Annuler</button>
+                    ) : s.status !== 'cancelled' && (
+                      <button onClick={() => updateSubMut.mutate({ id: s.id, data: { status: 'active' } })} className="text-xs text-green-600">Réactiver</button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs font-semibold ${s.status === 'active' ? 'text-green-600' : 'text-gray-400'}`}>{s.status}</span>
-                  {s.status === 'active' ? (
-                    <button onClick={() => updateSubMut.mutate({ id: s.id, status: 'cancelled' })} className="text-xs text-red-500">Annuler</button>
-                  ) : s.status !== 'cancelled' && (
-                    <button onClick={() => updateSubMut.mutate({ id: s.id, status: 'active' })} className="text-xs text-green-600">Réactiver</button>
-                  )}
-                </div>
+                {editingExpiry && s.status === 'active' && (
+                  <div className="flex items-end gap-2 p-2 rounded-lg" style={{ background: '#F5F4EF' }}>
+                    <Input label="Expiration" type="date" value={expiryForm.expires_at} onChange={(e) => setExpiryForm((f) => ({ ...f, expires_at: e.target.value }))} />
+                    <Input label="Prix personnalisé" type="number" value={String(expiryForm.custom_price)} onChange={(e) => setExpiryForm((f) => ({ ...f, custom_price: e.target.value }))} />
+                    <Button size="sm" loading={updateSubMut.isPending} onClick={() => updateSubMut.mutate({ id: s.id, data: { expires_at: expiryForm.expires_at, custom_price: expiryForm.custom_price === '' ? null : parseFloat(String(expiryForm.custom_price)) } })} className="gap-1"><Check className="h-3.5 w-3.5" /></Button>
+                  </div>
+                )}
               </div>
             ))}
             {!subs?.length && <p className="text-sm text-gray-400 py-2">Aucun abonnement</p>}
@@ -260,6 +281,10 @@ const AbonnementsActifsTab = () => {
                 <span className="font-mono text-xs">{inv.invoice_number}</span>
                 <span>{inv.total_amount} {inv.currency}</span>
                 <span className={`text-xs font-semibold ${inv.status === 'paid' ? 'text-green-600' : 'text-gray-400'}`}>{inv.status}</span>
+                <button onClick={() => adminSubscriptionsApi.downloadInvoicePdf(selectedHost.id, inv.id, `facture-${inv.invoice_number}.pdf`)}
+                  className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500">
+                  <Download className="h-3.5 w-3.5" />
+                </button>
               </div>
             ))}
             {!invoices?.length && <p className="text-sm text-gray-400 py-2">Aucune facture</p>}
@@ -270,10 +295,66 @@ const AbonnementsActifsTab = () => {
   );
 };
 
+// ─── Facturation tab (vue plateforme) ───────────────────────────────────────────
+
+const FacturationTab = () => {
+  const [status, setStatus] = useState('');
+  const [page, setPage] = useState(1);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-all-invoices', status, page],
+    queryFn: () => adminSubscriptionsApi.allInvoices({ status: status || undefined, page, per_page: 20 }),
+  });
+
+  return (
+    <div className="flex flex-col gap-3">
+      <select className="input w-fit" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
+        <option value="">Tous les statuts</option>
+        <option value="draft">Brouillon</option>
+        <option value="sent">Envoyée</option>
+        <option value="paid">Payée</option>
+        <option value="overdue">En retard</option>
+        <option value="void">Annulée</option>
+      </select>
+
+      <div className="card p-2">
+        {isLoading && <p className="text-sm text-gray-400 text-center py-6">Chargement…</p>}
+        {data?.data.map((inv) => (
+          <div key={inv.id} className="flex items-center justify-between py-2.5 px-2 border-b border-gray-50 last:border-0 text-sm">
+            <div className="min-w-0 flex-1">
+              <p className="font-mono text-xs font-semibold">{inv.invoice_number}</p>
+              <p className="text-xs text-gray-400 truncate">{inv.organization?.name ?? inv.hotel_name ?? '—'}</p>
+            </div>
+            <span className="text-xs text-gray-500 mr-3">{inv.total_amount} {inv.currency}</span>
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full mr-3 ${inv.status === 'paid' ? 'bg-green-50 text-green-700' : inv.status === 'overdue' ? 'bg-red-50 text-red-600' : inv.status === 'void' ? 'bg-gray-100 text-gray-400' : 'bg-amber-50 text-amber-700'}`}>
+              {inv.status}
+            </span>
+            {inv.organization && (
+              <button onClick={() => adminSubscriptionsApi.downloadInvoicePdf(inv.organization!.id, inv.id, `facture-${inv.invoice_number}.pdf`)}
+                className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500">
+                <Download className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        ))}
+        {!isLoading && !data?.data.length && <p className="text-sm text-gray-400 text-center py-6">Aucune facture</p>}
+      </div>
+
+      {data && data.meta.total > data.meta.per_page && (
+        <div className="flex justify-center items-center gap-3">
+          <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40">← Préc.</button>
+          <span className="text-xs text-gray-500 font-medium">{data.meta.current_page} / {Math.ceil(data.meta.total / data.meta.per_page)}</span>
+          <button disabled={data.data.length < data.meta.per_page} onClick={() => setPage((p) => p + 1)} className="rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40">Suiv. →</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Main page ──────────────────────────────────────────────────────────────────
 
 export const AdminSubscriptionsPage = () => {
-  const [tab, setTab] = useState<'packs' | 'active'>('packs');
+  const [tab, setTab] = useState<'packs' | 'active' | 'facturation'>('packs');
 
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
@@ -283,10 +364,13 @@ export const AdminSubscriptionsPage = () => {
           <Package className="h-4 w-4" /> Packs
         </button>
         <button onClick={() => setTab('active')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'active' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
-          <CreditCard className="h-4 w-4" /> Abonnements actifs
+          <CreditCard className="h-4 w-4" /> Abonnements
+        </button>
+        <button onClick={() => setTab('facturation')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'facturation' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
+          <Download className="h-4 w-4" /> Facturation
         </button>
       </div>
-      {tab === 'packs' ? <PacksTab /> : <AbonnementsActifsTab />}
+      {tab === 'packs' ? <PacksTab /> : tab === 'active' ? <AbonnementsActifsTab /> : <FacturationTab />}
     </div>
   );
 };
