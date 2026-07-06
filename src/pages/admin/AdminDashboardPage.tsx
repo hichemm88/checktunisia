@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban } from 'lucide-react';
 import { adminDashboardApi } from '@/api/admin/dashboard';
+import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -35,7 +36,7 @@ export const AdminDashboardPage = () => {
     <div className="flex flex-col gap-6 max-w-6xl">
       <h1 className="text-xl font-bold text-gray-900">Tableau de bord</h1>
 
-      {isLoading && <p className="text-sm text-gray-400">Chargement…</p>}
+      {isLoading && <ListSkeleton rows={4} height="h-20" />}
 
       {stats && (
         <>

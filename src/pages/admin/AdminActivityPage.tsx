@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminActivityApi } from '@/api/admin/activity';
 import { Card } from '@/components/ui/Card';
+import { Pagination } from '@/components/admin/Pagination';
+import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
 const ACTION_LABELS: Record<string, string> = {
   'hotel.created': 'a créé un établissement',
@@ -54,7 +56,7 @@ export const AdminActivityPage = () => {
       </select>
 
       <Card>
-        {isLoading && [1, 2, 3].map((i) => <div key={i} className="h-14 animate-pulse rounded-lg bg-gray-50 my-1" />)}
+        {isLoading && <ListSkeleton rows={3} />}
         {data?.data.map((entry) => (
           <div key={entry.id} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold mt-0.5" style={{ background: '#E8EEFB', color: '#1B3A5F' }}>
@@ -75,12 +77,8 @@ export const AdminActivityPage = () => {
         {!isLoading && !data?.data.length && <p className="py-6 text-center text-sm text-gray-400">Aucune activité</p>}
       </Card>
 
-      {data && data.meta.total > 30 && (
-        <div className="flex justify-center items-center gap-3">
-          <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40">← Préc.</button>
-          <span className="text-xs text-gray-500 font-medium">{data.meta.current_page} / {Math.ceil(data.meta.total / 30)}</span>
-          <button disabled={data.data.length < 30} onClick={() => setPage((p) => p + 1)} className="rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40">Suiv. →</button>
-        </div>
+      {data && (
+        <Pagination meta={data.meta} currentCount={data.data.length} onPrev={() => setPage((p) => p - 1)} onNext={() => setPage((p) => p + 1)} />
       )}
     </div>
   );

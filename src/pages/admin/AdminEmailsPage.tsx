@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
+import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { useAdminMutation } from '@/hooks/useAdminMutation';
 
 const PLACEHOLDER_HINTS: Record<string, string[]> = {
   welcome: ['first_name', 'last_name', 'hotel_name', 'role_label', 'credentials_box', 'cta_button'],
@@ -89,7 +91,7 @@ export const AdminEmailsPage = () => {
   const { toast } = useToast();
   const { data: templates, isLoading } = useQuery({ queryKey: ['admin-emails'], queryFn: adminEmailsApi.list });
 
-  const remindersMut = useMutation({
+  const remindersMut = useAdminMutation({
     mutationFn: adminEmailsApi.sendReminders,
     onSuccess: (res) => toast(`${res.sent}/${res.candidates} rappel(s) envoyé(s)`, 'success'),
   });
@@ -106,7 +108,7 @@ export const AdminEmailsPage = () => {
         Le rappel d'expiration n'est pas encore automatique (nécessite un scheduler côté serveur) — utilisez ce bouton pour notifier les abonnements qui expirent sous 7 jours.
       </p>
 
-      {isLoading && <p className="text-sm text-gray-400 text-center py-8">Chargement…</p>}
+      {isLoading && <ListSkeleton rows={4} height="h-24" />}
       <div className="flex flex-col gap-4">
         {templates?.map((t) => <TemplateCard key={t.key} template={t} />)}
       </div>

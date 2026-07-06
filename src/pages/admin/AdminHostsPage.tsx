@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Building2, Search, CheckCircle2, XCircle, Plus, X, ChevronLeft, ChevronRight, Trash2,
-  Pencil, Check, FileText, Download,
+  Building2, Search, CheckCircle2, XCircle, Plus, X, Trash2,
+  Pencil, Check, FileText,
 } from 'lucide-react';
 import { adminHostsApi, AdminHost, AdminHostDetail } from '@/api/admin/hosts';
-import { adminSubscriptionsApi, adminPlansApi, AdminInvoice } from '@/api/admin/subscriptions';
+import { adminSubscriptionsApi, adminPlansApi } from '@/api/admin/subscriptions';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
+import { useAdminMutation } from '@/hooks/useAdminMutation';
+import { Pagination } from '@/components/admin/Pagination';
+import { InvoiceRow } from '@/components/admin/InvoiceRow';
+import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -52,7 +56,6 @@ const CreateHostForm = ({ onDone }: { onDone: () => void }) => {
 
 const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
   const qc = useQueryClient();
-  const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [creating, setCreating] = useState(false);
   const sub = host.active_subscription;
@@ -65,23 +68,25 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
     custom_price: sub?.custom_price ?? '',
   });
 
-  const updateMut = useMutation({
+  const updateMut = useAdminMutation({
     mutationFn: () => adminSubscriptionsApi.updateForHost(host.id, sub!.id, {
       plan_id: form.plan_id ? parseInt(form.plan_id) : undefined,
       expires_at: form.expires_at || undefined,
       custom_price: form.custom_price === '' ? null : parseFloat(String(form.custom_price)),
     }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-detail', host.id] }); setEditing(false); toast('Abonnement mis à jour', 'success'); },
+    successMessage: 'Abonnement mis à jour',
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-detail', host.id] }); setEditing(false); },
   });
 
   const [newSub, setNewSub] = useState({ plan_id: '', billing_cycle: 'monthly', started_at: new Date().toISOString().slice(0, 10), expires_at: '', custom_price: '' });
-  const createMut = useMutation({
+  const createMut = useAdminMutation({
     mutationFn: () => adminSubscriptionsApi.createForHost(host.id, {
       ...newSub,
       plan_id: parseInt(newSub.plan_id),
       custom_price: newSub.custom_price === '' ? null : parseFloat(String(newSub.custom_price)),
     }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-detail', host.id] }); setCreating(false); toast('Abonnement créé', 'success'); },
+    successMessage: 'Abonnement créé',
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-detail', host.id] }); setCreating(false); },
   });
 
   if (!sub) {
@@ -142,41 +147,10 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
 
 // ─── Factures ───────────────────────────────────────────────────────────────────
 
-const InvoiceRow = ({ hostId, invoice }: { hostId: string; invoice: AdminInvoice }) => {
-  const qc = useQueryClient();
-  const statusMut = useMutation({
-    mutationFn: (status: string) => adminSubscriptionsApi.updateInvoiceForHost(hostId, invoice.id, {
-      status, paid_at: status === 'paid' ? new Date().toISOString().slice(0, 10) : undefined,
-    }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-host-invoices', hostId] }),
-  });
-
-  return (
-    <div className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0 text-sm">
-      <div className="min-w-0">
-        <p className="font-mono text-xs font-semibold">{invoice.invoice_number}</p>
-        <p className="text-xs text-gray-400">{invoice.total_amount} {invoice.currency}</p>
-      </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${invoice.status === 'paid' ? 'bg-green-50 text-green-700' : invoice.status === 'overdue' ? 'bg-red-50 text-red-600' : invoice.status === 'void' ? 'bg-gray-100 text-gray-400' : 'bg-amber-50 text-amber-700'}`}>
-          {invoice.status}
-        </span>
-        {invoice.status !== 'paid' && invoice.status !== 'void' && (
-          <button onClick={() => statusMut.mutate('paid')} className="text-xs font-semibold text-green-600">Marquer payée</button>
-        )}
-        <button onClick={() => adminSubscriptionsApi.downloadInvoicePdf(hostId, invoice.id, `facture-${invoice.invoice_number}.pdf`)}
-          className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500">
-          <Download className="h-3.5 w-3.5" />
-        </button>
-      </div>
-    </div>
-  );
-};
-
 const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
   const qc = useQueryClient();
-  const { toast } = useToast();
   const [showCreate, setShowCreate] = useState(false);
+  const [error, setError] = useState('');
   const sub = host.active_subscription;
 
   const { data: invoices, isLoading } = useQuery({
@@ -192,8 +166,8 @@ const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
       tax_amount: parseFloat(form.tax_amount) || 0,
       due_at: form.due_at || undefined,
     }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-invoices', host.id] }); setShowCreate(false); toast('Facture créée', 'success'); },
-    onError: (err) => toast(extractErrors(err), 'error'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-invoices', host.id] }); setShowCreate(false); },
+    onError: (err) => setError(extractErrors(err)),
   });
 
   return (
@@ -214,17 +188,20 @@ const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
             <Input label="TVA" type="number" value={form.tax_amount} onChange={(e) => setForm((f) => ({ ...f, tax_amount: e.target.value }))} />
             <Input label="Échéance" type="date" value={form.due_at} onChange={(e) => setForm((f) => ({ ...f, due_at: e.target.value }))} />
           </div>
+          {error && <p className="text-xs text-red-500">{error}</p>}
           <Button size="sm" loading={createMut.isPending} onClick={() => createMut.mutate()}>Créer la facture</Button>
         </div>
       )}
 
-      {isLoading && <p className="text-xs text-gray-400">Chargement…</p>}
+      {isLoading && <ListSkeleton rows={2} height="h-10" />}
       {!isLoading && !invoices?.length && (
         <div className="flex items-center gap-2 text-xs text-gray-400">
           <FileText className="h-3.5 w-3.5" /> Aucune facture
         </div>
       )}
-      {invoices?.map((inv) => <InvoiceRow key={inv.id} hostId={host.id} invoice={inv} />)}
+      {invoices?.map((inv) => (
+        <InvoiceRow key={inv.id} hostId={host.id} invoice={inv} invalidateKey={['admin-host-invoices', host.id]} />
+      ))}
     </div>
   );
 };
@@ -233,7 +210,6 @@ const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
 
 export const AdminHostsPage = () => {
   const qc = useQueryClient();
-  const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
@@ -254,17 +230,20 @@ export const AdminHostsPage = () => {
     enabled: !!selected,
   });
 
-  const suspendMut = useMutation({
+  const suspendMut = useAdminMutation({
     mutationFn: () => adminHostsApi.suspend(selected!.id, suspendReason),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hosts'] }); setShowSuspend(false); setSuspendReason(''); toast('Hébergeur suspendu', 'success'); },
+    successMessage: 'Hébergeur suspendu',
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hosts'] }); setShowSuspend(false); setSuspendReason(''); },
   });
-  const activateMut = useMutation({
+  const activateMut = useAdminMutation({
     mutationFn: () => adminHostsApi.activate(selected!.id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hosts'] }); toast('Hébergeur réactivé', 'success'); },
+    successMessage: 'Hébergeur réactivé',
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-hosts'] }),
   });
-  const deleteMut = useMutation({
+  const deleteMut = useAdminMutation({
     mutationFn: () => adminHostsApi.remove(selected!.id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hosts'] }); setSelected(null); setConfirmDelete(false); toast('Hébergeur supprimé', 'success'); },
+    successMessage: 'Hébergeur supprimé',
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hosts'] }); setSelected(null); setConfirmDelete(false); },
   });
 
   const hosts = data?.data ?? [];
@@ -296,7 +275,7 @@ export const AdminHostsPage = () => {
             </select>
           </div>
 
-          {isLoading && <p className="text-sm text-gray-400 text-center py-8">Chargement…</p>}
+          {isLoading && <ListSkeleton rows={5} height="h-16" />}
 
           <div className="flex flex-col gap-2">
             {hosts.map((h) => (
@@ -325,19 +304,8 @@ export const AdminHostsPage = () => {
             {!isLoading && !hosts.length && <p className="text-sm text-gray-400 text-center py-8">Aucun hébergeur</p>}
           </div>
 
-          {meta && meta.total > meta.per_page && (
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <span>{meta.total} hébergeurs</span>
-              <div className="flex gap-2 items-center">
-                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="p-1 rounded hover:bg-gray-200 disabled:opacity-40">
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <span>Page {meta.current_page}</span>
-                <button onClick={() => setPage((p) => p + 1)} disabled={hosts.length < meta.per_page} className="p-1 rounded hover:bg-gray-200 disabled:opacity-40">
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+          {meta && (
+            <Pagination meta={meta} currentCount={hosts.length} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => p + 1)} />
           )}
         </div>
 

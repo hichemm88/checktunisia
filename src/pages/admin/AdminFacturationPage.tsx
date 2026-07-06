@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Download } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Search } from 'lucide-react';
 import { adminSubscriptionsApi } from '@/api/admin/subscriptions';
 import { adminHostsApi } from '@/api/admin/hosts';
+import { InvoiceRow } from '@/components/admin/InvoiceRow';
+import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { Pagination } from '@/components/admin/Pagination';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Tous les statuts' },
@@ -14,7 +17,6 @@ const STATUS_OPTIONS = [
 ];
 
 export const AdminFacturationPage = () => {
-  const qc = useQueryClient();
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [hostSearch, setHostSearch] = useState('');
@@ -29,14 +31,6 @@ export const AdminFacturationPage = () => {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-all-invoices', status, page, selectedHost?.id],
     queryFn: () => adminSubscriptionsApi.allInvoices({ status: status || undefined, organization_id: selectedHost?.id, page, per_page: 20 }),
-  });
-
-  const statusMut = useMutation({
-    mutationFn: (vars: { hostId: string; invoiceId: string; newStatus: string }) =>
-      adminSubscriptionsApi.updateInvoiceForHost(vars.hostId, vars.invoiceId, {
-        status: vars.newStatus, paid_at: vars.newStatus === 'paid' ? new Date().toISOString().slice(0, 10) : undefined,
-      }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-all-invoices'] }),
   });
 
   return (
@@ -75,40 +69,32 @@ export const AdminFacturationPage = () => {
       </div>
 
       <div className="card p-2">
-        {isLoading && <p className="text-sm text-gray-400 text-center py-6">Chargement…</p>}
+        {isLoading && <ListSkeleton rows={4} height="h-10" />}
         {data?.data.map((inv) => (
-          <div key={inv.id} className="flex items-center justify-between py-2.5 px-2 border-b border-gray-50 last:border-0 text-sm">
-            <div className="min-w-0 flex-1">
-              <p className="font-mono text-xs font-semibold">{inv.invoice_number}</p>
-              <p className="text-xs text-gray-400 truncate">{inv.organization?.name ?? inv.hotel_name ?? '—'}</p>
+          inv.organization ? (
+            <InvoiceRow
+              key={inv.id}
+              hostId={inv.organization.id}
+              invoice={inv}
+              subtitle={inv.organization.name}
+              invalidateKey={['admin-all-invoices']}
+            />
+          ) : (
+            <div key={inv.id} className="flex items-center justify-between py-2.5 px-2 border-b border-gray-50 last:border-0 text-sm">
+              <div className="min-w-0 flex-1">
+                <p className="font-mono text-xs font-semibold">{inv.invoice_number}</p>
+                <p className="text-xs text-gray-400 truncate">{inv.hotel_name ?? '—'}</p>
+              </div>
+              <span className="text-xs text-gray-500 mr-3">{inv.total_amount} {inv.currency}</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">{inv.status}</span>
             </div>
-            <span className="text-xs text-gray-500 mr-3">{inv.total_amount} {inv.currency}</span>
-            <span className={`text-xs font-bold px-2 py-0.5 rounded-full mr-3 ${inv.status === 'paid' ? 'bg-green-50 text-green-700' : inv.status === 'overdue' ? 'bg-red-50 text-red-600' : inv.status === 'void' ? 'bg-gray-100 text-gray-400' : 'bg-amber-50 text-amber-700'}`}>
-              {inv.status}
-            </span>
-            {inv.organization && inv.status !== 'paid' && inv.status !== 'void' && (
-              <button onClick={() => statusMut.mutate({ hostId: inv.organization!.id, invoiceId: inv.id, newStatus: 'paid' })}
-                className="text-xs font-semibold text-green-600 mr-3">
-                Marquer payée
-              </button>
-            )}
-            {inv.organization && (
-              <button onClick={() => adminSubscriptionsApi.downloadInvoicePdf(inv.organization!.id, inv.id, `facture-${inv.invoice_number}.pdf`)}
-                className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500">
-                <Download className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
+          )
         ))}
         {!isLoading && !data?.data.length && <p className="text-sm text-gray-400 text-center py-6">Aucune facture</p>}
       </div>
 
-      {data && data.meta.total > data.meta.per_page && (
-        <div className="flex justify-center items-center gap-3">
-          <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40">← Préc.</button>
-          <span className="text-xs text-gray-500 font-medium">{data.meta.current_page} / {Math.ceil(data.meta.total / data.meta.per_page)}</span>
-          <button disabled={data.data.length < data.meta.per_page} onClick={() => setPage((p) => p + 1)} className="rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40">Suiv. →</button>
-        </div>
+      {data && (
+        <Pagination meta={data.meta} currentCount={data.data.length} onPrev={() => setPage((p) => p - 1)} onNext={() => setPage((p) => p + 1)} />
       )}
     </div>
   );

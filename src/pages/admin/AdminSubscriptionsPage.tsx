@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Package, CreditCard, Plus, X, Pencil, Check, Trash2, Search, Download } from 'lucide-react';
+import { Package, CreditCard, Plus, X, Pencil, Check, Trash2, Search } from 'lucide-react';
 import { adminPlansApi, adminSubscriptionsApi, AdminPlan } from '@/api/admin/subscriptions';
 import { adminHostsApi } from '@/api/admin/hosts';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
+import { useAdminMutation } from '@/hooks/useAdminMutation';
+import { InvoiceRow } from '@/components/admin/InvoiceRow';
+import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -57,7 +59,6 @@ const CreatePlanForm = ({ onDone }: { onDone: () => void }) => {
 
 const PlanRow = ({ plan }: { plan: AdminPlan }) => {
   const qc = useQueryClient();
-  const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [form, setForm] = useState({
@@ -65,17 +66,17 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
     max_rooms: plan.max_rooms ?? '', is_active: plan.is_active,
   });
 
-  const updateMut = useMutation({
+  const updateMut = useAdminMutation({
     mutationFn: () => adminPlansApi.update(plan.id, {
       price_monthly: parseFloat(form.price_monthly), price_yearly: form.price_yearly ? parseFloat(String(form.price_yearly)) : null,
       max_rooms: form.max_rooms ? parseInt(String(form.max_rooms)) : null, is_active: form.is_active,
     }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-plans'] }); setEditing(false); },
   });
-  const deleteMut = useMutation({
+  const deleteMut = useAdminMutation({
     mutationFn: () => adminPlansApi.remove(plan.id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-plans'] }); toast('Pack supprimé', 'success'); },
-    onError: (err) => toast(extractErrors(err), 'error'),
+    successMessage: 'Pack supprimé',
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-plans'] }),
   });
 
   return (
@@ -146,7 +147,7 @@ const PacksTab = () => {
         </Button>
       </div>
       {showCreate && <CreatePlanForm onDone={() => setShowCreate(false)} />}
-      {isLoading && <p className="text-sm text-gray-400 text-center py-6">Chargement…</p>}
+      {isLoading && <ListSkeleton rows={3} />}
       {plans?.map((p) => <PlanRow key={p.id} plan={p} />)}
     </div>
   );
@@ -156,7 +157,6 @@ const PacksTab = () => {
 
 const AbonnementsActifsTab = () => {
   const qc = useQueryClient();
-  const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [selectedHost, setSelectedHost] = useState<{ id: string; name: string } | null>(null);
   const [showNewSub, setShowNewSub] = useState(false);
@@ -181,13 +181,14 @@ const AbonnementsActifsTab = () => {
   const { data: plans } = useQuery({ queryKey: ['admin-plans'], queryFn: adminPlansApi.list });
 
   const [newSub, setNewSub] = useState({ plan_id: '', billing_cycle: 'monthly', started_at: new Date().toISOString().slice(0, 10), expires_at: '', custom_price: '' });
-  const createSubMut = useMutation({
+  const createSubMut = useAdminMutation({
     mutationFn: () => adminSubscriptionsApi.createForHost(selectedHost!.id, {
       ...newSub, plan_id: parseInt(newSub.plan_id), custom_price: newSub.custom_price === '' ? null : parseFloat(newSub.custom_price),
     }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-subs-host', selectedHost?.id] }); setShowNewSub(false); toast('Abonnement créé', 'success'); },
+    successMessage: 'Abonnement créé',
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-subs-host', selectedHost?.id] }); setShowNewSub(false); },
   });
-  const updateSubMut = useMutation({
+  const updateSubMut = useAdminMutation({
     mutationFn: (vars: { id: string; data: object }) => adminSubscriptionsApi.updateForHost(selectedHost!.id, vars.id, vars.data),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-subs-host', selectedHost?.id] }); setEditingExpiry(false); },
   });
@@ -277,15 +278,7 @@ const AbonnementsActifsTab = () => {
           <div className="card p-4">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Factures</p>
             {invoices?.map((inv) => (
-              <div key={inv.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0 text-sm">
-                <span className="font-mono text-xs">{inv.invoice_number}</span>
-                <span>{inv.total_amount} {inv.currency}</span>
-                <span className={`text-xs font-semibold ${inv.status === 'paid' ? 'text-green-600' : 'text-gray-400'}`}>{inv.status}</span>
-                <button onClick={() => adminSubscriptionsApi.downloadInvoicePdf(selectedHost.id, inv.id, `facture-${inv.invoice_number}.pdf`)}
-                  className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500">
-                  <Download className="h-3.5 w-3.5" />
-                </button>
-              </div>
+              <InvoiceRow key={inv.id} hostId={selectedHost.id} invoice={inv} invalidateKey={['admin-invoices-host', selectedHost.id]} />
             ))}
             {!invoices?.length && <p className="text-sm text-gray-400 py-2">Aucune facture</p>}
           </div>

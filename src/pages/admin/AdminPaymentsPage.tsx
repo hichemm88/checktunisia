@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
+import { extractErrors } from '@/lib/api';
+import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { Pagination } from '@/components/admin/Pagination';
 
 const C = { navy: '#1B3A5F' };
 
@@ -47,9 +50,10 @@ const ConfigTab = () => {
       virement_bank_name: virement.bank_name, virement_beneficiary: virement.beneficiary, virement_details: virement.details,
     }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-platform-settings'] }); toast('Paramètres enregistrés', 'success'); },
+    onError: (err) => toast(extractErrors(err), 'error'),
   });
 
-  if (isLoading) return <p className="text-sm text-gray-400 text-center py-8">Chargement…</p>;
+  if (isLoading) return <div className="flex flex-col gap-2"><ListSkeleton rows={3} height="h-20" /></div>;
 
   return (
     <div className="flex flex-col gap-4">
@@ -90,11 +94,12 @@ const ConfigTab = () => {
 
 const HistoriqueTab = () => {
   const [status, setStatus] = useState('');
-  const { data, isLoading } = useQuery({ queryKey: ['admin-payments', status], queryFn: () => adminPaymentsApi.list({ status: status || undefined, per_page: 30 }) });
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useQuery({ queryKey: ['admin-payments', status, page], queryFn: () => adminPaymentsApi.list({ status: status || undefined, page, per_page: 30 }) });
 
   return (
     <div className="flex flex-col gap-3">
-      <select className="input w-fit" value={status} onChange={(e) => setStatus(e.target.value)}>
+      <select className="input w-fit" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
         <option value="">Tous les statuts</option>
         <option value="completed">Complétés</option>
         <option value="pending">En attente</option>
@@ -102,7 +107,7 @@ const HistoriqueTab = () => {
         <option value="expired">Expirés</option>
       </select>
       <Card>
-        {isLoading && <p className="text-sm text-gray-400 text-center py-6">Chargement…</p>}
+        {isLoading && <ListSkeleton rows={3} height="h-14" />}
         {data?.data.map((p) => (
           <div key={p.id} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0 text-sm">
             <div className="min-w-0">
@@ -117,6 +122,9 @@ const HistoriqueTab = () => {
         ))}
         {!isLoading && !data?.data.length && <p className="text-sm text-gray-400 text-center py-6">Aucun paiement</p>}
       </Card>
+      {data && (
+        <Pagination meta={data.meta} currentCount={data.data.length} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => p + 1)} />
+      )}
     </div>
   );
 };

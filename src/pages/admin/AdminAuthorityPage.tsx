@@ -5,8 +5,9 @@ import { adminAuthorityApi, AdminAuthorityUser, AdminAuthorityOrganization } fro
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
+import { useAdminMutation } from '@/hooks/useAdminMutation';
+import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
 const TYPE_LABELS: Record<string, string> = {
   police: 'Police', immigration: 'Immigration', customs: 'Douanes',
@@ -45,8 +46,8 @@ const CreateOrgForm = ({ onDone }: { onDone: () => void }) => {
 
 const OrgRow = ({ org }: { org: AdminAuthorityOrganization }) => {
   const qc = useQueryClient();
-  const { toast } = useToast();
   const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [form, setForm] = useState({ name: org.name, type: org.type, governorate: org.governorate ?? '' });
   const [error, setError] = useState('');
 
@@ -55,10 +56,10 @@ const OrgRow = ({ org }: { org: AdminAuthorityOrganization }) => {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-authority-orgs'] }); setEditing(false); },
     onError: (err) => setError(extractErrors(err)),
   });
-  const deleteMut = useMutation({
+  const deleteMut = useAdminMutation({
     mutationFn: () => adminAuthorityApi.organizations.remove(org.id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-authority-orgs'] }); toast('Organisme supprimé', 'success'); },
-    onError: (err) => toast(extractErrors(err), 'error'),
+    successMessage: 'Organisme supprimé',
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-authority-orgs'] }),
   });
 
   if (editing) {
@@ -87,7 +88,14 @@ const OrgRow = ({ org }: { org: AdminAuthorityOrganization }) => {
       </div>
       <div className="flex items-center gap-1 shrink-0 ml-2">
         <button onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500"><Pencil className="h-3.5 w-3.5" /></button>
-        <button onClick={() => deleteMut.mutate()} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
+        {!confirmDelete ? (
+          <button onClick={() => setConfirmDelete(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
+        ) : (
+          <div className="flex gap-1">
+            <button onClick={() => deleteMut.mutate()} className="text-xs font-bold text-red-600">Confirmer</button>
+            <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-400">Annuler</button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -106,7 +114,7 @@ const OrganismesTab = () => {
       </div>
       {showCreate && <CreateOrgForm onDone={() => setShowCreate(false)} />}
       <div className="card p-4">
-        {isLoading && <p className="text-sm text-gray-400 text-center py-6">Chargement…</p>}
+        {isLoading && <ListSkeleton rows={3} />}
         {data?.map((org) => <OrgRow key={org.id} org={org} />)}
         {!isLoading && !data?.length && <p className="text-sm text-gray-400 text-center py-6">Aucun organisme</p>}
       </div>
@@ -158,16 +166,16 @@ const CreateAuthorityUserForm = ({ onDone }: { onDone: () => void }) => {
 
 const AuthorityUserRow = ({ u }: { u: AdminAuthorityUser }) => {
   const qc = useQueryClient();
-  const { toast } = useToast();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const statusMut = useMutation({
+  const statusMut = useAdminMutation({
     mutationFn: (status: string) => adminAuthorityApi.users.update(u.id, { status }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-authority-users'] }),
   });
-  const deleteMut = useMutation({
+  const deleteMut = useAdminMutation({
     mutationFn: () => adminAuthorityApi.users.remove(u.id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-authority-users'] }); toast('Utilisateur supprimé', 'success'); },
+    successMessage: 'Utilisateur supprimé',
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-authority-users'] }),
   });
 
   return (
@@ -212,7 +220,7 @@ const AuthorityUsersTab = () => {
       </div>
       {showCreate && <CreateAuthorityUserForm onDone={() => setShowCreate(false)} />}
       <div className="card p-4">
-        {isLoading && <p className="text-sm text-gray-400 text-center py-6">Chargement…</p>}
+        {isLoading && <ListSkeleton rows={3} />}
         {data?.map((u) => <AuthorityUserRow key={u.id} u={u} />)}
         {!isLoading && !data?.length && <p className="text-sm text-gray-400 text-center py-6">Aucun utilisateur</p>}
       </div>

@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Building2, Search, CheckCircle2, XCircle, Clock, Plus, X, ChevronLeft, ChevronRight, Trash2, RefreshCw,
+  Building2, Search, CheckCircle2, XCircle, Clock, Plus, X, Trash2, RefreshCw,
 } from 'lucide-react';
 import { adminHotelsApi, AdminHotel } from '@/api/admin/hotels';
+import { adminHostsApi } from '@/api/admin/hosts';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
+import { useAdminMutation } from '@/hooks/useAdminMutation';
+import { Pagination } from '@/components/admin/Pagination';
+import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
 const STATUS: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
   active:    { label: 'Actif',      color: '#22c55e', icon: CheckCircle2 },
@@ -32,9 +36,17 @@ const CreateHotelForm = ({ onDone }: { onDone: () => void }) => {
   const [error, setError] = useState('');
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
+  const [hostSearch, setHostSearch] = useState('');
+  const [selectedHost, setSelectedHost] = useState<{ id: string; name: string } | null>(null);
+  const { data: hostResults } = useQuery({
+    queryKey: ['admin-hosts-search-hotelform', hostSearch],
+    queryFn: () => adminHostsApi.list({ search: hostSearch || undefined, per_page: 6 }),
+    enabled: hostSearch.length >= 2,
+  });
+
   const mut = useMutation({
     mutationFn: () => adminHotelsApi.create({
-      name: form.name, type: form.type, room_count: parseInt(form.room_count) || 1,
+      name: form.name, organization_id: selectedHost!.id, type: form.type, room_count: parseInt(form.room_count) || 1,
       address: { line1: form.line1, city: form.city, governorate: form.governorate },
     }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hotels'] }); toast('Établissement créé', 'success'); onDone(); },
@@ -44,6 +56,28 @@ const CreateHotelForm = ({ onDone }: { onDone: () => void }) => {
   return (
     <div className="card p-4 flex flex-col gap-3">
       <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Nouvel établissement</p>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <input
+          className="input w-full pl-9"
+          placeholder="Hébergeur propriétaire…"
+          value={selectedHost ? selectedHost.name : hostSearch}
+          onChange={(e) => { setHostSearch(e.target.value); setSelectedHost(null); }}
+        />
+        {selectedHost && (
+          <button onClick={() => { setSelectedHost(null); setHostSearch(''); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600">✕</button>
+        )}
+        {!selectedHost && hostResults?.data?.length ? (
+          <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-100 bg-white shadow-lg">
+            {hostResults.data.map((h) => (
+              <button key={h.id} className="flex w-full items-center px-3 py-2 text-left text-sm hover:bg-warm-100"
+                onClick={() => { setSelectedHost({ id: h.id, name: h.name }); setHostSearch(''); }}>
+                {h.name}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
       <Input label="Nom" value={form.name} onChange={(e) => set('name', e.target.value)} />
       <div className="grid grid-cols-2 gap-2">
         <Select label="Type" value={form.type} onChange={(e) => set('type', e.target.value)}
@@ -60,7 +94,7 @@ const CreateHotelForm = ({ onDone }: { onDone: () => void }) => {
       </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
       <div className="flex gap-2">
-        <Button size="sm" loading={mut.isPending} disabled={!form.name || !form.line1 || !form.city || !form.governorate} onClick={() => mut.mutate()}>Créer</Button>
+        <Button size="sm" loading={mut.isPending} disabled={!selectedHost || !form.name || !form.line1 || !form.city || !form.governorate} onClick={() => mut.mutate()}>Créer</Button>
         <Button size="sm" variant="ghost" onClick={onDone}>Annuler</Button>
       </div>
     </div>
@@ -71,7 +105,6 @@ const CreateHotelForm = ({ onDone }: { onDone: () => void }) => {
 
 export const AdminHotelsPage = () => {
   const qc = useQueryClient();
-  const { toast } = useToast();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -91,17 +124,20 @@ export const AdminHotelsPage = () => {
     enabled: !!selected,
   });
 
-  const suspendMut = useMutation({
+  const suspendMut = useAdminMutation({
     mutationFn: () => adminHotelsApi.suspend(selected!.id, suspendReason),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hotels'] }); setShowSuspend(false); setSuspendReason(''); toast('Établissement suspendu', 'success'); },
+    successMessage: 'Établissement suspendu',
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hotels'] }); setShowSuspend(false); setSuspendReason(''); },
   });
-  const activateMut = useMutation({
+  const activateMut = useAdminMutation({
     mutationFn: () => adminHotelsApi.activate(selected!.id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hotels'] }); toast('Établissement réactivé', 'success'); },
+    successMessage: 'Établissement réactivé',
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-hotels'] }),
   });
-  const deleteMut = useMutation({
+  const deleteMut = useAdminMutation({
     mutationFn: () => adminHotelsApi.remove(selected!.id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hotels'] }); setSelected(null); setConfirmDelete(false); toast('Établissement supprimé', 'success'); },
+    successMessage: 'Établissement supprimé',
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hotels'] }); setSelected(null); setConfirmDelete(false); },
   });
 
   const hotels = hotelsRes?.data ?? [];
@@ -134,7 +170,7 @@ export const AdminHotelsPage = () => {
             </select>
           </div>
 
-          {isLoading && <p className="text-sm text-gray-400 text-center py-8">Chargement…</p>}
+          {isLoading && <ListSkeleton rows={5} height="h-16" />}
 
           <div className="flex flex-col gap-2">
             {hotels.map((h) => {
@@ -166,19 +202,8 @@ export const AdminHotelsPage = () => {
             {!isLoading && !hotels.length && <p className="text-sm text-gray-400 text-center py-8">Aucun établissement</p>}
           </div>
 
-          {meta && meta.total > meta.per_page && (
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <span>{meta.total} établissements</span>
-              <div className="flex gap-2 items-center">
-                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="p-1 rounded hover:bg-gray-200 disabled:opacity-40">
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <span>Page {meta.current_page}</span>
-                <button onClick={() => setPage((p) => p + 1)} disabled={hotels.length < meta.per_page} className="p-1 rounded hover:bg-gray-200 disabled:opacity-40">
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+          {meta && (
+            <Pagination meta={meta} currentCount={hotels.length} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => p + 1)} />
           )}
         </div>
 

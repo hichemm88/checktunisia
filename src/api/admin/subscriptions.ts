@@ -55,14 +55,7 @@ export const adminPlansApi = {
 };
 
 export const adminSubscriptionsApi = {
-  list: (hotelId: string) => api.get<{ data: AdminSubscription[] }>(`/admin/hotels/${hotelId}/subscriptions`).then((r) => r.data.data),
-  create: (hotelId: string, data: object) => api.post(`/admin/hotels/${hotelId}/subscriptions`, data).then((r) => r.data.data),
-  update: (hotelId: string, id: string, data: object) => api.patch(`/admin/hotels/${hotelId}/subscriptions/${id}`, data).then((r) => r.data.data),
-  invoices: (hotelId: string) => api.get<{ data: AdminInvoice[] }>(`/admin/hotels/${hotelId}/invoices`).then((r) => r.data.data),
-  createInvoice: (hotelId: string, data: object) => api.post(`/admin/hotels/${hotelId}/invoices`, data).then((r) => r.data.data),
-  updateInvoice: (hotelId: string, id: string, data: object) => api.patch(`/admin/hotels/${hotelId}/invoices/${id}`, data).then((r) => r.data.data),
-
-  // Hébergeur-scoped (primary path — subscriptions/invoices are org-level)
+  // Hébergeur-scoped (subscriptions/invoices are org-level)
   listForHost: (hostId: string) => api.get<{ data: AdminSubscription[] }>(`/admin/hosts/${hostId}/subscriptions`).then((r) => r.data.data),
   createForHost: (hostId: string, data: object) => api.post<{ data: AdminSubscription }>(`/admin/hosts/${hostId}/subscriptions`, data).then((r) => r.data.data),
   updateForHost: (hostId: string, id: string, data: object) => api.patch<{ data: AdminSubscription }>(`/admin/hosts/${hostId}/subscriptions/${id}`, data).then((r) => r.data.data),

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Plus, X, ChevronLeft, ChevronRight, Send, Trash2, Pencil, Save } from 'lucide-react';
+import { Search, Plus, X, Send, Trash2, Pencil, Save } from 'lucide-react';
 import { adminUsersApi, AdminUser } from '@/api/admin/users';
 import { adminHotelsApi } from '@/api/admin/hotels';
 import { Button } from '@/components/ui/Button';
@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
+import { useAdminMutation } from '@/hooks/useAdminMutation';
+import { Pagination } from '@/components/admin/Pagination';
+import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
 const ROLE_LABELS: Record<string, string> = { hotel_admin: 'Administrateur', receptionist: 'Réceptionniste' };
 
@@ -58,7 +61,6 @@ const CreateUserForm = ({ onDone }: { onDone: () => void }) => {
 
 const UserRow = ({ u }: { u: AdminUser }) => {
   const qc = useQueryClient();
-  const { toast } = useToast();
   const [mode, setMode] = useState<'view' | 'edit' | 'confirm_delete'>('view');
   const [editForm, setEditForm] = useState({ first_name: u.first_name, last_name: u.last_name, role: u.role });
   const [error, setError] = useState('');
@@ -68,13 +70,13 @@ const UserRow = ({ u }: { u: AdminUser }) => {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }); setMode('view'); },
     onError: (err) => setError(extractErrors(err)),
   });
-  const deleteMut = useMutation({
+  const deleteMut = useAdminMutation({
     mutationFn: () => adminUsersApi.remove(u.id),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }); toast('Utilisateur supprimé', 'success'); },
+    successMessage: 'Utilisateur supprimé',
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),
   });
-  const resendMut = useMutation({
+  const resendMut = useAdminMutation({
     mutationFn: () => adminUsersApi.resendInvite(u.id),
-    onError: (err) => setError(extractErrors(err)),
   });
 
   if (mode === 'edit') {
@@ -179,20 +181,13 @@ export const AdminUsersPage = () => {
       </div>
 
       <div className="card p-4">
-        {isLoading && [1, 2, 3].map((i) => <div key={i} className="h-14 animate-pulse rounded-lg bg-gray-50 my-1" />)}
+        {isLoading && <ListSkeleton rows={3} />}
         {users.map((u) => <UserRow key={u.id} u={u} />)}
         {!isLoading && !users.length && <p className="py-6 text-center text-sm text-gray-400">Aucun utilisateur</p>}
       </div>
 
-      {meta && meta.total > meta.per_page && (
-        <div className="flex items-center justify-between text-sm text-gray-500">
-          <span>{meta.total} utilisateurs</span>
-          <div className="flex gap-2 items-center">
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className="p-1 rounded hover:bg-gray-200 disabled:opacity-40"><ChevronLeft className="h-4 w-4" /></button>
-            <span>Page {meta.current_page}</span>
-            <button onClick={() => setPage((p) => p + 1)} disabled={users.length < meta.per_page} className="p-1 rounded hover:bg-gray-200 disabled:opacity-40"><ChevronRight className="h-4 w-4" /></button>
-          </div>
-        </div>
+      {meta && (
+        <Pagination meta={meta} currentCount={users.length} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => p + 1)} />
       )}
     </div>
   );
