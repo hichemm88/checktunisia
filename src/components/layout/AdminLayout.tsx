@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   ShieldCheck, LayoutDashboard, Building2, Home, Users, Landmark,
-  CreditCard, Wallet, Mail, Activity, LogOut, Search, X,
+  CreditCard, Wallet, Mail, Activity, LogOut, Search, X, FileText,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { to: '/admin/users',        icon: Users,           label: 'Utilisateurs' },
   { to: '/admin/authority',    icon: Landmark,        label: 'Autorités' },
   { to: '/admin/subscriptions',icon: CreditCard,      label: 'Abonnements' },
+  { to: '/admin/facturation',  icon: FileText,        label: 'Facturation' },
   { to: '/admin/payments',     icon: Wallet,          label: 'Paiements' },
   { to: '/admin/emails',       icon: Mail,            label: 'Emails' },
   { to: '/admin/activity',     icon: Activity,        label: "Journal d'activité" },

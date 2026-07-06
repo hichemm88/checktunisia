@@ -295,66 +295,10 @@ const AbonnementsActifsTab = () => {
   );
 };
 
-// ─── Facturation tab (vue plateforme) ───────────────────────────────────────────
-
-const FacturationTab = () => {
-  const [status, setStatus] = useState('');
-  const [page, setPage] = useState(1);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['admin-all-invoices', status, page],
-    queryFn: () => adminSubscriptionsApi.allInvoices({ status: status || undefined, page, per_page: 20 }),
-  });
-
-  return (
-    <div className="flex flex-col gap-3">
-      <select className="input w-fit" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
-        <option value="">Tous les statuts</option>
-        <option value="draft">Brouillon</option>
-        <option value="sent">Envoyée</option>
-        <option value="paid">Payée</option>
-        <option value="overdue">En retard</option>
-        <option value="void">Annulée</option>
-      </select>
-
-      <div className="card p-2">
-        {isLoading && <p className="text-sm text-gray-400 text-center py-6">Chargement…</p>}
-        {data?.data.map((inv) => (
-          <div key={inv.id} className="flex items-center justify-between py-2.5 px-2 border-b border-gray-50 last:border-0 text-sm">
-            <div className="min-w-0 flex-1">
-              <p className="font-mono text-xs font-semibold">{inv.invoice_number}</p>
-              <p className="text-xs text-gray-400 truncate">{inv.organization?.name ?? inv.hotel_name ?? '—'}</p>
-            </div>
-            <span className="text-xs text-gray-500 mr-3">{inv.total_amount} {inv.currency}</span>
-            <span className={`text-xs font-bold px-2 py-0.5 rounded-full mr-3 ${inv.status === 'paid' ? 'bg-green-50 text-green-700' : inv.status === 'overdue' ? 'bg-red-50 text-red-600' : inv.status === 'void' ? 'bg-gray-100 text-gray-400' : 'bg-amber-50 text-amber-700'}`}>
-              {inv.status}
-            </span>
-            {inv.organization && (
-              <button onClick={() => adminSubscriptionsApi.downloadInvoicePdf(inv.organization!.id, inv.id, `facture-${inv.invoice_number}.pdf`)}
-                className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500">
-                <Download className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-        ))}
-        {!isLoading && !data?.data.length && <p className="text-sm text-gray-400 text-center py-6">Aucune facture</p>}
-      </div>
-
-      {data && data.meta.total > data.meta.per_page && (
-        <div className="flex justify-center items-center gap-3">
-          <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40">← Préc.</button>
-          <span className="text-xs text-gray-500 font-medium">{data.meta.current_page} / {Math.ceil(data.meta.total / data.meta.per_page)}</span>
-          <button disabled={data.data.length < data.meta.per_page} onClick={() => setPage((p) => p + 1)} className="rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40">Suiv. →</button>
-        </div>
-      )}
-    </div>
-  );
-};
-
 // ─── Main page ──────────────────────────────────────────────────────────────────
 
 export const AdminSubscriptionsPage = () => {
-  const [tab, setTab] = useState<'packs' | 'active' | 'facturation'>('packs');
+  const [tab, setTab] = useState<'packs' | 'active'>('packs');
 
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
@@ -366,11 +310,8 @@ export const AdminSubscriptionsPage = () => {
         <button onClick={() => setTab('active')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'active' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
           <CreditCard className="h-4 w-4" /> Abonnements
         </button>
-        <button onClick={() => setTab('facturation')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'facturation' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
-          <Download className="h-4 w-4" /> Facturation
-        </button>
       </div>
-      {tab === 'packs' ? <PacksTab /> : tab === 'active' ? <AbonnementsActifsTab /> : <FacturationTab />}
+      {tab === 'packs' ? <PacksTab /> : <AbonnementsActifsTab />}
     </div>
   );
 };

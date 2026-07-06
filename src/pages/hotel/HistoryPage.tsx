@@ -1,7 +1,7 @@
 import { useRef, useState, ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronRight, Trash2 } from 'lucide-react';
+import { Search, ChevronRight, Trash2, LogOut } from 'lucide-react';
 import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Input } from '@/components/ui/Input';
@@ -127,6 +127,17 @@ const STATUS_LABELS: Record<string, string> = {
   no_show: 'No-show', cancelled: 'Annulé',
 };
 
+// A stay whose expected checkout date has arrived (or passed) while still active —
+// highlighted so receptionists don't forget to check the guest out.
+const isCheckoutDue = (status: string, expectedCheckOut: string) => {
+  if (status !== 'active') return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const checkout = new Date(expectedCheckOut);
+  checkout.setHours(0, 0, 0, 0);
+  return checkout <= today;
+};
+
 export const HistoryPage = () => {
   const navigate   = useNavigate();
   const qc         = useQueryClient();
@@ -188,6 +199,7 @@ export const HistoryPage = () => {
 
           {!isLoading && data?.data.map((ci) => {
             const style = STATUS_ROW_STYLE[ci.status] ?? { border: '#d1d5db', dot: '#d1d5db' };
+            const checkoutDue = isCheckoutDue(ci.status, ci.expected_check_out_date);
             const guestName = ci.primary_guest
               ? `${ci.primary_guest.first_name} ${ci.primary_guest.last_name}`
               : 'Sans voyageur';
@@ -198,8 +210,11 @@ export const HistoryPage = () => {
 
             const row = (
               <div
-                className="flex items-center bg-white rounded-card shadow-card overflow-hidden"
-                style={{ borderLeft: `4px solid ${style.border}` }}
+                className="flex items-center rounded-card shadow-card overflow-hidden"
+                style={{
+                  borderLeft: `4px solid ${checkoutDue ? '#F59E0B' : style.border}`,
+                  background: checkoutDue ? '#FFFBEB' : '#fff',
+                }}
               >
                 <button
                   onClick={() => navigate(`/hotel/history/${ci.id}`)}
@@ -235,12 +250,18 @@ export const HistoryPage = () => {
                   </div>
                   {/* Status dot + label + chevron */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <span
-                      className="text-[11px] font-bold"
-                      style={{ color: style.dot }}
-                    >
-                      {STATUS_LABELS[ci.status] ?? ci.status}
-                    </span>
+                    {checkoutDue ? (
+                      <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: '#FEF3C7', color: '#92400E' }}>
+                        <LogOut className="h-3 w-3" /> Départ
+                      </span>
+                    ) : (
+                      <span
+                        className="text-[11px] font-bold"
+                        style={{ color: style.dot }}
+                      >
+                        {STATUS_LABELS[ci.status] ?? ci.status}
+                      </span>
+                    )}
                     <ChevronRight className="h-4 w-4 text-gray-300" />
                   </div>
                 </button>
