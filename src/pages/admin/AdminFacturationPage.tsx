@@ -5,7 +5,7 @@ import { adminSubscriptionsApi } from '@/api/admin/subscriptions';
 import { adminHostsApi } from '@/api/admin/hosts';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
-import { Pagination } from '@/components/admin/Pagination';
+import { Pagination } from '@/components/ui/Pagination';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Tous les statuts' },

@@ -11,7 +11,7 @@ interface PaginationProps {
   onNext: () => void;
 }
 
-/** Shared pagination control — used across all paginated admin lists. */
+/** Shared pagination control — used across all paginated lists (admin, authority, hotel). */
 export const Pagination = ({ meta, currentCount, onPrev, onNext }: PaginationProps) => {
   if (meta.total <= meta.per_page) return null;
 

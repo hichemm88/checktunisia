@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
-import { Search, User, MapPin, Lock, ShieldAlert } from 'lucide-react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { Search, User, MapPin, Lock, ShieldAlert, Building2, BedDouble, UserCog } from 'lucide-react';
 import { getFlagUrl } from '@/lib/flags';
 import { WatchlistSeverity } from '@/types';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
@@ -9,10 +9,92 @@ import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { Pagination } from '@/components/ui/Pagination';
 import { authorityApi, SearchParams } from '@/api/authority';
 import { AuthorityGuest, ApiList } from '@/types';
 import { extractErrors } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
+
+const fmtDate = (d?: string | null) =>
+  d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+
+const RecentCheckInsSection = () => {
+  const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useQuery({
+    queryKey: ['authority-recent-check-ins', page],
+    queryFn: () => authorityApi.getRecentCheckIns({ page, per_page: 20 }),
+  });
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+        Derniers check-ins
+      </p>
+
+      {isLoading && [1, 2, 3].map((i) => (
+        <div key={i} className="h-20 animate-pulse rounded-card bg-gray-100" />
+      ))}
+
+      {!isLoading && data?.data.map((c) => (
+        <button
+          key={`${c.check_in_id}-${c.guest_id}`}
+          onClick={() => navigate(`/authority/guests/${c.guest_id}`)}
+          className="flex items-start gap-3 rounded-card bg-white p-4 shadow-card hover:shadow-card-hover transition-shadow text-left w-full"
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: '#1B3A5F' }}>
+            {[c.first_name[0], c.last_name[0]].join('').toUpperCase()}
+          </div>
+          <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+            <p className="font-semibold text-gray-900 flex items-center gap-2">
+              {c.first_name} {c.last_name}
+              {c.nationality_code && (() => {
+                const url = getFlagUrl(c.nationality_code);
+                return url ? (
+                  <img src={url} alt={c.nationality_code} width={18}
+                    className="rounded-sm inline-block"
+                    style={{ border: '1px solid rgba(0,0,0,0.08)', verticalAlign: 'middle' }}
+                  />
+                ) : null;
+              })()}
+            </p>
+            <p className="text-xs text-gray-500">
+              {fmtDate(c.date_of_birth)} · {c.nationality_code}
+              {c.document_number && ` · ${c.document_number}`}
+            </p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 mt-1 text-xs text-gray-500">
+              {c.hotel && (
+                <span className="flex items-center gap-1">
+                  <Building2 className="h-3 w-3" /> {c.hotel.name}
+                  {c.hotel.city && ` (${c.hotel.city})`}
+                </span>
+              )}
+              {c.room_number && (
+                <span className="flex items-center gap-1">
+                  <BedDouble className="h-3 w-3" /> Ch. {c.room_number}
+                </span>
+              )}
+              {c.created_by && (
+                <span className="flex items-center gap-1">
+                  <UserCog className="h-3 w-3" /> Check-in par {c.created_by}
+                </span>
+              )}
+            </div>
+          </div>
+          <span className="text-xs text-gray-400 shrink-0">{fmtDate(c.check_in_date)}</span>
+        </button>
+      ))}
+
+      {!isLoading && !data?.data.length && (
+        <p className="py-8 text-center text-sm text-gray-400">Aucun check-in récent.</p>
+      )}
+
+      {data && (
+        <Pagination meta={data.meta} currentCount={data.data.length} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => p + 1)} />
+      )}
+    </div>
+  );
+};
 
 const WATCHLIST_COLORS: Record<WatchlistSeverity, { bg: string; border: string; text: string; label: string }> = {
   critique: { bg: '#FEF2F2', border: '#EF4444', text: '#991B1B', label: 'RECHERCHÉ — CRITIQUE' },
@@ -151,6 +233,9 @@ export const SearchPage = () => {
             </Button>
           </div>
         </Card>
+
+        {/* Default view: recent check-ins, replaced by search results once a search runs */}
+        {!results && <RecentCheckInsSection />}
 
         {/* Results */}
         {results && (

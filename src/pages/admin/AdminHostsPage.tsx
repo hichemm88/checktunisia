@@ -12,7 +12,7 @@ import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
-import { Pagination } from '@/components/admin/Pagination';
+import { Pagination } from '@/components/ui/Pagination';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 

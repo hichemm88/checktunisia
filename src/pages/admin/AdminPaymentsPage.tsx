@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
-import { Pagination } from '@/components/admin/Pagination';
+import { Pagination } from '@/components/ui/Pagination';
 
 const C = { navy: '#1B3A5F' };
 

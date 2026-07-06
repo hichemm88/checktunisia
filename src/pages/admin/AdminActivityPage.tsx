@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminActivityApi } from '@/api/admin/activity';
 import { Card } from '@/components/ui/Card';
-import { Pagination } from '@/components/admin/Pagination';
+import { Pagination } from '@/components/ui/Pagination';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
 const ACTION_LABELS: Record<string, string> = {

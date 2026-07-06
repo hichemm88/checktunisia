@@ -187,6 +187,22 @@ export interface AuthorityCheckIn {
   }>;
 }
 
+/** One row per traveler — a multi-guest stay produces one entry per guest, not one per check-in. */
+export interface AuthorityRecentCheckIn {
+  check_in_id: string;
+  reference: string;
+  check_in_date: string;
+  guest_id: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth?: string | null;
+  nationality_code?: string | null;
+  document_number?: string | null;
+  hotel: { name: string; city?: string | null; governorate?: string | null } | null;
+  room_number?: string | null;
+  created_by?: string | null;
+}
+
 export interface AuthorityHotelOwner {
   entity_type: 'company' | 'individual';
   name?: string | null;

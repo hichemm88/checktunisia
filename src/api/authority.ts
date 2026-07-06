@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 import {
   AuthorityGuest, AuthorityGuestProfile, AuthorityHotel, AuthorityCheckIn,
-  AuthorityDashboard, AuthorityAlert, AuthorityActivity,
+  AuthorityDashboard, AuthorityAlert, AuthorityActivity, AuthorityRecentCheckIn,
   WatchlistEntry, WatchlistImportResult,
   ApiList,
 } from '@/types';
@@ -37,6 +37,10 @@ export const authorityApi = {
   // ── Guest search ──────────────────────────────────────────────────────────
   search: (params: SearchParams) =>
     api.get<ApiList<AuthorityGuest>>('/authority/search', { params }).then((r) => r.data),
+
+  // ── Recent check-ins (one row per traveler) ──────────────────────────────
+  getRecentCheckIns: (params?: { page?: number; per_page?: number }) =>
+    api.get<ApiList<AuthorityRecentCheckIn>>('/authority/recent-check-ins', { params }).then((r) => r.data),
 
   // ── Guest profile ─────────────────────────────────────────────────────────
   getProfile: (guestId: string) =>

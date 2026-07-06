@@ -9,7 +9,7 @@ import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
-import { Pagination } from '@/components/admin/Pagination';
+import { Pagination } from '@/components/ui/Pagination';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
 const ROLE_LABELS: Record<string, string> = { hotel_admin: 'Administrateur', receptionist: 'Réceptionniste' };
