@@ -1,0 +1,115 @@
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Mail, Save, Eye, Send } from 'lucide-react';
+import { adminEmailsApi, EmailTemplateItem } from '@/api/admin/emails';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Card } from '@/components/ui/Card';
+import { useToast } from '@/components/ui/Toast';
+import { extractErrors } from '@/lib/api';
+
+const PLACEHOLDER_HINTS: Record<string, string[]> = {
+  welcome: ['first_name', 'last_name', 'hotel_name', 'role_label', 'credentials_box', 'cta_button'],
+  account_suspended: ['name', 'reason'],
+  payment_received: ['name', 'plan_name', 'expires_at', 'credentials_box'],
+  subscription_reminder: ['name', 'plan_name', 'expires_at', 'days_remaining'],
+};
+
+const TemplateCard = ({ template }: { template: EmailTemplateItem }) => {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [form, setForm] = useState({ subject: template.subject, body_html: template.body_html });
+  const [showPreview, setShowPreview] = useState(false);
+  const [error, setError] = useState('');
+
+  const saveMut = useMutation({
+    mutationFn: () => adminEmailsApi.update(template.key, form),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-emails'] }); toast('Modèle enregistré', 'success'); },
+    onError: (err) => setError(extractErrors(err)),
+  });
+
+  const { data: preview, refetch: refetchPreview, isFetching: previewLoading } = useQuery({
+    queryKey: ['admin-email-preview', template.key],
+    queryFn: () => adminEmailsApi.preview(template.key),
+    enabled: false,
+  });
+
+  const togglePreview = async () => {
+    if (!showPreview) await refetchPreview();
+    setShowPreview((s) => !s);
+  };
+
+  return (
+    <Card>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Mail className="h-4 w-4 text-gray-400" />
+          <p className="font-bold text-gray-900">{template.label}</p>
+        </div>
+        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${template.is_custom ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+          {template.is_custom ? 'Personnalisé' : 'Par défaut'}
+        </span>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <Input label="Objet" value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} />
+        <div className="flex flex-col gap-1.5">
+          <label className="label">Corps (HTML)</label>
+          <textarea
+            className="input-field font-mono text-xs"
+            rows={8}
+            value={form.body_html}
+            onChange={(e) => setForm((f) => ({ ...f, body_html: e.target.value }))}
+          />
+        </div>
+        <p className="text-xs text-gray-400">
+          Variables disponibles : {PLACEHOLDER_HINTS[template.key]?.map((v) => `{{${v}}}`).join(', ')}
+        </p>
+
+        {error && <p className="text-xs text-red-500">{error}</p>}
+
+        <div className="flex gap-2">
+          <Button size="sm" loading={saveMut.isPending} onClick={() => saveMut.mutate()} className="gap-1.5"><Save className="h-3.5 w-3.5" /> Enregistrer</Button>
+          <Button size="sm" variant="secondary" loading={previewLoading} onClick={togglePreview} className="gap-1.5">
+            <Eye className="h-3.5 w-3.5" /> {showPreview ? 'Masquer' : 'Aperçu'}
+          </Button>
+        </div>
+
+        {showPreview && preview && (
+          <div className="rounded-xl border border-gray-200 overflow-hidden">
+            <iframe title={`preview-${template.key}`} srcDoc={preview.html} className="w-full" style={{ height: 480, border: 'none' }} />
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+};
+
+export const AdminEmailsPage = () => {
+  const { toast } = useToast();
+  const { data: templates, isLoading } = useQuery({ queryKey: ['admin-emails'], queryFn: adminEmailsApi.list });
+
+  const remindersMut = useMutation({
+    mutationFn: adminEmailsApi.sendReminders,
+    onSuccess: (res) => toast(`${res.sent}/${res.candidates} rappel(s) envoyé(s)`, 'success'),
+  });
+
+  return (
+    <div className="flex flex-col gap-4 max-w-2xl">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold text-gray-900">Emails</h1>
+        <Button size="sm" variant="secondary" loading={remindersMut.isPending} onClick={() => remindersMut.mutate()} className="gap-1.5">
+          <Send className="h-4 w-4" /> Envoyer les rappels maintenant
+        </Button>
+      </div>
+      <p className="text-xs text-gray-400 -mt-2">
+        Le rappel d'expiration n'est pas encore automatique (nécessite un scheduler côté serveur) — utilisez ce bouton pour notifier les abonnements qui expirent sous 7 jours.
+      </p>
+
+      {isLoading && <p className="text-sm text-gray-400 text-center py-8">Chargement…</p>}
+      <div className="flex flex-col gap-4">
+        {templates?.map((t) => <TemplateCard key={t.key} template={t} />)}
+      </div>
+    </div>
+  );
+};

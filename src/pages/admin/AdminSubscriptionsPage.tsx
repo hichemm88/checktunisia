@@ -1,0 +1,292 @@
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Package, CreditCard, Plus, X, Pencil, Check, Trash2, Search } from 'lucide-react';
+import { adminPlansApi, adminSubscriptionsApi, AdminPlan } from '@/api/admin/subscriptions';
+import { adminHotelsApi } from '@/api/admin/hotels';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import { useToast } from '@/components/ui/Toast';
+import { extractErrors } from '@/lib/api';
+
+const fmtDate = (d?: string | null) =>
+  d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+
+// ─── Packs tab ──────────────────────────────────────────────────────────────────
+
+const CreatePlanForm = ({ onDone }: { onDone: () => void }) => {
+  const qc = useQueryClient();
+  const [form, setForm] = useState({ name: '', slug: '', min_rooms: '1', max_rooms: '', price_monthly: '', price_yearly: '' });
+  const [error, setError] = useState('');
+  const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  const mut = useMutation({
+    mutationFn: () => adminPlansApi.create({
+      name: form.name, slug: form.slug, min_rooms: parseInt(form.min_rooms) || 1,
+      max_rooms: form.max_rooms ? parseInt(form.max_rooms) : null,
+      price_monthly: parseFloat(form.price_monthly) || 0,
+      price_yearly: form.price_yearly ? parseFloat(form.price_yearly) : null,
+    }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-plans'] }); onDone(); },
+    onError: (err) => setError(extractErrors(err)),
+  });
+
+  return (
+    <div className="flex flex-col gap-3 p-4 rounded-xl border border-gray-100 bg-white">
+      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Nouveau pack</p>
+      <div className="grid grid-cols-2 gap-2">
+        <Input label="Nom" value={form.name} onChange={(e) => set('name', e.target.value)} />
+        <Input label="Slug" value={form.slug} onChange={(e) => set('slug', e.target.value)} />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Input label="Chambres min" type="number" value={form.min_rooms} onChange={(e) => set('min_rooms', e.target.value)} />
+        <Input label="Chambres max (vide = illimité)" type="number" value={form.max_rooms} onChange={(e) => set('max_rooms', e.target.value)} />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Input label="Prix mensuel (TND)" type="number" value={form.price_monthly} onChange={(e) => set('price_monthly', e.target.value)} />
+        <Input label="Prix annuel (TND)" type="number" value={form.price_yearly} onChange={(e) => set('price_yearly', e.target.value)} />
+      </div>
+      {error && <p className="text-xs text-red-500">{error}</p>}
+      <div className="flex gap-2">
+        <Button size="sm" loading={mut.isPending} disabled={!form.name || !form.slug || !form.price_monthly} onClick={() => mut.mutate()}>Créer</Button>
+        <Button size="sm" variant="ghost" onClick={onDone}>Annuler</Button>
+      </div>
+    </div>
+  );
+};
+
+const PlanRow = ({ plan }: { plan: AdminPlan }) => {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [form, setForm] = useState({
+    price_monthly: plan.price_monthly, price_yearly: plan.price_yearly ?? '',
+    max_rooms: plan.max_rooms ?? '', is_active: plan.is_active,
+  });
+
+  const updateMut = useMutation({
+    mutationFn: () => adminPlansApi.update(plan.id, {
+      price_monthly: parseFloat(form.price_monthly), price_yearly: form.price_yearly ? parseFloat(String(form.price_yearly)) : null,
+      max_rooms: form.max_rooms ? parseInt(String(form.max_rooms)) : null, is_active: form.is_active,
+    }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-plans'] }); setEditing(false); },
+  });
+  const deleteMut = useMutation({
+    mutationFn: () => adminPlansApi.remove(plan.id),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-plans'] }); toast('Pack supprimé', 'success'); },
+    onError: (err) => toast(extractErrors(err), 'error'),
+  });
+
+  return (
+    <div className="flex flex-col gap-3 p-4 rounded-xl border border-gray-100 bg-white">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: '#1B3A5F18' }}>
+            <Package className="h-4 w-4" style={{ color: '#1B3A5F' }} />
+          </div>
+          <div>
+            <p className="font-bold text-gray-900">{plan.name}</p>
+            <p className="text-xs text-gray-400">{plan.min_rooms}–{plan.max_rooms ?? '∞'} chambres</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${plan.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{plan.is_active ? 'Actif' : 'Inactif'}</span>
+          {!editing && (
+            <>
+              <button onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500"><Pencil className="h-3.5 w-3.5" /></button>
+              <button onClick={() => setConfirmDelete((s) => !s)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {editing ? (
+        <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2">
+            <Input label="Prix mensuel" type="number" value={form.price_monthly} onChange={(e) => setForm((f) => ({ ...f, price_monthly: e.target.value }))} />
+            <Input label="Prix annuel" type="number" value={String(form.price_yearly)} onChange={(e) => setForm((f) => ({ ...f, price_yearly: e.target.value }))} />
+          </div>
+          <Input label="Chambres max" type="number" value={String(form.max_rooms)} onChange={(e) => setForm((f) => ({ ...f, max_rooms: e.target.value }))} />
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} /> Actif
+          </label>
+          <div className="flex gap-2">
+            <Button size="sm" loading={updateMut.isPending} onClick={() => updateMut.mutate()} className="gap-1.5"><Check className="h-3.5 w-3.5" /> Enregistrer</Button>
+            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Annuler</Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex gap-4 text-sm text-gray-600">
+          <span>{plan.price_monthly} TND/mois</span>
+          {plan.price_yearly && <span>{plan.price_yearly} TND/an</span>}
+        </div>
+      )}
+
+      {confirmDelete && (
+        <div className="flex gap-2 p-2 rounded-lg bg-red-50">
+          <p className="text-xs text-gray-700 flex-1">Supprimer ce pack ?</p>
+          <button onClick={() => deleteMut.mutate()} className="text-xs font-bold text-red-600">Confirmer</button>
+          <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-400">Annuler</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const PacksTab = () => {
+  const [showCreate, setShowCreate] = useState(false);
+  const { data: plans, isLoading } = useQuery({ queryKey: ['admin-plans'], queryFn: adminPlansApi.list });
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex justify-end">
+        <Button size="sm" onClick={() => setShowCreate((s) => !s)} className="gap-1.5">
+          {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showCreate ? 'Annuler' : 'Ajouter'}
+        </Button>
+      </div>
+      {showCreate && <CreatePlanForm onDone={() => setShowCreate(false)} />}
+      {isLoading && <p className="text-sm text-gray-400 text-center py-6">Chargement…</p>}
+      {plans?.map((p) => <PlanRow key={p.id} plan={p} />)}
+    </div>
+  );
+};
+
+// ─── Abonnements actifs tab ─────────────────────────────────────────────────────
+
+const AbonnementsActifsTab = () => {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [search, setSearch] = useState('');
+  const [selectedHotel, setSelectedHotel] = useState<{ id: string; name: string } | null>(null);
+  const [showNewSub, setShowNewSub] = useState(false);
+
+  const { data: hotels } = useQuery({
+    queryKey: ['admin-hotels-search', search],
+    queryFn: () => adminHotelsApi.list({ search: search || undefined, per_page: 8 }),
+    enabled: search.length >= 2,
+  });
+
+  const { data: subs } = useQuery({
+    queryKey: ['admin-subs', selectedHotel?.id],
+    queryFn: () => adminSubscriptionsApi.list(selectedHotel!.id),
+    enabled: !!selectedHotel,
+  });
+  const { data: invoices } = useQuery({
+    queryKey: ['admin-invoices', selectedHotel?.id],
+    queryFn: () => adminSubscriptionsApi.invoices(selectedHotel!.id),
+    enabled: !!selectedHotel,
+  });
+  const { data: plans } = useQuery({ queryKey: ['admin-plans'], queryFn: adminPlansApi.list });
+
+  const [newSub, setNewSub] = useState({ plan_id: '', billing_cycle: 'monthly', started_at: new Date().toISOString().slice(0, 10), expires_at: '' });
+  const createSubMut = useMutation({
+    mutationFn: () => adminSubscriptionsApi.create(selectedHotel!.id, { ...newSub, plan_id: parseInt(newSub.plan_id) }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-subs', selectedHotel?.id] }); setShowNewSub(false); toast('Abonnement créé', 'success'); },
+  });
+  const updateSubMut = useMutation({
+    mutationFn: (vars: { id: string; status: string }) => adminSubscriptionsApi.update(selectedHotel!.id, vars.id, { status: vars.status }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-subs', selectedHotel?.id] }),
+  });
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <input className="input w-full pl-9" placeholder="Chercher un établissement…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        {hotels?.data?.length ? (
+          <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-100 bg-white shadow-lg">
+            {hotels.data.map((h) => (
+              <button key={h.id} className="flex w-full items-center px-3 py-2 text-left text-sm hover:bg-warm-100"
+                onClick={() => { setSelectedHotel({ id: h.id, name: h.name }); setSearch(''); }}>
+                {h.name}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      {!selectedHotel ? (
+        <div className="card p-8 text-center text-sm text-gray-400">
+          <CreditCard className="h-8 w-8 mx-auto mb-3 text-gray-200" />
+          Cherchez un établissement pour voir/gérer son abonnement
+        </div>
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
+            <p className="font-bold text-gray-900">{selectedHotel.name}</p>
+            <Button size="sm" onClick={() => setShowNewSub((s) => !s)} className="gap-1.5">
+              {showNewSub ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} Nouvel abonnement
+            </Button>
+          </div>
+
+          {showNewSub && (
+            <div className="card p-4 flex flex-col gap-2">
+              <Select label="Pack" value={newSub.plan_id} onChange={(e) => setNewSub((f) => ({ ...f, plan_id: e.target.value }))}
+                options={[{ value: '', label: 'Choisir…' }, ...(plans ?? []).map((p) => ({ value: String(p.id), label: p.name }))]} />
+              <div className="grid grid-cols-2 gap-2">
+                <Input label="Début" type="date" value={newSub.started_at} onChange={(e) => setNewSub((f) => ({ ...f, started_at: e.target.value }))} />
+                <Input label="Expiration" type="date" value={newSub.expires_at} onChange={(e) => setNewSub((f) => ({ ...f, expires_at: e.target.value }))} />
+              </div>
+              <Button size="sm" loading={createSubMut.isPending} disabled={!newSub.plan_id || !newSub.expires_at} onClick={() => createSubMut.mutate()}>Créer</Button>
+            </div>
+          )}
+
+          <div className="card p-4">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Abonnements</p>
+            {subs?.map((s) => (
+              <div key={s.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0 text-sm">
+                <div>
+                  <span className="font-medium">{s.plan?.name ?? `Pack #${s.plan_id}`}</span>
+                  <span className="text-xs text-gray-400 ml-2">jusqu'au {fmtDate(s.expires_at)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-semibold ${s.status === 'active' ? 'text-green-600' : 'text-gray-400'}`}>{s.status}</span>
+                  {s.status === 'active' ? (
+                    <button onClick={() => updateSubMut.mutate({ id: s.id, status: 'cancelled' })} className="text-xs text-red-500">Annuler</button>
+                  ) : s.status !== 'cancelled' && (
+                    <button onClick={() => updateSubMut.mutate({ id: s.id, status: 'active' })} className="text-xs text-green-600">Réactiver</button>
+                  )}
+                </div>
+              </div>
+            ))}
+            {!subs?.length && <p className="text-sm text-gray-400 py-2">Aucun abonnement</p>}
+          </div>
+
+          <div className="card p-4">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Factures</p>
+            {invoices?.map((inv) => (
+              <div key={inv.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0 text-sm">
+                <span className="font-mono text-xs">{inv.invoice_number}</span>
+                <span>{inv.total_amount} {inv.currency}</span>
+                <span className={`text-xs font-semibold ${inv.status === 'paid' ? 'text-green-600' : 'text-gray-400'}`}>{inv.status}</span>
+              </div>
+            ))}
+            {!invoices?.length && <p className="text-sm text-gray-400 py-2">Aucune facture</p>}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+// ─── Main page ──────────────────────────────────────────────────────────────────
+
+export const AdminSubscriptionsPage = () => {
+  const [tab, setTab] = useState<'packs' | 'active'>('packs');
+
+  return (
+    <div className="flex flex-col gap-4 max-w-3xl">
+      <h1 className="text-xl font-bold text-gray-900">Abonnements</h1>
+      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#E0DDD7' }}>
+        <button onClick={() => setTab('packs')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'packs' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
+          <Package className="h-4 w-4" /> Packs
+        </button>
+        <button onClick={() => setTab('active')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'active' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
+          <CreditCard className="h-4 w-4" /> Abonnements actifs
+        </button>
+      </div>
+      {tab === 'packs' ? <PacksTab /> : <AbonnementsActifsTab />}
+    </div>
+  );
+};

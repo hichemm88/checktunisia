@@ -29,8 +29,16 @@ import { HotelDetailPage } from '@/pages/authority/HotelDetailPage';
 import { AlertsPage } from '@/pages/authority/AlertsPage';
 import { ActivityPage } from '@/pages/authority/ActivityPage';
 import { WatchlistPage } from '@/pages/authority/WatchlistPage';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
-import { AdminPlatformSettingsPage } from '@/pages/admin/AdminPlatformSettingsPage';
+import { AdminHostsPage } from '@/pages/admin/AdminHostsPage';
+import { AdminHotelsPage } from '@/pages/admin/AdminHotelsPage';
+import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
+import { AdminAuthorityPage } from '@/pages/admin/AdminAuthorityPage';
+import { AdminSubscriptionsPage } from '@/pages/admin/AdminSubscriptionsPage';
+import { AdminPaymentsPage } from '@/pages/admin/AdminPaymentsPage';
+import { AdminEmailsPage } from '@/pages/admin/AdminEmailsPage';
+import { AdminActivityPage } from '@/pages/admin/AdminActivityPage';
 import { ProfilePage } from '@/pages/profile/ProfilePage';
 
 // ─── Guards ─────────────────────────────────────────────────────────────────
@@ -47,7 +55,7 @@ const RequireRole = ({ roles }: { roles: Role[] }) => {
 const RoleRedirect = () => {
   const role = useAuthStore((s) => s.user?.role);
   if (role === 'authority_user') return <Navigate to="/authority/dashboard" replace />;
-  if (role === 'platform_admin') return <Navigate to="/admin/hotels" replace />;
+  if (role === 'platform_admin') return <Navigate to="/admin/dashboard" replace />;
   return <Navigate to="/hotel/dashboard" replace />;
 };
 
@@ -140,8 +148,18 @@ export const App = () => (
 
       {/* Admin */}
       <Route element={<RequireRole roles={['platform_admin']} />}>
-        <Route path="/admin/hotels"    element={<AdminDashboardPage />} />
-        <Route path="/admin/settings"  element={<AdminPlatformSettingsPage />} />
+        <Route element={<AdminLayout />}>
+          <Route path="/admin/dashboard"     element={<AdminDashboardPage />} />
+          <Route path="/admin/hosts"         element={<AdminHostsPage />} />
+          <Route path="/admin/hotels"        element={<AdminHotelsPage />} />
+          <Route path="/admin/users"         element={<AdminUsersPage />} />
+          <Route path="/admin/authority"     element={<AdminAuthorityPage />} />
+          <Route path="/admin/subscriptions" element={<AdminSubscriptionsPage />} />
+          <Route path="/admin/payments"      element={<AdminPaymentsPage />} />
+          <Route path="/admin/emails"        element={<AdminEmailsPage />} />
+          <Route path="/admin/activity"      element={<AdminActivityPage />} />
+          <Route path="/admin/settings"      element={<Navigate to="/admin/payments" replace />} />
+        </Route>
       </Route>
     </Route>
 

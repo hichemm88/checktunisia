@@ -1,0 +1,143 @@
+import { useState } from 'react';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import {
+  ShieldCheck, LayoutDashboard, Building2, Home, Users, Landmark,
+  CreditCard, Wallet, Mail, Activity, LogOut, Search, X,
+} from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
+import { authApi } from '@/api/auth';
+import { adminSearchApi, GlobalSearchResult } from '@/api/admin/search';
+
+const NAV_ITEMS = [
+  { to: '/admin/dashboard',    icon: LayoutDashboard, label: 'Tableau de bord' },
+  { to: '/admin/hosts',        icon: Building2,       label: 'Hébergeurs' },
+  { to: '/admin/hotels',       icon: Home,            label: 'Établissements' },
+  { to: '/admin/users',        icon: Users,           label: 'Utilisateurs' },
+  { to: '/admin/authority',    icon: Landmark,        label: 'Autorités' },
+  { to: '/admin/subscriptions',icon: CreditCard,      label: 'Abonnements' },
+  { to: '/admin/payments',     icon: Wallet,          label: 'Paiements' },
+  { to: '/admin/emails',       icon: Mail,            label: 'Emails' },
+  { to: '/admin/activity',     icon: Activity,        label: "Journal d'activité" },
+];
+
+const TYPE_LABELS: Record<string, string> = { organization: 'Hébergeur', hotel: 'Établissement', user: 'Utilisateur' };
+const TYPE_ROUTE: Record<string, (id: string) => string> = {
+  organization: (id) => `/admin/hosts/${id}`,
+  hotel:        (id) => `/admin/hotels/${id}`,
+  user:         (id) => `/admin/users?highlight=${id}`,
+};
+
+const GlobalSearch = () => {
+  const navigate = useNavigate();
+  const [q, setQ] = useState('');
+  const [open, setOpen] = useState(false);
+
+  const { data } = useQuery({
+    queryKey: ['admin-global-search', q],
+    queryFn: () => adminSearchApi.search(q),
+    enabled: q.trim().length >= 2,
+  });
+
+  const results: GlobalSearchResult[] = data
+    ? [...data.organizations, ...data.hotels, ...data.users]
+    : [];
+
+  return (
+    <div className="relative w-full max-w-sm">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+      <input
+        className="input w-full pl-9 pr-8"
+        placeholder="Rechercher un hébergeur, établissement, utilisateur…"
+        value={q}
+        onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+      />
+      {q && (
+        <button className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500" onClick={() => setQ('')}>
+          <X className="h-4 w-4" />
+        </button>
+      )}
+      {open && q.trim().length >= 2 && (
+        <div className="absolute z-50 mt-1 w-full rounded-xl border border-gray-100 bg-white shadow-lg max-h-80 overflow-y-auto">
+          {results.length === 0 ? (
+            <p className="p-3 text-sm text-gray-400 text-center">Aucun résultat</p>
+          ) : results.map((r) => (
+            <button
+              key={`${r.type}-${r.id}`}
+              className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-warm-100"
+              onMouseDown={() => { navigate(TYPE_ROUTE[r.type](r.id)); setQ(''); setOpen(false); }}
+            >
+              <span className="truncate">{r.label}</span>
+              <span className="ml-2 shrink-0 text-xs text-gray-400">{TYPE_LABELS[r.type]}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export const AdminLayout = () => {
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try { await authApi.logout(); } catch { /* ignore */ }
+    logout();
+    navigate('/login');
+  };
+
+  return (
+    <div className="flex min-h-screen" style={{ background: '#F5F4EF' }}>
+      {/* ── Sidebar ── */}
+      <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-gray-100 bg-white">
+        <div className="flex items-center gap-2.5 px-5 h-16 border-b border-gray-100">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: '#1B3A5F' }}>
+            <ShieldCheck className="h-4 w-4 text-white" />
+          </div>
+          <span className="font-bold text-gray-900">Qayed <span className="text-xs font-normal text-gray-400">Admin</span></span>
+        </div>
+        <nav className="flex-1 flex flex-col gap-0.5 p-3 overflow-y-auto">
+          {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                  isActive ? 'text-white' : 'text-gray-500 hover:bg-warm-100 hover:text-gray-800'
+                }`
+              }
+              style={({ isActive }) => (isActive ? { background: '#1B3A5F' } : undefined)}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+        <div className="p-3 border-t border-gray-100">
+          <button
+            onClick={handleLogout}
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+          >
+            <LogOut className="h-4 w-4" /> Se déconnecter
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Main ── */}
+      <div className="flex-1 min-w-0 flex flex-col">
+        <header className="sticky top-0 z-30 flex items-center justify-end gap-4 px-4 md:px-6 h-16 bg-white border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <GlobalSearch />
+            <span className="hidden sm:block text-sm text-gray-500 whitespace-nowrap">{user?.first_name} {user?.last_name}</span>
+          </div>
+        </header>
+        <main className="flex-1 p-4 md:p-6">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+};
