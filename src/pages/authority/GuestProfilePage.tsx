@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/Button';
 import { authorityApi } from '@/api/authority';
 import { api } from '@/lib/api';
 
+const fmtDate = (d?: string | null) =>
+  d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+
 const DetailRow = ({ label, value }: { label: string; value?: string | null }) => (
   <div className="flex justify-between py-2 text-sm border-b border-gray-50 last:border-0">
     <span className="text-gray-500">{label}</span>
@@ -99,7 +102,7 @@ export const GuestProfilePage = () => {
               </div>
             </div>
           </CardHeader>
-          <DetailRow label="Date de naissance" value={profile.date_of_birth} />
+          <DetailRow label="Date de naissance" value={fmtDate(profile.date_of_birth)} />
           <DetailRow label="Sexe" value={profile.sex === 'M' ? 'Masculin' : profile.sex === 'F' ? 'Féminin' : 'Autre'} />
           <DetailRow label="Nationalité" value={profile.nationality_code} />
         </Card>
@@ -125,8 +128,8 @@ export const GuestProfilePage = () => {
               </div>
               <DetailRow label="N° document" value={doc.document_number} />
               <DetailRow label="Pays délivrance" value={doc.issuing_country_code} />
-              <DetailRow label="Date émission" value={doc.issue_date} />
-              <DetailRow label="Date expiration" value={doc.expiry_date} />
+              <DetailRow label="Date émission" value={fmtDate(doc.issue_date)} />
+              <DetailRow label="Date expiration" value={fmtDate(doc.expiry_date)} />
             </div>
           ))}
           {!profile.documents.length && <p className="text-sm text-gray-400">Aucun document enregistré</p>}
@@ -155,8 +158,8 @@ export const GuestProfilePage = () => {
                   {stay.hotel.registration_number && ` · Rég. ${stay.hotel.registration_number}`}
                 </p>
                 <div className="mt-2 flex gap-4 text-xs text-gray-500">
-                  <span>Arrivée: <strong className="text-gray-700">{stay.check_in_date}</strong></span>
-                  <span>Départ: <strong className="text-gray-700">{stay.actual_check_out_date ?? stay.expected_check_out_date}</strong></span>
+                  <span>Arrivée: <strong className="text-gray-700">{fmtDate(stay.check_in_date)}</strong></span>
+                  <span>Départ: <strong className="text-gray-700">{fmtDate(stay.actual_check_out_date ?? stay.expected_check_out_date)}</strong></span>
                   {stay.room_number && <span>Ch. <strong className="text-gray-700">{stay.room_number}</strong></span>}
                 </div>
               </div>
