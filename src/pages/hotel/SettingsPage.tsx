@@ -613,6 +613,9 @@ const ActiviteTab = () => {
                   <span className="text-xs text-gray-400"> ({entry.actor.role === 'hotel_admin' ? t('settingsPage.roleAdmin') : entry.actor.role === 'receptionist' ? t('settingsPage.roleReceptionist') : entry.actor.role})</span>
                 )}
                 {' '}{actionLabel(entry.action)}
+                {entry.subject_label && (
+                  <span className="font-semibold text-gray-600"> — {entry.subject_label}</span>
+                )}
               </p>
               <p className="text-xs text-gray-400">
                 {new Date(entry.created_at).toLocaleString(dateLocaleFor(i18n.language), {

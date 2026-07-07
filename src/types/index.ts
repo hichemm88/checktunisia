@@ -311,6 +311,7 @@ export interface ActivityLogEntry {
   action: string;
   subject_type?: string | null;
   subject_id?: string | null;
+  subject_label?: string | null;
   actor: { id: string; name: string; role: string } | null;
   created_at: string;
 }
