@@ -47,11 +47,11 @@ const RecentCheckInsSection = () => {
           className="flex items-start gap-3 rounded-card bg-white p-4 shadow-card hover:shadow-card-hover transition-shadow text-start w-full"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: '#5346A8' }}>
-            {[c.first_name[0], c.last_name[0]].join('').toUpperCase()}
+            {[c.first_name?.[0], c.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'}
           </div>
           <div className="flex flex-col gap-0.5 min-w-0 flex-1">
             <p className="font-semibold text-gray-900 flex items-center gap-2">
-              {c.first_name} {c.last_name}
+              {c.first_name ?? '—'} {c.last_name ?? ''}
               {c.nationality_code && (() => {
                 const url = getFlagUrl(c.nationality_code);
                 return url ? (
@@ -276,7 +276,7 @@ export const SearchPage = () => {
                       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
                       style={{ background: wl ? wl.border : '#5346A8' }}
                     >
-                      {hit ? <ShieldAlert className="h-5 w-5" /> : [g.first_name[0], g.last_name[0]].join('').toUpperCase()}
+                      {hit ? <ShieldAlert className="h-5 w-5" /> : [g.first_name?.[0], g.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'}
                     </div>
                     <div className="flex flex-col gap-0.5 min-w-0">
                       {wl && (
