@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Users, ArrowDownToLine, ArrowUpFromLine, Building2,
   AlertTriangle, Globe2, TrendingUp, Clock, MapPin,
@@ -83,22 +84,23 @@ const NationalityList = ({ items }: { items: Array<{ nationality_code: string; c
 
 // ─── Ministry view ───────────────────────────────────────────────────────────
 const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
     <div className="flex flex-col gap-6">
       {/* KPI grid */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <KpiTile icon={Users}          label="Voyageurs présents" value={data.active_guests}    color="#5346A8" />
-        <KpiTile icon={ArrowDownToLine} label="Arrivées aujourd'hui" value={data.check_ins_today}  color="#137453" />
-        <KpiTile icon={ArrowUpFromLine} label="Départs aujourd'hui" value={data.check_outs_today} color="#8B7FE0" />
-        <KpiTile icon={Building2}      label="Établissements actifs" value={data.active_hotels}   color="#5346A8" />
+        <KpiTile icon={Users}          label={t('authorityDashboard.activeGuests')} value={data.active_guests}    color="#5346A8" />
+        <KpiTile icon={ArrowDownToLine} label={t('authorityDashboard.checkinsToday')} value={data.check_ins_today}  color="#137453" />
+        <KpiTile icon={ArrowUpFromLine} label={t('authorityDashboard.checkoutsToday')} value={data.check_outs_today} color="#8B7FE0" />
+        <KpiTile icon={Building2}      label={t('authorityDashboard.activeHotels')} value={data.active_hotels}   color="#5346A8" />
         <KpiTile
           icon={AlertTriangle}
-          label="Docs expirant ≤ 30j"
+          label={t('authorityDashboard.docsExpiring30d')}
           value={data.expiring_docs_30d}
           color={data.expiring_docs_30d > 0 ? '#5346A8' : '#6B7280'}
-          sub={data.expiring_docs_30d > 0 ? 'Voir alertes →' : undefined}
+          sub={data.expiring_docs_30d > 0 ? t('authorityDashboard.seeAlerts') : undefined}
         />
       </div>
 
@@ -108,7 +110,7 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
         <Card>
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="h-4 w-4" style={{ color: '#5346A8' }} />
-            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>Tendance 7 jours</p>
+            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>{t('authorityDashboard.weeklyTrend')}</p>
           </div>
           <WeeklyTrend trend={data.weekly_trend} />
         </Card>
@@ -117,7 +119,7 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
         <Card>
           <div className="flex items-center gap-2 mb-4">
             <Globe2 className="h-4 w-4" style={{ color: '#5346A8' }} />
-            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>Nationalités présentes</p>
+            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>{t('authorityDashboard.presentNationalities')}</p>
           </div>
           <NationalityList items={data.top_nationalities} />
         </Card>
@@ -128,17 +130,17 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4" style={{ color: '#5346A8' }} />
-            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>Répartition par gouvernorat</p>
+            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>{t('authorityDashboard.byGovernorate')}</p>
           </div>
-          <span className="text-xs text-gray-400">{data.by_governorate.length} gouvernorats</span>
+          <span className="text-xs text-gray-400">{t('authorityDashboard.governoratesCount', { count: data.by_governorate.length })}</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="py-2 text-start text-xs font-medium text-gray-400">Gouvernorat</th>
-                <th className="py-2 text-end text-xs font-medium text-gray-400">Établissements</th>
-                <th className="py-2 text-end text-xs font-medium text-gray-400">Voyageurs présents</th>
+                <th className="py-2 text-start text-xs font-medium text-gray-400">{t('authorityDashboard.governorate')}</th>
+                <th className="py-2 text-end text-xs font-medium text-gray-400">{t('authorityLayout.nav.hotels')}</th>
+                <th className="py-2 text-end text-xs font-medium text-gray-400">{t('authorityDashboard.activeGuests')}</th>
               </tr>
             </thead>
             <tbody>
@@ -163,7 +165,7 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
               {data.by_governorate.length === 0 && (
                 <tr>
                   <td colSpan={3} className="py-8 text-center text-gray-400 text-sm">
-                    Aucune donnée disponible
+                    {t('authorityDashboard.noDataAvailable')}
                   </td>
                 </tr>
               )}
@@ -177,6 +179,7 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
 
 // ─── Police view ─────────────────────────────────────────────────────────────
 const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
@@ -189,7 +192,7 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
         >
           <MapPin className="h-5 w-5 text-white/70 shrink-0" />
           <div>
-            <p className="text-xs text-white/60 font-medium uppercase tracking-wide">Zone de compétence</p>
+            <p className="text-xs text-white/60 font-medium uppercase tracking-wide">{t('authorityDashboard.jurisdiction')}</p>
             <p className="text-lg font-bold text-white">{data.governorate}</p>
           </div>
         </div>
@@ -197,10 +200,10 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <KpiTile icon={Users}          label="Voyageurs présents" value={data.active_guests}    color="#5346A8" />
-        <KpiTile icon={ArrowDownToLine} label="Arrivées aujourd'hui" value={data.check_ins_today}  color="#137453" />
-        <KpiTile icon={ArrowUpFromLine} label="Départs aujourd'hui" value={data.check_outs_today} color="#8B7FE0" />
-        <KpiTile icon={Building2}      label="Établissements zone" value={data.hotels_in_zone}   color="#5346A8" />
+        <KpiTile icon={Users}          label={t('authorityDashboard.activeGuests')} value={data.active_guests}    color="#5346A8" />
+        <KpiTile icon={ArrowDownToLine} label={t('authorityDashboard.checkinsToday')} value={data.check_ins_today}  color="#137453" />
+        <KpiTile icon={ArrowUpFromLine} label={t('authorityDashboard.checkoutsToday')} value={data.check_outs_today} color="#8B7FE0" />
+        <KpiTile icon={Building2}      label={t('authorityDashboard.hotelsInZone')} value={data.hotels_in_zone}   color="#5346A8" />
       </div>
 
       {/* Alert card for expiring docs */}
@@ -218,9 +221,9 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
           </div>
           <div>
             <p className="font-semibold" style={{ color: '#8A6206' }}>
-              {data.expiring_docs_30d} document{data.expiring_docs_30d > 1 ? 's' : ''} expirant dans 30 jours
+              {t('authorityDashboard.docsExpiringIn30d', { count: data.expiring_docs_30d })}
             </p>
-            <p className="text-sm" style={{ color: '#B07820' }}>Cliquer pour voir les alertes →</p>
+            <p className="text-sm" style={{ color: '#B07820' }}>{t('authorityDashboard.clickToSeeAlerts')}</p>
           </div>
         </button>
       )}
@@ -231,11 +234,11 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
         <Card>
           <div className="flex items-center gap-2 mb-4">
             <Globe2 className="h-4 w-4" style={{ color: '#5346A8' }} />
-            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>Nationalités dans la zone</p>
+            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>{t('authorityDashboard.nationalitiesInZone')}</p>
           </div>
           {data.nationalities.length > 0
             ? <NationalityList items={data.nationalities} />
-            : <p className="text-sm text-gray-400 py-4 text-center">Aucun voyageur présent</p>
+            : <p className="text-sm text-gray-400 py-4 text-center">{t('authorityDashboard.noGuestPresent')}</p>
           }
         </Card>
 
@@ -243,11 +246,11 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
         <Card>
           <div className="flex items-center gap-2 mb-4">
             <Clock className="h-4 w-4" style={{ color: '#5346A8' }} />
-            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>Arrivées récentes (24h)</p>
+            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>{t('authorityDashboard.recentArrivals')}</p>
           </div>
           <div className="flex flex-col gap-2">
             {data.recent_arrivals.length === 0 && (
-              <p className="text-sm text-gray-400 py-4 text-center">Aucune arrivée dans les 24 dernières heures</p>
+              <p className="text-sm text-gray-400 py-4 text-center">{t('authorityDashboard.noArrivals24h')}</p>
             )}
             {data.recent_arrivals.map((arrival) => (
               <button
@@ -265,8 +268,8 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-gray-800 truncate">{arrival.guest_name}</p>
                     <p className="text-xs text-gray-400 truncate">
-                      {arrival.hotel}{arrival.room ? ` · Ch. ${arrival.room}` : ''}
-                      {arrival.guests_count > 1 ? ` · ${arrival.guests_count} pers.` : ''}
+                      {arrival.hotel}{arrival.room ? ` · ${t('checkinWizard.roomShort')} ${arrival.room}` : ''}
+                      {arrival.guests_count > 1 ? ` · ${t('authorityDashboard.peopleCount', { count: arrival.guests_count })}` : ''}
                     </p>
                   </div>
                 </div>
@@ -282,6 +285,7 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export const AuthorityDashboardPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const profile   = user?.authority_profile;
   const isMinistry = profile?.org_type === 'ministry';
@@ -293,8 +297,8 @@ export const AuthorityDashboardPage = () => {
   });
 
   const pageTitle = isMinistry
-    ? 'Tableau de bord national'
-    : `Tableau de bord — ${profile?.governorate ?? 'Zone'}`;
+    ? t('authorityDashboard.nationalTitle')
+    : t('authorityDashboard.zoneTitle', { zone: profile?.governorate ?? t('authorityDashboard.zone') });
 
   return (
     <AuthorityLayout title={pageTitle}>
@@ -308,8 +312,8 @@ export const AuthorityDashboardPage = () => {
 
       {isError && (
         <div className="rounded-2xl bg-red-50 border border-red-200 p-6 text-center">
-          <p className="text-red-600 font-medium">Impossible de charger le tableau de bord.</p>
-          <p className="text-sm text-red-400 mt-1">Vérifiez votre connexion et réessayez.</p>
+          <p className="text-red-600 font-medium">{t('authorityDashboard.loadError')}</p>
+          <p className="text-sm text-red-400 mt-1">{t('authorityDashboard.checkConnection')}</p>
         </div>
       )}
 

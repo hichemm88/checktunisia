@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Search, User, MapPin, Lock, ShieldAlert, Building2, BedDouble, UserCog } from 'lucide-react';
 import { getFlagUrl } from '@/lib/flags';
 import { WatchlistSeverity } from '@/types';
@@ -15,10 +16,13 @@ import { AuthorityGuest, ApiList } from '@/types';
 import { extractErrors } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 
-const fmtDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
+const fmtDate = (d: string | null | undefined, locale: string) =>
+  d ? new Date(d).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const RecentCheckInsSection = () => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const { data, isLoading } = useQuery({
@@ -29,7 +33,7 @@ const RecentCheckInsSection = () => {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-        Derniers check-ins
+        {t('authoritySearch.recentCheckins')}
       </p>
 
       {isLoading && [1, 2, 3].map((i) => (
@@ -59,7 +63,7 @@ const RecentCheckInsSection = () => {
               })()}
             </p>
             <p className="text-xs text-gray-500">
-              {fmtDate(c.date_of_birth)} · {c.nationality_code}
+              {fmtDate(c.date_of_birth, locale)} · {c.nationality_code}
               {c.document_number && ` · ${c.document_number}`}
             </p>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 mt-1 text-xs text-gray-500">
@@ -71,22 +75,22 @@ const RecentCheckInsSection = () => {
               )}
               {c.room_number && (
                 <span className="flex items-center gap-1">
-                  <BedDouble className="h-3 w-3" /> Ch. {c.room_number}
+                  <BedDouble className="h-3 w-3" /> {t('checkinWizard.roomShort')} {c.room_number}
                 </span>
               )}
               {c.created_by && (
                 <span className="flex items-center gap-1">
-                  <UserCog className="h-3 w-3" /> Check-in par {c.created_by}
+                  <UserCog className="h-3 w-3" /> {t('authoritySearch.checkinBy', { name: c.created_by })}
                 </span>
               )}
             </div>
           </div>
-          <span className="text-xs text-gray-400 shrink-0">{fmtDate(c.check_in_date)}</span>
+          <span className="text-xs text-gray-400 shrink-0">{fmtDate(c.check_in_date, locale)}</span>
         </button>
       ))}
 
       {!isLoading && !data?.data.length && (
-        <p className="py-8 text-center text-sm text-gray-400">Aucun check-in récent.</p>
+        <p className="py-8 text-center text-sm text-gray-400">{t('authoritySearch.noRecentCheckin')}</p>
       )}
 
       {data && (
@@ -96,13 +100,14 @@ const RecentCheckInsSection = () => {
   );
 };
 
-const WATCHLIST_COLORS: Record<WatchlistSeverity, { bg: string; border: string; text: string; label: string }> = {
-  critique: { bg: '#FEF2F2', border: '#EF4444', text: '#991B1B', label: 'RECHERCHÉ — CRITIQUE' },
-  eleve:    { bg: '#FBF0D7', border: '#E3A008', text: '#8A6206', label: 'RECHERCHÉ — ÉLEVÉ'   },
-  moyen:    { bg: '#EEEBFA', border: '#5346A8', text: '#5346A8', label: 'SIGNALÉ'              },
-};
-
 export const SearchPage = () => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
+  const WATCHLIST_COLORS: Record<WatchlistSeverity, { bg: string; border: string; text: string; label: string }> = {
+    critique: { bg: '#FEF2F2', border: '#EF4444', text: '#991B1B', label: t('authoritySearch.severityCritical') },
+    eleve:    { bg: '#FBF0D7', border: '#E3A008', text: '#8A6206', label: t('authoritySearch.severityHigh') },
+    moyen:    { bg: '#EEEBFA', border: '#5346A8', text: '#5346A8', label: t('authoritySearch.severityFlagged') },
+  };
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const profile   = user?.authority_profile;
@@ -128,7 +133,7 @@ export const SearchPage = () => {
   const hasParams = Object.values(params).some((v) => v);
 
   return (
-    <AuthorityLayout title="Recherche de voyageurs">
+    <AuthorityLayout title={t('authoritySearch.title')}>
       <div className="flex flex-col gap-6">
 
         {/* Police zone indicator */}
@@ -139,7 +144,7 @@ export const SearchPage = () => {
           >
             <MapPin className="h-4 w-4 shrink-0" style={{ color: '#5346A8' }} />
             <p className="text-sm text-gray-700">
-              Recherche limitée à votre zone de compétence :{' '}
+              {t('authoritySearch.zoneLimited')}{' '}
               <span className="font-semibold" style={{ color: '#5346A8' }}>{zone}</span>
             </p>
           </div>
@@ -148,36 +153,36 @@ export const SearchPage = () => {
         {/* Search form */}
         <Card>
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-4">
-            Critères de recherche
+            {t('authoritySearch.searchCriteria')}
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             <Input
-              label="Prénom"
+              label={t('guestScan.firstName')}
               placeholder="Ahmed"
               value={params.first_name ?? ''}
               onChange={(e) => set('first_name', e.target.value)}
             />
             <Input
-              label="Nom"
+              label={t('guestScan.lastName')}
               placeholder="Ben Ali"
               value={params.last_name ?? ''}
               onChange={(e) => set('last_name', e.target.value)}
             />
             <Input
-              label="N° document"
-              placeholder="Passeport / CIN"
+              label={t('authoritySearch.documentNumber')}
+              placeholder={t('authoritySearch.documentNumberPlaceholder')}
               value={params.document_number ?? ''}
               onChange={(e) => set('document_number', e.target.value)}
             />
             <Input
-              label="Nationalité (code)"
+              label={t('authoritySearch.nationalityCode')}
               placeholder="TUN"
               value={params.nationality_code ?? ''}
               onChange={(e) => set('nationality_code', e.target.value.toUpperCase())}
               maxLength={3}
             />
             <Input
-              label="Date de naissance"
+              label={t('guestScan.dateOfBirth')}
               type="date"
               value={params.date_of_birth ?? ''}
               onChange={(e) => set('date_of_birth', e.target.value)}
@@ -186,24 +191,24 @@ export const SearchPage = () => {
             {/* Governorate field — locked for police */}
             <div className="relative">
               <Input
-                label="Gouvernorat établissement"
+                label={t('authoritySearch.hotelGovernorate')}
                 placeholder="Tunis"
                 value={params.hotel_governorate ?? ''}
                 onChange={(e) => !isPolice && set('hotel_governorate', e.target.value)}
                 readOnly={isPolice}
-                hint={isPolice ? 'Fixé à votre zone' : undefined}
+                hint={isPolice ? t('authoritySearch.fixedToZone') : undefined}
                 leftIcon={isPolice ? <Lock className="h-3.5 w-3.5 text-gray-400" /> : undefined}
               />
             </div>
 
             <Input
-              label="Check-in depuis"
+              label={t('authoritySearch.checkinFrom')}
               type="date"
               value={params.check_in_from ?? ''}
               onChange={(e) => set('check_in_from', e.target.value)}
             />
             <Input
-              label="Check-in jusqu'à"
+              label={t('authoritySearch.checkinTo')}
               type="date"
               value={params.check_in_to ?? ''}
               onChange={(e) => set('check_in_to', e.target.value)}
@@ -219,7 +224,7 @@ export const SearchPage = () => {
               disabled={!hasParams}
               className="gap-2"
             >
-              <Search className="h-4 w-4" /> Rechercher
+              <Search className="h-4 w-4" /> {t('common.search')}
             </Button>
             <Button
               variant="ghost"
@@ -229,7 +234,7 @@ export const SearchPage = () => {
                 setError('');
               }}
             >
-              Réinitialiser
+              {t('authoritySearch.reset')}
             </Button>
           </div>
         </Card>
@@ -241,11 +246,10 @@ export const SearchPage = () => {
         {results && (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-gray-500">
-              {results.meta.total} résultat{results.meta.total !== 1 ? 's' : ''} trouvé
-              {results.meta.total !== 1 ? 's' : ''}
+              {t('authoritySearch.resultsFound', { count: results.meta.total })}
               {isPolice && zone && (
                 <span className="ms-2 inline-flex items-center gap-1 text-xs font-medium" style={{ color: '#5346A8' }}>
-                  · <MapPin className="h-3 w-3" /> Zone {zone}
+                  · <MapPin className="h-3 w-3" /> {t('authoritySearch.zone')} {zone}
                 </span>
               )}
             </p>
@@ -293,13 +297,13 @@ export const SearchPage = () => {
                       </p>
                       {g.last_stay && (
                         <p className="text-xs text-gray-400 mt-0.5">
-                          Dernier séjour : {g.last_stay.hotel_name} ({g.last_stay.check_in_date})
+                          {t('authoritySearch.lastStay')} : {g.last_stay.hotel_name} ({g.last_stay.check_in_date})
                         </p>
                       )}
                     </div>
                   </div>
                   <Badge variant={(g.last_stay?.status as any) ?? 'default'}>
-                    {g.last_stay?.status ?? 'historique'}
+                    {g.last_stay?.status ?? t('authoritySearch.historical')}
                   </Badge>
                 </button>
               );
@@ -308,8 +312,8 @@ export const SearchPage = () => {
             {results.data.length === 0 && (
               <div className="py-12 text-center">
                 <User className="mx-auto h-10 w-10 text-gray-200 mb-3" />
-                <p className="text-gray-500">Aucun voyageur trouvé pour ces critères.</p>
-                <p className="text-sm text-gray-400 mt-1">Vérifiez l'orthographe ou élargissez la recherche.</p>
+                <p className="text-gray-500">{t('authoritySearch.noGuestFound')}</p>
+                <p className="text-sm text-gray-400 mt-1">{t('authoritySearch.checkSpellingHint')}</p>
               </div>
             )}
           </div>
