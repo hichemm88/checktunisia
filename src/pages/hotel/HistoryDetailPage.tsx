@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, LogOut, CheckCircle, FileText, MapPin, CalendarDays, Printer, UserPlus } from 'lucide-react';
 import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
@@ -22,12 +23,14 @@ const DetailRow = ({ label, value }: { label: string; value?: string | number | 
   </div>
 );
 
-const fmtDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString('fr-TN', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
-
-const SEX_LABELS: Record<string, string> = { M: 'Masculin', F: 'Féminin', X: 'Autre' };
+const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-TN');
+const fmtDate = (d: string | null | undefined, locale: string) =>
+  d ? new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
 
 export const HistoryDetailPage = () => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
+  const SEX_LABELS: Record<string, string> = { M: t('common.male'), F: t('common.female'), X: t('common.other') };
   const { id }   = useParams<{ id: string }>();
   const navigate = useNavigate();
   const qc       = useQueryClient();
@@ -51,7 +54,7 @@ export const HistoryDetailPage = () => {
 
   const completeMutation = useMutation({
     mutationFn: () => checkInsApi.complete(id!),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['check-in', id] }); toast('Check-in complété', 'success'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['check-in', id] }); toast(t('hotelHistoryDetail.completed'), 'success'); },
     onError: (err) => toast(extractErrors(err), 'error'),
   });
 
@@ -60,13 +63,13 @@ export const HistoryDetailPage = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['check-in', id] });
       setShowCheckoutModal(false);
-      toast('Check-out enregistré', 'success');
+      toast(t('hotelHistoryDetail.checkoutSaved'), 'success');
     },
     onError: (err) => toast(extractErrors(err), 'error'),
   });
 
   if (isLoading) return (
-    <HotelLayout title="Détail">
+    <HotelLayout title={t('hotelHistoryDetail.detail')}>
       <div className="p-4 flex flex-col gap-4">
         {[1,2,3].map(i => <div key={i} className="h-32 animate-pulse rounded-card bg-gray-100" />)}
       </div>
@@ -79,7 +82,7 @@ export const HistoryDetailPage = () => {
     ?? ci.guests?.find(g => g.is_primary)
     ?? ci.guests?.[0];
 
-  const guestName = pg ? `${pg.first_name} ${pg.last_name}` : 'Sans voyageur';
+  const guestName = pg ? `${pg.first_name} ${pg.last_name}` : t('hotelHistory.noGuest');
   const initials  = pg
     ? `${pg.first_name?.[0] ?? ''}${pg.last_name?.[0] ?? ''}`.toUpperCase()
     : '?';
@@ -94,14 +97,14 @@ export const HistoryDetailPage = () => {
     const isChild     = index >= adultsN;
     const isRequired  = !isChild;
     const labelBase   = isChild
-      ? `Enfant ${index - adultsN + 1}`
-      : index === 0 ? 'Adulte — voyageur principal' : `Adulte ${index + 1}`;
+      ? t('checkinWizard.childN', { n: index - adultsN + 1 })
+      : index === 0 ? t('checkinWizard.primaryGuestLabel') : t('checkinWizard.adultN', { n: index + 1 });
     return { index, isRequired, labelBase };
   });
 
   return (
     <>
-    <HotelLayout title="Détail check-in">
+    <HotelLayout title={t('hotelHistoryDetail.checkinDetail')}>
       <div className="flex flex-col">
 
         {/* ── Hero ── */}
@@ -113,7 +116,7 @@ export const HistoryDetailPage = () => {
             onClick={() => navigate(-1)}
             className="flex items-center gap-1.5 text-sm text-blue-300 mb-4 self-start hover:text-white transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" /> Retour
+            <ArrowLeft className="h-4 w-4" /> {t('common.back')}
           </button>
 
           <div className="flex items-center gap-4">
@@ -134,9 +137,9 @@ export const HistoryDetailPage = () => {
           {/* Quick stats row */}
           <div className="mt-4 grid grid-cols-3 gap-2">
             {[
-              { icon: MapPin,       label: 'Chambre',  val: ci.room?.number ?? '—' },
-              { icon: CalendarDays, label: 'Arrivée',  val: fmtDate(ci.check_in_date).split(' ').slice(0,2).join(' ') },
-              { icon: CalendarDays, label: 'Départ',   val: fmtDate(ci.expected_check_out_date).split(' ').slice(0,2).join(' ') },
+              { icon: MapPin,       label: t('checkinWizard.roomShort'),  val: ci.room?.number ?? '—' },
+              { icon: CalendarDays, label: t('checkinWizard.arrivalLabel'),  val: fmtDate(ci.check_in_date, locale).split(' ').slice(0,2).join(' ') },
+              { icon: CalendarDays, label: t('hotelHistoryDetail.departure'),   val: fmtDate(ci.expected_check_out_date, locale).split(' ').slice(0,2).join(' ') },
             ].map(({ icon: Icon, label, val }) => (
               <div key={label} className="flex flex-col gap-1 rounded-xl p-2.5" style={{ background: 'rgba(255,255,255,0.1)' }}>
                 <div className="flex items-center gap-1">
@@ -154,22 +157,22 @@ export const HistoryDetailPage = () => {
 
           {/* Booking details */}
           <Card>
-            <p className="label mb-3">Réservation</p>
-            <DetailRow label="Adultes"      value={ci.adults_count} />
-            <DetailRow label="Enfants"      value={ci.children_count} />
-            <DetailRow label="Départ réel"  value={fmtDate(ci.actual_check_out_date)} />
-            {ci.booking_reference && <DetailRow label="Réf. réservation" value={ci.booking_reference} />}
-            {ci.booking_source    && <DetailRow label="Source" value={ci.booking_source} />}
+            <p className="label mb-3">{t('checkinWizard.bookingSummary')}</p>
+            <DetailRow label={t('checkinWizard.adults')}      value={ci.adults_count} />
+            <DetailRow label={t('checkinWizard.children')}      value={ci.children_count} />
+            <DetailRow label={t('hotelHistoryDetail.actualDeparture')}  value={fmtDate(ci.actual_check_out_date, locale)} />
+            {ci.booking_reference && <DetailRow label={t('hotelHistoryDetail.bookingRef')} value={ci.booking_reference} />}
+            {ci.booking_source    && <DetailRow label={t('hotelHistoryDetail.source')} value={ci.booking_source} />}
             {ci.created_by && (
-              <DetailRow label="Enregistré par" value={`${ci.created_by.first_name} ${ci.created_by.last_name}`} />
+              <DetailRow label={t('hotelHistoryDetail.registeredBy')} value={`${ci.created_by.first_name} ${ci.created_by.last_name}`} />
             )}
-            {ci.notes && <DetailRow label="Notes" value={ci.notes} />}
+            {ci.notes && <DetailRow label={t('hotelHistoryDetail.notes')} value={ci.notes} />}
           </Card>
 
           {/* Guests */}
           <div className="flex flex-col gap-3">
             <p className="label">
-              Voyageurs · {ci.guests?.length ?? 0}{canEdit ? `/${totalSlots}` : ''}
+              {t('checkinWizard.guests')} · {ci.guests?.length ?? 0}{canEdit ? `/${totalSlots}` : ''}
             </p>
             {ci.guests?.map((g) => {
               const gInitials = `${g.first_name?.[0] ?? ''}${g.last_name?.[0] ?? ''}`.toUpperCase();
@@ -201,19 +204,19 @@ export const HistoryDetailPage = () => {
                           className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
                           style={{ background: '#EEEBFA', color: '#5346A8' }}
                         >
-                          Principal
+                          {t('hotelHistoryDetail.primary')}
                         </span>
                       )}
                     </div>
                     <p className="text-xs text-gray-500">
-                      {fmtDate(g.date_of_birth)} · {SEX_LABELS[g.sex] ?? g.sex} · {g.nationality_code}
+                      {fmtDate(g.date_of_birth, locale)} · {SEX_LABELS[g.sex] ?? g.sex} · {g.nationality_code}
                     </p>
                     {g.document && (
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <FileText className="h-3 w-3 text-gray-300" />
                         <p className="text-xs text-gray-400">
                           {g.document.type} {g.document.document_number}
-                          {g.document.expiry_date && ` · expire ${fmtDate(g.document.expiry_date)}`}
+                          {g.document.expiry_date && ` · ${t('hotelHistoryDetail.expires')} ${fmtDate(g.document.expiry_date, locale)}`}
                         </p>
                       </div>
                     )}
@@ -221,7 +224,7 @@ export const HistoryDetailPage = () => {
                 </Card>
               );
             })}
-            {!ci.guests?.length && !canEdit && <p className="text-sm text-gray-400">Aucun voyageur enregistré</p>}
+            {!ci.guests?.length && !canEdit && <p className="text-sm text-gray-400">{t('hotelHistoryDetail.noGuestRegistered')}</p>}
 
             {canEdit && emptySlots.map((slot) => (
               addingSlot === slot.index ? (
@@ -229,7 +232,7 @@ export const HistoryDetailPage = () => {
                   key={slot.index}
                   checkIn={ci}
                   isPrimary={slot.index === 0}
-                  label={`${slot.labelBase}${slot.isRequired ? ' — Obligatoire' : ' — Optionnel'}`}
+                  label={`${slot.labelBase}${slot.isRequired ? ' — ' + t('checkinWizard.required') : ' — ' + t('common.optional')}`}
                   onSuccess={() => { setAddingSlot(null); qc.invalidateQueries({ queryKey: ['check-in', id] }); }}
                   onCancel={() => setAddingSlot(null)}
                 />
@@ -257,7 +260,7 @@ export const HistoryDetailPage = () => {
                       {slot.labelBase}
                     </p>
                     <p className="text-xs" style={{ color: slot.isRequired ? '#f87171' : '#9CA3AF' }}>
-                      {slot.isRequired ? 'Document requis — Appuyer pour scanner' : 'Optionnel — Appuyer pour scanner'}
+                      {slot.isRequired ? t('checkinWizard.documentRequiredHint') : t('checkinWizard.documentOptionalHint')}
                     </p>
                   </div>
                 </button>
@@ -269,7 +272,7 @@ export const HistoryDetailPage = () => {
           <div className="flex flex-col gap-2">
             {ci.status === 'draft' && (
               <Button fullWidth size="lg" onClick={() => completeMutation.mutate()} loading={completeMutation.isPending}>
-                <CheckCircle className="h-5 w-5" /> Finaliser le check-in
+                <CheckCircle className="h-5 w-5" /> {t('checkinWizard.finalize')}
               </Button>
             )}
             {ci.status === 'active' && (
@@ -277,7 +280,7 @@ export const HistoryDetailPage = () => {
                 variant="secondary" fullWidth size="lg"
                 onClick={() => { setCheckoutDate(todayISO); setShowCheckoutModal(true); }}
               >
-                <LogOut className="h-5 w-5" /> Enregistrer le check-out
+                <LogOut className="h-5 w-5" /> {t('hotelHistoryDetail.recordCheckout')}
               </Button>
             )}
             {hotel && (
@@ -288,7 +291,7 @@ export const HistoryDetailPage = () => {
                 onClick={() => window.print()}
                 className="gap-2"
               >
-                <Printer className="h-5 w-5" /> Imprimer fiche de police
+                <Printer className="h-5 w-5" /> {t('hotelHistoryDetail.printPoliceForm')}
               </Button>
             )}
           </div>
@@ -309,14 +312,14 @@ export const HistoryDetailPage = () => {
             className="bg-white rounded-2xl p-6 w-full max-w-sm flex flex-col gap-4 shadow-2xl"
             onClick={e => e.stopPropagation()}
           >
-            <h3 className="text-base font-black text-gray-900">Confirmer le check-out</h3>
+            <h3 className="text-base font-black text-gray-900">{t('hotelHistoryDetail.confirmCheckout')}</h3>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                Date de départ réelle
+                {t('hotelHistoryDetail.actualDepartureDate')}
               </label>
               <input
                 type="date"
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-qayed-cachet"
                 value={checkoutDate}
                 min={ci.check_in_date}
                 max={todayISO}
@@ -329,7 +332,7 @@ export const HistoryDetailPage = () => {
                 onClick={() => setShowCheckoutModal(false)}
                 disabled={checkoutMutation.isPending}
               >
-                Annuler
+                {t('common.cancel')}
               </Button>
               <Button
                 fullWidth
@@ -337,7 +340,7 @@ export const HistoryDetailPage = () => {
                 loading={checkoutMutation.isPending}
                 disabled={!checkoutDate}
               >
-                Confirmer
+                {t('common.confirm')}
               </Button>
             </div>
           </div>

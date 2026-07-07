@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { paymentApi } from '@/api/payment';
 import { Button } from '@/components/ui/Button';
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/Button';
  * We verify server-side before showing confirmation.
  */
 export const PaymentSuccessPage = () => {
+  const { t } = useTranslation();
   const navigate      = useNavigate();
   const [params]      = useSearchParams();
   const paymentId     = params.get('payment_id') ?? '';
@@ -34,7 +36,7 @@ export const PaymentSuccessPage = () => {
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-3 text-gray-500">
           <Loader2 className="h-8 w-8 animate-spin" />
-          <p className="text-sm">Vérification du paiement…</p>
+          <p className="text-sm">{t('paymentResult.verifying')}</p>
         </div>
       </div>
     );
@@ -48,13 +50,13 @@ export const PaymentSuccessPage = () => {
             <CheckCircle className="h-8 w-8 text-green-600" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Paiement confirmé</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t('paymentResult.confirmedTitle')}</h2>
             <p className="mt-1 text-sm text-gray-500">
-              Votre abonnement a été activé. Merci pour votre confiance.
+              {t('paymentResult.confirmedHint')}
             </p>
           </div>
           <Button fullWidth size="lg" onClick={() => navigate('/hotel/dashboard', { replace: true })}>
-            Retour au tableau de bord
+            {t('paymentResult.backToDashboard')}
           </Button>
         </div>
       </div>
@@ -69,15 +71,15 @@ export const PaymentSuccessPage = () => {
           <AlertCircle className="h-8 w-8 text-red-600" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-gray-900">Paiement non abouti</h2>
+          <h2 className="text-lg font-bold text-gray-900">{t('paymentResult.failedTitle')}</h2>
           <p className="mt-1 text-sm text-gray-500">
             {status === 'error'
-              ? 'Impossible de vérifier le statut du paiement. Contactez le support.'
-              : 'Le paiement n\'a pas été validé. Aucun montant n\'a été débité.'}
+              ? t('paymentResult.errorHint')
+              : t('paymentResult.failedHint')}
           </p>
         </div>
         <Button fullWidth size="lg" onClick={() => navigate('/hotel/settings', { replace: true })}>
-          Réessayer
+          {t('paymentResult.retry')}
         </Button>
       </div>
     </div>

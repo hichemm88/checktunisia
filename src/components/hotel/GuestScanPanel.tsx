@@ -1,5 +1,6 @@
 import { useState, useRef, ChangeEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Camera, CheckCircle, Loader2, ScanLine, Upload, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -10,19 +11,19 @@ import { extractErrors } from '@/lib/api';
 import { scanMrz } from '@/lib/mrzScanner';
 import { CheckIn } from '@/types';
 
-const SEX_OPTIONS = [
-  { value: '',  label: 'Sexe'     },
-  { value: 'M', label: 'Masculin' },
-  { value: 'F', label: 'Féminin'  },
-  { value: 'X', label: 'Autre'    },
-];
-
 export const GuestScanPanel = ({
   checkIn, isPrimary, label, onSuccess, onCancel,
 }: {
   checkIn: CheckIn; isPrimary: boolean; label: string;
   onSuccess: () => void; onCancel?: () => void;
 }) => {
+  const { t } = useTranslation();
+  const SEX_OPTIONS = [
+    { value: '',  label: t('common.sex')    },
+    { value: 'M', label: t('common.male')   },
+    { value: 'F', label: t('common.female') },
+    { value: 'X', label: t('common.other')  },
+  ];
   const { toast } = useToast();
   const fileRef       = useRef<HTMLInputElement>(null); // caméra
   const uploadRef     = useRef<HTMLInputElement>(null); // galerie / fichier
@@ -53,7 +54,7 @@ export const GuestScanPanel = ({
       setExtractedOk(true);
       setScanState('done');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Scan échoué';
+      const msg = err instanceof Error ? err.message : t('guestScan.scanFailed');
       toast(msg, 'error');
       setScanState('error');
       if (fileRef.current) fileRef.current.value = '';
@@ -84,7 +85,7 @@ export const GuestScanPanel = ({
         <p className="text-sm font-bold text-gray-800">{label}</p>
         {onCancel && (
           <button className="text-xs text-gray-400 hover:text-gray-600 font-medium" onClick={onCancel}>
-            Annuler
+            {t('common.cancel')}
           </button>
         )}
       </div>
@@ -101,7 +102,7 @@ export const GuestScanPanel = ({
           style={{ border: '2px dashed #EEEBFA' }}
         >
           {scanState === 'error' && (
-            <p className="text-sm text-red-600 font-medium text-center">Scan échoué. Réessayez ou saisissez manuellement.</p>
+            <p className="text-sm text-red-600 font-medium text-center">{t('guestScan.scanFailedRetry')}</p>
           )}
           <div
             className="flex h-16 w-16 items-center justify-center rounded-2xl"
@@ -110,17 +111,17 @@ export const GuestScanPanel = ({
             <ScanLine className="h-8 w-8 text-white" />
           </div>
           <p className="text-xs text-center text-gray-400">
-            Photographiez la page du passeport avec la zone MRZ (deux lignes de codes) bien visible.
+            {t('guestScan.photographHint')}
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Button onClick={() => fileRef.current?.click()}>
-              <Camera className="h-4 w-4" /> Prendre une photo
+              <Camera className="h-4 w-4" /> {t('guestScan.takePhoto')}
             </Button>
             <Button variant="secondary" onClick={() => uploadRef.current?.click()}>
-              <Upload className="h-4 w-4" /> Importer une photo
+              <Upload className="h-4 w-4" /> {t('guestScan.importPhoto')}
             </Button>
             <Button variant="secondary" onClick={() => { setExtractedOk(false); setScanState('done'); }}>
-              Saisie manuelle
+              {t('guestScan.manualEntry')}
             </Button>
           </div>
         </div>
@@ -135,7 +136,7 @@ export const GuestScanPanel = ({
           >
             <Loader2 className="h-7 w-7 animate-spin" style={{ color: '#5346A8' }} />
           </div>
-          <p className="text-sm font-semibold text-gray-700">Lecture MRZ en cours…</p>
+          <p className="text-sm font-semibold text-gray-700">{t('guestScan.readingMrz')}</p>
           <div className="w-full max-w-xs rounded-full bg-gray-100 h-2">
             <div
               className="h-2 rounded-full transition-all duration-300"
@@ -153,33 +154,33 @@ export const GuestScanPanel = ({
             <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-emerald-50 border border-emerald-200">
               <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" />
               <p className="text-xs font-semibold text-emerald-800">
-                Document lu avec succès — vérifiez les données
+                {t('guestScan.readSuccess')}
               </p>
             </div>
           )}
           <div className="flex flex-col gap-3">
             <Select
-              label="Type de document"
+              label={t('guestScan.documentType')}
               options={[
-                { value: 'passport', label: 'Passeport' },
-                { value: 'national_id', label: 'CIN (Carte d’identité nationale)' },
+                { value: 'passport', label: t('guestScan.passport') },
+                { value: 'national_id', label: t('guestScan.nationalId') },
               ]}
               value={guestForm.document_type ?? 'passport'}
               onChange={(e) => setG('document_type', e.target.value)}
             />
             <div className="grid grid-cols-2 gap-3">
-              <Input label="Prénom" value={guestForm.first_name ?? ''} onChange={(e) => setG('first_name', e.target.value)} required />
-              <Input label="Nom"    value={guestForm.last_name  ?? ''} onChange={(e) => setG('last_name',  e.target.value)} required />
+              <Input label={t('guestScan.firstName')} value={guestForm.first_name ?? ''} onChange={(e) => setG('first_name', e.target.value)} required />
+              <Input label={t('guestScan.lastName')}    value={guestForm.last_name  ?? ''} onChange={(e) => setG('last_name',  e.target.value)} required />
             </div>
-            <Input label="Date de naissance" type="date" value={guestForm.date_of_birth ?? ''} onChange={(e) => setG('date_of_birth', e.target.value)} required />
+            <Input label={t('guestScan.dateOfBirth')} type="date" value={guestForm.date_of_birth ?? ''} onChange={(e) => setG('date_of_birth', e.target.value)} required />
             <div className="grid grid-cols-2 gap-3">
-              <Select label="Sexe" options={SEX_OPTIONS} value={guestForm.sex ?? ''} onChange={(e) => setG('sex', e.target.value)} />
-              <Input label="Nationalité" placeholder="TUN" value={guestForm.nationality_code ?? ''} onChange={(e) => setG('nationality_code', e.target.value.toUpperCase())} maxLength={3} />
+              <Select label={t('common.sex')} options={SEX_OPTIONS} value={guestForm.sex ?? ''} onChange={(e) => setG('sex', e.target.value)} />
+              <Input label={t('guestScan.nationality')} placeholder="TUN" value={guestForm.nationality_code ?? ''} onChange={(e) => setG('nationality_code', e.target.value.toUpperCase())} maxLength={3} />
             </div>
-            <Input label="N° document" value={guestForm.document_number ?? ''} onChange={(e) => setG('document_number', e.target.value)} />
+            <Input label={t('guestScan.documentNumber')} value={guestForm.document_number ?? ''} onChange={(e) => setG('document_number', e.target.value)} />
             <div className="grid grid-cols-2 gap-3">
-              <Input label="Pays délivrance" placeholder="TUN" value={guestForm.issuing_country_code ?? ''} onChange={(e) => setG('issuing_country_code', e.target.value.toUpperCase())} maxLength={3} />
-              <Input label="Expiration" type="date" value={guestForm.expiry_date ?? ''} onChange={(e) => setG('expiry_date', e.target.value)} />
+              <Input label={t('guestScan.issuingCountry')} placeholder="TUN" value={guestForm.issuing_country_code ?? ''} onChange={(e) => setG('issuing_country_code', e.target.value.toUpperCase())} maxLength={3} />
+              <Input label={t('guestScan.expiry')} type="date" value={guestForm.expiry_date ?? ''} onChange={(e) => setG('expiry_date', e.target.value)} />
             </div>
           </div>
 
@@ -189,11 +190,11 @@ export const GuestScanPanel = ({
             onClick={() => addGuestMutation.mutate()}
             disabled={!guestForm.first_name || !guestForm.last_name || !guestForm.date_of_birth}
           >
-            Confirmer le voyageur <ArrowRight className="h-4 w-4" />
+            {t('guestScan.confirmGuest')} <ArrowRight className="h-4 w-4" />
           </Button>
 
           <button className="text-center text-sm font-medium" style={{ color: '#5346A8' }} onClick={reset}>
-            ↩ Rescanner ou corriger
+            ↩ {t('guestScan.rescan')}
           </button>
         </>
       )}
