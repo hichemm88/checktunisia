@@ -51,7 +51,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
     <div className="min-h-screen" style={{ background: 'var(--qayed-papier)' }}>
       {/* ── Top bar ──────────────────────────────────────────────────── */}
       <header
-        className="sticky top-0 z-30 shadow-lg relative overflow-hidden"
+        className="sticky top-0 z-30 shadow-lg relative"
         style={{ background: 'var(--qayed-encre)' }}
       >
         {/* Motif "lignes de registre" — uniquement sur fond encre nuit */}

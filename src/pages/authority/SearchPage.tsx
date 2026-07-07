@@ -75,7 +75,7 @@ const RecentCheckInsSection = () => {
               )}
               {c.room_number && (
                 <span className="flex items-center gap-1">
-                  <BedDouble className="h-3 w-3" /> {t('checkinWizard.roomShort')} {c.room_number}
+                  <BedDouble className="h-3 w-3" /> {c.room_number}
                 </span>
               )}
               {c.created_by && (
@@ -118,6 +118,7 @@ export const SearchPage = () => {
   const [params, setParams] = useState<SearchParams>(() => ({
     hotel_governorate: isPolice && zone ? zone : undefined,
   }));
+  const [page, setPage]       = useState(1);
   const [results, setResults] = useState<ApiList<AuthorityGuest> | null>(null);
   const [error, setError]     = useState('');
 
@@ -125,10 +126,15 @@ export const SearchPage = () => {
     setParams((p) => ({ ...p, [k]: v || undefined }));
 
   const searchMutation = useMutation({
-    mutationFn: () => authorityApi.search(params),
+    mutationFn: (targetPage: number) => authorityApi.search({ ...params, page: targetPage, per_page: 20 }),
     onSuccess: (data) => { setResults(data); setError(''); },
     onError:   (err)  => setError(extractErrors(err)),
   });
+
+  const runSearch = (targetPage: number) => {
+    setPage(targetPage);
+    searchMutation.mutate(targetPage);
+  };
 
   const hasParams = Object.values(params).some((v) => v);
 
@@ -219,7 +225,7 @@ export const SearchPage = () => {
 
           <div className="mt-5 flex gap-3">
             <Button
-              onClick={() => searchMutation.mutate()}
+              onClick={() => runSearch(1)}
               loading={searchMutation.isPending}
               disabled={!hasParams}
               className="gap-2"
@@ -231,6 +237,7 @@ export const SearchPage = () => {
               onClick={() => {
                 setParams({ hotel_governorate: isPolice && zone ? zone : undefined });
                 setResults(null);
+                setPage(1);
                 setError('');
               }}
             >
@@ -315,6 +322,15 @@ export const SearchPage = () => {
                 <p className="text-gray-500">{t('authoritySearch.noGuestFound')}</p>
                 <p className="text-sm text-gray-400 mt-1">{t('authoritySearch.checkSpellingHint')}</p>
               </div>
+            )}
+
+            {results.data.length > 0 && (
+              <Pagination
+                meta={results.meta}
+                currentCount={results.data.length}
+                onPrev={() => runSearch(Math.max(1, page - 1))}
+                onNext={() => runSearch(page + 1)}
+              />
             )}
           </div>
         )}
