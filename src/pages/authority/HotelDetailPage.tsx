@@ -20,7 +20,7 @@ const Row = ({ label, value }: { label: string; value?: string | number | null }
   value != null && value !== '' ? (
     <div className="flex justify-between py-2 text-sm border-b border-gray-50 last:border-0">
       <span className="text-gray-500">{label}</span>
-      <span className="font-medium text-gray-900 text-right max-w-[60%]">{value}</span>
+      <span className="font-medium text-gray-900 text-end max-w-[60%]">{value}</span>
     </div>
   ) : null;
 
@@ -311,7 +311,7 @@ export const HotelDetailPage = () => {
             <h3 className="text-sm font-bold text-gray-900">
               Historique des check-ins
               {checkIns && (
-                <span className="ml-2 text-xs font-normal text-gray-400">
+                <span className="ms-2 text-xs font-normal text-gray-400">
                   · {checkIns.meta.total} entrée{checkIns.meta.total !== 1 ? 's' : ''}
                 </span>
               )}
@@ -385,7 +385,7 @@ export const HotelDetailPage = () => {
                             src={pgFlag}
                             alt={pg?.nationality_code ?? ''}
                             width={16}
-                            className="absolute -bottom-1 -right-1 rounded-sm shadow-sm"
+                            className="absolute -bottom-1 -end-1 rounded-sm shadow-sm"
                             style={{ border: '1px solid rgba(0,0,0,0.1)' }}
                           />
                         )}

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   UserCheck, Users, DoorOpen, Calendar, ChevronRight,
   TrendingUp, FileWarning, Percent, AlertCircle, Plus, ShieldAlert,
@@ -14,6 +15,7 @@ import type { DashboardData } from '@/types';
 
 // ── SVG occupancy ring ───────────────────────────────────────────────────────
 const OccupancyRing = ({ pct, present, total }: { pct: number; present: number; total?: number }) => {
+  const { t } = useTranslation();
   const r = 42, circ = 2 * Math.PI * r;
   const filled = ((Math.min(pct, 100)) / 100) * circ;
   const color  = pct >= 80 ? '#4ade80' : pct >= 50 ? '#fbbf24' : '#93c5fd';
@@ -37,12 +39,12 @@ const OccupancyRing = ({ pct, present, total }: { pct: number; present: number; 
         </text>
         {/* Present count */}
         <text x="53" y="63" textAnchor="middle" fill="rgba(255,255,255,0.7)" style={{ fontSize: 11 }}>
-          {present} présent{present !== 1 ? 's' : ''}
+          {t('hotelDashboard.presentCount', { count: present })}
         </text>
       </svg>
       {total != null && (
         <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.5)' }}>
-          sur {total} unité{total !== 1 ? 's' : ''}
+          {t('hotelDashboard.ofTotalUnits', { count: total })}
         </span>
       )}
     </div>
@@ -96,14 +98,6 @@ const StatTile = ({
   </Card>
 );
 
-// ── Greeting helper ──────────────────────────────────────────────────────────
-const greeting = () => {
-  const h = new Date().getHours();
-  if (h < 12) return 'Bonjour';
-  if (h < 18) return 'Bon après-midi';
-  return 'Bonsoir';
-};
-
 // ── Dashboard ────────────────────────────────────────────────────────────────
 const EMPTY_DASH: DashboardData = {
   today: { arrivals_expected: 0, arrivals_done: 0, currently_present: 0, departures_today: 0, occupancy_rate: 0 },
@@ -115,6 +109,7 @@ const EMPTY_DASH: DashboardData = {
 };
 
 export const DashboardPage = () => {
+  const { t, i18n } = useTranslation();
   const navigate    = useNavigate();
   const { user, activePropertyId } = useAuthStore();
   const { data, isLoading } = useQuery({
@@ -129,8 +124,17 @@ export const DashboardPage = () => {
   const hasAlerts          = d.expiry_alerts.length > 0;
   const securityHitCount   = d.pending_watchlist_hits ?? 0;
 
+  const greeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return t('hotelDashboard.greetingMorning');
+    if (h < 18) return t('hotelDashboard.greetingAfternoon');
+    return t('hotelDashboard.greetingEvening');
+  };
+
+  const dateLocale = i18n.language === 'ar' ? 'ar-TN' : i18n.language === 'en' ? 'en-GB' : 'fr-TN';
+
   return (
-    <HotelLayout title="Tableau de bord">
+    <HotelLayout title={t('hotelDashboard.title')}>
       <div className="flex flex-col gap-4 pb-4">
 
         {/* ── Hero: greeting + occupancy ring ── */}
@@ -143,22 +147,22 @@ export const DashboardPage = () => {
               {greeting()}
             </p>
             <h1 className="text-xl font-black text-white leading-tight truncate">
-              {user?.first_name ?? 'Bienvenue'}
+              {user?.first_name ?? t('hotelDashboard.welcome')}
             </h1>
             <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
-              {new Date().toLocaleDateString('fr-TN', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
 
             {/* Quick stats row */}
             <div className="flex gap-3 mt-3">
               <div className="flex flex-col" style={{ color: 'rgba(255,255,255,0.9)' }}>
                 <span className="text-lg font-black leading-none">{d.today.arrivals_expected}</span>
-                <span className="text-[10px] font-medium uppercase tracking-wide mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>arrivées</span>
+                <span className="text-[10px] font-medium uppercase tracking-wide mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('hotelDashboard.arrivals')}</span>
               </div>
               <div className="w-px self-stretch" style={{ background: 'rgba(255,255,255,0.15)' }} />
               <div className="flex flex-col" style={{ color: 'rgba(255,255,255,0.9)' }}>
                 <span className="text-lg font-black leading-none">{d.today.departures_today}</span>
-                <span className="text-[10px] font-medium uppercase tracking-wide mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>départs</span>
+                <span className="text-[10px] font-medium uppercase tracking-wide mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('hotelDashboard.departures')}</span>
               </div>
             </div>
 
@@ -168,7 +172,7 @@ export const DashboardPage = () => {
               style={{ background: '#5346A8', color: '#fff', boxShadow: '0 2px 8px rgba(83,70,168,0.3)' }}
             >
               <Plus className="h-4 w-4" />
-              Nouveau check-in
+              {t('hotelDashboard.newCheckin')}
             </button>
           </div>
 
@@ -191,7 +195,7 @@ export const DashboardPage = () => {
           {securityHitCount > 0 && (
             <button
               onClick={() => navigate('/hotel/security')}
-              className="flex items-start gap-3 rounded-xl p-4 w-full text-left transition-opacity hover:opacity-90 active:scale-[.99]"
+              className="flex items-start gap-3 rounded-xl p-4 w-full text-start transition-opacity hover:opacity-90 active:scale-[.99]"
               style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}
             >
               <div
@@ -202,13 +206,13 @@ export const DashboardPage = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold" style={{ color: '#7F1D1D' }}>
-                  Notification de sécurité
+                  {t('hotelDashboard.securityNotification')}
                 </p>
                 <p className="text-sm font-semibold mt-0.5" style={{ color: '#991B1B' }}>
-                  {securityHitCount} alerte{securityHitCount > 1 ? 's' : ''} en attente — Appuyer pour voir
+                  {t('hotelDashboard.pendingAlerts', { count: securityHitCount })}
                 </p>
                 <p className="text-xs mt-1" style={{ color: '#B91C1C' }}>
-                  Contactez les autorités compétentes immédiatement.
+                  {t('hotelDashboard.contactAuthorities')}
                 </p>
               </div>
               <ChevronRight className="h-5 w-5 shrink-0 mt-1" style={{ color: '#DC2626' }} />
@@ -222,10 +226,10 @@ export const DashboardPage = () => {
               <div>
                 <p className="text-sm font-semibold text-amber-800">
                   {sub.status !== 'active'
-                    ? 'Abonnement inactif'
-                    : `Expire dans ${sub.days_remaining} jour${sub.days_remaining !== 1 ? 's' : ''}`}
+                    ? t('hotelDashboard.subInactive')
+                    : t('hotelDashboard.subExpiresIn', { count: sub.days_remaining })}
                 </p>
-                <p className="text-xs text-amber-600 mt-0.5">Contactez support@qayed.tn</p>
+                <p className="text-xs text-amber-600 mt-0.5">{t('hotelDashboard.contactSupport')}</p>
               </div>
             </div>
           )}
@@ -237,12 +241,12 @@ export const DashboardPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              <StatTile icon={UserCheck}  label="Arrivées prévues"  value={d.today.arrivals_expected} accent="#5346A8" />
-              <StatTile icon={Users}      label="Check-ins faits"   value={d.today.arrivals_done}     accent="#1F9D6B" />
-              <StatTile icon={DoorOpen}   label="Présents"          value={d.today.currently_present} accent="#443896" />
-              <StatTile icon={Calendar}   label="Départs auj."      value={d.today.departures_today}  accent="#5346A8" />
-              <StatTile icon={Percent}    label="Taux d'occupation" value={`${d.today.occupancy_rate}%`} accent={d.today.occupancy_rate >= 80 ? '#1F9D6B' : '#5346A8'} />
-              <StatTile icon={TrendingUp} label="Check-ins ce mois" value={d.month.check_ins_total}   accent="#8B7FE0" />
+              <StatTile icon={UserCheck}  label={t('hotelDashboard.statArrivalsExpected')}  value={d.today.arrivals_expected} accent="#5346A8" />
+              <StatTile icon={Users}      label={t('hotelDashboard.statCheckinsDone')}   value={d.today.arrivals_done}     accent="#1F9D6B" />
+              <StatTile icon={DoorOpen}   label={t('hotelDashboard.statPresent')}          value={d.today.currently_present} accent="#443896" />
+              <StatTile icon={Calendar}   label={t('hotelDashboard.statDeparturesToday')}      value={d.today.departures_today}  accent="#5346A8" />
+              <StatTile icon={Percent}    label={t('hotelDashboard.statOccupancyRate')} value={`${d.today.occupancy_rate}%`} accent={d.today.occupancy_rate >= 80 ? '#1F9D6B' : '#5346A8'} />
+              <StatTile icon={TrendingUp} label={t('hotelDashboard.statCheckinsMonth')} value={d.month.check_ins_total}   accent="#8B7FE0" />
             </div>
           )}
 
@@ -253,7 +257,7 @@ export const DashboardPage = () => {
                 <CardTitle>
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-gray-400" />
-                    Tendance — 7 derniers jours
+                    {t('hotelDashboard.weeklyTrend')}
                   </div>
                 </CardTitle>
               </CardHeader>
@@ -270,11 +274,11 @@ export const DashboardPage = () => {
                 <CardTitle>
                   <div className="flex items-center gap-2">
                     <FileWarning className="h-4 w-4 text-amber-500" />
-                    Documents expirant bientôt
+                    {t('hotelDashboard.expiringDocuments')}
                   </div>
                 </CardTitle>
                 <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full ring-1 ring-amber-200">
-                  {d.expiry_alerts.length} alerte{d.expiry_alerts.length > 1 ? 's' : ''}
+                  {t('hotelDashboard.alertCount', { count: d.expiry_alerts.length })}
                 </span>
               </CardHeader>
               <div className="flex flex-col gap-2 mt-1">
@@ -282,17 +286,17 @@ export const DashboardPage = () => {
                   <button
                     key={i}
                     onClick={() => navigate(`/hotel/history/${alert.check_in_id}`)}
-                    className="flex items-center justify-between rounded-xl border border-amber-100 bg-amber-50/60 px-3 py-2.5 text-left hover:bg-amber-50 transition-colors"
+                    className="flex items-center justify-between rounded-xl border border-amber-100 bg-amber-50/60 px-3 py-2.5 text-start hover:bg-amber-50 transition-colors"
                   >
                     <div>
                       <p className="text-sm font-semibold text-gray-900">{alert.guest_name}</p>
-                      <p className="text-xs text-gray-500">{alert.document_number} · Réf. {alert.reference}</p>
+                      <p className="text-xs text-gray-500">{alert.document_number} · {t('hotelDashboard.ref')} {alert.reference}</p>
                     </div>
-                    <div className="text-right shrink-0 ml-3">
+                    <div className="text-end shrink-0 ms-3">
                       <p className={`text-xs font-bold ${alert.days_until_expiry <= 7 ? 'text-red-600' : 'text-amber-600'}`}>
-                        {alert.days_until_expiry <= 0 ? 'Expiré' : `J-${alert.days_until_expiry}`}
+                        {alert.days_until_expiry <= 0 ? t('hotelDashboard.expired') : t('hotelDashboard.daysUntil', { count: alert.days_until_expiry })}
                       </p>
-                      <p className="text-xs text-gray-400">{new Date(alert.expiry_date).toLocaleDateString('fr-TN')}</p>
+                      <p className="text-xs text-gray-400">{new Date(alert.expiry_date).toLocaleDateString(dateLocale)}</p>
                     </div>
                   </button>
                 ))}
@@ -303,13 +307,13 @@ export const DashboardPage = () => {
           {/* Recent check-ins */}
           <Card padding="none">
             <CardHeader className="px-5 pt-5 pb-3">
-              <CardTitle>Récents</CardTitle>
+              <CardTitle>{t('hotelDashboard.recent')}</CardTitle>
               <button
                 onClick={() => navigate('/hotel/history')}
                 className="text-xs font-semibold"
                 style={{ color: '#5346A8' }}
               >
-                Voir tout →
+                {t('hotelDashboard.seeAll')} →
               </button>
             </CardHeader>
             <div className="divide-y divide-gray-50">
@@ -321,7 +325,7 @@ export const DashboardPage = () => {
                   <button
                     key={c.id}
                     onClick={() => navigate(`/hotel/history/${c.id}`)}
-                    className="flex w-full items-center justify-between px-5 py-3 hover:bg-warm-100 text-left transition-colors"
+                    className="flex w-full items-center justify-between px-5 py-3 hover:bg-warm-100 text-start transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
@@ -332,14 +336,14 @@ export const DashboardPage = () => {
                       </div>
                       <div className="flex flex-col gap-0.5 min-w-0">
                         <span className="text-sm font-semibold text-gray-900 truncate">
-                          {c.primary_guest ?? 'Sans nom'}
+                          {c.primary_guest ?? t('hotelDashboard.noName')}
                         </span>
                         <span className="text-xs text-gray-500">
-                          {c.room ? `Ch. ${c.room}` : 'Sans chambre'} · {c.reference}
+                          {c.room ? t('hotelDashboard.room', { room: c.room }) : t('hotelDashboard.noRoom')} · {c.reference}
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                    <div className="flex items-center gap-2 shrink-0 ms-2">
                       {statusBadge(c.status)}
                       <ChevronRight className="h-4 w-4 text-gray-300" />
                     </div>
@@ -354,9 +358,9 @@ export const DashboardPage = () => {
                   >
                     <UserCheck className="h-5 w-5" style={{ color: '#5346A8' }} />
                   </div>
-                  <p className="text-sm text-gray-400">Aucun check-in récent</p>
+                  <p className="text-sm text-gray-400">{t('hotelDashboard.noRecentCheckin')}</p>
                   <Button size="sm" onClick={() => navigate('/hotel/check-ins/new')}>
-                    Commencer un check-in
+                    {t('hotelDashboard.startCheckin')}
                   </Button>
                 </div>
               )}

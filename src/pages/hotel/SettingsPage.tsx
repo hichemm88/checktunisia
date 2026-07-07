@@ -118,7 +118,7 @@ const SocieteTab = () => {
           ].map(({ label, value }) => value ? (
             <div key={label} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
               <span className="text-sm text-gray-500">{label}</span>
-              <span className="text-sm font-medium text-gray-900 text-right max-w-[60%]">{value}</span>
+              <span className="text-sm font-medium text-gray-900 text-end max-w-[60%]">{value}</span>
             </div>
           ) : null)}
 
@@ -312,7 +312,7 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
           )}
         </div>
       </div>
-      <div className="flex items-center gap-2 shrink-0 ml-2">
+      <div className="flex items-center gap-2 shrink-0 ms-2">
         <Badge variant={u.status === 'active' ? 'active' : 'suspended'}>
           {ROLE_LABELS[u.role] ?? u.role}
         </Badge>

@@ -411,7 +411,7 @@ export const WatchlistPage = () => {
           <div className="flex items-center justify-between pt-2">
             <p className="text-xs text-gray-400">
               Page {data.meta.current_page} / {data.meta.last_page}
-              <span className="ml-2">· {data.meta.total} entrée{data.meta.total !== 1 ? 's' : ''}</span>
+              <span className="ms-2">· {data.meta.total} entrée{data.meta.total !== 1 ? 's' : ''}</span>
             </p>
             <div className="flex items-center gap-1">
               <button

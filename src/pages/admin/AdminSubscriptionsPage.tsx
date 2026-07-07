@@ -198,12 +198,12 @@ const AbonnementsActifsTab = () => {
   return (
     <div className="flex flex-col gap-4">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <input className="input w-full pl-9" placeholder="Chercher un hébergeur…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <input className="input w-full ps-9" placeholder="Chercher un hébergeur…" value={search} onChange={(e) => setSearch(e.target.value)} />
         {hosts?.data?.length ? (
           <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-100 bg-white shadow-lg">
             {hosts.data.map((h) => (
-              <button key={h.id} className="flex w-full items-center px-3 py-2 text-left text-sm hover:bg-warm-100"
+              <button key={h.id} className="flex w-full items-center px-3 py-2 text-start text-sm hover:bg-warm-100"
                 onClick={() => { setSelectedHost({ id: h.id, name: h.name }); setSearch(''); }}>
                 {h.name}
               </button>
@@ -246,8 +246,8 @@ const AbonnementsActifsTab = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="font-medium">{s.plan?.name ?? `Pack #${s.plan_id}`}</span>
-                    <span className="text-xs text-gray-400 ml-2">jusqu'au {fmtDate(s.expires_at)}</span>
-                    {s.custom_price && <span className="text-xs text-gray-400 ml-2">· {s.custom_price} TND</span>}
+                    <span className="text-xs text-gray-400 ms-2">jusqu'au {fmtDate(s.expires_at)}</span>
+                    {s.custom_price && <span className="text-xs text-gray-400 ms-2">· {s.custom_price} TND</span>}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs font-semibold ${s.status === 'active' ? 'text-green-600' : 'text-gray-400'}`}>{s.status}</span>

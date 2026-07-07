@@ -1,6 +1,7 @@
 import { useRef, useState, ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Search, ChevronRight, Trash2, LogOut } from 'lucide-react';
 import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
@@ -9,6 +10,8 @@ import { checkInsApi } from '@/api/checkIns';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
+
+const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 
 // ─── Swipe-to-delete row (admin only) ──────────────────────────────────────────
 
@@ -56,7 +59,7 @@ const SwipeableRow = ({ children, onDelete, deleting }: { children: ReactNode; o
       <button
         onClick={onDelete}
         disabled={deleting}
-        className="absolute inset-y-0 right-0 flex items-center justify-center bg-red-500 text-white disabled:opacity-60"
+        className="absolute inset-y-0 end-0 flex items-center justify-center bg-red-500 text-white disabled:opacity-60"
         style={{ width: REVEAL_WIDTH }}
       >
         <Trash2 className="h-5 w-5" />
@@ -81,16 +84,16 @@ const SwipeableRow = ({ children, onDelete, deleting }: { children: ReactNode; o
 };
 
 // Parse only the date part (YYYY-MM-DD) to avoid UTC/local timezone shifts
-const fmtDate = (iso: string): string => {
+const fmtDate = (iso: string, locale: string): string => {
   if (!iso) return '—';
   const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('fr-FR', {
+  return new Date(y, m - 1, d).toLocaleDateString(locale, {
     day: 'numeric', month: 'short', year: 'numeric',
   });
 };
 
 // "3 juil. → 17 juil. 2026" or "3 → 17 juil. 2026" when same month/year
-const fmtRange = (from: string, to: string): string => {
+const fmtRange = (from: string, to: string, locale: string): string => {
   const f = from.slice(0, 10).split('-').map(Number);
   const t = to.slice(0, 10).split('-').map(Number);
   const dFrom = new Date(f[0], f[1] - 1, f[2]);
@@ -99,19 +102,15 @@ const fmtRange = (from: string, to: string): string => {
   const sameMonth = sameYear && f[1] === t[1];
 
   if (sameMonth) {
-    return `${f[2]} → ${dTo.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    return `${f[2]} → ${dTo.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`;
   }
   if (sameYear) {
-    return `${dFrom.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} → ${dTo.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    return `${dFrom.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} → ${dTo.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`;
   }
-  return `${fmtDate(from)} → ${fmtDate(to)}`;
+  return `${fmtDate(from, locale)} → ${fmtDate(to, locale)}`;
 };
 
 const STATUS_FILTERS = ['all', 'draft', 'active', 'completed'] as const;
-
-const STATUS_FILTER_LABELS: Record<string, string> = {
-  all: 'Tous', draft: 'Brouillon', active: 'Actif', completed: 'Terminé',
-};
 
 // Left border + subtle bg per status
 const STATUS_ROW_STYLE: Record<string, { border: string; dot: string }> = {
@@ -120,11 +119,6 @@ const STATUS_ROW_STYLE: Record<string, { border: string; dot: string }> = {
   completed: { border: '#d1d5db', dot: '#d1d5db' },
   no_show:   { border: '#E3A008', dot: '#E3A008' },
   cancelled: { border: '#d1d5db', dot: '#d1d5db' },
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  active: 'Actif', draft: 'Brouillon', completed: 'Terminé',
-  no_show: 'No-show', cancelled: 'Annulé',
 };
 
 // A stay whose expected checkout date has arrived (or passed) while still active —
@@ -139,6 +133,8 @@ const isCheckoutDue = (status: string, expectedCheckOut: string) => {
 };
 
 export const HistoryPage = () => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
   const navigate   = useNavigate();
   const qc         = useQueryClient();
   const { toast }  = useToast();
@@ -146,6 +142,14 @@ export const HistoryPage = () => {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>('all');
   const [page, setPage]     = useState(1);
+
+  const STATUS_FILTER_LABELS: Record<string, string> = {
+    all: t('common.all'), draft: t('checkinStatus.draft'), active: t('checkinStatus.active'), completed: t('checkinStatus.completed'),
+  };
+  const STATUS_LABELS: Record<string, string> = {
+    active: t('checkinStatus.active'), draft: t('checkinStatus.draft'), completed: t('checkinStatus.completed'),
+    no_show: t('checkinStatus.noShow'), cancelled: t('checkinStatus.cancelled'),
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ['check-ins', { search, status, page }],
@@ -156,18 +160,18 @@ export const HistoryPage = () => {
     mutationFn: (id: string) => checkInsApi.deleteCheckIn(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['check-ins'] });
-      toast('Check-in supprimé', 'success');
+      toast(t('hotelHistory.deleted'), 'success');
     },
     onError: (err) => toast(extractErrors(err), 'error'),
   });
 
   return (
-    <HotelLayout title="Historique">
+    <HotelLayout title={t('hotelHistory.title')}>
       <div className="flex flex-col gap-4 p-4">
 
         {/* Search */}
         <Input
-          placeholder="Nom, référence, chambre…"
+          placeholder={t('hotelHistory.searchPlaceholder')}
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           leftIcon={<Search className="h-4 w-4" />}
@@ -202,7 +206,7 @@ export const HistoryPage = () => {
             const checkoutDue = isCheckoutDue(ci.status, ci.expected_check_out_date);
             const guestName = ci.primary_guest
               ? `${ci.primary_guest.first_name} ${ci.primary_guest.last_name}`
-              : 'Sans voyageur';
+              : t('hotelHistory.noGuest');
             const initials = ci.primary_guest
               ? `${ci.primary_guest.first_name?.[0] ?? ''}${ci.primary_guest.last_name?.[0] ?? ''}`.toUpperCase()
               : '?';
@@ -218,7 +222,7 @@ export const HistoryPage = () => {
               >
                 <button
                   onClick={() => navigate(`/hotel/history/${ci.id}`)}
-                  className="flex flex-1 items-center gap-3 p-3.5 text-left hover:bg-warm-100 transition-colors min-w-0"
+                  className="flex flex-1 items-center gap-3 p-3.5 text-start hover:bg-warm-100 transition-colors min-w-0"
                 >
                   {/* Avatar + flag */}
                   <div className="relative shrink-0">
@@ -233,7 +237,7 @@ export const HistoryPage = () => {
                         src={flagUrl}
                         alt={(ci.primary_guest as any)?.nationality_code ?? ''}
                         width={15}
-                        className="absolute -bottom-1 -right-1 rounded-sm shadow-sm"
+                        className="absolute -bottom-1 -end-1 rounded-sm shadow-sm"
                         style={{ border: '1px solid rgba(0,0,0,0.1)' }}
                       />
                     )}
@@ -242,17 +246,17 @@ export const HistoryPage = () => {
                   <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                     <span className="text-sm font-semibold text-gray-900 truncate">{guestName}</span>
                     <span className="text-xs text-gray-500 truncate">
-                      {ci.room ? ci.room.number : 'Sans unité'} · {ci.reference}
+                      {ci.room ? ci.room.number : t('hotelHistory.noUnit')} · {ci.reference}
                     </span>
                     <span className="text-xs text-gray-400">
-                      {fmtRange(ci.check_in_date, ci.expected_check_out_date)}
+                      {fmtRange(ci.check_in_date, ci.expected_check_out_date, locale)}
                     </span>
                   </div>
                   {/* Status dot + label + chevron */}
                   <div className="flex items-center gap-2 shrink-0">
                     {checkoutDue ? (
                       <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: '#FBF0D7', color: '#8A6206' }}>
-                        <LogOut className="h-3 w-3" /> Départ
+                        <LogOut className="h-3 w-3" /> {t('hotelHistory.departure')}
                       </span>
                     ) : (
                       <span
@@ -285,8 +289,8 @@ export const HistoryPage = () => {
           {!isLoading && !data?.data.length && (
             <div className="flex flex-col items-center gap-2 py-16 text-center">
               <Search className="h-8 w-8 text-gray-200" />
-              <p className="text-sm font-medium text-gray-400">Aucun résultat</p>
-              <p className="text-xs text-gray-300">Essayez un autre filtre ou une autre recherche</p>
+              <p className="text-sm font-medium text-gray-400">{t('common.noResults')}</p>
+              <p className="text-xs text-gray-300">{t('hotelHistory.tryOtherFilter')}</p>
             </div>
           )}
         </div>
@@ -299,7 +303,7 @@ export const HistoryPage = () => {
               onClick={() => setPage((p) => p - 1)}
               className="rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40 hover:bg-warm-100 transition-colors"
             >
-              ← Préc.
+              ← {t('common.previous')}
             </button>
             <span className="text-xs text-gray-500 font-medium">
               {data.meta.current_page} / {Math.ceil(data.meta.total / data.meta.per_page)}
@@ -309,7 +313,7 @@ export const HistoryPage = () => {
               onClick={() => setPage((p) => p + 1)}
               className="rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40 hover:bg-warm-100 transition-colors"
             >
-              Suiv. →
+              {t('common.next')} →
             </button>
           </div>
         )}

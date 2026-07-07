@@ -71,7 +71,7 @@ export const HotelsPage = () => {
           <p className="text-sm text-gray-500">
             {data.meta.total} établissement{data.meta.total !== 1 ? 's' : ''}
             {isPolice && zone && (
-              <span className="ml-1 text-xs" style={{ color: '#5346A8' }}>· Zone {zone}</span>
+              <span className="ms-1 text-xs" style={{ color: '#5346A8' }}>· Zone {zone}</span>
             )}
           </p>
         )}
@@ -86,7 +86,7 @@ export const HotelsPage = () => {
             <button
               key={hotel.id}
               onClick={() => navigate(`/authority/hotels/${hotel.id}`)}
-              className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm border border-gray-100 hover:border-navy-200 hover:shadow-md transition-all text-left w-full"
+              className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm border border-gray-100 hover:border-navy-200 hover:shadow-md transition-all text-start w-full"
             >
               <div className="flex items-start gap-3">
                 <div

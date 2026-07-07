@@ -86,7 +86,7 @@ const OrgRow = ({ org }: { org: AdminAuthorityOrganization }) => {
         <p className="text-sm font-semibold text-gray-900 truncate">{org.name}</p>
         <p className="text-xs text-gray-400">{TYPE_LABELS[org.type] ?? org.type}{org.governorate ? ` · ${org.governorate}` : ''}{org.user_profiles_count ? ` · ${org.user_profiles_count} utilisateur(s)` : ''}</p>
       </div>
-      <div className="flex items-center gap-1 shrink-0 ml-2">
+      <div className="flex items-center gap-1 shrink-0 ms-2">
         <button onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500"><Pencil className="h-3.5 w-3.5" /></button>
         {!confirmDelete ? (
           <button onClick={() => setConfirmDelete(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -186,7 +186,7 @@ const AuthorityUserRow = ({ u }: { u: AdminAuthorityUser }) => {
           <p className="text-xs text-gray-500 truncate">{u.email}</p>
           <p className="text-xs text-gray-400 truncate">{u.organization ?? '—'}{u.badge_number ? ` · ${u.badge_number}` : ''}</p>
         </div>
-        <div className="flex items-center gap-2 shrink-0 ml-2">
+        <div className="flex items-center gap-2 shrink-0 ms-2">
           <span className={`text-xs font-semibold px-2 py-1 rounded-full ${u.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{u.status}</span>
           {u.status === 'active' ? (
             <button onClick={() => statusMut.mutate('suspended')} className="text-xs text-gray-400 hover:text-red-500">Suspendre</button>

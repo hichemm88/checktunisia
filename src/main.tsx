@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '@/components/ui/Toast';
 import { App } from './App';
 import './index.css';
+import './i18n';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,13 +21,13 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
     if (this.state.error) {
       return (
         <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: '500px', margin: '4rem auto', textAlign: 'center' }}>
-          <h2 style={{ color: '#dc2626' }}>Une erreur est survenue</h2>
+          <h2 style={{ color: '#DC2626' }}>Une erreur est survenue</h2>
           <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
             {(this.state.error as Error).message}
           </p>
           <button
             onClick={() => window.location.href = '/'}
-            style={{ marginTop: '1rem', padding: '0.5rem 1.5rem', background: '#1e3a5f', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+            style={{ marginTop: '1rem', padding: '0.5rem 1.5rem', background: '#5346A8', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
           >
             Retour à l'accueil
           </button>

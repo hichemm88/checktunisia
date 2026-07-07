@@ -1,25 +1,31 @@
 import { ReactNode } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { LayoutDashboard, ClipboardList, History, Settings, LogOut, Layers } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
 import { QayedStamp } from '@/components/ui/QayedStamp';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 
 interface HotelLayoutProps { children: ReactNode; title?: string; backHref?: string }
 
-const getNavItems = (isAdmin: boolean) => [
-  { to: '/hotel/dashboard',     icon: LayoutDashboard, label: 'Accueil'    },
-  { to: '/hotel/check-ins/new', icon: ClipboardList,   label: 'Check-in'  },
-  { to: '/hotel/history',       icon: History,         label: 'Historique' },
-  { to: '/hotel/properties',    icon: Layers,          label: 'Mes biens' },
-  ...(isAdmin ? [{ to: '/hotel/settings', icon: Settings, label: 'Paramètres' }] : []),
-];
+const useNavItems = (isAdmin: boolean) => {
+  const { t } = useTranslation();
+  return [
+    { to: '/hotel/dashboard',     icon: LayoutDashboard, label: t('hotelLayout.nav.home') },
+    { to: '/hotel/check-ins/new', icon: ClipboardList,   label: t('hotelLayout.nav.checkin') },
+    { to: '/hotel/history',       icon: History,         label: t('hotelLayout.nav.history') },
+    { to: '/hotel/properties',    icon: Layers,          label: t('hotelLayout.nav.properties') },
+    ...(isAdmin ? [{ to: '/hotel/settings', icon: Settings, label: t('hotelLayout.nav.settings') }] : []),
+  ];
+};
 
 export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
+  const { t } = useTranslation();
   const { user, logout, activePropertyName } = useAuthStore();
   const navigate = useNavigate();
-  const navItems = getNavItems(user?.role === 'hotel_admin');
+  const navItems = useNavItems(user?.role === 'hotel_admin');
 
   const handleLogout = async () => {
     try { await authApi.logout(); } catch { /* ignore */ }
@@ -53,20 +59,21 @@ export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
             </div>
           </div>
 
-          {/* Right: avatar + logout */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          {/* Right: language + avatar + logout */}
+          <div className="flex items-center gap-1 shrink-0">
+            <LanguageSwitcher />
             <Link
               to="/profile"
               className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity"
               style={{ background: 'var(--qayed-cachet-dilue)' }}
-              title="Mon profil"
+              title={t('common.myProfile')}
             >
               <span className="text-xs font-bold" style={{ color: 'var(--qayed-cachet)' }}>{initials}</span>
             </Link>
             <button
               onClick={handleLogout}
               className="h-9 w-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"
-              title="Se déconnecter"
+              title={t('common.logout')}
             >
               <LogOut className="h-4 w-4" />
             </button>

@@ -15,7 +15,7 @@ const C = { navy: '#5346A8' };
 const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
   <label className="flex items-center gap-3 cursor-pointer select-none">
     <div onClick={() => onChange(!checked)} className="relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0" style={{ background: checked ? C.navy : '#d1d5db' }}>
-      <span className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200" style={{ transform: checked ? 'translateX(20px)' : 'none' }} />
+      <span className="absolute top-0.5 start-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200" style={{ transform: checked ? 'translateX(20px)' : 'none' }} />
     </div>
     <span className="text-sm font-semibold text-gray-700">{label}</span>
   </label>
@@ -114,7 +114,7 @@ const HistoriqueTab = () => {
               <p className="font-medium text-gray-900 truncate">{p.hotel_name ?? '—'}</p>
               <p className="text-xs text-gray-400">{p.invoice_number ?? '—'} · {p.provider}</p>
             </div>
-            <div className="text-right shrink-0 ml-2">
+            <div className="text-end shrink-0 ms-2">
               <p className="font-semibold">{p.amount} {p.currency}</p>
               <p className={`text-xs font-medium ${p.status === 'completed' ? 'text-green-600' : p.status === 'failed' ? 'text-red-500' : 'text-gray-400'}`}>{p.status}</p>
             </div>

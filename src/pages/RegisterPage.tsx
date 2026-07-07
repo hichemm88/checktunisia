@@ -1,20 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useTranslation, Trans } from 'react-i18next';
 import {
-  ShieldCheck, ArrowLeft, ArrowRight, CheckCircle2,
+  ArrowLeft, ArrowRight, CheckCircle2,
   Building2, User, CreditCard, Briefcase,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { QayedStamp } from '@/components/ui/QayedStamp';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { fetchPlans, registerOrganization, RegisterPayload } from '@/api/public';
-
-const STEPS = [
-  { label: 'Type de compte',      icon: Briefcase },
-  { label: 'Votre organisation',  icon: Building2 },
-  { label: 'Compte admin',        icon: User },
-  { label: 'Abonnement',          icon: CreditCard },
-];
 
 type FormData = RegisterPayload & { password_confirmation: string };
 
@@ -27,11 +23,19 @@ const INIT: FormData = {
 };
 
 export const RegisterPage = () => {
+  const { t } = useTranslation();
   const navigate   = useNavigate();
   const [params]   = useSearchParams();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>({ ...INIT, plan_slug: params.get('plan') ?? '' });
   const [done, setDone] = useState<{ orgName: string; email: string; trialEnds: string } | null>(null);
+
+  const STEPS = [
+    { label: t('register.step0Label'), icon: Briefcase },
+    { label: t('register.step1Label'), icon: Building2 },
+    { label: t('register.step2Label'), icon: User },
+    { label: t('register.step3Label'), icon: CreditCard },
+  ];
 
   const set = (k: keyof FormData, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -63,42 +67,43 @@ export const RegisterPage = () => {
 
   // ── Success screen ──────────────────────────────────────────────────────────
   if (done) return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#F6F5F1' }}>
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--qayed-papier)' }}>
       <div className="card w-full max-w-md p-10 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mx-auto mb-5">
-          <CheckCircle2 className="h-8 w-8 text-green-600" />
+        <div className="flex h-16 w-16 items-center justify-center rounded-full mx-auto mb-5" style={{ background: 'var(--qayed-conforme-fond)' }}>
+          <CheckCircle2 className="h-8 w-8" style={{ color: 'var(--qayed-conforme)' }} />
         </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Inscription réussie !</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">{t('register.successTitle')}</h2>
         <p className="text-gray-500 text-sm mb-1">
-          <strong>{done.orgName}</strong> est maintenant sur Qayed.
+          <Trans t={t} i18nKey="register.successOrgLine" values={{ orgName: done.orgName }} components={{ strong: <strong /> }} />
         </p>
         <p className="text-gray-400 text-sm mb-6">
-          Essai gratuit actif jusqu'au <strong>{done.trialEnds}</strong>.
+          <Trans t={t} i18nKey="register.successTrialLine" values={{ trialEnds: done.trialEnds }} components={{ strong: <strong /> }} />
         </p>
         <p className="text-sm text-gray-500 mb-2">
-          Connectez-vous avec <strong>{done.email}</strong>.
+          <Trans t={t} i18nKey="register.successLoginLine" values={{ email: done.email }} components={{ strong: <strong /> }} />
         </p>
         <p className="text-xs text-gray-400 mb-8">
-          Vous pourrez ajouter vos établissements juste après la connexion.
+          {t('register.successHint')}
         </p>
-        <Button fullWidth size="lg" onClick={() => navigate('/login')}>Se connecter</Button>
+        <Button fullWidth size="lg" onClick={() => navigate('/login')}>{t('auth.loginButton')}</Button>
       </div>
     </div>
   );
 
   // ── Wizard ──────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen px-4 py-10" style={{ background: '#F6F5F1' }}>
+    <div className="min-h-screen px-4 py-10" style={{ background: 'var(--qayed-papier)' }}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-8 max-w-xl mx-auto">
         <Link to="/" className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800">
-          <ArrowLeft className="h-4 w-4" /> Retour
+          <ArrowLeft className="h-4 w-4" /> {t('common.back')}
         </Link>
-        <div className="flex items-center gap-2 ml-auto">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: '#5346A8' }}>
-            <ShieldCheck className="h-4 w-4 text-white" />
+        <div className="flex items-center gap-3 ms-auto">
+          <LanguageSwitcher />
+          <div className="flex items-center gap-2">
+            <QayedStamp size={26} />
+            <span className="qayed-display text-sm text-qayed-cachet">QAYED</span>
           </div>
-          <span className="font-bold text-sm" style={{ color: '#5346A8' }}>Qayed</span>
         </div>
       </div>
 
@@ -124,19 +129,18 @@ export const RegisterPage = () => {
 
       <div className="card w-full max-w-xl mx-auto p-8">
         <h1 className="text-xl font-bold text-gray-900 mb-1">{STEPS[step].label}</h1>
-        <p className="text-sm text-gray-400 mb-6">Étape {step + 1} sur {STEPS.length}</p>
+        <p className="text-sm text-gray-400 mb-6">{t('register.stepOf', { current: step + 1, total: STEPS.length })}</p>
 
         {/* ── Étape 0 : Type de compte ── */}
         {step === 0 && (
           <div className="flex flex-col gap-4">
             <p className="text-sm text-gray-600">
-              Inscrivez une <strong>société</strong> (SARL, SA…) ou un <strong>particulier</strong>.
-              Un seul compte gère tous vos hébergements.
+              <Trans t={t} i18nKey="register.entityTypeHint" components={{ strong: <strong /> }} />
             </p>
             <div className="grid grid-cols-2 gap-4 mt-2">
               {([
-                ['company',    'Société',      Briefcase, 'SARL, SA, STE, SUARL…'],
-                ['individual', 'Particulier',  User,      'Propriétaire en nom propre'],
+                ['company',    t('register.entityCompany'),    Briefcase, t('register.entityCompanyHint')],
+                ['individual', t('register.entityIndividual'), User,      t('register.entityIndividualHint')],
               ] as const).map(([val, label, Icon, sub]) => (
                 <button
                   key={val}
@@ -169,26 +173,25 @@ export const RegisterPage = () => {
         {step === 1 && (
           <div className="flex flex-col gap-4">
             <Input
-              label={form.entity_type === 'company' ? 'Raison sociale *' : 'Nom complet *'}
-              placeholder={form.entity_type === 'company' ? 'Ex: Kasbahost SARL' : 'Ex: Mohammed Ben Ali'}
+              label={form.entity_type === 'company' ? t('register.orgNameCompanyLabel') : t('register.orgNameIndividualLabel')}
+              placeholder={form.entity_type === 'company' ? t('register.orgNameCompanyPlaceholder') : t('register.orgNameIndividualPlaceholder')}
               value={form.org_name}
               onChange={(e) => set('org_name', e.target.value)}
               error={fieldErr('org_name')}
             />
             <Input
-              label={form.entity_type === 'company' ? 'N° Registre du commerce (optionnel)' : 'N° CIN (optionnel)'}
+              label={form.entity_type === 'company' ? t('register.orgRegistrationCompanyLabel') : t('register.orgRegistrationIndividualLabel')}
               value={form.org_registration_number ?? ''}
               onChange={(e) => set('org_registration_number', e.target.value)}
             />
             <Input
-              label="Téléphone de contact (optionnel)"
+              label={t('register.orgPhoneLabel')}
               type="tel"
               value={form.org_phone ?? ''}
               onChange={(e) => set('org_phone', e.target.value)}
             />
             <div className="rounded-xl p-4 text-sm text-gray-500" style={{ background: '#F6F5F1' }}>
-              Vous pourrez ajouter vos établissements (appartements, villas, hôtels…)
-              directement après la connexion.
+              {t('register.orgHint')}
             </div>
           </div>
         )}
@@ -198,41 +201,41 @@ export const RegisterPage = () => {
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
               <Input
-                label="Prénom *"
+                label={t('register.firstNameLabel')}
                 value={form.first_name}
                 onChange={(e) => set('first_name', e.target.value)}
                 error={fieldErr('first_name')}
               />
               <Input
-                label="Nom *"
+                label={t('register.lastNameLabel')}
                 value={form.last_name}
                 onChange={(e) => set('last_name', e.target.value)}
                 error={fieldErr('last_name')}
               />
             </div>
             <Input
-              label="Email professionnel *"
+              label={t('register.workEmailLabel')}
               type="email"
               value={form.email}
               onChange={(e) => set('email', e.target.value)}
               error={fieldErr('email')}
             />
             <Input
-              label="Téléphone (optionnel)"
+              label={t('register.phoneLabel')}
               type="tel"
               value={form.phone ?? ''}
               onChange={(e) => set('phone', e.target.value)}
             />
             <Input
-              label="Mot de passe *"
+              label={t('register.passwordLabel')}
               type="password"
               value={form.password}
               onChange={(e) => set('password', e.target.value)}
               error={fieldErr('password')}
-              hint="12 car. min · majuscule · chiffre · symbole"
+              hint={t('register.passwordHint')}
             />
             <Input
-              label="Confirmer le mot de passe *"
+              label={t('register.passwordConfirmLabel')}
               type="password"
               value={form.password_confirmation}
               onChange={(e) => set('password_confirmation', e.target.value)}
@@ -244,15 +247,14 @@ export const RegisterPage = () => {
         {step === 3 && (
           <div className="flex flex-col gap-4">
             <p className="text-sm text-gray-500 -mt-2">
-              Plan appliqué à <strong>l'ensemble de vos hébergements</strong>.
-              <strong> 30 jours d'essai gratuit</strong> inclus — aucun paiement maintenant.
+              <Trans t={t} i18nKey="register.planHint" components={{ strong: <strong /> }} />
             </p>
             {plans.map((p) => (
               <button
                 key={p.slug}
                 type="button"
                 onClick={() => set('plan_slug', p.slug)}
-                className="flex items-start gap-4 rounded-2xl p-4 text-left transition-all"
+                className="flex items-start gap-4 rounded-2xl p-4 text-start transition-all"
                 style={{
                   border: form.plan_slug === p.slug ? '2px solid #5346A8' : '1.5px solid #DDD9CF',
                   background: form.plan_slug === p.slug ? 'rgba(83,70,168,0.05)' : '#fff',
@@ -268,13 +270,13 @@ export const RegisterPage = () => {
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-gray-900">{p.name}</span>
                     <span className="text-lg font-extrabold" style={{ color: '#5346A8' }}>
-                      {p.price_monthly} TND<span className="text-xs font-normal text-gray-400">/mois</span>
+                      {p.price_monthly} TND<span className="text-xs font-normal text-gray-400">/{t('register.perMonth')}</span>
                     </span>
                   </div>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {p.max_rooms ? `jusqu'à ${p.max_rooms} unités au total` : `${p.min_rooms}+ unités`}
+                    {p.max_rooms ? t('register.upToUnits', { count: p.max_rooms }) : t('register.plusUnits', { count: p.min_rooms })}
                     {' · '}
-                    {p.features.max_users === -1 ? 'Utilisateurs illimités' : `${p.features.max_users} utilisateurs`}
+                    {p.features.max_users === -1 ? t('register.unlimitedUsers') : t('register.nUsers', { count: p.features.max_users })}
                   </p>
                 </div>
                 {form.plan_slug === p.slug && (
@@ -289,29 +291,29 @@ export const RegisterPage = () => {
         <div className="flex gap-3 mt-8">
           {step > 0 && (
             <Button variant="secondary" onClick={() => setStep((s) => s - 1)} className="gap-2">
-              <ArrowLeft className="h-4 w-4" /> Retour
+              <ArrowLeft className="h-4 w-4" /> {t('common.back')}
             </Button>
           )}
           {step < STEPS.length - 1 ? (
             <Button fullWidth className="gap-2" onClick={() => setStep((s) => s + 1)} disabled={!canNext[step]}>
-              Suivant <ArrowRight className="h-4 w-4" />
+              {t('common.next')} <ArrowRight className="h-4 w-4" />
             </Button>
           ) : (
             <Button fullWidth loading={isPending} disabled={!form.plan_slug} onClick={() => mutate()}>
-              Créer mon compte
+              {t('register.createAccount')}
             </Button>
           )}
         </div>
 
         {error && (
           <p className="mt-3 text-xs text-center text-red-500">
-            {(error as any)?.response?.data?.message ?? 'Une erreur est survenue.'}
+            {(error as any)?.response?.data?.message ?? t('common.error')}
           </p>
         )}
 
         <p className="mt-5 text-center text-xs text-gray-400">
-          Déjà un compte ?{' '}
-          <Link to="/login" className="font-semibold" style={{ color: '#5346A8' }}>Se connecter</Link>
+          {t('register.alreadyHaveAccount')}{' '}
+          <Link to="/login" className="font-semibold" style={{ color: '#5346A8' }}>{t('auth.loginButton')}</Link>
         </p>
       </div>
     </div>

@@ -20,7 +20,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ref={ref}
           id={selectId}
           className={cn(
-            'input-field appearance-none bg-white pr-10',
+            'input-field appearance-none bg-white pe-10',
             error && 'border-red-400 focus:ring-red-100 focus:border-red-500',
             className,
           )}

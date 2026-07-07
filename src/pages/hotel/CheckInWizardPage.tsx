@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   CheckCircle, UserPlus,
   ArrowLeft, ArrowRight, Minus, Plus,
@@ -18,14 +19,9 @@ import { extractErrors } from '@/lib/api';
 import { GuestScanPanel } from '@/components/hotel/GuestScanPanel';
 import { CheckIn } from '@/types';
 
-const STEPS = [
-  { label: 'Réservation' },
-  { label: 'Documents'   },
-  { label: 'Validation'  },
-];
-
-const fmtDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString('fr-TN', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-TN');
+const fmtDate = (d: string | null | undefined, locale: string) =>
+  d ? new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
 
 // ─── +/- Stepper ────────────────────────────────────────────────────────────
 const Stepper = ({
@@ -66,6 +62,7 @@ const Stepper = ({
 
 // ─── Step 1 : Réservation ───────────────────────────────────────────────────
 const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [form, setForm] = useState<Partial<CreateCheckInPayload>>({
     check_in_date: new Date().toISOString().split('T')[0],
@@ -76,8 +73,8 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
 
   const { data: rooms } = useQuery({ queryKey: ['rooms'], queryFn: () => roomsApi.list() });
   const roomOptions = [
-    { value: '', label: 'Sans chambre assignée' },
-    ...(rooms?.data ?? []).map((r) => ({ value: r.id, label: `Ch. ${r.number} (${r.type})` })),
+    { value: '', label: t('checkinWizard.noRoomAssigned') },
+    ...(rooms?.data ?? []).map((r) => ({ value: r.id, label: t('checkinWizard.roomOption', { number: r.number, type: r.type }) })),
   ];
 
   const createMutation = useMutation({
@@ -91,27 +88,27 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
   return (
     <div className="flex flex-col gap-4">
       <Select
-        label="Chambre"
+        label={t('checkinWizard.roomLabel')}
         options={roomOptions}
         value={form.room_id ?? ''}
         onChange={(e) => set('room_id', e.target.value)}
       />
       <Input
-        label="Référence réservation"
-        placeholder="Optionnel (ex. BOOKING-123)"
+        label={t('checkinWizard.bookingRefLabel')}
+        placeholder={t('checkinWizard.bookingRefPlaceholder')}
         value={form.booking_reference ?? ''}
         onChange={(e) => set('booking_reference', e.target.value)}
       />
       <div className="grid grid-cols-2 gap-3">
         <Input
-          label="Arrivée"
+          label={t('checkinWizard.arrivalLabel')}
           type="date"
           value={form.check_in_date ?? ''}
           onChange={(e) => set('check_in_date', e.target.value)}
           required
         />
         <Input
-          label="Départ prévu"
+          label={t('checkinWizard.expectedDepartureLabel')}
           type="date"
           value={form.expected_check_out_date ?? ''}
           onChange={(e) => set('expected_check_out_date', e.target.value)}
@@ -119,8 +116,8 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
         />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <Stepper label="Adultes" value={form.adults_count ?? 1} min={1} max={20} onChange={(v) => set('adults_count', v)} />
-        <Stepper label="Enfants" value={form.children_count ?? 0} min={0} max={20} onChange={(v) => set('children_count', v)} />
+        <Stepper label={t('checkinWizard.adults')} value={form.adults_count ?? 1} min={1} max={20} onChange={(v) => set('adults_count', v)} />
+        <Stepper label={t('checkinWizard.children')} value={form.children_count ?? 0} min={0} max={20} onChange={(v) => set('children_count', v)} />
       </div>
       <Button
         fullWidth size="lg"
@@ -128,21 +125,26 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
         onClick={() => createMutation.mutate(form as CreateCheckInPayload)}
         disabled={!form.check_in_date || !form.expected_check_out_date}
       >
-        Continuer <ArrowRight className="h-4 w-4" />
+        {t('common.next')} <ArrowRight className="h-4 w-4" />
       </Button>
     </div>
   );
 };
 
 // ─── Step 2 : Document voyageur principal ───────────────────────────────────
-const DocumentStep = ({ checkIn, onNext }: { checkIn: CheckIn; onNext: () => void }) => (
-  <div className="flex flex-col gap-5">
-    <GuestScanPanel checkIn={checkIn} isPrimary label="Voyageur principal (adulte)" onSuccess={onNext} />
-  </div>
-);
+const DocumentStep = ({ checkIn, onNext }: { checkIn: CheckIn; onNext: () => void }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col gap-5">
+      <GuestScanPanel checkIn={checkIn} isPrimary label={t('checkinWizard.primaryGuestLabel')} onSuccess={onNext} />
+    </div>
+  );
+};
 
 // ─── Step 3 : Validation + voyageurs supplémentaires ────────────────────────
 const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => void }) => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
   const { toast }  = useToast();
   const navigate   = useNavigate();
   const [addingSlot, setAddingSlot] = useState<number | null>(null);
@@ -163,8 +165,8 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
     const isChild    = i >= adultsN;
     const isRequired = !isChild;
     const labelBase  = isChild
-      ? `Enfant ${i - adultsN + 1}`
-      : i === 0 ? 'Adulte — voyageur principal' : `Adulte ${i + 1}`;
+      ? t('checkinWizard.childN', { n: i - adultsN + 1 })
+      : i === 0 ? t('checkinWizard.primaryGuestLabel') : t('checkinWizard.adultN', { n: i + 1 });
     return { index: i, isChild, isRequired, guest: guests[i] ?? null, labelBase };
   });
 
@@ -173,7 +175,7 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
   const completeMutation = useMutation({
     mutationFn: () => checkInsApi.complete(checkIn.id),
     onSuccess: () => {
-      toast('Check-in complété avec succès !', 'success');
+      toast(t('checkinWizard.completedSuccess'), 'success');
       onDone();
       navigate('/hotel/history');
     },
@@ -184,15 +186,15 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
     <div className="flex flex-col gap-5">
       {/* Résumé */}
       <Card>
-        <p className="label mb-3">Résumé réservation</p>
+        <p className="label mb-3">{t('checkinWizard.bookingSummary')}</p>
         <div className="flex flex-col gap-2">
           {([
-            ['Référence',    ci.reference],
-            ['Chambre',      ci.room?.number ?? '—'],
-            ['Arrivée',      fmtDate(ci.check_in_date)],
-            ['Départ prévu', fmtDate(ci.expected_check_out_date)],
-            ['Adultes',      String(adultsN)],
-            ['Enfants',      String(childrenN)],
+            [t('checkinWizard.reference'), ci.reference],
+            [t('checkinWizard.roomShort'), ci.room?.number ?? '—'],
+            [t('checkinWizard.arrivalLabel'), fmtDate(ci.check_in_date, locale)],
+            [t('checkinWizard.expectedDepartureLabel'), fmtDate(ci.expected_check_out_date, locale)],
+            [t('checkinWizard.adults'), String(adultsN)],
+            [t('checkinWizard.children'), String(childrenN)],
           ] as const).map(([label, value]) => (
             <div key={label} className="flex justify-between text-sm">
               <span className="text-gray-500">{label}</span>
@@ -205,7 +207,7 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
       {/* Voyageur slots */}
       <div className="flex flex-col gap-3">
         <p className="label">
-          Voyageurs ({fetching ? '…' : guests.length}/{totalN})
+          {t('checkinWizard.guests')} ({fetching ? '…' : guests.length}/{totalN})
         </p>
 
         {fetching && <div className="h-14 animate-pulse rounded-2xl bg-gray-100" />}
@@ -230,7 +232,7 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
                     {slot.guest.first_name} {slot.guest.last_name}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {slot.labelBase} · {slot.guest.nationality_code} · {fmtDate(slot.guest.date_of_birth)}
+                    {slot.labelBase} · {slot.guest.nationality_code} · {fmtDate(slot.guest.date_of_birth, locale)}
                   </p>
                 </div>
                 <CheckCircle className="h-5 w-5 shrink-0 text-emerald-500" />
@@ -245,7 +247,7 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
                 key={slot.index}
                 checkIn={checkIn}
                 isPrimary={slot.index === 0}
-                label={`${slot.labelBase}${slot.isRequired ? ' — Obligatoire' : ' — Optionnel'}`}
+                label={`${slot.labelBase}${slot.isRequired ? ' — ' + t('checkinWizard.required') : ' — ' + t('common.optional')}`}
                 onSuccess={() => { setAddingSlot(null); refetch(); }}
                 onCancel={() => setAddingSlot(null)}
               />
@@ -257,7 +259,7 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
             <button
               key={slot.index}
               onClick={() => setAddingSlot(slot.index)}
-              className="flex items-center gap-3 rounded-2xl p-3.5 text-left transition-all"
+              className="flex items-center gap-3 rounded-2xl p-3.5 text-start transition-all"
               style={{
                 border: `2px dashed ${slot.isRequired ? '#fca5a5' : '#EEEBFA'}`,
                 background: slot.isRequired ? '#FFF5F5' : '#F6F5F1',
@@ -277,7 +279,7 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
                   {slot.labelBase}
                 </p>
                 <p className="text-xs" style={{ color: slot.isRequired ? '#f87171' : '#9CA3AF' }}>
-                  {slot.isRequired ? 'Document requis — Appuyer pour scanner' : 'Optionnel — Appuyer pour scanner'}
+                  {slot.isRequired ? t('checkinWizard.documentRequiredHint') : t('checkinWizard.documentOptionalHint')}
                 </p>
               </div>
             </button>
@@ -287,7 +289,7 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
 
       {!fetching && !allAdultsFilled && (
         <p className="text-xs text-red-500 text-center font-medium">
-          Les documents des adultes sont obligatoires pour finaliser.
+          {t('checkinWizard.adultDocsRequired')}
         </p>
       )}
 
@@ -298,7 +300,7 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
         onClick={() => completeMutation.mutate()}
       >
         <CheckCircle className="h-5 w-5" />
-        Finaliser le check-in
+        {t('checkinWizard.finalize')}
       </Button>
     </div>
   );
@@ -306,12 +308,19 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
 
 // ─── Main Wizard ─────────────────────────────────────────────────────────────
 export const CheckInWizardPage = () => {
+  const { t } = useTranslation();
   const navigate  = useNavigate();
   const [step, setStep]       = useState(0);
   const [checkIn, setCheckIn] = useState<CheckIn | null>(null);
 
+  const STEPS = [
+    { label: t('checkinWizard.stepBooking') },
+    { label: t('checkinWizard.stepDocuments') },
+    { label: t('checkinWizard.stepValidation') },
+  ];
+
   return (
-    <HotelLayout title="Nouveau check-in">
+    <HotelLayout title={t('checkinWizard.title')}>
       <div className="p-4 flex flex-col gap-6">
         <StepIndicator steps={STEPS} currentStep={step} />
 
@@ -327,7 +336,7 @@ export const CheckInWizardPage = () => {
               style={{ color: '#5346A8' }}
               onClick={() => setStep(2)}
             >
-              Passer <ArrowRight className="h-4 w-4" />
+              {t('checkinWizard.skip')} <ArrowRight className="h-4 w-4" />
             </button>
           </>
         )}
@@ -344,7 +353,7 @@ export const CheckInWizardPage = () => {
               else setStep((s) => s - 1);
             }}
           >
-            <ArrowLeft className="h-4 w-4" /> Retour
+            <ArrowLeft className="h-4 w-4" /> {t('common.back')}
           </button>
         )}
       </div>

@@ -1,13 +1,16 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '@/api/auth';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { QayedStamp } from '@/components/ui/QayedStamp';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { extractErrors } from '@/lib/api';
 
 export const LoginPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const setAuth = useAuthStore((s) => s.setAuth);
   const [email, setEmail] = useState('');
@@ -41,19 +44,22 @@ export const LoginPage = () => {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4" style={{ background: 'var(--qayed-papier)' }}>
+      <div className="absolute top-4 end-4">
+        <LanguageSwitcher />
+      </div>
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <QayedStamp size={56} />
           <div className="text-center">
             <h1 className="qayed-display text-2xl text-qayed-encre">QAYED</h1>
-            <p className="text-sm text-gray-500">Enregistrement numérique des hôtes</p>
+            <p className="text-sm text-gray-500">{t('auth.tagline')}</p>
           </div>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="card p-6 flex flex-col gap-5">
-          <h2 className="text-center text-base font-semibold text-gray-900">Connexion</h2>
+          <h2 className="text-center text-base font-semibold text-gray-900">{t('auth.loginTitle')}</h2>
 
           {error && (
             <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
@@ -62,17 +68,17 @@ export const LoginPage = () => {
           )}
 
           <Input
-            label="Email"
+            label={t('auth.emailLabel')}
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="vous@exemple.tn"
+            placeholder={t('auth.emailPlaceholder')}
             required
             autoComplete="email"
           />
 
           <Input
-            label="Mot de passe"
+            label={t('auth.passwordLabel')}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -82,12 +88,12 @@ export const LoginPage = () => {
           />
 
           <Button type="submit" fullWidth loading={loading} size="lg">
-            Se connecter
+            {t('auth.loginButton')}
           </Button>
         </form>
 
         <p className="mt-4 text-center text-xs text-gray-400">
-          © {new Date().getFullYear()} Qayed — Plateforme agréée MdI
+          © {new Date().getFullYear()} {t('auth.footer')}
         </p>
       </div>
     </div>

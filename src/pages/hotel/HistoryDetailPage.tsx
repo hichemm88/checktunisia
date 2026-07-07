@@ -18,7 +18,7 @@ import { GuestScanPanel } from '@/components/hotel/GuestScanPanel';
 const DetailRow = ({ label, value }: { label: string; value?: string | number | null }) => (
   <div className="flex justify-between items-start py-3 border-b border-gray-50 last:border-0">
     <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">{label}</span>
-    <span className="text-sm font-semibold text-gray-900 text-right max-w-[55%]">{value ?? '—'}</span>
+    <span className="text-sm font-semibold text-gray-900 text-end max-w-[55%]">{value ?? '—'}</span>
   </div>
 );
 
@@ -188,7 +188,7 @@ export const HistoryDetailPage = () => {
                         src={gFlagUrl}
                         alt={g.nationality_code}
                         width={16}
-                        className="absolute -bottom-1 -right-1 rounded-sm shadow-sm"
+                        className="absolute -bottom-1 -end-1 rounded-sm shadow-sm"
                         style={{ border: '1px solid rgba(0,0,0,0.1)' }}
                       />
                     )}
@@ -237,7 +237,7 @@ export const HistoryDetailPage = () => {
                 <button
                   key={slot.index}
                   onClick={() => setAddingSlot(slot.index)}
-                  className="flex items-center gap-3 rounded-2xl p-3.5 text-left transition-all"
+                  className="flex items-center gap-3 rounded-2xl p-3.5 text-start transition-all"
                   style={{
                     border: `2px dashed ${slot.isRequired ? '#fca5a5' : '#EEEBFA'}`,
                     background: slot.isRequired ? '#FFF5F5' : '#F6F5F1',

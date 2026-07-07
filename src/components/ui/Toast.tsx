@@ -33,14 +33,14 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed bottom-20 left-1/2 z-50 flex -translate-x-1/2 flex-col gap-2 md:bottom-6">
+      <div className="fixed bottom-20 start-1/2 z-50 flex -translate-x-1/2 flex-col gap-2 md:bottom-6">
         {toasts.map((t) => {
           const Icon = icons[t.type];
           return (
             <div key={t.id} className={cn('flex items-start gap-3 rounded-xl border px-4 py-3 shadow-lg', styles[t.type])}>
               <Icon className="mt-0.5 h-4 w-4 shrink-0" />
               <p className="text-sm font-medium">{t.message}</p>
-              <button onClick={() => remove(t.id)} className="ml-2 shrink-0 opacity-60 hover:opacity-100">
+              <button onClick={() => remove(t.id)} className="ms-2 shrink-0 opacity-60 hover:opacity-100">
                 <X className="h-4 w-4" />
               </button>
             </div>

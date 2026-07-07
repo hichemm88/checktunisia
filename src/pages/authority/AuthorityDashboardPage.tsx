@@ -74,7 +74,7 @@ const NationalityList = ({ items }: { items: Array<{ nationality_code: string; c
               }}
             />
           </div>
-          <span className="w-8 text-right text-xs text-gray-500">{n.count}</span>
+          <span className="w-8 text-end text-xs text-gray-500">{n.count}</span>
         </div>
       ))}
     </div>
@@ -136,9 +136,9 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="py-2 text-left text-xs font-medium text-gray-400">Gouvernorat</th>
-                <th className="py-2 text-right text-xs font-medium text-gray-400">Établissements</th>
-                <th className="py-2 text-right text-xs font-medium text-gray-400">Voyageurs présents</th>
+                <th className="py-2 text-start text-xs font-medium text-gray-400">Gouvernorat</th>
+                <th className="py-2 text-end text-xs font-medium text-gray-400">Établissements</th>
+                <th className="py-2 text-end text-xs font-medium text-gray-400">Voyageurs présents</th>
               </tr>
             </thead>
             <tbody>
@@ -149,8 +149,8 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
                   onClick={() => navigate(`/authority/hotels?governorate=${encodeURIComponent(row.governorate)}`)}
                 >
                   <td className="py-2.5 font-medium text-gray-800">{row.governorate || '—'}</td>
-                  <td className="py-2.5 text-right text-gray-500">{row.hotels}</td>
-                  <td className="py-2.5 text-right">
+                  <td className="py-2.5 text-end text-gray-500">{row.hotels}</td>
+                  <td className="py-2.5 text-end">
                     <span
                       className="inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
                       style={{ background: '#EEEBFA', color: '#5346A8' }}
@@ -207,7 +207,7 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
       {data.expiring_docs_30d > 0 && (
         <button
           onClick={() => navigate('/authority/alerts')}
-          className="flex items-center gap-4 rounded-2xl p-5 text-left transition-shadow hover:shadow-md w-full"
+          className="flex items-center gap-4 rounded-2xl p-5 text-start transition-shadow hover:shadow-md w-full"
           style={{ background: '#FFF8EE', border: '1px solid #5346A855' }}
         >
           <div
@@ -253,7 +253,7 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
               <button
                 key={arrival.check_in_id}
                 onClick={() => navigate(`/authority/guests`)}
-                className="flex items-center justify-between rounded-xl p-3 text-left hover:bg-gray-50 transition-colors w-full"
+                className="flex items-center justify-between rounded-xl p-3 text-start hover:bg-gray-50 transition-colors w-full"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div
@@ -270,7 +270,7 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
                     </p>
                   </div>
                 </div>
-                <span className="text-xs text-gray-400 shrink-0 ml-2">{arrival.check_in_date}</span>
+                <span className="text-xs text-gray-400 shrink-0 ms-2">{arrival.check_in_date}</span>
               </button>
             ))}
           </div>

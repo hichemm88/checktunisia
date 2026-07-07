@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, Search, Building2, Bell, Activity, LogOut, MapPin, ShieldAlert,
 } from 'lucide-react';
@@ -7,6 +8,7 @@ import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
 import { QayedStamp } from '@/components/ui/QayedStamp';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 
 interface AuthorityLayoutProps { children: ReactNode; title?: string }
 
@@ -28,6 +30,7 @@ const NavItem = ({
 );
 
 export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
+  const { t } = useTranslation();
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
@@ -80,7 +83,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
                 className="hidden sm:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
                 style={{ background: 'var(--qayed-cachet-sombre)22', color: 'var(--qayed-cachet-sombre)', border: '1px solid var(--qayed-cachet-sombre)55' }}
               >
-                Ministère
+                {t('authorityLayout.ministry')}
               </span>
             )}
             {isPolice && (
@@ -88,14 +91,15 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
                 className="hidden sm:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
                 style={{ background: 'var(--qayed-cachet-sombre)22', color: 'var(--qayed-cachet-sombre)', border: '1px solid var(--qayed-cachet-sombre)55' }}
               >
-                Police
+                {t('authorityLayout.police')}
               </span>
             )}
           </div>
 
-          {/* Right: user + logout */}
+          {/* Right: language + user + logout */}
           <div className="flex items-center gap-2 shrink-0">
-            <div className="hidden sm:flex flex-col items-end leading-tight mr-1">
+            <LanguageSwitcher onDark />
+            <div className="hidden sm:flex flex-col items-end leading-tight me-1">
               <span className="text-xs font-medium text-white/90">
                 {user?.first_name} {user?.last_name}
               </span>
@@ -109,18 +113,18 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
               to="/profile"
               className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white shrink-0 hover:opacity-80 transition-opacity"
               style={{ background: 'var(--qayed-cachet)' }}
-              title="Mon profil"
+              title={t('common.myProfile')}
             >
               {initials || '?'}
             </Link>
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-white/40 hover:bg-white/10 hover:text-red-400 transition-colors ml-1"
-              title="Déconnexion"
+              className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-white/40 hover:bg-white/10 hover:text-red-400 transition-colors ms-1"
+              title={t('common.logout')}
             >
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:block">Quitter</span>
+              <span className="hidden sm:block">{t('common.logout')}</span>
             </button>
           </div>
         </div>
@@ -131,14 +135,14 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
           style={{ borderColor: 'rgba(255,255,255,0.08)' }}
         >
           <nav className="flex items-center gap-1 h-10 overflow-x-auto scrollbar-none">
-            <NavItem to="/authority/dashboard" icon={LayoutDashboard} label="Tableau de bord" end />
-            <NavItem to="/authority/search"    icon={Search}          label="Voyageurs" />
-            <NavItem to="/authority/hotels"    icon={Building2}       label="Établissements" />
-            <NavItem to="/authority/alerts"    icon={Bell}        label="Alertes" />
-            <NavItem to="/authority/watchlist" icon={ShieldAlert} label="Surveillance" />
+            <NavItem to="/authority/dashboard" icon={LayoutDashboard} label={t('authorityLayout.nav.dashboard')} end />
+            <NavItem to="/authority/search"    icon={Search}          label={t('authorityLayout.nav.search')} />
+            <NavItem to="/authority/hotels"    icon={Building2}       label={t('authorityLayout.nav.hotels')} />
+            <NavItem to="/authority/alerts"    icon={Bell}        label={t('authorityLayout.nav.alerts')} />
+            <NavItem to="/authority/watchlist" icon={ShieldAlert} label={t('authorityLayout.nav.watchlist')} />
             {/* Activity log: ministry only */}
             {isMinistry && (
-              <NavItem to="/authority/activity" icon={Activity} label="Activité" />
+              <NavItem to="/authority/activity" icon={Activity} label={t('authorityLayout.nav.activity')} />
             )}
           </nav>
         </div>

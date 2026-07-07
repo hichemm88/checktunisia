@@ -37,12 +37,12 @@ export const InvoiceRow = ({ invoice, hostId, subtitle, invalidateKey }: Invoice
         <p className="font-mono text-xs font-semibold">{invoice.invoice_number}</p>
         {subtitle && <p className="text-xs text-gray-400 truncate">{subtitle}</p>}
       </div>
-      <span className="text-xs text-gray-500 mr-3 shrink-0">{invoice.total_amount} {invoice.currency}</span>
-      <span className={`text-xs font-bold px-2 py-0.5 rounded-full mr-3 shrink-0 ${STATUS_STYLE[invoice.status] ?? DEFAULT_STYLE}`}>
+      <span className="text-xs text-gray-500 me-3 shrink-0">{invoice.total_amount} {invoice.currency}</span>
+      <span className={`text-xs font-bold px-2 py-0.5 rounded-full me-3 shrink-0 ${STATUS_STYLE[invoice.status] ?? DEFAULT_STYLE}`}>
         {invoice.status}
       </span>
       {invoice.status !== 'paid' && invoice.status !== 'void' && (
-        <button onClick={() => statusMut.mutate('paid')} className="text-xs font-semibold text-green-600 mr-3 shrink-0">
+        <button onClick={() => statusMut.mutate('paid')} className="text-xs font-semibold text-green-600 me-3 shrink-0">
           Marquer payée
         </button>
       )}

@@ -22,7 +22,7 @@ const AlertCard = ({ alert, onClick }: { alert: AuthorityAlert; onClick: () => v
   return (
     <button
       onClick={onClick}
-      className="flex items-center justify-between gap-4 rounded-2xl p-4 text-left w-full transition-shadow hover:shadow-md"
+      className="flex items-center justify-between gap-4 rounded-2xl p-4 text-start w-full transition-shadow hover:shadow-md"
       style={{ background: style.bg, border: `1px solid ${style.border}` }}
     >
       <div className="flex items-center gap-4 min-w-0">
@@ -41,7 +41,7 @@ const AlertCard = ({ alert, onClick }: { alert: AuthorityAlert; onClick: () => v
           <p className="font-semibold text-gray-900 truncate">
             {alert.guest_name ?? 'Voyageur inconnu'}
             {alert.nationality_code && (
-              <span className="ml-2 text-xs font-normal text-gray-500">· {alert.nationality_code}</span>
+              <span className="ms-2 text-xs font-normal text-gray-500">· {alert.nationality_code}</span>
             )}
           </p>
 

@@ -264,7 +264,7 @@ export const OnboardingPage = () => {
                   : 'Votre compte est créé. Commençons par ajouter votre premier établissement, puis vos unités.'}
               </p>
             </div>
-            <div className="w-full flex flex-col gap-2 text-left p-4 rounded-xl" style={{ background: '#F6F5F1' }}>
+            <div className="w-full flex flex-col gap-2 text-start p-4 rounded-xl" style={{ background: '#F6F5F1' }}>
               {(hasProperty
                 ? ['Ajouter vos unités', 'Scanner votre premier passeport', 'Gérer vos check-ins']
                 : ['Créer votre premier établissement', 'Ajouter vos unités', 'Gérer vos check-ins']
@@ -399,7 +399,7 @@ export const OnboardingPage = () => {
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1">
+            <div className="flex flex-col gap-3 max-h-72 overflow-y-auto pe-1">
               {rooms.map((room, i) => (
                 <div key={i} className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F6F5F1' }}>
                   <div className="flex items-center justify-between mb-1">

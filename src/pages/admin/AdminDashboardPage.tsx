@@ -58,7 +58,7 @@ export const AdminDashboardPage = () => {
                 {stats.alerts.expiring_subscriptions.map((s) => (
                   <div key={s.id} className="flex items-center justify-between text-sm">
                     <span className="truncate font-medium text-gray-800">{s.name}</span>
-                    <span className="text-xs text-gray-400 shrink-0 ml-2">{fmtDate(s.expires_at)}</span>
+                    <span className="text-xs text-gray-400 shrink-0 ms-2">{fmtDate(s.expires_at)}</span>
                   </div>
                 ))}
               </AlertCard>
@@ -66,7 +66,7 @@ export const AdminDashboardPage = () => {
                 {stats.alerts.failed_payments.map((p) => (
                   <div key={p.id} className="flex items-center justify-between text-sm">
                     <span className="truncate font-medium text-gray-800">{p.hotel_name ?? '—'}</span>
-                    <span className="text-xs text-gray-400 shrink-0 ml-2">{p.amount}</span>
+                    <span className="text-xs text-gray-400 shrink-0 ms-2">{p.amount}</span>
                   </div>
                 ))}
               </AlertCard>
@@ -74,7 +74,7 @@ export const AdminDashboardPage = () => {
                 {stats.alerts.recently_suspended.map((h) => (
                   <Link key={h.id} to={`/admin/hotels`} className="flex items-center justify-between text-sm hover:text-gray-900">
                     <span className="truncate font-medium text-gray-800">{h.name}</span>
-                    <span className="text-xs text-gray-400 shrink-0 ml-2">{fmtDate(h.updated_at)}</span>
+                    <span className="text-xs text-gray-400 shrink-0 ms-2">{fmtDate(h.updated_at)}</span>
                   </Link>
                 ))}
               </AlertCard>

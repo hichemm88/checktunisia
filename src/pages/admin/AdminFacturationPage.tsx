@@ -39,22 +39,22 @@ export const AdminFacturationPage = () => {
 
       <div className="flex gap-3 flex-wrap">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
-            className="input pl-9 w-64"
+            className="input ps-9 w-64"
             placeholder="Filtrer par hébergeur…"
             value={selectedHost ? selectedHost.name : hostSearch}
             onChange={(e) => { setHostSearch(e.target.value); setSelectedHost(null); setPage(1); }}
           />
           {selectedHost && (
-            <button onClick={() => { setSelectedHost(null); setHostSearch(''); setPage(1); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600">
+            <button onClick={() => { setSelectedHost(null); setHostSearch(''); setPage(1); }} className="absolute end-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600">
               ✕
             </button>
           )}
           {!selectedHost && hostResults?.data?.length ? (
             <div className="absolute z-20 mt-1 w-64 rounded-xl border border-gray-100 bg-white shadow-lg">
               {hostResults.data.map((h) => (
-                <button key={h.id} className="flex w-full items-center px-3 py-2 text-left text-sm hover:bg-warm-100"
+                <button key={h.id} className="flex w-full items-center px-3 py-2 text-start text-sm hover:bg-warm-100"
                   onClick={() => { setSelectedHost({ id: h.id, name: h.name }); setHostSearch(''); setPage(1); }}>
                   {h.name}
                 </button>
@@ -85,7 +85,7 @@ export const AdminFacturationPage = () => {
                 <p className="font-mono text-xs font-semibold">{inv.invoice_number}</p>
                 <p className="text-xs text-gray-400 truncate">{inv.hotel_name ?? '—'}</p>
               </div>
-              <span className="text-xs text-gray-500 mr-3">{inv.total_amount} {inv.currency}</span>
+              <span className="text-xs text-gray-500 me-3">{inv.total_amount} {inv.currency}</span>
               <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">{inv.status}</span>
             </div>
           )

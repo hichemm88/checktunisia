@@ -21,22 +21,22 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
         <div className="relative flex items-center">
           {leftIcon && (
-            <span className="pointer-events-none absolute left-3.5 text-gray-400">{leftIcon}</span>
+            <span className="pointer-events-none absolute start-3.5 text-gray-400">{leftIcon}</span>
           )}
           <input
             ref={ref}
             id={inputId}
             className={cn(
               'input-field',
-              leftIcon && 'pl-10',
-              rightElement && 'pr-12',
+              leftIcon && 'ps-10',
+              rightElement && 'pe-12',
               error && 'border-red-400 focus:ring-red-100 focus:border-red-500',
               className,
             )}
             {...props}
           />
           {rightElement && (
-            <span className="absolute right-3.5">{rightElement}</span>
+            <span className="absolute end-3.5">{rightElement}</span>
           )}
         </div>
         {error && <p className="text-xs font-medium text-red-600">{error}</p>}

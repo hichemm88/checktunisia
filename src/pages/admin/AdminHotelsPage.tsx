@@ -57,20 +57,20 @@ const CreateHotelForm = ({ onDone }: { onDone: () => void }) => {
     <div className="card p-4 flex flex-col gap-3">
       <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Nouvel établissement</p>
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         <input
-          className="input w-full pl-9"
+          className="input w-full ps-9"
           placeholder="Hébergeur propriétaire…"
           value={selectedHost ? selectedHost.name : hostSearch}
           onChange={(e) => { setHostSearch(e.target.value); setSelectedHost(null); }}
         />
         {selectedHost && (
-          <button onClick={() => { setSelectedHost(null); setHostSearch(''); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600">✕</button>
+          <button onClick={() => { setSelectedHost(null); setHostSearch(''); }} className="absolute end-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600">✕</button>
         )}
         {!selectedHost && hostResults?.data?.length ? (
           <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-100 bg-white shadow-lg">
             {hostResults.data.map((h) => (
-              <button key={h.id} className="flex w-full items-center px-3 py-2 text-left text-sm hover:bg-warm-100"
+              <button key={h.id} className="flex w-full items-center px-3 py-2 text-start text-sm hover:bg-warm-100"
                 onClick={() => { setSelectedHost({ id: h.id, name: h.name }); setHostSearch(''); }}>
                 {h.name}
               </button>
@@ -158,8 +158,8 @@ export const AdminHotelsPage = () => {
         <div className="lg:col-span-2 flex flex-col gap-4">
           <div className="flex gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input className="input w-full pl-9" placeholder="Rechercher…" value={search}
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input className="input w-full ps-9" placeholder="Rechercher…" value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
             </div>
             <select className="input" value={filter} onChange={(e) => { setFilter(e.target.value); setPage(1); }}>
@@ -177,7 +177,7 @@ export const AdminHotelsPage = () => {
               const s = STATUS[h.status] ?? STATUS.pending;
               return (
                 <button key={h.id} onClick={() => setSelected(h)}
-                  className="card p-4 text-left hover:shadow-md transition-all"
+                  className="card p-4 text-start hover:shadow-md transition-all"
                   style={{ outline: selected?.id === h.id ? '2px solid #5346A8' : 'none' }}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
@@ -275,7 +275,7 @@ export const AdminHotelsPage = () => {
                     {(hotelUsers as any[]).map((u) => (
                       <div key={u.id} className="flex items-center justify-between text-sm">
                         <span className="truncate font-medium">{u.first_name} {u.last_name}</span>
-                        <span className="text-xs text-gray-400 ml-2 flex-shrink-0">{u.role}</span>
+                        <span className="text-xs text-gray-400 ms-2 flex-shrink-0">{u.role}</span>
                       </div>
                     ))}
                   </div>

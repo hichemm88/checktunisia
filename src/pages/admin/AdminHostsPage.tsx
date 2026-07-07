@@ -264,8 +264,8 @@ export const AdminHostsPage = () => {
         <div className="lg:col-span-2 flex flex-col gap-4">
           <div className="flex gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input className="input w-full pl-9" placeholder="Rechercher…" value={search}
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input className="input w-full ps-9" placeholder="Rechercher…" value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
             </div>
             <select className="input" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
@@ -280,7 +280,7 @@ export const AdminHostsPage = () => {
           <div className="flex flex-col gap-2">
             {hosts.map((h) => (
               <button key={h.id} onClick={() => setSelected(h)}
-                className="card p-4 text-left hover:shadow-md transition-all"
+                className="card p-4 text-start hover:shadow-md transition-all"
                 style={{ outline: selected?.id === h.id ? '2px solid #5346A8' : 'none' }}>
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
@@ -379,7 +379,7 @@ export const AdminHostsPage = () => {
                       {detail.users.map((u) => (
                         <div key={u.id} className="flex items-center justify-between text-sm">
                           <span className="truncate font-medium">{u.first_name} {u.last_name}</span>
-                          <span className="text-xs text-gray-400 ml-2 flex-shrink-0">{u.role}</span>
+                          <span className="text-xs text-gray-400 ms-2 flex-shrink-0">{u.role}</span>
                         </div>
                       ))}
                       {!detail.users.length && <p className="text-xs text-gray-400">Aucun utilisateur</p>}

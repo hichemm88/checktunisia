@@ -40,7 +40,7 @@ const RecentCheckInsSection = () => {
         <button
           key={`${c.check_in_id}-${c.guest_id}`}
           onClick={() => navigate(`/authority/guests/${c.guest_id}`)}
-          className="flex items-start gap-3 rounded-card bg-white p-4 shadow-card hover:shadow-card-hover transition-shadow text-left w-full"
+          className="flex items-start gap-3 rounded-card bg-white p-4 shadow-card hover:shadow-card-hover transition-shadow text-start w-full"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: '#5346A8' }}>
             {[c.first_name[0], c.last_name[0]].join('').toUpperCase()}
@@ -244,7 +244,7 @@ export const SearchPage = () => {
               {results.meta.total} résultat{results.meta.total !== 1 ? 's' : ''} trouvé
               {results.meta.total !== 1 ? 's' : ''}
               {isPolice && zone && (
-                <span className="ml-2 inline-flex items-center gap-1 text-xs font-medium" style={{ color: '#5346A8' }}>
+                <span className="ms-2 inline-flex items-center gap-1 text-xs font-medium" style={{ color: '#5346A8' }}>
                   · <MapPin className="h-3 w-3" /> Zone {zone}
                 </span>
               )}
@@ -257,7 +257,7 @@ export const SearchPage = () => {
                 <button
                   key={g.guest_id}
                   onClick={() => navigate(`/authority/guests/${g.guest_id}`)}
-                  className="flex items-start justify-between rounded-card bg-white p-4 shadow-card hover:shadow-card-hover transition-shadow text-left w-full"
+                  className="flex items-start justify-between rounded-card bg-white p-4 shadow-card hover:shadow-card-hover transition-shadow text-start w-full"
                   style={wl ? { borderLeft: `4px solid ${wl.border}`, background: wl.bg } : undefined}
                 >
                   <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -271,8 +271,8 @@ export const SearchPage = () => {
                       {wl && (
                         <span className="text-xs font-bold tracking-wide" style={{ color: wl.text }}>
                           ⚠ {wl.label}
-                          {hit?.reason_code && <span className="ml-1 font-normal">· {hit.reason_code.replace('_', ' ')}</span>}
-                          {hit?.reason && <span className="ml-1 italic font-normal">"{hit.reason.slice(0, 50)}"</span>}
+                          {hit?.reason_code && <span className="ms-1 font-normal">· {hit.reason_code.replace('_', ' ')}</span>}
+                          {hit?.reason && <span className="ms-1 italic font-normal">"{hit.reason.slice(0, 50)}"</span>}
                         </span>
                       )}
                       <p className="font-semibold text-gray-900 flex items-center gap-2">

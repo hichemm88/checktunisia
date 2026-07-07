@@ -271,7 +271,7 @@ const RoomsPanel = ({ property }: { property: Property }) => {
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                       {deletingId === room.id ? (
-                        <div className="flex items-center gap-1.5 ml-1">
+                        <div className="flex items-center gap-1.5 ms-1">
                           <button onClick={() => delMut.mutate(room.id)}
                             className="text-xs text-red-600 font-semibold">Supprimer</button>
                           <button onClick={() => setDeletingId(null)} className="text-xs text-gray-400">Annuler</button>

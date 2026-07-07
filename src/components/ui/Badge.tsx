@@ -1,4 +1,5 @@
 import { HTMLAttributes } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/cn';
 
 type BadgeVariant = 'active' | 'draft' | 'completed' | 'suspended' | 'expired' | 'cancelled' | 'no_show' | 'default';
@@ -14,32 +15,35 @@ const variantMap: Record<BadgeVariant, string> = {
   default:   'bg-gray-100 text-gray-600',
 };
 
-const labelMap: Record<string, string> = {
-  active:    'Actif',
-  draft:     'Brouillon',
-  completed: 'Terminé',
-  suspended: 'Suspendu',
-  expired:   'Expiré',
-  cancelled: 'Annulé',
-  no_show:   'No-show',
+const labelKeyMap: Record<string, string> = {
+  active:    'checkinStatus.active',
+  draft:     'checkinStatus.draft',
+  completed: 'checkinStatus.completed',
+  suspended: 'checkinStatus.suspended',
+  expired:   'checkinStatus.expired',
+  cancelled: 'checkinStatus.cancelled',
+  no_show:   'checkinStatus.noShow',
 };
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   variant?: BadgeVariant;
 }
 
-export const Badge = ({ className, variant = 'default', children, ...props }: BadgeProps) => (
-  <span
-    className={cn(
-      'inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wide',
-      variantMap[variant],
-      className,
-    )}
-    {...props}
-  >
-    {children ?? (variant !== 'default' ? (labelMap[variant] ?? variant) : '')}
-  </span>
-);
+export const Badge = ({ className, variant = 'default', children, ...props }: BadgeProps) => {
+  const { t } = useTranslation();
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-wide',
+        variantMap[variant],
+        className,
+      )}
+      {...props}
+    >
+      {children ?? (variant !== 'default' ? t(labelKeyMap[variant] ?? variant) : '')}
+    </span>
+  );
+};
 
 export const statusBadge = (status: string) => {
   const variant = (status as BadgeVariant) in variantMap ? (status as BadgeVariant) : 'default';
