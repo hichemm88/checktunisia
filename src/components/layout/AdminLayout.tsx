@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   ShieldCheck, LayoutDashboard, Building2, Home, Users, Landmark,
-  CreditCard, Wallet, Mail, Activity, LogOut, Search, X, FileText,
+  CreditCard, Wallet, Mail, Activity, LogOut, Search, X, FileText, Menu,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
@@ -80,9 +80,47 @@ const GlobalSearch = () => {
   );
 };
 
+const SidebarContent = ({ onNavigate, onLogout }: { onNavigate?: () => void; onLogout: () => void }) => (
+  <>
+    <div className="flex items-center gap-2.5 px-5 h-16 border-b border-gray-100 shrink-0">
+      <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: '#1B3A5F' }}>
+        <ShieldCheck className="h-4 w-4 text-white" />
+      </div>
+      <span className="font-bold text-gray-900">Qayed <span className="text-xs font-normal text-gray-400">Admin</span></span>
+    </div>
+    <nav className="flex-1 flex flex-col gap-0.5 p-3 overflow-y-auto">
+      {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
+        <NavLink
+          key={to}
+          to={to}
+          onClick={onNavigate}
+          className={({ isActive }) =>
+            `flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+              isActive ? 'text-white' : 'text-gray-500 hover:bg-warm-100 hover:text-gray-800'
+            }`
+          }
+          style={({ isActive }) => (isActive ? { background: '#1B3A5F' } : undefined)}
+        >
+          <Icon className="h-4 w-4 shrink-0" />
+          {label}
+        </NavLink>
+      ))}
+    </nav>
+    <div className="p-3 border-t border-gray-100 shrink-0">
+      <button
+        onClick={onLogout}
+        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+      >
+        <LogOut className="h-4 w-4" /> Se déconnecter
+      </button>
+    </div>
+  </>
+);
+
 export const AdminLayout = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const handleLogout = async () => {
     try { await authApi.logout(); } catch { /* ignore */ }
@@ -92,50 +130,44 @@ export const AdminLayout = () => {
 
   return (
     <div className="flex min-h-screen" style={{ background: '#F5F4EF' }}>
-      {/* ── Sidebar ── */}
+      {/* ── Sidebar (desktop) ── */}
       <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-gray-100 bg-white">
-        <div className="flex items-center gap-2.5 px-5 h-16 border-b border-gray-100">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: '#1B3A5F' }}>
-            <ShieldCheck className="h-4 w-4 text-white" />
-          </div>
-          <span className="font-bold text-gray-900">Qayed <span className="text-xs font-normal text-gray-400">Admin</span></span>
-        </div>
-        <nav className="flex-1 flex flex-col gap-0.5 p-3 overflow-y-auto">
-          {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive ? 'text-white' : 'text-gray-500 hover:bg-warm-100 hover:text-gray-800'
-                }`
-              }
-              style={({ isActive }) => (isActive ? { background: '#1B3A5F' } : undefined)}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="p-3 border-t border-gray-100">
-          <button
-            onClick={handleLogout}
-            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
-          >
-            <LogOut className="h-4 w-4" /> Se déconnecter
-          </button>
-        </div>
+        <SidebarContent onLogout={handleLogout} />
       </aside>
+
+      {/* ── Sidebar (mobile drawer) ── */}
+      {mobileNavOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div className="fixed inset-0 bg-black/40" onClick={() => setMobileNavOpen(false)} />
+          <aside className="relative z-10 flex w-64 max-w-[80vw] flex-col bg-white shadow-xl">
+            <button
+              onClick={() => setMobileNavOpen(false)}
+              className="absolute top-4 right-3 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"
+              aria-label="Fermer le menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <SidebarContent onNavigate={() => setMobileNavOpen(false)} onLogout={handleLogout} />
+          </aside>
+        </div>
+      )}
 
       {/* ── Main ── */}
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="sticky top-0 z-30 flex items-center justify-end gap-4 px-4 md:px-6 h-16 bg-white border-b border-gray-100">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex items-center gap-2 md:gap-4 px-3 md:px-6 h-16 bg-white border-b border-gray-100">
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            className="md:hidden shrink-0 rounded-lg p-2 text-gray-500 hover:bg-warm-100"
+            aria-label="Ouvrir le menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div className="flex-1 min-w-0 flex items-center justify-end gap-3">
             <GlobalSearch />
             <span className="hidden sm:block text-sm text-gray-500 whitespace-nowrap">{user?.first_name} {user?.last_name}</span>
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-6">
+        <main className="flex-1 min-w-0 p-4 md:p-6">
           <Outlet />
         </main>
       </div>
