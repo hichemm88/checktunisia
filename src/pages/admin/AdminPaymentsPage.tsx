@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CreditCard, Landmark, Save, Wallet } from 'lucide-react';
+import { Building2, CreditCard, Landmark, Save, Wallet } from 'lucide-react';
 import { adminPaymentsApi } from '@/api/admin/payments';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 import { Pagination } from '@/components/ui/Pagination';
+import { formatTND } from '@/lib/money';
 
 const C = { navy: '#5346A8' };
 
@@ -28,11 +29,16 @@ const ConfigTab = () => {
   const { toast } = useToast();
   const { data: settings, isLoading } = useQuery({ queryKey: ['admin-platform-settings'], queryFn: adminPaymentsApi.getSettings });
 
+  const [company, setCompany] = useState({ name: '', mf: '', rc: '', address: '' });
   const [flouci, setFlouci] = useState({ enabled: false, app_token: '', app_secret: '' });
   const [virement, setVirement] = useState({ enabled: true, rib: '', iban: '', bank_name: '', beneficiary: '', details: '' });
   const [initialized, setInitialized] = useState(false);
 
   if (settings && !initialized) {
+    setCompany({
+      name: settings.company_name ?? '', mf: settings.company_mf ?? '',
+      rc: settings.company_rc ?? '', address: settings.company_address ?? '',
+    });
     setFlouci({ enabled: settings.flouci_enabled, app_token: '', app_secret: '' });
     setVirement({
       enabled: settings.virement_enabled, rib: settings.virement_rib ?? '', iban: settings.virement_iban ?? '',
@@ -43,6 +49,7 @@ const ConfigTab = () => {
 
   const saveMut = useMutation({
     mutationFn: () => adminPaymentsApi.updateSettings({
+      company_name: company.name, company_mf: company.mf, company_rc: company.rc, company_address: company.address,
       flouci_enabled: flouci.enabled,
       ...(flouci.app_token ? { flouci_app_token: flouci.app_token } : {}),
       ...(flouci.app_secret ? { flouci_app_secret: flouci.app_secret } : {}),
@@ -57,6 +64,22 @@ const ConfigTab = () => {
 
   return (
     <div className="flex flex-col gap-4">
+      <Card>
+        <div className="flex items-center gap-2 mb-3">
+          <Building2 className="h-4 w-4 text-gray-400" />
+          <p className="font-bold text-gray-900">{t('adminPayments.companyTitle')}</p>
+        </div>
+        <div className="flex flex-col gap-3">
+          <Input label={t('adminPayments.companyName')} value={company.name} onChange={(e) => setCompany((f) => ({ ...f, name: e.target.value }))} />
+          <div className="grid grid-cols-2 gap-2">
+            <Input label={t('adminPayments.companyMf')} placeholder={t('adminPayments.toComplete')} value={company.mf} onChange={(e) => setCompany((f) => ({ ...f, mf: e.target.value }))} />
+            <Input label={t('adminPayments.companyRc')} placeholder={t('adminPayments.toComplete')} value={company.rc} onChange={(e) => setCompany((f) => ({ ...f, rc: e.target.value }))} />
+          </div>
+          <Input label={t('adminPayments.companyAddress')} placeholder={t('adminPayments.toComplete')} value={company.address} onChange={(e) => setCompany((f) => ({ ...f, address: e.target.value }))} />
+          <p className="text-xs text-gray-400">{t('adminPayments.companyHint')}</p>
+        </div>
+      </Card>
+
       <Card>
         <div className="flex items-center gap-2 mb-3">
           <CreditCard className="h-4 w-4 text-gray-400" />
@@ -116,7 +139,7 @@ const HistoriqueTab = () => {
               <p className="text-xs text-gray-400">{p.invoice_number ?? '—'} · {p.provider}</p>
             </div>
             <div className="text-end shrink-0 ms-2">
-              <p className="font-semibold">{p.amount} {p.currency}</p>
+              <p className="font-mono font-semibold">{formatTND(p.amount)}</p>
               <p className={`text-xs font-medium ${p.status === 'completed' ? 'text-green-600' : p.status === 'failed' ? 'text-red-500' : 'text-gray-400'}`}>{p.status}</p>
             </div>
           </div>

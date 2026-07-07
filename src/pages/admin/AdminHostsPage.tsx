@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
+import { formatTNDAmount } from '@/lib/money';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { Pagination } from '@/components/ui/Pagination';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
@@ -133,7 +134,7 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
         <div className="rounded-xl p-3 text-sm" style={{ background: '#F6F5F1' }}>
           <p className="font-semibold">{sub.plan?.name}</p>
           <p className="text-xs text-gray-400">{t('adminHotels.expiresOn', { date: fmtDate(sub.expires_at, locale) })}</p>
-          {sub.custom_price && <p className="text-xs text-gray-400">{t('adminHosts.negotiatedPrice', { price: sub.custom_price })}</p>}
+          {sub.custom_price && <p className="font-mono text-xs text-gray-400">{t('adminHosts.negotiatedPrice', { price: formatTNDAmount(sub.custom_price) })}</p>}
         </div>
       ) : (
         <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F6F5F1' }}>
@@ -190,7 +191,7 @@ const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
 
       {showCreate && sub && (
         <div className="rounded-xl p-3 flex flex-col gap-2 mb-2" style={{ background: '#F6F5F1' }}>
-          <Input label={t('adminHosts.amountEmptyHint', { price: sub.custom_price ?? sub.plan?.price_monthly ?? '—' })} type="number" value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} />
+          <Input label={t('adminHosts.amountEmptyHint', { price: (sub.custom_price ?? sub.plan?.price_monthly) != null ? formatTNDAmount(sub.custom_price ?? sub.plan?.price_monthly) : '—' })} type="number" value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} />
           <div className="grid grid-cols-2 gap-2">
             <Input label={t('adminHosts.tax')} type="number" value={form.tax_amount} onChange={(e) => setForm((f) => ({ ...f, tax_amount: e.target.value }))} />
             <Input label={t('adminHosts.dueDate')} type="date" value={form.due_at} onChange={(e) => setForm((f) => ({ ...f, due_at: e.target.value }))} />

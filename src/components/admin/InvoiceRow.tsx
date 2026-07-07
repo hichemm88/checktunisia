@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Download } from 'lucide-react';
 import { adminSubscriptionsApi, AdminInvoice } from '@/api/admin/subscriptions';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
+import { formatTND } from '@/lib/money';
 
 const STATUS_STYLE: Record<string, string> = {
   paid: 'bg-green-50 text-green-700',
@@ -39,7 +40,7 @@ export const InvoiceRow = ({ invoice, hostId, subtitle, invalidateKey }: Invoice
         <p className="font-mono text-xs font-semibold">{invoice.invoice_number}</p>
         {subtitle && <p className="text-xs text-gray-400 truncate">{subtitle}</p>}
       </div>
-      <span className="text-xs text-gray-500 me-3 shrink-0">{invoice.total_amount} {invoice.currency}</span>
+      <span className="font-mono text-xs text-gray-500 me-3 shrink-0">{formatTND(invoice.total_amount)}</span>
       <span className={`text-xs font-bold px-2 py-0.5 rounded-full me-3 shrink-0 ${STATUS_STYLE[invoice.status] ?? DEFAULT_STYLE}`}>
         {invoice.status}
       </span>

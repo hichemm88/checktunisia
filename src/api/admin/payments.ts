@@ -1,6 +1,10 @@
 import { api } from '@/lib/api';
 
 export interface PlatformSettings {
+  company_name: string | null;
+  company_mf: string | null;
+  company_rc: string | null;
+  company_address: string | null;
   flouci_enabled: boolean;
   virement_enabled: boolean;
   virement_rib: string | null;

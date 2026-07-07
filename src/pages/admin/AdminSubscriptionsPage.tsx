@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { extractErrors } from '@/lib/api';
+import { formatTND, formatTNDAmount } from '@/lib/money';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
@@ -124,8 +125,8 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
         </div>
       ) : (
         <div className="flex gap-4 text-sm text-gray-600">
-          <span>{t('adminSubscriptions.priceMonth', { price: plan.price_monthly })}</span>
-          {plan.price_yearly && <span>{t('adminSubscriptions.priceYear', { price: plan.price_yearly })}</span>}
+          <span className="font-mono">{t('adminSubscriptions.priceMonth', { price: formatTNDAmount(plan.price_monthly) })}</span>
+          {plan.price_yearly && <span className="font-mono">{t('adminSubscriptions.priceYear', { price: formatTNDAmount(plan.price_yearly) })}</span>}
         </div>
       )}
 
@@ -255,7 +256,7 @@ const AbonnementsActifsTab = () => {
                   <div>
                     <span className="font-medium">{s.plan?.name ?? t('adminSubscriptions.planHash', { id: s.plan_id })}</span>
                     <span className="text-xs text-gray-400 ms-2">{t('adminSubscriptions.until', { date: fmtDate(s.expires_at, locale) })}</span>
-                    {s.custom_price && <span className="text-xs text-gray-400 ms-2">· {s.custom_price} TND</span>}
+                    {s.custom_price && <span className="font-mono text-xs text-gray-400 ms-2">· {formatTND(s.custom_price)}</span>}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs font-semibold ${s.status === 'active' ? 'text-green-600' : 'text-gray-400'}`}>{s.status}</span>

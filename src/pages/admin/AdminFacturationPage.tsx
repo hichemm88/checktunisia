@@ -7,6 +7,7 @@ import { adminHostsApi } from '@/api/admin/hosts';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 import { Pagination } from '@/components/ui/Pagination';
+import { formatTND } from '@/lib/money';
 
 const STATUS_OPTIONS = [
   { value: '', labelKey: 'adminFacturation.statusAll' },
@@ -87,7 +88,7 @@ export const AdminFacturationPage = () => {
                 <p className="font-mono text-xs font-semibold">{inv.invoice_number}</p>
                 <p className="text-xs text-gray-400 truncate">{inv.hotel_name ?? '—'}</p>
               </div>
-              <span className="text-xs text-gray-500 me-3">{inv.total_amount} {inv.currency}</span>
+              <span className="font-mono text-xs text-gray-500 me-3">{formatTND(inv.total_amount)}</span>
               <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">{inv.status}</span>
             </div>
           )
