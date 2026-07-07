@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 
 // Pages
 import { LoginPage } from '@/pages/auth/LoginPage';
+import { SetPasswordPage } from '@/pages/auth/SetPasswordPage';
 import { TwoFactorVerifyPage } from '@/pages/auth/TwoFactorVerifyPage';
 import { TwoFactorSetupPage } from '@/pages/authority/TwoFactorSetupPage';
 import { LandingPage } from '@/pages/LandingPage';
@@ -104,6 +105,7 @@ export const App = () => (
     <Route path="/"         element={<PublicRoute element={<LandingPage />} />} />
     <Route path="/register" element={<PublicRoute element={<RegisterPage />} />} />
     <Route path="/login"                element={<LoginPage />} />
+    <Route path="/set-password"         element={<SetPasswordPage />} />
     <Route path="/auth/2fa/verify"      element={<TwoFactorVerifyPage />} />
     <Route path="/authority/2fa/setup"  element={<TwoFactorSetupPage />} />
 

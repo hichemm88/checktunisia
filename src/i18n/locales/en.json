@@ -798,7 +798,17 @@
     "backToLogin": "Back to sign in",
     "footer": "Qayed — Platform approved by the Ministry of Interior",
     "loginTitle": "Sign in",
-    "registerTitle": "Register"
+    "registerTitle": "Register",
+    "setPassword": {
+      "title": "Set your password",
+      "submit": "Activate my account",
+      "mismatch": "Passwords do not match.",
+      "successTitle": "Password set",
+      "successBody": "Your account is active — you can now sign in.",
+      "goToLogin": "Go to sign in",
+      "invalidTitle": "Invalid link",
+      "invalidBody": "This set-password link is incomplete or has expired. Ask your administrator to resend the invite."
+    }
   },
   "landing": {
     "login": "Sign in",

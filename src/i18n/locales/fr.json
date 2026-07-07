@@ -798,7 +798,17 @@
     "backToLogin": "Retour à la connexion",
     "footer": "Qayed — Plateforme agréée MdI",
     "loginTitle": "Connexion",
-    "registerTitle": "Inscription"
+    "registerTitle": "Inscription",
+    "setPassword": {
+      "title": "Définissez votre mot de passe",
+      "submit": "Activer mon compte",
+      "mismatch": "Les mots de passe ne correspondent pas.",
+      "successTitle": "Mot de passe défini",
+      "successBody": "Votre compte est activé, vous pouvez maintenant vous connecter.",
+      "goToLogin": "Aller à la connexion",
+      "invalidTitle": "Lien invalide",
+      "invalidBody": "Ce lien de définition de mot de passe est incomplet ou a expiré. Demandez un nouvel envoi à votre administrateur."
+    }
   },
   "landing": {
     "login": "Connexion",
