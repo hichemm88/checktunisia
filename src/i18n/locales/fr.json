@@ -1,4 +1,50 @@
 {
+  "adminUsers": {
+    "title": "Utilisateurs",
+    "newUser": "Nouvel utilisateur",
+    "property": "Établissement",
+    "choose": "Choisir…",
+    "userCreatedEmailSent": "Utilisateur créé, email envoyé",
+    "userDeleted": "Utilisateur supprimé",
+    "passwordRegeneratedNoEmailShort": "Mot de passe régénéré, email non envoyé.",
+    "searchPlaceholder": "Nom, email…",
+    "allRoles": "Tous les rôles"
+  },
+  "adminEmails": {
+    "title": "Emails",
+    "templateSaved": "Modèle enregistré",
+    "custom": "Personnalisé",
+    "default": "Par défaut",
+    "subject": "Objet",
+    "bodyHtml": "Corps (HTML)",
+    "availableVariables": "Variables disponibles :",
+    "hide": "Masquer",
+    "preview": "Aperçu",
+    "sendRemindersNow": "Envoyer les rappels maintenant",
+    "remindersSent": "{{sent}}/{{candidates}} rappel(s) envoyé(s)",
+    "remindersHint": "Le rappel d'expiration n'est pas encore automatique (nécessite un scheduler côté serveur) — utilisez ce bouton pour notifier les abonnements qui expirent sous 7 jours."
+  },
+  "adminPayments": {
+    "title": "Paiements",
+    "paymentMethods": "Moyens de paiement",
+    "history": "Historique",
+    "settingsSaved": "Paramètres enregistrés",
+    "flouciTitle": "Flouci (paiement en ligne)",
+    "enableFlouci": "Activer Flouci",
+    "leaveEmptyHint": "Laisser vide pour ne pas changer",
+    "credentialsSecurityHint": "Par sécurité, les identifiants déjà enregistrés ne sont jamais réaffichés — laissez ces champs vides si vous ne voulez pas les changer.",
+    "bankTransferTitle": "Virement bancaire",
+    "enableBankTransfer": "Activer le virement",
+    "bank": "Banque",
+    "beneficiary": "Bénéficiaire",
+    "additionalInstructions": "Instructions complémentaires",
+    "statusAll": "Tous les statuts",
+    "statusCompleted": "Complétés",
+    "statusPending": "En attente",
+    "statusFailed": "Échoués",
+    "statusExpired": "Expirés",
+    "noPayment": "Aucun paiement"
+  },
   "adminShared": {
     "invoiceMarkedPaid": "Facture marquée payée",
     "markPaid": "Marquer payée"

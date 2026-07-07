@@ -1,4 +1,50 @@
 {
+  "adminUsers": {
+    "title": "المستخدمون",
+    "newUser": "مستخدم جديد",
+    "property": "العقار",
+    "choose": "اختر…",
+    "userCreatedEmailSent": "تم إنشاء المستخدم، تم إرسال البريد الإلكتروني",
+    "userDeleted": "تم حذف المستخدم",
+    "passwordRegeneratedNoEmailShort": "تم إعادة توليد كلمة المرور، لم يُرسل البريد الإلكتروني.",
+    "searchPlaceholder": "الاسم، البريد الإلكتروني…",
+    "allRoles": "جميع الأدوار"
+  },
+  "adminEmails": {
+    "title": "البريد الإلكتروني",
+    "templateSaved": "تم حفظ النموذج",
+    "custom": "مخصص",
+    "default": "افتراضي",
+    "subject": "الموضوع",
+    "bodyHtml": "المحتوى (HTML)",
+    "availableVariables": "المتغيرات المتاحة:",
+    "hide": "إخفاء",
+    "preview": "معاينة",
+    "sendRemindersNow": "إرسال التذكيرات الآن",
+    "remindersSent": "تم إرسال {{sent}}/{{candidates}} تذكيرًا",
+    "remindersHint": "تذكير انتهاء الصلاحية ليس تلقائيًا بعد (يتطلب مجدولًا من جانب الخادم) — استخدم هذا الزر لإخطار الاشتراكات التي تنتهي خلال 7 أيام."
+  },
+  "adminPayments": {
+    "title": "المدفوعات",
+    "paymentMethods": "وسائل الدفع",
+    "history": "السجل",
+    "settingsSaved": "تم حفظ الإعدادات",
+    "flouciTitle": "Flouci (الدفع عبر الإنترنت)",
+    "enableFlouci": "تفعيل Flouci",
+    "leaveEmptyHint": "اترك فارغًا لعدم التغيير",
+    "credentialsSecurityHint": "لأسباب أمنية، لا يتم إعادة عرض بيانات الاعتماد المحفوظة مسبقًا — اترك هذه الحقول فارغة إذا كنت لا تريد تغييرها.",
+    "bankTransferTitle": "التحويل البنكي",
+    "enableBankTransfer": "تفعيل التحويل البنكي",
+    "bank": "البنك",
+    "beneficiary": "المستفيد",
+    "additionalInstructions": "تعليمات إضافية",
+    "statusAll": "جميع الحالات",
+    "statusCompleted": "مكتملة",
+    "statusPending": "قيد الانتظار",
+    "statusFailed": "فاشلة",
+    "statusExpired": "منتهية الصلاحية",
+    "noPayment": "لا توجد مدفوعات"
+  },
   "adminShared": {
     "invoiceMarkedPaid": "تم وضع علامة على الفاتورة كمدفوعة",
     "markPaid": "وضع علامة مدفوعة"

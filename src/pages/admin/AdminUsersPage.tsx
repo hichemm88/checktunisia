@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus, X, Send, Trash2, Pencil, Save } from 'lucide-react';
 import { adminUsersApi, AdminUser } from '@/api/admin/users';
@@ -12,11 +13,10 @@ import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { Pagination } from '@/components/ui/Pagination';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
-const ROLE_LABELS: Record<string, string> = { hotel_admin: 'Administrateur', receptionist: 'Réceptionniste' };
-
 // ─── Create form ────────────────────────────────────────────────────────────────
 
 const CreateUserForm = ({ onDone }: { onDone: () => void }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', role: 'receptionist', hotel_id: '' });
@@ -30,28 +30,28 @@ const CreateUserForm = ({ onDone }: { onDone: () => void }) => {
 
   const mut = useMutation({
     mutationFn: () => adminUsersApi.create(form as any),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }); toast('Utilisateur créé, email envoyé', 'success'); onDone(); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-users'] }); toast(t('adminUsers.userCreatedEmailSent'), 'success'); onDone(); },
     onError: (err) => setError(extractErrors(err)),
   });
 
   return (
     <div className="card p-4 flex flex-col gap-3">
-      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Nouvel utilisateur</p>
+      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">{t('adminUsers.newUser')}</p>
       <div className="grid grid-cols-2 gap-2">
-        <Input label="Prénom" value={form.first_name} onChange={(e) => set('first_name', e.target.value)} />
-        <Input label="Nom" value={form.last_name} onChange={(e) => set('last_name', e.target.value)} />
+        <Input label={t('profile.firstName')} value={form.first_name} onChange={(e) => set('first_name', e.target.value)} />
+        <Input label={t('profile.lastName')} value={form.last_name} onChange={(e) => set('last_name', e.target.value)} />
       </div>
-      <Input label="Email" type="email" value={form.email} onChange={(e) => set('email', e.target.value)} />
-      <Select label="Rôle" value={form.role} onChange={(e) => set('role', e.target.value)}
-        options={[{ value: 'receptionist', label: 'Réceptionniste' }, { value: 'hotel_admin', label: 'Administrateur' }]} />
-      <Select label="Établissement" value={form.hotel_id} onChange={(e) => set('hotel_id', e.target.value)}
-        options={[{ value: '', label: 'Choisir…' }, ...(hotels?.data ?? []).map((h) => ({ value: h.id, label: h.name }))]} />
+      <Input label={t('profile.email')} type="email" value={form.email} onChange={(e) => set('email', e.target.value)} />
+      <Select label={t('settingsPage.role')} value={form.role} onChange={(e) => set('role', e.target.value)}
+        options={[{ value: 'receptionist', label: t('settingsPage.roleReceptionist') }, { value: 'hotel_admin', label: t('settingsPage.roleAdmin') }]} />
+      <Select label={t('adminUsers.property')} value={form.hotel_id} onChange={(e) => set('hotel_id', e.target.value)}
+        options={[{ value: '', label: t('adminUsers.choose') }, ...(hotels?.data ?? []).map((h) => ({ value: h.id, label: h.name }))]} />
       {error && <p className="text-xs text-red-500">{error}</p>}
       <div className="flex gap-2">
         <Button size="sm" loading={mut.isPending}
           disabled={!form.first_name || !form.last_name || !form.email || !form.hotel_id}
-          onClick={() => mut.mutate()}>Créer et envoyer l'invitation</Button>
-        <Button size="sm" variant="ghost" onClick={onDone}>Annuler</Button>
+          onClick={() => mut.mutate()}>{t('settingsPage.createAndSendInvite')}</Button>
+        <Button size="sm" variant="ghost" onClick={onDone}>{t('common.cancel')}</Button>
       </div>
     </div>
   );
@@ -60,6 +60,7 @@ const CreateUserForm = ({ onDone }: { onDone: () => void }) => {
 // ─── Row ────────────────────────────────────────────────────────────────────────
 
 const UserRow = ({ u }: { u: AdminUser }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [mode, setMode] = useState<'view' | 'edit' | 'confirm_delete'>('view');
   const [editForm, setEditForm] = useState({ first_name: u.first_name, last_name: u.last_name, role: u.role });
@@ -72,7 +73,7 @@ const UserRow = ({ u }: { u: AdminUser }) => {
   });
   const deleteMut = useAdminMutation({
     mutationFn: () => adminUsersApi.remove(u.id),
-    successMessage: 'Utilisateur supprimé',
+    successMessage: t('adminUsers.userDeleted'),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-users'] }),
   });
   const resendMut = useAdminMutation({
@@ -83,15 +84,15 @@ const UserRow = ({ u }: { u: AdminUser }) => {
     return (
       <div className="py-3 border-b border-gray-50 last:border-0 flex flex-col gap-2">
         <div className="grid grid-cols-2 gap-2">
-          <Input label="Prénom" value={editForm.first_name} onChange={(e) => setEditForm((f) => ({ ...f, first_name: e.target.value }))} />
-          <Input label="Nom" value={editForm.last_name} onChange={(e) => setEditForm((f) => ({ ...f, last_name: e.target.value }))} />
+          <Input label={t('profile.firstName')} value={editForm.first_name} onChange={(e) => setEditForm((f) => ({ ...f, first_name: e.target.value }))} />
+          <Input label={t('profile.lastName')} value={editForm.last_name} onChange={(e) => setEditForm((f) => ({ ...f, last_name: e.target.value }))} />
         </div>
-        <Select label="Rôle" value={editForm.role} onChange={(e) => setEditForm((f) => ({ ...f, role: e.target.value as any }))}
-          options={[{ value: 'receptionist', label: 'Réceptionniste' }, { value: 'hotel_admin', label: 'Administrateur' }]} />
+        <Select label={t('settingsPage.role')} value={editForm.role} onChange={(e) => setEditForm((f) => ({ ...f, role: e.target.value as any }))}
+          options={[{ value: 'receptionist', label: t('settingsPage.roleReceptionist') }, { value: 'hotel_admin', label: t('settingsPage.roleAdmin') }]} />
         {error && <p className="text-xs text-red-500">{error}</p>}
         <div className="flex gap-2">
-          <Button size="sm" onClick={() => editMut.mutate()} loading={editMut.isPending} className="gap-1.5"><Save className="h-3.5 w-3.5" /> Enregistrer</Button>
-          <Button size="sm" variant="ghost" onClick={() => setMode('view')}>Annuler</Button>
+          <Button size="sm" onClick={() => editMut.mutate()} loading={editMut.isPending} className="gap-1.5"><Save className="h-3.5 w-3.5" /> {t('common.save')}</Button>
+          <Button size="sm" variant="ghost" onClick={() => setMode('view')}>{t('common.cancel')}</Button>
         </div>
       </div>
     );
@@ -100,10 +101,10 @@ const UserRow = ({ u }: { u: AdminUser }) => {
   if (mode === 'confirm_delete') {
     return (
       <div className="py-3 border-b border-gray-50 last:border-0">
-        <p className="text-sm text-gray-700 mb-2">Supprimer <span className="font-semibold">{u.first_name} {u.last_name}</span> ?</p>
+        <p className="text-sm text-gray-700 mb-2">{t('settingsPage.confirmDeleteUser')} <span className="font-semibold">{u.first_name} {u.last_name}</span> ?</p>
         <div className="flex gap-2">
-          <Button size="sm" loading={deleteMut.isPending} onClick={() => deleteMut.mutate()} className="!bg-red-600 hover:!bg-red-700 gap-1.5"><Trash2 className="h-3.5 w-3.5" /> Supprimer</Button>
-          <Button size="sm" variant="ghost" onClick={() => setMode('view')}>Annuler</Button>
+          <Button size="sm" loading={deleteMut.isPending} onClick={() => deleteMut.mutate()} className="!bg-red-600 hover:!bg-red-700 gap-1.5"><Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}</Button>
+          <Button size="sm" variant="ghost" onClick={() => setMode('view')}>{t('common.cancel')}</Button>
         </div>
       </div>
     );
@@ -123,9 +124,9 @@ const UserRow = ({ u }: { u: AdminUser }) => {
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0 ms-2">
-          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ background: '#5346A818', color: '#5346A8' }}>{ROLE_LABELS[u.role] ?? u.role}</span>
+          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ background: '#5346A818', color: '#5346A8' }}>{u.role === 'hotel_admin' ? t('settingsPage.roleAdmin') : u.role === 'receptionist' ? t('settingsPage.roleReceptionist') : u.role}</span>
           {!u.last_login_at && (
-            <button onClick={() => resendMut.mutate()} disabled={resendMut.isPending} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors" title="Renvoyer l'invitation">
+            <button onClick={() => resendMut.mutate()} disabled={resendMut.isPending} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors" title={t('settingsPage.resendInvite')}>
               <Send className="h-3.5 w-3.5" />
             </button>
           )}
@@ -135,7 +136,7 @@ const UserRow = ({ u }: { u: AdminUser }) => {
       </div>
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
       {resendMut.isSuccess && (
-        <p className="text-xs text-green-600 mt-1">{resendMut.data.email_sent ? 'Invitation renvoyée.' : "Mot de passe régénéré, email non envoyé."}</p>
+        <p className="text-xs text-green-600 mt-1">{resendMut.data.email_sent ? t('settingsPage.inviteResentFull') : t('adminUsers.passwordRegeneratedNoEmailShort')}</p>
       )}
     </div>
   );
@@ -144,6 +145,7 @@ const UserRow = ({ u }: { u: AdminUser }) => {
 // ─── Main page ──────────────────────────────────────────────────────────────────
 
 export const AdminUsersPage = () => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('');
   const [page, setPage] = useState(1);
@@ -160,9 +162,9 @@ export const AdminUsersPage = () => {
   return (
     <div className="flex flex-col gap-4 max-w-4xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">Utilisateurs</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t('adminUsers.title')}</h1>
         <Button size="sm" onClick={() => setShowCreate((s) => !s)} className="gap-1.5">
-          {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showCreate ? 'Annuler' : 'Ajouter'}
+          {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showCreate ? t('common.cancel') : t('common.add')}
         </Button>
       </div>
 
@@ -171,19 +173,19 @@ export const AdminUsersPage = () => {
       <div className="flex gap-3">
         <div className="relative flex-1">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input className="input w-full ps-9" placeholder="Nom, email…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+          <input className="input w-full ps-9" placeholder={t('adminUsers.searchPlaceholder')} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
         </div>
         <select className="input" value={role} onChange={(e) => { setRole(e.target.value); setPage(1); }}>
-          <option value="">Tous les rôles</option>
-          <option value="hotel_admin">Administrateurs</option>
-          <option value="receptionist">Réceptionnistes</option>
+          <option value="">{t('adminUsers.allRoles')}</option>
+          <option value="hotel_admin">{t('settingsPage.roleAdmins')}</option>
+          <option value="receptionist">{t('settingsPage.roleReceptionists')}</option>
         </select>
       </div>
 
       <div className="card p-4">
         {isLoading && <ListSkeleton rows={3} />}
         {users.map((u) => <UserRow key={u.id} u={u} />)}
-        {!isLoading && !users.length && <p className="py-6 text-center text-sm text-gray-400">Aucun utilisateur</p>}
+        {!isLoading && !users.length && <p className="py-6 text-center text-sm text-gray-400">{t('settingsPage.noUser')}</p>}
       </div>
 
       {meta && (

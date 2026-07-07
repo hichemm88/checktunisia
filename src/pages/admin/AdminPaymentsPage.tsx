@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CreditCard, Landmark, Save, Wallet } from 'lucide-react';
 import { adminPaymentsApi } from '@/api/admin/payments';
@@ -21,9 +22,8 @@ const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: (v: 
   </label>
 );
 
-const fmtDate = (d?: string | null) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
-
 const ConfigTab = () => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
   const { data: settings, isLoading } = useQuery({ queryKey: ['admin-platform-settings'], queryFn: adminPaymentsApi.getSettings });
@@ -49,7 +49,7 @@ const ConfigTab = () => {
       virement_enabled: virement.enabled, virement_rib: virement.rib, virement_iban: virement.iban,
       virement_bank_name: virement.bank_name, virement_beneficiary: virement.beneficiary, virement_details: virement.details,
     }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-platform-settings'] }); toast('Paramètres enregistrés', 'success'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-platform-settings'] }); toast(t('adminPayments.settingsSaved'), 'success'); },
     onError: (err) => toast(extractErrors(err), 'error'),
   });
 
@@ -60,39 +60,40 @@ const ConfigTab = () => {
       <Card>
         <div className="flex items-center gap-2 mb-3">
           <CreditCard className="h-4 w-4 text-gray-400" />
-          <p className="font-bold text-gray-900">Flouci (paiement en ligne)</p>
+          <p className="font-bold text-gray-900">{t('adminPayments.flouciTitle')}</p>
         </div>
         <div className="flex flex-col gap-3">
-          <Toggle checked={flouci.enabled} onChange={(v) => setFlouci((f) => ({ ...f, enabled: v }))} label="Activer Flouci" />
-          <Input label="App Token" placeholder="Laisser vide pour ne pas changer" type="password" value={flouci.app_token} onChange={(e) => setFlouci((f) => ({ ...f, app_token: e.target.value }))} />
-          <Input label="App Secret" placeholder="Laisser vide pour ne pas changer" type="password" value={flouci.app_secret} onChange={(e) => setFlouci((f) => ({ ...f, app_secret: e.target.value }))} />
-          <p className="text-xs text-gray-400">Par sécurité, les identifiants déjà enregistrés ne sont jamais réaffichés — laissez ces champs vides si vous ne voulez pas les changer.</p>
+          <Toggle checked={flouci.enabled} onChange={(v) => setFlouci((f) => ({ ...f, enabled: v }))} label={t('adminPayments.enableFlouci')} />
+          <Input label="App Token" placeholder={t('adminPayments.leaveEmptyHint')} type="password" value={flouci.app_token} onChange={(e) => setFlouci((f) => ({ ...f, app_token: e.target.value }))} />
+          <Input label="App Secret" placeholder={t('adminPayments.leaveEmptyHint')} type="password" value={flouci.app_secret} onChange={(e) => setFlouci((f) => ({ ...f, app_secret: e.target.value }))} />
+          <p className="text-xs text-gray-400">{t('adminPayments.credentialsSecurityHint')}</p>
         </div>
       </Card>
 
       <Card>
         <div className="flex items-center gap-2 mb-3">
           <Landmark className="h-4 w-4 text-gray-400" />
-          <p className="font-bold text-gray-900">Virement bancaire</p>
+          <p className="font-bold text-gray-900">{t('adminPayments.bankTransferTitle')}</p>
         </div>
         <div className="flex flex-col gap-3">
-          <Toggle checked={virement.enabled} onChange={(v) => setVirement((f) => ({ ...f, enabled: v }))} label="Activer le virement" />
-          <Input label="Banque" value={virement.bank_name} onChange={(e) => setVirement((f) => ({ ...f, bank_name: e.target.value }))} />
-          <Input label="Bénéficiaire" value={virement.beneficiary} onChange={(e) => setVirement((f) => ({ ...f, beneficiary: e.target.value }))} />
+          <Toggle checked={virement.enabled} onChange={(v) => setVirement((f) => ({ ...f, enabled: v }))} label={t('adminPayments.enableBankTransfer')} />
+          <Input label={t('adminPayments.bank')} value={virement.bank_name} onChange={(e) => setVirement((f) => ({ ...f, bank_name: e.target.value }))} />
+          <Input label={t('adminPayments.beneficiary')} value={virement.beneficiary} onChange={(e) => setVirement((f) => ({ ...f, beneficiary: e.target.value }))} />
           <div className="grid grid-cols-2 gap-2">
             <Input label="RIB" value={virement.rib} onChange={(e) => setVirement((f) => ({ ...f, rib: e.target.value }))} />
             <Input label="IBAN" value={virement.iban} onChange={(e) => setVirement((f) => ({ ...f, iban: e.target.value }))} />
           </div>
-          <Input label="Instructions complémentaires" value={virement.details} onChange={(e) => setVirement((f) => ({ ...f, details: e.target.value }))} />
+          <Input label={t('adminPayments.additionalInstructions')} value={virement.details} onChange={(e) => setVirement((f) => ({ ...f, details: e.target.value }))} />
         </div>
       </Card>
 
-      <Button loading={saveMut.isPending} onClick={() => saveMut.mutate()} className="gap-1.5 self-start"><Save className="h-4 w-4" /> Enregistrer</Button>
+      <Button loading={saveMut.isPending} onClick={() => saveMut.mutate()} className="gap-1.5 self-start"><Save className="h-4 w-4" /> {t('common.save')}</Button>
     </div>
   );
 };
 
 const HistoriqueTab = () => {
+  const { t } = useTranslation();
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const { data, isLoading } = useQuery({ queryKey: ['admin-payments', status, page], queryFn: () => adminPaymentsApi.list({ status: status || undefined, page, per_page: 30 }) });
@@ -100,11 +101,11 @@ const HistoriqueTab = () => {
   return (
     <div className="flex flex-col gap-3">
       <select className="input w-fit" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
-        <option value="">Tous les statuts</option>
-        <option value="completed">Complétés</option>
-        <option value="pending">En attente</option>
-        <option value="failed">Échoués</option>
-        <option value="expired">Expirés</option>
+        <option value="">{t('adminPayments.statusAll')}</option>
+        <option value="completed">{t('adminPayments.statusCompleted')}</option>
+        <option value="pending">{t('adminPayments.statusPending')}</option>
+        <option value="failed">{t('adminPayments.statusFailed')}</option>
+        <option value="expired">{t('adminPayments.statusExpired')}</option>
       </select>
       <Card>
         {isLoading && <ListSkeleton rows={3} height="h-14" />}
@@ -120,7 +121,7 @@ const HistoriqueTab = () => {
             </div>
           </div>
         ))}
-        {!isLoading && !data?.data.length && <p className="text-sm text-gray-400 text-center py-6">Aucun paiement</p>}
+        {!isLoading && !data?.data.length && <p className="text-sm text-gray-400 text-center py-6">{t('adminPayments.noPayment')}</p>}
       </Card>
       {data && (
         <Pagination meta={data.meta} currentCount={data.data.length} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => p + 1)} />
@@ -130,17 +131,18 @@ const HistoriqueTab = () => {
 };
 
 export const AdminPaymentsPage = () => {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<'config' | 'history'>('config');
 
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
-      <h1 className="text-xl font-bold text-gray-900">Paiements</h1>
+      <h1 className="text-xl font-bold text-gray-900">{t('adminPayments.title')}</h1>
       <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#DDD9CF' }}>
         <button onClick={() => setTab('config')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'config' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
-          <Wallet className="h-4 w-4" /> Moyens de paiement
+          <Wallet className="h-4 w-4" /> {t('adminPayments.paymentMethods')}
         </button>
         <button onClick={() => setTab('history')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'history' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
-          <CreditCard className="h-4 w-4" /> Historique
+          <CreditCard className="h-4 w-4" /> {t('adminPayments.history')}
         </button>
       </div>
       {tab === 'config' ? <ConfigTab /> : <HistoriqueTab />}

@@ -1,4 +1,50 @@
 {
+  "adminUsers": {
+    "title": "Users",
+    "newUser": "New user",
+    "property": "Property",
+    "choose": "Choose…",
+    "userCreatedEmailSent": "User created, email sent",
+    "userDeleted": "User deleted",
+    "passwordRegeneratedNoEmailShort": "Password regenerated, email not sent.",
+    "searchPlaceholder": "Name, email…",
+    "allRoles": "All roles"
+  },
+  "adminEmails": {
+    "title": "Emails",
+    "templateSaved": "Template saved",
+    "custom": "Custom",
+    "default": "Default",
+    "subject": "Subject",
+    "bodyHtml": "Body (HTML)",
+    "availableVariables": "Available variables:",
+    "hide": "Hide",
+    "preview": "Preview",
+    "sendRemindersNow": "Send reminders now",
+    "remindersSent": "{{sent}}/{{candidates}} reminder(s) sent",
+    "remindersHint": "The expiration reminder isn't automatic yet (requires a server-side scheduler) — use this button to notify subscriptions expiring within 7 days."
+  },
+  "adminPayments": {
+    "title": "Payments",
+    "paymentMethods": "Payment methods",
+    "history": "History",
+    "settingsSaved": "Settings saved",
+    "flouciTitle": "Flouci (online payment)",
+    "enableFlouci": "Enable Flouci",
+    "leaveEmptyHint": "Leave empty to keep unchanged",
+    "credentialsSecurityHint": "For security, previously saved credentials are never redisplayed — leave these fields empty if you don't want to change them.",
+    "bankTransferTitle": "Bank transfer",
+    "enableBankTransfer": "Enable bank transfer",
+    "bank": "Bank",
+    "beneficiary": "Beneficiary",
+    "additionalInstructions": "Additional instructions",
+    "statusAll": "All statuses",
+    "statusCompleted": "Completed",
+    "statusPending": "Pending",
+    "statusFailed": "Failed",
+    "statusExpired": "Expired",
+    "noPayment": "No payment"
+  },
   "adminShared": {
     "invoiceMarkedPaid": "Invoice marked as paid",
     "markPaid": "Mark paid"
