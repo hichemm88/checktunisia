@@ -54,7 +54,7 @@ export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
                 {activePropertyName ?? user?.hotel?.name ?? 'Qayed'}
               </Link>
               {title && (
-                <span className="text-sm font-bold text-gray-900 leading-snug mt-0.5 truncate">{title}</span>
+                <span className="qayed-display text-sm text-gray-900 leading-snug mt-0.5 truncate">{title}</span>
               )}
             </div>
           </div>

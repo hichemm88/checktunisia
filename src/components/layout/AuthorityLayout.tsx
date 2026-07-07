@@ -152,7 +152,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
       {title && (
         <div className="border-b border-gray-200 bg-white/60 px-4 py-3">
           <div className="mx-auto max-w-6xl">
-            <h1 className="text-sm font-semibold" style={{ color: 'var(--qayed-cachet)' }}>{title}</h1>
+            <h1 className="qayed-display text-sm" style={{ color: 'var(--qayed-cachet)' }}>{title}</h1>
           </div>
         </div>
       )}

@@ -42,7 +42,7 @@ export const AdminDashboardPage = () => {
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl">
-      <h1 className="text-xl font-bold text-gray-900">{t('adminDashboard.title')}</h1>
+      <h1 className="qayed-display text-xl text-gray-900">{t('adminDashboard.title')}</h1>
 
       {isLoading && <ListSkeleton rows={4} height="h-20" />}
 

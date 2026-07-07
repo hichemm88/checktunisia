@@ -215,7 +215,7 @@ export const HistoryDetailPage = () => {
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <FileText className="h-3 w-3 text-gray-300" />
                         <p className="text-xs text-gray-400">
-                          {g.document.type} {g.document.document_number}
+                          {g.document.type} <span className="font-mono">{g.document.document_number}</span>
                           {g.document.expiry_date && ` · ${t('hotelHistoryDetail.expires')} ${fmtDate(g.document.expiry_date, locale)}`}
                         </p>
                       </div>

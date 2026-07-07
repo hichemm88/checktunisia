@@ -146,7 +146,7 @@ export const DashboardPage = () => {
             <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#5346A8' }}>
               {greeting()}
             </p>
-            <h1 className="text-xl font-black text-white leading-tight truncate">
+            <h1 className="qayed-display text-xl text-white truncate">
               {user?.first_name ?? t('hotelDashboard.welcome')}
             </h1>
             <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
@@ -290,7 +290,7 @@ export const DashboardPage = () => {
                   >
                     <div>
                       <p className="text-sm font-semibold text-gray-900">{alert.guest_name}</p>
-                      <p className="text-xs text-gray-500">{alert.document_number} · {t('hotelDashboard.ref')} {alert.reference}</p>
+                      <p className="text-xs text-gray-500"><span className="font-mono">{alert.document_number}</span> · {t('hotelDashboard.ref')} <span className="font-mono">{alert.reference}</span></p>
                     </div>
                     <div className="text-end shrink-0 ms-3">
                       <p className={`text-xs font-bold ${alert.days_until_expiry <= 7 ? 'text-red-600' : 'text-amber-600'}`}>
@@ -339,7 +339,7 @@ export const DashboardPage = () => {
                           {c.primary_guest ?? t('hotelDashboard.noName')}
                         </span>
                         <span className="text-xs text-gray-500">
-                          {c.room ? t('hotelDashboard.room', { room: c.room }) : t('hotelDashboard.noRoom')} · {c.reference}
+                          {c.room ? t('hotelDashboard.room', { room: c.room }) : t('hotelDashboard.noRoom')} · <span className="font-mono">{c.reference}</span>
                         </span>
                       </div>
                     </div>

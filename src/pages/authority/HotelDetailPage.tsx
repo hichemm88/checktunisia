@@ -427,7 +427,7 @@ export const HotelDetailPage = () => {
 
                         <span className="text-xs text-gray-500 truncate">
                           {ci.room_number ? `${t('checkinWizard.roomShort')} ${ci.room_number}` : t('hotelHistory.noUnit')}
-                          {' · '}{ci.reference}
+                          {' · '}<span className="font-mono">{ci.reference}</span>
                           {ci.guests_count > 1 && ` · ${t('authorityHotelDetail.guestsAbbrev', { count: ci.guests_count })}`}
                         </span>
                         <span className="text-xs text-gray-400">

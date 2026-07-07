@@ -119,7 +119,7 @@ export const ProfilePage = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-sm font-bold text-gray-900">{t('profile.title')}</h1>
+          <h1 className="qayed-display text-sm text-gray-900">{t('profile.title')}</h1>
         </div>
       </header>
 

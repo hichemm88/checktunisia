@@ -29,7 +29,7 @@ export const CardHeader = ({ className, children, ...props }: HTMLAttributes<HTM
 );
 
 export const CardTitle = ({ className, children, ...props }: HTMLAttributes<HTMLHeadingElement>) => (
-  <h3 className={cn('text-base font-bold text-gray-900', className)} {...props}>
+  <h3 className={cn('qayed-display text-base text-gray-900', className)} {...props}>
     {children}
   </h3>
 );

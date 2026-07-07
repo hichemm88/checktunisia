@@ -354,7 +354,7 @@ export const WatchlistPage = () => {
                         )}
                         {entry.document_number && (
                           <span className="text-xs text-gray-500 flex items-center gap-1">
-                            <span className="text-gray-300">{t('authorityWatchlist.docAbbrev')}</span> {entry.document_number}
+                            <span className="text-gray-300">{t('authorityWatchlist.docAbbrev')}</span> <span className="font-mono">{entry.document_number}</span>
                           </span>
                         )}
                         <span className="text-xs text-gray-400">{REASON_LABELS[entry.reason_code]}</span>

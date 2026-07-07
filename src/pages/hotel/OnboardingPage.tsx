@@ -257,7 +257,7 @@ export const OnboardingPage = () => {
               <Building2 className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 mb-2">
+              <h1 className="qayed-display text-xl text-gray-900 mb-2">
                 {hasProperty && profile ? t('onboarding.welcomeBackTitle', { name: profile.name }) : t('onboarding.welcomeTitle')}
               </h1>
               <p className="text-sm text-gray-500 leading-relaxed">
@@ -290,7 +290,7 @@ export const OnboardingPage = () => {
         {step === STEP_PROPERTY && STEP_PROPERTY > 0 && (
           <div className="flex flex-col gap-4">
             <div>
-              <h2 className="text-lg font-bold text-gray-900 mb-1">{t('onboarding.firstPropertyTitle')}</h2>
+              <h2 className="qayed-display text-lg text-gray-900 mb-1">{t('onboarding.firstPropertyTitle')}</h2>
               <p className="text-sm text-gray-400">
                 {t('onboarding.firstPropertyBody')}
               </p>
@@ -392,7 +392,7 @@ export const OnboardingPage = () => {
         {step === STEP_ROOMS && (
           <div className="flex flex-col gap-5">
             <div>
-              <h2 className="text-lg font-bold text-gray-900 mb-1">{t('onboarding.roomsTitle')}</h2>
+              <h2 className="qayed-display text-lg text-gray-900 mb-1">{t('onboarding.roomsTitle')}</h2>
               <p className="text-sm text-gray-400">
                 {t('onboarding.roomsBody')}
               </p>
@@ -471,7 +471,7 @@ export const OnboardingPage = () => {
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">{t('onboarding.doneTitle')}</h2>
+              <h2 className="qayed-display text-xl text-gray-900 mb-2">{t('onboarding.doneTitle')}</h2>
               <p className="text-sm text-gray-500">
                 {t('onboarding.doneBody')}
               </p>

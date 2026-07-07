@@ -152,7 +152,7 @@ export const AdminHotelsPage = () => {
   return (
     <div className="flex flex-col gap-4 max-w-6xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">{t('adminHotels.title')}</h1>
+        <h1 className="qayed-display text-xl text-gray-900">{t('adminHotels.title')}</h1>
         <Button size="sm" onClick={() => setShowCreate((s) => !s)} className="gap-1.5">
           {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showCreate ? t('common.cancel') : t('common.add')}
         </Button>

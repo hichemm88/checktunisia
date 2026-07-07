@@ -14,10 +14,10 @@ const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 
 const fmtDate = (d: string | null | undefined, locale: string) =>
   d ? new Date(d).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
-const DetailRow = ({ label, value }: { label: string; value?: string | null }) => (
+const DetailRow = ({ label, value, mono }: { label: string; value?: string | null; mono?: boolean }) => (
   <div className="flex justify-between py-2 text-sm border-b border-gray-50 last:border-0">
     <span className="text-gray-500">{label}</span>
-    <span className="font-medium text-gray-900">{value ?? '—'}</span>
+    <span className={`font-medium text-gray-900 ${mono ? 'font-mono' : ''}`}>{value ?? '—'}</span>
   </div>
 );
 
@@ -130,7 +130,7 @@ export const GuestProfilePage = () => {
                   {doc.is_verified ? t('guestProfile.verified') : t('guestProfile.notVerified')}
                 </Badge>
               </div>
-              <DetailRow label={t('guestScan.documentNumber')} value={doc.document_number} />
+              <DetailRow label={t('guestScan.documentNumber')} value={doc.document_number} mono />
               <DetailRow label={t('guestScan.issuingCountry')} value={doc.issuing_country_code} />
               <DetailRow label={t('guestProfile.issueDate')} value={fmtDate(doc.issue_date, locale)} />
               <DetailRow label={t('guestProfile.expiryDate')} value={fmtDate(doc.expiry_date, locale)} />

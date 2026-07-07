@@ -289,7 +289,7 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
           <tbody>
             <tr>
               <td style={lbl()}>{t('policeFiche.reference')}</td>
-              <td style={cell({ fontFamily: 'monospace', fontWeight: 'bold', color: C, fontSize: '8pt', whiteSpace: 'nowrap' })}>
+              <td style={cell({ fontFamily: "'IBM Plex Mono', monospace", fontWeight: 'bold', color: C, fontSize: '8pt', whiteSpace: 'nowrap' })}>
                 {ci.reference}
               </td>
               <td style={lbl()}>{t('policeFiche.unit')}</td>
@@ -362,7 +362,7 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
                 <td style={td({ textAlign: 'center' as const })}>{SEX_LABELS[g.sex] ?? g.sex}</td>
                 <td style={td({ textAlign: 'center' as const })}>{g.nationality_code}</td>
                 <td style={td()}>{g.document ? (g.document.type in DOC_LABEL_KEYS ? t(DOC_LABEL_KEYS[g.document.type]) : g.document.type) : '—'}</td>
-                <td style={td({ fontFamily: 'monospace', fontSize: '7.5pt', whiteSpace: 'nowrap' as const })}>
+                <td style={td({ fontFamily: "'IBM Plex Mono', monospace", fontSize: '7.5pt', whiteSpace: 'nowrap' as const })}>
                   {g.document?.document_number ?? '—'}
                 </td>
                 <td style={td({ textAlign: 'center' as const })}>{g.document?.issuing_country_code ?? '—'}</td>

@@ -64,7 +64,7 @@ const RecentCheckInsSection = () => {
             </p>
             <p className="text-xs text-gray-500">
               {fmtDate(c.date_of_birth, locale)} · {c.nationality_code}
-              {c.document_number && ` · ${c.document_number}`}
+              {c.document_number && <> · <span className="font-mono">{c.document_number}</span></>}
             </p>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 mt-1 text-xs text-gray-500">
               {c.hotel && (
@@ -293,7 +293,7 @@ export const SearchPage = () => {
                       </p>
                       <p className="text-xs text-gray-500">
                         {g.date_of_birth} · {g.sex} · {g.nationality_code}
-                        {g.document_number && ` · ${g.document_number}`}
+                        {g.document_number && <> · <span className="font-mono">{g.document_number}</span></>}
                       </p>
                       {g.last_stay && (
                         <p className="text-xs text-gray-400 mt-0.5">

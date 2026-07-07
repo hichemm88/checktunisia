@@ -46,6 +46,27 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Arabic (dir=rtl): Archivo/IBM Plex Sans are Latin-only, so the whole
+     document — including headings, mono/data cells and form controls —
+     must fall back to IBM Plex Sans Arabic. Per BRAND.md: "À égalité avec
+     le français", not a degraded fallback. */
+  html[dir='rtl'] body,
+  html[dir='rtl'] input,
+  html[dir='rtl'] textarea,
+  html[dir='rtl'] select {
+    font-family: var(--qayed-font-arabic);
+  }
+  html[dir='rtl'] .qayed-display {
+    font-family: var(--qayed-font-arabic);
+    font-variation-settings: normal; /* 'wdth' axis is Archivo-only */
+    font-weight: 700; /* IBM Plex Sans Arabic tops out at 700, not 900 */
+  }
+  html[dir='rtl'] .qayed-mono {
+    /* Plex Mono has no Arabic glyphs; digits/CIN numbers still render fine
+       in the Arabic font since Tunisian usage keeps Western numerals. */
+    font-family: var(--qayed-font-arabic);
+  }
+
   /* Prevent iOS zoom on inputs */
   input, textarea, select { font-size: 16px !important; }
 }

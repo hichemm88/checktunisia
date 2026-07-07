@@ -246,7 +246,7 @@ export const HistoryPage = () => {
                   <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                     <span className="text-sm font-semibold text-gray-900 truncate">{guestName}</span>
                     <span className="text-xs text-gray-500 truncate">
-                      {ci.room ? ci.room.number : t('hotelHistory.noUnit')} · {ci.reference}
+                      {ci.room ? ci.room.number : t('hotelHistory.noUnit')} · <span className="font-mono">{ci.reference}</span>
                     </span>
                     <span className="text-xs text-gray-400">
                       {fmtRange(ci.check_in_date, ci.expected_check_out_date, locale)}

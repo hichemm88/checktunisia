@@ -136,7 +136,7 @@ export const AdminPaymentsPage = () => {
 
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
-      <h1 className="text-xl font-bold text-gray-900">{t('adminPayments.title')}</h1>
+      <h1 className="qayed-display text-xl text-gray-900">{t('adminPayments.title')}</h1>
       <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#DDD9CF' }}>
         <button onClick={() => setTab('config')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'config' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
           <Wallet className="h-4 w-4" /> {t('adminPayments.paymentMethods')}

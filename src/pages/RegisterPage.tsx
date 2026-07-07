@@ -128,7 +128,7 @@ export const RegisterPage = () => {
       </div>
 
       <div className="card w-full max-w-xl mx-auto p-8">
-        <h1 className="text-xl font-bold text-gray-900 mb-1">{STEPS[step].label}</h1>
+        <h1 className="qayed-display text-xl text-gray-900 mb-1">{STEPS[step].label}</h1>
         <p className="text-sm text-gray-400 mb-6">{t('register.stepOf', { current: step + 1, total: STEPS.length })}</p>
 
         {/* ── Étape 0 : Type de compte ── */}

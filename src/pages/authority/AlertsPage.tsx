@@ -51,7 +51,7 @@ const AlertCard = ({ alert, onClick }: { alert: AuthorityAlert; onClick: () => v
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
             <span className="flex items-center gap-1 text-xs text-gray-500">
               <FileWarning className="h-3 w-3" />
-              {docTypeLabel[alert.document_type] ?? alert.document_type} · {alert.document_number}
+              {docTypeLabel[alert.document_type] ?? alert.document_type} · <span className="font-mono">{alert.document_number}</span>
             </span>
             <span className="flex items-center gap-1 text-xs text-gray-500">
               <Calendar className="h-3 w-3" />

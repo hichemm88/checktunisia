@@ -52,7 +52,7 @@ export const AdminActivityPage = () => {
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">{t('adminActivity.title')}</h1>
+        <h1 className="qayed-display text-xl text-gray-900">{t('adminActivity.title')}</h1>
       </div>
       <select className="input w-fit" value={action} onChange={(e) => { setAction(e.target.value); setPage(1); }}>
         <option value="">{t('adminActivity.allActions')}</option>
