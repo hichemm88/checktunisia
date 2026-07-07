@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /hotel
+Disallow: /authority
+Disallow: /profile
+
+Sitemap: https://qayed.tn/sitemap.xml

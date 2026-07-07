@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#10222E"/>
+  <circle cx="1000" cy="120" r="260" fill="#5346A8" opacity="0.16"/>
+  <g transform="translate(140 195) rotate(-6)">
+    <rect x="0" y="0" width="150" height="150" rx="30" fill="none" stroke="#5346A8" stroke-width="9"/>
+    <text x="75" y="82" text-anchor="middle" dominant-baseline="central" font-family="'IBM Plex Sans Arabic', Tahoma, Arial, sans-serif" font-weight="700" font-size="70" fill="#5346A8">قيد</text>
+  </g>
+  <text x="340" y="270" font-family="Archivo, Arial, sans-serif" font-weight="900" font-size="86" letter-spacing="-2" fill="#F6F5F1">QAYED</text>
+  <text x="342" y="330" font-family="'IBM Plex Sans Arabic', Tahoma, Arial, sans-serif" font-weight="700" font-size="24" fill="#8B7FE0" direction="rtl">سجّل نزلاءك رقمياً</text>
+  <text x="140" y="430" font-family="'IBM Plex Sans', Arial, sans-serif" font-weight="500" font-size="34" fill="#F6F5F1">Enregistrez vos voyageurs en 30 secondes.</text>
+  <text x="140" y="475" font-family="'IBM Plex Sans', Arial, sans-serif" font-weight="400" font-size="22" fill="#9BA8B3">La fiche de police digitale pour hébergements tunisiens.</text>
+  <text x="140 " y="560" font-family="'IBM Plex Mono', monospace" font-size="18" letter-spacing="2" fill="#8B7FE0">QAYED.TN</text>
+</svg>
