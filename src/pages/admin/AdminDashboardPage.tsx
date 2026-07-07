@@ -1,11 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban } from 'lucide-react';
 import { adminDashboardApi } from '@/api/admin/dashboard';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
-const fmtDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
+
+const fmtDate = (d: string | null | undefined, locale: string) =>
+  d ? new Date(d).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const Stat = ({ icon: Icon, label, value, color }: { icon: typeof Building2; label: string; value?: number; color: string }) => (
   <div className="card p-5">
@@ -19,50 +22,55 @@ const Stat = ({ icon: Icon, label, value, color }: { icon: typeof Building2; lab
   </div>
 );
 
-const AlertCard = ({ icon: Icon, title, color, children, empty }: { icon: typeof AlertTriangle; title: string; color: string; children: React.ReactNode; empty: boolean }) => (
-  <div className="card p-4">
-    <div className="flex items-center gap-2 mb-3">
-      <Icon className="h-4 w-4" style={{ color }} />
-      <p className="text-sm font-bold text-gray-800">{title}</p>
+const AlertCard = ({ icon: Icon, title, color, children, empty }: { icon: typeof AlertTriangle; title: string; color: string; children: React.ReactNode; empty: boolean }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="card p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Icon className="h-4 w-4" style={{ color }} />
+        <p className="text-sm font-bold text-gray-800">{title}</p>
+      </div>
+      {empty ? <p className="text-xs text-gray-400 py-2">{t('adminDashboard.nothingToReport')}</p> : <div className="flex flex-col gap-2">{children}</div>}
     </div>
-    {empty ? <p className="text-xs text-gray-400 py-2">Rien à signaler</p> : <div className="flex flex-col gap-2">{children}</div>}
-  </div>
-);
+  );
+};
 
 export const AdminDashboardPage = () => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
   const { data: stats, isLoading } = useQuery({ queryKey: ['admin-stats'], queryFn: adminDashboardApi.stats });
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl">
-      <h1 className="text-xl font-bold text-gray-900">Tableau de bord</h1>
+      <h1 className="text-xl font-bold text-gray-900">{t('adminDashboard.title')}</h1>
 
       {isLoading && <ListSkeleton rows={4} height="h-20" />}
 
       {stats && (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Stat icon={Building2}    label="Établissements" value={stats.hotels.total}     color="#5346A8" />
-            <Stat icon={CheckCircle2} label="Actifs"         value={stats.hotels.active}    color="#1F9D6B" />
-            <Stat icon={XCircle}      label="Suspendus"      value={stats.hotels.suspended} color="#ef4444" />
-            <Stat icon={Clock}        label="En attente"     value={stats.hotels.pending}   color="#E3A008" />
+            <Stat icon={Building2}    label={t('adminDashboard.properties')} value={stats.hotels.total}     color="#5346A8" />
+            <Stat icon={CheckCircle2} label={t('adminDashboard.active')}     value={stats.hotels.active}    color="#1F9D6B" />
+            <Stat icon={XCircle}      label={t('adminDashboard.suspended')}  value={stats.hotels.suspended} color="#ef4444" />
+            <Stat icon={Clock}        label={t('adminDashboard.pending')}    value={stats.hotels.pending}   color="#E3A008" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Stat icon={TrendingUp} label="Check-ins aujourd'hui" value={stats.check_ins.today}      color="#8B7FE0" />
-            <Stat icon={Users}      label="Check-ins ce mois"     value={stats.check_ins.this_month} color="#8B7FE0" />
+            <Stat icon={TrendingUp} label={t('adminDashboard.checkinsToday')}     value={stats.check_ins.today}      color="#8B7FE0" />
+            <Stat icon={Users}      label={t('adminDashboard.checkinsThisMonth')} value={stats.check_ins.this_month} color="#8B7FE0" />
           </div>
 
           <div>
-            <p className="text-sm font-bold text-gray-700 mb-3">À surveiller</p>
+            <p className="text-sm font-bold text-gray-700 mb-3">{t('adminDashboard.toWatch')}</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <AlertCard icon={CreditCard} title="Abonnements qui expirent (30j)" color="#E3A008" empty={!stats.alerts.expiring_subscriptions.length}>
+              <AlertCard icon={CreditCard} title={t('adminDashboard.expiringSubscriptions')} color="#E3A008" empty={!stats.alerts.expiring_subscriptions.length}>
                 {stats.alerts.expiring_subscriptions.map((s) => (
                   <div key={s.id} className="flex items-center justify-between text-sm">
                     <span className="truncate font-medium text-gray-800">{s.name}</span>
-                    <span className="text-xs text-gray-400 shrink-0 ms-2">{fmtDate(s.expires_at)}</span>
+                    <span className="text-xs text-gray-400 shrink-0 ms-2">{fmtDate(s.expires_at, locale)}</span>
                   </div>
                 ))}
               </AlertCard>
-              <AlertCard icon={AlertTriangle} title="Paiements en échec (30j)" color="#ef4444" empty={!stats.alerts.failed_payments.length}>
+              <AlertCard icon={AlertTriangle} title={t('adminDashboard.failedPayments')} color="#ef4444" empty={!stats.alerts.failed_payments.length}>
                 {stats.alerts.failed_payments.map((p) => (
                   <div key={p.id} className="flex items-center justify-between text-sm">
                     <span className="truncate font-medium text-gray-800">{p.hotel_name ?? '—'}</span>
@@ -70,11 +78,11 @@ export const AdminDashboardPage = () => {
                   </div>
                 ))}
               </AlertCard>
-              <AlertCard icon={Ban} title="Suspendus récemment (7j)" color="#9ca3af" empty={!stats.alerts.recently_suspended.length}>
+              <AlertCard icon={Ban} title={t('adminDashboard.recentlySuspended')} color="#9ca3af" empty={!stats.alerts.recently_suspended.length}>
                 {stats.alerts.recently_suspended.map((h) => (
                   <Link key={h.id} to={`/admin/hotels`} className="flex items-center justify-between text-sm hover:text-gray-900">
                     <span className="truncate font-medium text-gray-800">{h.name}</span>
-                    <span className="text-xs text-gray-400 shrink-0 ms-2">{fmtDate(h.updated_at)}</span>
+                    <span className="text-xs text-gray-400 shrink-0 ms-2">{fmtDate(h.updated_at, locale)}</span>
                   </Link>
                 ))}
               </AlertCard>

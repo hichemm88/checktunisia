@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { User, Lock, Shield, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { authApi } from '@/api/auth';
 import { useAuthStore } from '@/stores/authStore';
@@ -9,6 +10,8 @@ import { extractErrors } from '@/lib/api';
 
 type Tab = 'info' | 'security';
 
+const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-TN');
+
 const PasswordRule = ({ ok, label }: { ok: boolean; label: string }) => (
   <span className={`flex items-center gap-1.5 text-xs ${ok ? 'text-green-600' : 'text-gray-400'}`}>
     <span className={`h-1.5 w-1.5 rounded-full ${ok ? 'bg-green-500' : 'bg-gray-300'}`} />
@@ -17,6 +20,7 @@ const PasswordRule = ({ ok, label }: { ok: boolean; label: string }) => (
 );
 
 export const ProfilePage = () => {
+  const { t, i18n } = useTranslation();
   const navigate  = useNavigate();
   const { user, setUser } = useAuthStore();
   const [tab, setTab] = useState<Tab>('info');
@@ -115,7 +119,7 @@ export const ProfilePage = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-sm font-bold text-gray-900">Mon profil</h1>
+          <h1 className="text-sm font-bold text-gray-900">{t('profile.title')}</h1>
         </div>
       </header>
 
@@ -144,34 +148,34 @@ export const ProfilePage = () => {
                 className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
                 style={{ background: '#5346A833', color: '#5346A8', border: '1px solid #5346A866' }}
               >
-                Autorité
+                {t('profile.authority')}
               </span>
             </div>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
               {profile.badge_number && (
                 <div>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wide">Badge</p>
+                  <p className="text-[10px] text-white/40 uppercase tracking-wide">{t('profile.badge')}</p>
                   <p className="text-sm font-mono font-semibold text-white">{profile.badge_number}</p>
                 </div>
               )}
               {profile.rank && (
                 <div>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wide">Grade</p>
+                  <p className="text-[10px] text-white/40 uppercase tracking-wide">{t('profile.rank')}</p>
                   <p className="text-sm font-semibold text-white">{profile.rank}</p>
                 </div>
               )}
               {profile.governorate && (
                 <div>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wide">Gouvernorat</p>
+                  <p className="text-[10px] text-white/40 uppercase tracking-wide">{t('profile.governorate')}</p>
                   <p className="text-sm text-white">{profile.governorate}</p>
                 </div>
               )}
               {profile.expires_at && (
                 <div>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wide">Expiration</p>
+                  <p className="text-[10px] text-white/40 uppercase tracking-wide">{t('profile.expiration')}</p>
                   <p className="text-sm text-white">
-                    {new Date(profile.expires_at).toLocaleDateString('fr-TN', {
+                    {new Date(profile.expires_at).toLocaleDateString(dateLocaleFor(i18n.language), {
                       day: '2-digit', month: 'short', year: 'numeric',
                     })}
                   </p>
@@ -193,27 +197,27 @@ export const ProfilePage = () => {
             <p className="font-semibold text-gray-900">{user?.first_name} {user?.last_name}</p>
             <p className="text-sm text-gray-500">{user?.email}</p>
             <span className="mt-1 inline-block rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
-              {user?.role?.replace('_', ' ')}
+              {t(`profile.role.${user?.role}`, { defaultValue: user?.role?.replace('_', ' ') })}
             </span>
           </div>
         </div>
 
         {/* ── Tabs ─────────────────────────────────────────────────────── */}
         <div className="flex rounded-2xl bg-white shadow-sm overflow-hidden">
-          {(['info', 'security'] as Tab[]).map((t) => (
+          {(['info', 'security'] as Tab[]).map((tabKey) => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
+              key={tabKey}
+              onClick={() => setTab(tabKey)}
               className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-semibold transition-colors ${
-                tab === t
+                tab === tabKey
                   ? 'border-b-2 text-gray-900'
                   : 'text-gray-400 hover:text-gray-600'
               }`}
-              style={tab === t ? { borderColor: '#5346A8', color: '#5346A8' } : undefined}
+              style={tab === tabKey ? { borderColor: '#5346A8', color: '#5346A8' } : undefined}
             >
-              {t === 'info'
-                ? <><User className="h-4 w-4" /> Informations</>
-                : <><Lock className="h-4 w-4" /> Sécurité</>
+              {tabKey === 'info'
+                ? <><User className="h-4 w-4" /> {t('profile.tabInfo')}</>
+                : <><Lock className="h-4 w-4" /> {t('profile.tabSecurity')}</>
               }
             </button>
           ))}
@@ -225,7 +229,7 @@ export const ProfilePage = () => {
             {infoSuccess && (
               <div className="flex items-center gap-2 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
                 <CheckCircle className="h-4 w-4 shrink-0" />
-                Profil mis à jour avec succès.
+                {t('profile.infoSuccess')}
               </div>
             )}
             {infoError && (
@@ -237,13 +241,13 @@ export const ProfilePage = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <Input
-                label="Prénom"
+                label={t('profile.firstName')}
                 value={firstName}
                 onChange={(e) => { setFirstName(e.target.value); setInfoSuccess(false); }}
                 required
               />
               <Input
-                label="Nom"
+                label={t('profile.lastName')}
                 value={lastName}
                 onChange={(e) => { setLastName(e.target.value); setInfoSuccess(false); }}
                 required
@@ -251,7 +255,7 @@ export const ProfilePage = () => {
             </div>
 
             <Input
-              label="Email"
+              label={t('profile.email')}
               type="email"
               value={user?.email ?? ''}
               disabled
@@ -259,7 +263,7 @@ export const ProfilePage = () => {
             />
 
             <Input
-              label="Téléphone"
+              label={t('profile.phone')}
               type="tel"
               value={phone}
               onChange={(e) => { setPhone(e.target.value); setInfoSuccess(false); }}
@@ -272,7 +276,7 @@ export const ProfilePage = () => {
               loading={infoLoading}
               disabled={!firstName.trim() || !lastName.trim()}
             >
-              Enregistrer les modifications
+              {t('profile.saveInfo')}
             </Button>
           </form>
         )}
@@ -283,7 +287,7 @@ export const ProfilePage = () => {
             {pwdSuccess && (
               <div className="flex items-center gap-2 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
                 <CheckCircle className="h-4 w-4 shrink-0" />
-                Mot de passe modifié. Les autres sessions ont été révoquées.
+                {t('profile.pwdSuccess')}
               </div>
             )}
             {pwdError && (
@@ -294,7 +298,7 @@ export const ProfilePage = () => {
             )}
 
             <Input
-              label="Mot de passe actuel"
+              label={t('profile.currentPassword')}
               type="password"
               value={currentPwd}
               onChange={(e) => { setCurrentPwd(e.target.value); setPwdSuccess(false); }}
@@ -303,7 +307,7 @@ export const ProfilePage = () => {
             />
 
             <Input
-              label="Nouveau mot de passe"
+              label={t('profile.newPassword')}
               type="password"
               value={newPwd}
               onChange={(e) => { setNewPwd(e.target.value); setPwdSuccess(false); }}
@@ -314,17 +318,17 @@ export const ProfilePage = () => {
             {/* Complexity indicators */}
             {newPwd.length > 0 && (
               <div className="rounded-xl bg-gray-50 border border-gray-100 p-3 grid grid-cols-2 gap-y-1.5 gap-x-3">
-                <PasswordRule ok={pwdChecks.length}    label="12 caractères min." />
-                <PasswordRule ok={pwdChecks.uppercase} label="Majuscule" />
-                <PasswordRule ok={pwdChecks.lowercase} label="Minuscule" />
-                <PasswordRule ok={pwdChecks.number}    label="Chiffre" />
-                <PasswordRule ok={pwdChecks.symbol}    label="Caractère spécial" />
-                <PasswordRule ok={pwdChecks.match}     label="Confirmation identique" />
+                <PasswordRule ok={pwdChecks.length}    label={t('profile.rule12Chars')} />
+                <PasswordRule ok={pwdChecks.uppercase} label={t('profile.ruleUppercase')} />
+                <PasswordRule ok={pwdChecks.lowercase} label={t('profile.ruleLowercase')} />
+                <PasswordRule ok={pwdChecks.number}    label={t('profile.ruleNumber')} />
+                <PasswordRule ok={pwdChecks.symbol}    label={t('profile.ruleSymbol')} />
+                <PasswordRule ok={pwdChecks.match}     label={t('profile.ruleMatch')} />
               </div>
             )}
 
             <Input
-              label="Confirmer le nouveau mot de passe"
+              label={t('profile.confirmNewPassword')}
               type="password"
               value={confirmPwd}
               onChange={(e) => { setConfirmPwd(e.target.value); setPwdSuccess(false); }}
@@ -338,7 +342,7 @@ export const ProfilePage = () => {
               loading={pwdLoading}
               disabled={!pwdValid || !currentPwd}
             >
-              Changer le mot de passe
+              {t('profile.changePassword')}
             </Button>
           </form>
         )}

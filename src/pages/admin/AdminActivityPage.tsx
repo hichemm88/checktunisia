@@ -1,42 +1,46 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { adminActivityApi } from '@/api/admin/activity';
 import { Card } from '@/components/ui/Card';
 import { Pagination } from '@/components/ui/Pagination';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
-const ACTION_LABELS: Record<string, string> = {
-  'hotel.created': 'a créé un établissement',
-  'hotel.updated': 'a modifié un établissement',
-  'hotel.suspended': 'a suspendu un établissement',
-  'hotel.activated': 'a réactivé un établissement',
-  'hotel.deleted': 'a supprimé un établissement',
-  'organization.created': 'a créé un hébergeur',
-  'organization.updated': 'a modifié un hébergeur',
-  'organization.suspended': 'a suspendu un hébergeur',
-  'organization.activated': 'a réactivé un hébergeur',
-  'organization.deleted': 'a supprimé un hébergeur',
-  'user.created': 'a créé un compte membre',
-  'user.updated': 'a modifié un compte membre',
-  'user.deleted': 'a supprimé un compte membre',
-  'user.invite_resent': 'a renvoyé une invitation',
-  'user.login': "s'est connecté(e)",
-  'user.logout': "s'est déconnecté(e)",
-  'authority_user.created': 'a créé un utilisateur autorité',
-  'authority_user.updated': 'a modifié un utilisateur autorité',
-  'authority_user.deleted': 'a supprimé un utilisateur autorité',
-  'authority_organization.created': 'a créé un organisme',
-  'authority_organization.updated': 'a modifié un organisme',
-  'authority_organization.deleted': 'a supprimé un organisme',
-  'subscription.activated': 'a créé/activé un abonnement',
-  'invoice.updated': 'a modifié une facture',
-  'check_in.created': 'a créé un check-in',
-  'check_in.deleted': 'a supprimé un check-in',
+const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
+
+const ACTION_KEYS: Record<string, string> = {
+  'hotel.created': 'adminActivity.action.hotelCreated',
+  'hotel.updated': 'adminActivity.action.hotelUpdated',
+  'hotel.suspended': 'adminActivity.action.hotelSuspended',
+  'hotel.activated': 'adminActivity.action.hotelActivated',
+  'hotel.deleted': 'adminActivity.action.hotelDeleted',
+  'organization.created': 'adminActivity.action.organizationCreated',
+  'organization.updated': 'adminActivity.action.organizationUpdated',
+  'organization.suspended': 'adminActivity.action.organizationSuspended',
+  'organization.activated': 'adminActivity.action.organizationActivated',
+  'organization.deleted': 'adminActivity.action.organizationDeleted',
+  'user.created': 'adminActivity.action.userCreated',
+  'user.updated': 'adminActivity.action.userUpdated',
+  'user.deleted': 'adminActivity.action.userDeleted',
+  'user.invite_resent': 'adminActivity.action.userInviteResent',
+  'user.login': 'adminActivity.action.userLogin',
+  'user.logout': 'adminActivity.action.userLogout',
+  'authority_user.created': 'adminActivity.action.authorityUserCreated',
+  'authority_user.updated': 'adminActivity.action.authorityUserUpdated',
+  'authority_user.deleted': 'adminActivity.action.authorityUserDeleted',
+  'authority_organization.created': 'adminActivity.action.authorityOrgCreated',
+  'authority_organization.updated': 'adminActivity.action.authorityOrgUpdated',
+  'authority_organization.deleted': 'adminActivity.action.authorityOrgDeleted',
+  'subscription.activated': 'adminActivity.action.subscriptionActivated',
+  'invoice.updated': 'adminActivity.action.invoiceUpdated',
+  'check_in.created': 'adminActivity.action.checkinCreated',
+  'check_in.deleted': 'adminActivity.action.checkinDeleted',
 };
 
-const actionLabel = (action: string) => ACTION_LABELS[action] ?? action.replace(/[._]/g, ' ');
-
 export const AdminActivityPage = () => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
+  const actionLabel = (action: string) => action in ACTION_KEYS ? t(ACTION_KEYS[action]) : action.replace(/[._]/g, ' ');
   const [page, setPage] = useState(1);
   const [action, setAction] = useState('');
 
@@ -48,11 +52,11 @@ export const AdminActivityPage = () => {
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">Journal d'activité</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t('adminActivity.title')}</h1>
       </div>
       <select className="input w-fit" value={action} onChange={(e) => { setAction(e.target.value); setPage(1); }}>
-        <option value="">Toutes les actions</option>
-        {Object.keys(ACTION_LABELS).map((a) => <option key={a} value={a}>{a}</option>)}
+        <option value="">{t('adminActivity.allActions')}</option>
+        {Object.keys(ACTION_KEYS).map((a) => <option key={a} value={a}>{a}</option>)}
       </select>
 
       <Card>
@@ -64,17 +68,17 @@ export const AdminActivityPage = () => {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm text-gray-800">
-                <span className="font-semibold">{entry.actor ? `${entry.actor.first_name} ${entry.actor.last_name}` : 'Compte supprimé'}</span>
+                <span className="font-semibold">{entry.actor ? `${entry.actor.first_name} ${entry.actor.last_name}` : t('settingsPage.deletedAccount')}</span>
                 {' '}{actionLabel(entry.action)}
                 {entry.hotel && <span className="text-xs text-gray-400"> ({entry.hotel.name})</span>}
               </p>
               <p className="text-xs text-gray-400">
-                {new Date(entry.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                {new Date(entry.created_at).toLocaleString(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
           </div>
         ))}
-        {!isLoading && !data?.data.length && <p className="py-6 text-center text-sm text-gray-400">Aucune activité</p>}
+        {!isLoading && !data?.data.length && <p className="py-6 text-center text-sm text-gray-400">{t('settingsPage.noActivity')}</p>}
       </Card>
 
       {data && (

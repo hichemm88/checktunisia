@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Download } from 'lucide-react';
 import { adminSubscriptionsApi, AdminInvoice } from '@/api/admin/subscriptions';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
@@ -21,13 +22,14 @@ interface InvoiceRowProps {
 
 /** Shared invoice row — used by AdminHostsPage, AdminSubscriptionsPage, AdminFacturationPage. */
 export const InvoiceRow = ({ invoice, hostId, subtitle, invalidateKey }: InvoiceRowProps) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
 
   const statusMut = useAdminMutation({
     mutationFn: (newStatus: string) => adminSubscriptionsApi.updateInvoiceForHost(hostId, invoice.id, {
       status: newStatus, paid_at: newStatus === 'paid' ? new Date().toISOString().slice(0, 10) : undefined,
     }),
-    successMessage: 'Facture marquée payée',
+    successMessage: t('adminShared.invoiceMarkedPaid'),
     onSuccess: () => qc.invalidateQueries({ queryKey: invalidateKey }),
   });
 
@@ -43,7 +45,7 @@ export const InvoiceRow = ({ invoice, hostId, subtitle, invalidateKey }: Invoice
       </span>
       {invoice.status !== 'paid' && invoice.status !== 'void' && (
         <button onClick={() => statusMut.mutate('paid')} className="text-xs font-semibold text-green-600 me-3 shrink-0">
-          Marquer payée
+          {t('adminShared.markPaid')}
         </button>
       )}
       <button onClick={() => adminSubscriptionsApi.downloadInvoicePdf(hostId, invoice.id, `facture-${invoice.invoice_number}.pdf`)}

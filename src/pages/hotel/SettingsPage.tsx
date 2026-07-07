@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building, CreditCard, Users, Plus, Trash2, Save,
@@ -18,6 +19,8 @@ import { HotelUser, CreateUserPayload } from '@/types';
 import { organizationApi, OrgInfo } from '@/api/organization';
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
+
+const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-TN');
 
 const Alert = ({ msg, type }: { msg: string; type: 'success' | 'error' }) => (
   <div className={`rounded-lg px-3 py-2 text-sm flex items-start gap-2 ${
@@ -39,20 +42,10 @@ const GOVERNORATES = [
   'Sousse', 'Tataouine', 'Tozeur', 'Tunis', 'Zaghouan',
 ];
 
-
-const ROLE_LABELS: Record<string, string> = {
-  hotel_admin:  'Administrateur',
-  receptionist: 'Réceptionniste',
-};
-
 // ─── Tab: Société ─────────────────────────────────────────────────────────────
 
-const ENTITY_TYPE_LABELS: Record<string, string> = {
-  company:    'Société',
-  individual: 'Particulier',
-};
-
 const SocieteTab = () => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [editing, setEditing]   = useState(false);
   const [feedback, setFeedback] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
@@ -79,7 +72,7 @@ const SocieteTab = () => {
     } as any),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['org-info'] });
-      setFeedback({ msg: 'Informations mises à jour', type: 'success' });
+      setFeedback({ msg: t('settingsPage.infoUpdated'), type: 'success' });
       setEditing(false);
     },
     onError: (err) => setFeedback({ msg: extractErrors(err), type: 'error' }),
@@ -92,12 +85,12 @@ const SocieteTab = () => {
       <CardHeader>
         <CardTitle>
           <div className="flex items-center gap-2">
-            <Building className="h-4 w-4 text-gray-400" /> Informations de la société
+            <Building className="h-4 w-4 text-gray-400" /> {t('settingsPage.companyInfo')}
           </div>
         </CardTitle>
         {!editing
           ? <button onClick={startEdit} className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity" style={{ color: '#5346A8' }}>
-              <Pencil className="h-3.5 w-3.5" /> Modifier
+              <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
             </button>
           : <button onClick={cancelEdit} className="text-gray-400 hover:text-gray-600">
               <X className="h-4 w-4" />
@@ -110,11 +103,11 @@ const SocieteTab = () => {
       {!editing ? (
         <div className="flex flex-col gap-0 mt-3">
           {[
-            { label: 'Type',               value: ENTITY_TYPE_LABELS[org?.entity_type ?? ''] ?? org?.entity_type },
-            { label: 'Raison sociale',     value: org?.name },
-            { label: 'N° registre (RC)',   value: org?.registration_number },
-            { label: 'Email contact',      value: org?.contact_email },
-            { label: 'Téléphone',          value: org?.contact_phone },
+            { label: t('settingsPage.type'),           value: org?.entity_type === 'company' ? t('policeFiche.company') : org?.entity_type === 'individual' ? t('policeFiche.individual') : org?.entity_type },
+            { label: t('settingsPage.legalName'),      value: org?.name },
+            { label: t('settingsPage.rcNumber'),       value: org?.registration_number },
+            { label: t('settingsPage.contactEmail'),   value: org?.contact_email },
+            { label: t('settingsPage.phone'),          value: org?.contact_phone },
           ].map(({ label, value }) => value ? (
             <div key={label} className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
               <span className="text-sm text-gray-500">{label}</span>
@@ -134,52 +127,52 @@ const SocieteTab = () => {
       ) : (
         <div className="flex flex-col gap-3 mt-3">
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Type d'entité</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('settingsPage.entityType')}</label>
             <Select
               value={form?.entity_type ?? 'company'}
               onChange={e => setForm(f => f ? { ...f, entity_type: e.target.value as any } : f)}
               options={[
-                { value: 'company',    label: 'Société' },
-                { value: 'individual', label: 'Particulier' },
+                { value: 'company',    label: t('policeFiche.company') },
+                { value: 'individual', label: t('policeFiche.individual') },
               ]}
             />
           </div>
-          <Input label="Raison sociale / Nom"
+          <Input label={t('settingsPage.legalNameOrName')}
             value={form?.name ?? ''}
             onChange={e => setForm(f => f ? { ...f, name: e.target.value } : f)}
           />
-          <Input label="N° Registre du commerce"
+          <Input label={t('settingsPage.rcNumberFull')}
             value={form?.registration_number ?? ''}
             onChange={e => setForm(f => f ? { ...f, registration_number: e.target.value } : f)}
             placeholder="B123456789"
           />
           <hr className="border-gray-100" />
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contacts</p>
-          <Input label="Email" type="email"
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('settingsPage.contacts')}</p>
+          <Input label={t('profile.email')} type="email"
             value={form?.contact_email ?? ''}
             onChange={e => setForm(f => f ? { ...f, contact_email: e.target.value } : f)}
             placeholder="contact@societe.tn"
           />
-          <Input label="Téléphone" type="tel"
+          <Input label={t('settingsPage.phone')} type="tel"
             value={form?.contact_phone ?? ''}
             onChange={e => setForm(f => f ? { ...f, contact_phone: e.target.value } : f)}
             placeholder="+216 xx xxx xxx"
           />
           <hr className="border-gray-100" />
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Adresse</p>
-          <Input label="Adresse" value={form?.address?.line1 ?? ''} onChange={e => setAddr('line1', e.target.value)} />
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('onboarding.address')}</p>
+          <Input label={t('onboarding.address')} value={form?.address?.line1 ?? ''} onChange={e => setAddr('line1', e.target.value)} />
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Ville" value={form?.address?.city ?? ''} onChange={e => setAddr('city', e.target.value)} />
-            <Select label="Gouvernorat" value={form?.address?.governorate ?? ''}
+            <Input label={t('propertiesPage.city')} value={form?.address?.city ?? ''} onChange={e => setAddr('city', e.target.value)} />
+            <Select label={t('propertiesPage.governorate')} value={form?.address?.governorate ?? ''}
               onChange={e => setAddr('governorate', e.target.value)}
-              options={[{ value: '', label: '— Choisir —' }, ...GOVERNORATES.map(g => ({ value: g, label: g }))]}
+              options={[{ value: '', label: t('settingsPage.choose') }, ...GOVERNORATES.map(g => ({ value: g, label: g }))]}
             />
           </div>
           <div className="flex gap-2 pt-1">
             <Button size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending} className="gap-2">
-              <Save className="h-4 w-4" /> Enregistrer
+              <Save className="h-4 w-4" /> {t('common.save')}
             </Button>
-            <Button size="sm" variant="ghost" onClick={cancelEdit}>Annuler</Button>
+            <Button size="sm" variant="ghost" onClick={cancelEdit}>{t('common.cancel')}</Button>
           </div>
         </div>
       )}
@@ -190,6 +183,7 @@ const SocieteTab = () => {
 // ─── User row ─────────────────────────────────────────────────────────────────
 
 const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [mode, setMode]     = useState<'view' | 'edit' | 'confirm_delete'>('view');
   const [editForm, setEditForm] = useState({
@@ -238,21 +232,21 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
       <div className="py-3 border-b border-gray-50 last:border-0">
         <div className="flex flex-col gap-2">
           <div className="grid grid-cols-2 gap-2">
-            <Input label="Prénom" value={editForm.first_name} onChange={e => setEditForm(f => ({ ...f, first_name: e.target.value }))} />
-            <Input label="Nom"    value={editForm.last_name}  onChange={e => setEditForm(f => ({ ...f, last_name:  e.target.value }))} />
+            <Input label={t('profile.firstName')} value={editForm.first_name} onChange={e => setEditForm(f => ({ ...f, first_name: e.target.value }))} />
+            <Input label={t('profile.lastName')}    value={editForm.last_name}  onChange={e => setEditForm(f => ({ ...f, last_name:  e.target.value }))} />
           </div>
           <Select
-            label="Rôle"
+            label={t('settingsPage.role')}
             value={editForm.role}
             onChange={e => setEditForm(f => ({ ...f, role: e.target.value as any }))}
             options={[
-              { value: 'receptionist', label: 'Réceptionniste' },
-              { value: 'hotel_admin',  label: 'Administrateur' },
+              { value: 'receptionist', label: t('settingsPage.roleReceptionist') },
+              { value: 'hotel_admin',  label: t('settingsPage.roleAdmin') },
             ]}
           />
           {allProperties && allProperties.length > 1 && (
             <div className="flex flex-col gap-1.5">
-              <label className="label">Biens accessibles</label>
+              <label className="label">{t('settingsPage.accessibleProperties')}</label>
               <div className="flex flex-col gap-1.5 rounded-lg border border-gray-100 p-2.5 max-h-36 overflow-y-auto">
                 {allProperties.map(p => (
                   <label key={p.id} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
@@ -267,9 +261,9 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
           <div className="flex gap-2">
             <Button size="sm" onClick={() => editMut.mutate()} loading={editMut.isPending}
               disabled={editForm.hotel_ids.length === 0} className="gap-1.5">
-              <Save className="h-3.5 w-3.5" /> Enregistrer
+              <Save className="h-3.5 w-3.5" /> {t('common.save')}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => { setMode('view'); setError(''); }}>Annuler</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setMode('view'); setError(''); }}>{t('common.cancel')}</Button>
           </div>
         </div>
       </div>
@@ -280,15 +274,15 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
     return (
       <div className="py-3 border-b border-gray-50 last:border-0">
         <p className="text-sm text-gray-700 mb-2">
-          Supprimer <span className="font-semibold">{u.first_name} {u.last_name}</span> ?
+          {t('settingsPage.confirmDeleteUser')} <span className="font-semibold">{u.first_name} {u.last_name}</span> ?
         </p>
         {error && <Alert msg={error} type="error" />}
         <div className="flex gap-2">
           <Button size="sm" loading={deleteMut.isPending} onClick={() => deleteMut.mutate()}
             className="!bg-red-600 hover:!bg-red-700 gap-1.5">
-            <Trash2 className="h-3.5 w-3.5" /> Supprimer
+            <Trash2 className="h-3.5 w-3.5" /> {t('common.delete')}
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => { setMode('view'); setError(''); }}>Annuler</Button>
+          <Button size="sm" variant="ghost" onClick={() => { setMode('view'); setError(''); }}>{t('common.cancel')}</Button>
         </div>
       </div>
     );
@@ -314,14 +308,14 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
       </div>
       <div className="flex items-center gap-2 shrink-0 ms-2">
         <Badge variant={u.status === 'active' ? 'active' : 'suspended'}>
-          {ROLE_LABELS[u.role] ?? u.role}
+          {u.role === 'hotel_admin' ? t('settingsPage.roleAdmin') : u.role === 'receptionist' ? t('settingsPage.roleReceptionist') : u.role}
         </Badge>
         {!u.last_login_at && (
           <button
             onClick={() => resendMut.mutate()}
             disabled={resendMut.isPending}
             className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors disabled:opacity-50"
-            title={resendMut.isSuccess ? 'Invitation renvoyée' : "Renvoyer l'invitation"}
+            title={resendMut.isSuccess ? t('settingsPage.inviteResent') : t('settingsPage.resendInvite')}
           >
             <Send className="h-3.5 w-3.5" />
           </button>
@@ -329,14 +323,14 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
         <button
           onClick={() => setMode('edit')}
           className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors"
-          title="Modifier"
+          title={t('common.edit')}
         >
           <Pencil className="h-3.5 w-3.5" />
         </button>
         <button
           onClick={() => setMode('confirm_delete')}
           className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
-          title="Supprimer"
+          title={t('common.delete')}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
@@ -345,7 +339,7 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
       {resendMut.isSuccess && !error && (
         <p className="text-xs text-green-600 mt-1">
-          {resendMut.data.email_sent ? 'Invitation renvoyée.' : "Mot de passe régénéré, mais l'email n'a pas pu être envoyé (contactez le support)."}
+          {resendMut.data.email_sent ? t('settingsPage.inviteResentFull') : t('settingsPage.passwordRegeneratedNoEmail')}
         </p>
       )}
     </div>
@@ -355,6 +349,7 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
 // ─── Add user form ────────────────────────────────────────────────────────────
 
 const AddUserForm = ({ onDone }: { onDone: () => void }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [form, setForm] = useState<CreateUserPayload>({
     first_name: '', last_name: '', email: '', role: 'receptionist', hotel_ids: [],
@@ -377,21 +372,21 @@ const AddUserForm = ({ onDone }: { onDone: () => void }) => {
 
   return (
     <div className="flex flex-col gap-3 border border-gray-100 rounded-xl p-4 mt-2">
-      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Nouveau membre</p>
+      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">{t('settingsPage.newMember')}</p>
       <div className="grid grid-cols-2 gap-2">
-        <Input label="Prénom" value={form.first_name} onChange={e => set('first_name', e.target.value)} />
-        <Input label="Nom"    value={form.last_name}  onChange={e => set('last_name',  e.target.value)} />
+        <Input label={t('profile.firstName')} value={form.first_name} onChange={e => set('first_name', e.target.value)} />
+        <Input label={t('profile.lastName')}    value={form.last_name}  onChange={e => set('last_name',  e.target.value)} />
       </div>
-      <Input label="Email" type="email" value={form.email} onChange={e => set('email', e.target.value)} />
-      <Select label="Rôle" value={form.role} onChange={e => set('role', e.target.value)}
+      <Input label={t('profile.email')} type="email" value={form.email} onChange={e => set('email', e.target.value)} />
+      <Select label={t('settingsPage.role')} value={form.role} onChange={e => set('role', e.target.value)}
         options={[
-          { value: 'receptionist', label: 'Réceptionniste' },
-          { value: 'hotel_admin',  label: 'Administrateur' },
+          { value: 'receptionist', label: t('settingsPage.roleReceptionist') },
+          { value: 'hotel_admin',  label: t('settingsPage.roleAdmin') },
         ]}
       />
       {properties && properties.length > 1 && (
         <div className="flex flex-col gap-1.5">
-          <label className="label">Biens accessibles</label>
+          <label className="label">{t('settingsPage.accessibleProperties')}</label>
           <div className="flex flex-col gap-1.5 rounded-lg border border-gray-100 p-2.5 max-h-36 overflow-y-auto">
             {properties.map(p => (
               <label key={p.id} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
@@ -400,17 +395,17 @@ const AddUserForm = ({ onDone }: { onDone: () => void }) => {
               </label>
             ))}
           </div>
-          <p className="text-xs text-gray-400">Laisser vide pour n'assigner que le bien actif.</p>
+          <p className="text-xs text-gray-400">{t('settingsPage.leaveEmptyHint')}</p>
         </div>
       )}
-      <p className="text-xs text-gray-400">Un email avec un mot de passe temporaire sera envoyé automatiquement.</p>
+      <p className="text-xs text-gray-400">{t('settingsPage.tempPasswordEmailHint')}</p>
       {error && <Alert msg={error} type="error" />}
       <div className="flex gap-2">
         <Button size="sm" onClick={() => mutation.mutate()} loading={mutation.isPending}
           disabled={!form.first_name || !form.last_name || !form.email}>
-          Créer et envoyer l'invitation
+          {t('settingsPage.createAndSendInvite')}
         </Button>
-        <Button size="sm" variant="ghost" onClick={onDone}>Annuler</Button>
+        <Button size="sm" variant="ghost" onClick={onDone}>{t('common.cancel')}</Button>
       </div>
     </div>
   );
@@ -419,6 +414,7 @@ const AddUserForm = ({ onDone }: { onDone: () => void }) => {
 // ─── Tab: Équipe ──────────────────────────────────────────────────────────────
 
 const EquipeTab = () => {
+  const { t } = useTranslation();
   const [showAdd, setShowAdd] = useState(false);
 
   const { data: users, isLoading } = useQuery({
@@ -431,7 +427,7 @@ const EquipeTab = () => {
       <CardHeader>
         <CardTitle>
           <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-gray-400" /> Équipe
+            <Users className="h-4 w-4 text-gray-400" /> {t('settingsPage.team')}
           </div>
         </CardTitle>
         <button
@@ -440,7 +436,7 @@ const EquipeTab = () => {
           style={{ color: '#5346A8' }}
         >
           {showAdd ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
-          {showAdd ? 'Annuler' : 'Ajouter'}
+          {showAdd ? t('common.cancel') : t('common.add')}
         </button>
       </CardHeader>
 
@@ -456,7 +452,7 @@ const EquipeTab = () => {
         ))}
 
         {!isLoading && !users?.length && (
-          <p className="py-6 text-center text-sm text-gray-400">Aucun utilisateur</p>
+          <p className="py-6 text-center text-sm text-gray-400">{t('settingsPage.noUser')}</p>
         )}
       </div>
     </Card>
@@ -466,6 +462,7 @@ const EquipeTab = () => {
 // ─── Tab: Abonnement ──────────────────────────────────────────────────────────
 
 const AbonnementTab = () => {
+  const { t, i18n } = useTranslation();
   const { data: sub } = useQuery({
     queryKey: ['subscription'],
     queryFn: settingsApi.getSubscription,
@@ -479,31 +476,31 @@ const AbonnementTab = () => {
           <CardHeader>
             <CardTitle>
               <div className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-gray-400" /> Abonnement
+                <CreditCard className="h-4 w-4 text-gray-400" /> {t('settingsPage.subscription')}
               </div>
             </CardTitle>
           </CardHeader>
           <div className="mt-3 flex flex-col gap-2">
             <div className="flex justify-between py-1.5 border-b border-gray-50">
-              <span className="text-sm text-gray-500">Plan</span>
+              <span className="text-sm text-gray-500">{t('settingsPage.plan')}</span>
               <span className="text-sm font-bold" style={{ color: '#5346A8' }}>
                 {typeof sub.plan === 'object' && sub.plan !== null ? sub.plan.name : (sub.plan ?? '—')}
               </span>
             </div>
             <div className="flex justify-between py-1.5 border-b border-gray-50">
-              <span className="text-sm text-gray-500">Statut</span>
+              <span className="text-sm text-gray-500">{t('common.status')}</span>
               <Badge variant={sub.status === 'active' ? 'active' : 'suspended'}>{sub.status}</Badge>
             </div>
             <div className="flex justify-between py-1.5 border-b border-gray-50">
-              <span className="text-sm text-gray-500">Expire le</span>
+              <span className="text-sm text-gray-500">{t('settingsPage.expiresOn')}</span>
               <span className="text-sm font-medium text-gray-900">
-                {new Date(sub.expires_at).toLocaleDateString('fr-TN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                {new Date(sub.expires_at).toLocaleDateString(dateLocaleFor(i18n.language), { day: 'numeric', month: 'long', year: 'numeric' })}
               </span>
             </div>
             <div className="flex justify-between py-1.5">
-              <span className="text-sm text-gray-500">Jours restants</span>
+              <span className="text-sm text-gray-500">{t('settingsPage.daysRemaining')}</span>
               <span className={`text-sm font-bold ${sub.days_remaining <= 7 ? 'text-red-600' : sub.days_remaining <= 30 ? 'text-amber-600' : 'text-green-600'}`}>
-                {sub.days_remaining} jour{sub.days_remaining !== 1 ? 's' : ''}
+                {t('settingsPage.daysCount', { count: sub.days_remaining })}
               </span>
             </div>
           </div>
@@ -512,9 +509,9 @@ const AbonnementTab = () => {
             <div className="mt-3 rounded-xl p-3 flex items-start gap-2" style={{ background: '#FBF0D7', border: '1px solid #FBF0D7' }}>
               <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-amber-800">Renouvellement à prévoir</p>
+                <p className="text-sm font-semibold text-amber-800">{t('settingsPage.renewalDue')}</p>
                 <p className="text-xs text-amber-600 mt-0.5">
-                  Contactez <a href="mailto:support@qayed.tn" className="underline font-medium">support@qayed.tn</a> pour renouveler votre abonnement.
+                  <Trans t={t} i18nKey="settingsPage.renewalContact" components={{ a: <a href="mailto:support@qayed.tn" className="underline font-medium" /> }} />
                 </p>
               </div>
             </div>
@@ -529,35 +526,36 @@ const AbonnementTab = () => {
 
 // ─── Tab: Activité ──────────────────────────────────────────────────────────────
 
-const ACTION_LABELS: Record<string, string> = {
-  'check_in.created':          'a créé un check-in',
-  'check_in.updated':          'a modifié un check-in',
-  'check_in.completed':        'a finalisé un check-in',
-  'check_in.checked_out':      'a enregistré un départ',
-  'check_in.cancelled':        'a annulé un check-in',
-  'check_in.deleted':          'a supprimé un check-in',
-  'guest.added':                'a ajouté un voyageur',
-  'guest.updated':              'a modifié un voyageur',
-  'guest.removed':              'a supprimé un voyageur',
-  'scan.uploaded':               'a scanné un document',
-  'room.created':               'a créé une unité',
-  'room.updated':               'a modifié une unité',
-  'room.deleted':               'a supprimé une unité',
-  'watchlist.hits_viewed':      'a consulté les alertes de surveillance',
-  'watchlist.hit_acknowledged': 'a traité une alerte de surveillance',
-  'user.login':                 's\'est connecté(e)',
-  'user.logout':                's\'est déconnecté(e)',
-  'user.created':                'a créé un compte membre',
-  'user.updated':                'a modifié un compte membre',
-  'user.deleted':                'a supprimé un compte membre',
-  'user.invite_resent':          'a renvoyé une invitation',
-  'profile.updated':             'a modifié son profil',
-  'profile.password_changed':    'a changé son mot de passe',
+const ACTION_KEYS: Record<string, string> = {
+  'check_in.created':           'settingsPage.action.checkinCreated',
+  'check_in.updated':           'settingsPage.action.checkinUpdated',
+  'check_in.completed':         'settingsPage.action.checkinCompleted',
+  'check_in.checked_out':       'settingsPage.action.checkinCheckedOut',
+  'check_in.cancelled':         'settingsPage.action.checkinCancelled',
+  'check_in.deleted':           'settingsPage.action.checkinDeleted',
+  'guest.added':                'settingsPage.action.guestAdded',
+  'guest.updated':               'settingsPage.action.guestUpdated',
+  'guest.removed':               'settingsPage.action.guestRemoved',
+  'scan.uploaded':                'settingsPage.action.scanUploaded',
+  'room.created':                'settingsPage.action.roomCreated',
+  'room.updated':                'settingsPage.action.roomUpdated',
+  'room.deleted':                'settingsPage.action.roomDeleted',
+  'watchlist.hits_viewed':       'settingsPage.action.watchlistViewed',
+  'watchlist.hit_acknowledged':  'settingsPage.action.watchlistAcknowledged',
+  'user.login':                  'settingsPage.action.userLogin',
+  'user.logout':                 'settingsPage.action.userLogout',
+  'user.created':                'settingsPage.action.userCreated',
+  'user.updated':                'settingsPage.action.userUpdated',
+  'user.deleted':                'settingsPage.action.userDeleted',
+  'user.invite_resent':          'settingsPage.action.userInviteResent',
+  'profile.updated':             'settingsPage.action.profileUpdated',
+  'profile.password_changed':    'settingsPage.action.profilePasswordChanged',
 };
 
-const actionLabel = (action: string): string => ACTION_LABELS[action] ?? action.replace(/[._]/g, ' ');
-
 const ActiviteTab = () => {
+  const { t, i18n } = useTranslation();
+  const actionLabel = (action: string): string =>
+    action in ACTION_KEYS ? t(ACTION_KEYS[action]) : action.replace(/[._]/g, ' ');
   const [page, setPage] = useState(1);
   const [role, setRole] = useState<string>('');
 
@@ -571,16 +569,16 @@ const ActiviteTab = () => {
       <CardHeader>
         <CardTitle>
           <div className="flex items-center gap-2">
-            <Activity className="h-4 w-4 text-gray-400" /> Activité
+            <Activity className="h-4 w-4 text-gray-400" /> {t('settingsPage.activity')}
           </div>
         </CardTitle>
       </CardHeader>
 
       <div className="flex gap-1.5 mb-3">
         {[
-          { value: '',             label: 'Tous' },
-          { value: 'receptionist', label: 'Réceptionnistes' },
-          { value: 'hotel_admin',  label: 'Administrateurs' },
+          { value: '',             label: t('common.all') },
+          { value: 'receptionist', label: t('settingsPage.roleReceptionists') },
+          { value: 'hotel_admin',  label: t('settingsPage.roleAdmins') },
         ].map((f) => (
           <button
             key={f.value}
@@ -610,14 +608,14 @@ const ActiviteTab = () => {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm text-gray-800">
-                <span className="font-semibold">{entry.actor?.name ?? 'Compte supprimé'}</span>
+                <span className="font-semibold">{entry.actor?.name ?? t('settingsPage.deletedAccount')}</span>
                 {entry.actor && (
-                  <span className="text-xs text-gray-400"> ({ROLE_LABELS[entry.actor.role] ?? entry.actor.role})</span>
+                  <span className="text-xs text-gray-400"> ({entry.actor.role === 'hotel_admin' ? t('settingsPage.roleAdmin') : entry.actor.role === 'receptionist' ? t('settingsPage.roleReceptionist') : entry.actor.role})</span>
                 )}
                 {' '}{actionLabel(entry.action)}
               </p>
               <p className="text-xs text-gray-400">
-                {new Date(entry.created_at).toLocaleString('fr-FR', {
+                {new Date(entry.created_at).toLocaleString(dateLocaleFor(i18n.language), {
                   day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
                 })}
               </p>
@@ -626,7 +624,7 @@ const ActiviteTab = () => {
         ))}
 
         {!isLoading && !data?.data.length && (
-          <p className="py-6 text-center text-sm text-gray-400">Aucune activité</p>
+          <p className="py-6 text-center text-sm text-gray-400">{t('settingsPage.noActivity')}</p>
         )}
       </div>
 
@@ -637,7 +635,7 @@ const ActiviteTab = () => {
             onClick={() => setPage((p) => p - 1)}
             className="rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40 hover:bg-warm-100 transition-colors"
           >
-            ← Préc.
+            ← {t('common.previous')}
           </button>
           <span className="text-xs text-gray-500 font-medium">
             {data.meta.current_page} / {data.meta.last_page}
@@ -647,7 +645,7 @@ const ActiviteTab = () => {
             onClick={() => setPage((p) => p + 1)}
             className="rounded-xl border border-gray-200 bg-white px-4 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40 hover:bg-warm-100 transition-colors"
           >
-            Suiv. →
+            {t('common.next')} →
           </button>
         </div>
       )}
@@ -659,20 +657,21 @@ const ActiviteTab = () => {
 
 type Tab = 'societe' | 'equipe' | 'activite' | 'abonnement';
 
-const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
-  { id: 'societe',     label: 'Société',      icon: Building   },
-  { id: 'equipe',      label: 'Équipe',        icon: Users      },
-  { id: 'activite',    label: 'Activité',      icon: Activity   },
-  { id: 'abonnement',  label: 'Abonnement',    icon: CreditCard },
+const TAB_DEFS: { id: Tab; labelKey: string; icon: React.ElementType }[] = [
+  { id: 'societe',     labelKey: 'settingsPage.tabCompany',      icon: Building   },
+  { id: 'equipe',      labelKey: 'settingsPage.team',            icon: Users      },
+  { id: 'activite',    labelKey: 'settingsPage.activity',        icon: Activity   },
+  { id: 'abonnement',  labelKey: 'settingsPage.subscription',    icon: CreditCard },
 ];
 
 export const SettingsPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'hotel_admin';
   const [tab, setTab] = useState<Tab>(isAdmin ? 'societe' : 'abonnement');
 
   return (
-    <HotelLayout title="Paramètres">
+    <HotelLayout title={t('settingsPage.title')}>
       <div className="flex flex-col">
 
         {/* ── Tab bar ── */}
@@ -680,18 +679,18 @@ export const SettingsPage = () => {
           className="sticky top-0 z-10 flex border-b px-4"
           style={{ background: '#fff', borderColor: '#E5E7EB' }}
         >
-          {(isAdmin ? TABS : TABS.filter(t => t.id !== 'societe' && t.id !== 'equipe' && t.id !== 'activite')).map(t => (
+          {(isAdmin ? TAB_DEFS : TAB_DEFS.filter(td => td.id !== 'societe' && td.id !== 'equipe' && td.id !== 'activite')).map(td => (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
+              key={td.id}
+              onClick={() => setTab(td.id)}
               className="flex items-center gap-1.5 px-3 py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap"
-              style={tab === t.id
+              style={tab === td.id
                 ? { borderColor: '#5346A8', color: '#5346A8' }
                 : { borderColor: 'transparent', color: '#9CA3AF' }
               }
             >
-              <t.icon className="h-4 w-4" />
-              {t.label}
+              <td.icon className="h-4 w-4" />
+              {t(td.labelKey)}
             </button>
           ))}
         </div>

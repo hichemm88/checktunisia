@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ShieldCheck, CheckCircle2, Building2, BedDouble, ArrowRight, Plus, Trash2, Home,
@@ -17,17 +18,17 @@ const ROOM_TYPES = [
 ];
 
 const PROPERTY_TYPES = [
-  { value: 'hotel',        label: 'Hôtel' },
-  { value: 'appartement',  label: 'Appartement' },
-  { value: 'villa',        label: 'Villa' },
-  { value: 'riad',         label: 'Riad' },
-  { value: 'maison_hotes', label: "Maison d'hôtes" },
-  { value: 'guesthouse',   label: 'Guesthouse' },
-  { value: 'hostel',       label: 'Auberge de jeunesse' },
-  { value: 'resort',       label: 'Resort' },
-  { value: 'bungalow',     label: 'Bungalow' },
-  { value: 'rental',       label: 'Location saisonnière' },
-  { value: 'residence',    label: 'Résidence hôtelière' },
+  { value: 'hotel',        labelKey: 'onboarding.typeHotel' },
+  { value: 'appartement',  labelKey: 'onboarding.typeApartment' },
+  { value: 'villa',        labelKey: 'onboarding.typeVilla' },
+  { value: 'riad',         labelKey: 'onboarding.typeRiad' },
+  { value: 'maison_hotes', labelKey: 'onboarding.typeGuesthouseFr' },
+  { value: 'guesthouse',   labelKey: 'onboarding.typeGuesthouse' },
+  { value: 'hostel',       labelKey: 'onboarding.typeHostel' },
+  { value: 'resort',       labelKey: 'onboarding.typeResort' },
+  { value: 'bungalow',     labelKey: 'onboarding.typeBungalow' },
+  { value: 'rental',       labelKey: 'onboarding.typeRental' },
+  { value: 'residence',    labelKey: 'onboarding.typeResidence' },
 ];
 
 const GOVERNORATES = [
@@ -56,6 +57,7 @@ const INIT_PROPERTY: PropertyDraft = {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export const OnboardingPage = () => {
+  const { t } = useTranslation();
   const navigate            = useNavigate();
   const qc                  = useQueryClient();
   const setActiveProperty   = useAuthStore((s) => s.setActiveProperty);
@@ -94,15 +96,15 @@ export const OnboardingPage = () => {
 
   const STEPS = hasProperty
     ? [
-        { label: 'Bienvenue',    icon: ShieldCheck },
-        { label: 'Vos unités',   icon: BedDouble },
-        { label: "C'est parti !", icon: CheckCircle2 },
+        { label: t('onboarding.stepWelcome'),  icon: ShieldCheck },
+        { label: t('onboarding.stepRooms'),    icon: BedDouble },
+        { label: t('onboarding.stepDone'),     icon: CheckCircle2 },
       ]
     : [
-        { label: 'Bienvenue',          icon: ShieldCheck },
-        { label: 'Premier bien',       icon: Home },
-        { label: 'Vos unités',         icon: BedDouble },
-        { label: "C'est parti !",      icon: CheckCircle2 },
+        { label: t('onboarding.stepWelcome'),   icon: ShieldCheck },
+        { label: t('onboarding.stepProperty'),  icon: Home },
+        { label: t('onboarding.stepRooms'),     icon: BedDouble },
+        { label: t('onboarding.stepDone'),      icon: CheckCircle2 },
       ];
 
   // Step indices vary depending on flow
@@ -184,10 +186,10 @@ export const OnboardingPage = () => {
 
   const handleCreateProperty = () => {
     const errors: Record<string, string> = {};
-    if (!property.name.trim())            errors['name']             = 'Nom requis';
-    if (!property.address.line1.trim())   errors['address.line1']    = 'Adresse requise';
-    if (!property.address.city.trim())    errors['address.city']     = 'Ville requise';
-    if (!property.room_count || property.room_count < 1) errors['room_count'] = 'Requis';
+    if (!property.name.trim())            errors['name']             = t('onboarding.errorNameRequired');
+    if (!property.address.line1.trim())   errors['address.line1']    = t('onboarding.errorAddressRequired');
+    if (!property.address.city.trim())    errors['address.city']     = t('onboarding.errorCityRequired');
+    if (!property.room_count || property.room_count < 1) errors['room_count'] = t('onboarding.errorRequired');
 
     if (Object.keys(errors).length > 0) { setPropErrors(errors); return; }
     setPropErrors({});
@@ -206,7 +208,7 @@ export const OnboardingPage = () => {
   if (statusLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#F6F5F1' }}>
-        <div className="text-sm text-gray-400">Chargement…</div>
+        <div className="text-sm text-gray-400">{t('common.loading')}</div>
       </div>
     );
   }
@@ -256,18 +258,16 @@ export const OnboardingPage = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900 mb-2">
-                {hasProperty && profile ? `Bienvenue, ${profile.name} !` : 'Bienvenue sur Qayed !'}
+                {hasProperty && profile ? t('onboarding.welcomeBackTitle', { name: profile.name }) : t('onboarding.welcomeTitle')}
               </h1>
               <p className="text-sm text-gray-500 leading-relaxed">
-                {hasProperty
-                  ? 'Votre compte est prêt. Prenons 2 minutes pour configurer votre établissement avant de commencer les check-ins.'
-                  : 'Votre compte est créé. Commençons par ajouter votre premier établissement, puis vos unités.'}
+                {hasProperty ? t('onboarding.welcomeBodyExisting') : t('onboarding.welcomeBodyNew')}
               </p>
             </div>
             <div className="w-full flex flex-col gap-2 text-start p-4 rounded-xl" style={{ background: '#F6F5F1' }}>
               {(hasProperty
-                ? ['Ajouter vos unités', 'Scanner votre premier passeport', 'Gérer vos check-ins']
-                : ['Créer votre premier établissement', 'Ajouter vos unités', 'Gérer vos check-ins']
+                ? [t('onboarding.checklistAddRooms'), t('onboarding.checklistScanPassport'), t('onboarding.checklistManageCheckins')]
+                : [t('onboarding.checklistCreateProperty'), t('onboarding.checklistAddRooms'), t('onboarding.checklistManageCheckins')]
               ).map((item, i) => (
                 <div key={item} className="flex items-center gap-3 text-sm">
                   <div
@@ -281,7 +281,7 @@ export const OnboardingPage = () => {
               ))}
             </div>
             <Button fullWidth size="lg" className="gap-2" onClick={() => setStep(1)}>
-              Commencer <ArrowRight className="h-4 w-4" />
+              {t('onboarding.start')} <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         )}
@@ -290,15 +290,15 @@ export const OnboardingPage = () => {
         {step === STEP_PROPERTY && STEP_PROPERTY > 0 && (
           <div className="flex flex-col gap-4">
             <div>
-              <h2 className="text-lg font-bold text-gray-900 mb-1">Votre premier établissement</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-1">{t('onboarding.firstPropertyTitle')}</h2>
               <p className="text-sm text-gray-400">
-                Renseignez les informations de base. Vous pourrez tout modifier depuis les paramètres.
+                {t('onboarding.firstPropertyBody')}
               </p>
             </div>
 
             <Input
-              label="Nom *"
-              placeholder="Ex: Appartement Medina Tunis"
+              label={t('onboarding.nameRequired')}
+              placeholder={t('onboarding.namePlaceholder')}
               value={property.name}
               onChange={(e) => setProp('name', e.target.value)}
               error={propErrors['name']}
@@ -307,20 +307,20 @@ export const OnboardingPage = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                  Type *
+                  {t('onboarding.typeRequired')}
                 </label>
                 <select
                   className="input w-full"
                   value={property.type}
                   onChange={(e) => setProp('type', e.target.value)}
                 >
-                  {PROPERTY_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
+                  {PROPERTY_TYPES.map((pt) => (
+                    <option key={pt.value} value={pt.value}>{t(pt.labelKey)}</option>
                   ))}
                 </select>
               </div>
               <Input
-                label="Unités / chambres *"
+                label={t('onboarding.roomsCountRequired')}
                 type="number"
                 min={1}
                 value={property.room_count}
@@ -330,7 +330,7 @@ export const OnboardingPage = () => {
             </div>
 
             <Input
-              label="Étoiles (optionnel)"
+              label={t('onboarding.starsOptional')}
               type="number"
               min={1}
               max={5}
@@ -340,11 +340,11 @@ export const OnboardingPage = () => {
             />
 
             <div className="h-px bg-gray-100" />
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Adresse</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('onboarding.address')}</p>
 
             <Input
-              label="Adresse *"
-              placeholder="Ex: 12 rue de la Kasbah"
+              label={t('onboarding.addressRequired')}
+              placeholder={t('onboarding.addressPlaceholder')}
               value={property.address.line1}
               onChange={(e) => setPropAddr('line1', e.target.value)}
               error={propErrors['address.line1']}
@@ -352,15 +352,15 @@ export const OnboardingPage = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <Input
-                label="Ville *"
-                placeholder="Ex: Tunis"
+                label={t('onboarding.cityRequired')}
+                placeholder={t('onboarding.cityPlaceholder')}
                 value={property.address.city}
                 onChange={(e) => setPropAddr('city', e.target.value)}
                 error={propErrors['address.city']}
               />
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-                  Gouvernorat *
+                  {t('onboarding.governorateRequired')}
                 </label>
                 <select
                   className="input w-full"
@@ -374,7 +374,7 @@ export const OnboardingPage = () => {
 
             {createPropertyMut.error && (
               <p className="text-xs text-red-500 text-center">
-                {(createPropertyMut.error as any)?.response?.data?.message ?? 'Une erreur est survenue.'}
+                {(createPropertyMut.error as any)?.response?.data?.message ?? t('onboarding.genericError')}
               </p>
             )}
 
@@ -383,7 +383,7 @@ export const OnboardingPage = () => {
               loading={createPropertyMut.isPending}
               onClick={handleCreateProperty}
             >
-              Créer et continuer
+              {t('onboarding.createAndContinue')}
             </Button>
           </div>
         )}
@@ -392,10 +392,9 @@ export const OnboardingPage = () => {
         {step === STEP_ROOMS && (
           <div className="flex flex-col gap-5">
             <div>
-              <h2 className="text-lg font-bold text-gray-900 mb-1">Vos unités</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-1">{t('onboarding.roomsTitle')}</h2>
               <p className="text-sm text-gray-400">
-                Ajoutez vos chambres / unités pour pouvoir assigner des check-ins.
-                Vous pourrez en ajouter d'autres depuis les paramètres.
+                {t('onboarding.roomsBody')}
               </p>
             </div>
 
@@ -403,7 +402,7 @@ export const OnboardingPage = () => {
               {rooms.map((room, i) => (
                 <div key={i} className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F6F5F1' }}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-gray-500">Unité {i + 1}</span>
+                    <span className="text-xs font-semibold text-gray-500">{t('onboarding.unitLabel', { number: i + 1 })}</span>
                     {rooms.length > 1 && (
                       <button onClick={() => removeRoom(i)} className="text-red-400 hover:text-red-600">
                         <Trash2 className="h-4 w-4" />
@@ -412,12 +411,12 @@ export const OnboardingPage = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Input
-                      label="N° / Nom"
+                      label={t('onboarding.numberOrName')}
                       value={room.room_number}
                       onChange={(e) => updateRoom(i, 'room_number', e.target.value)}
                     />
                     <Input
-                      label="Étage"
+                      label={t('onboarding.floor')}
                       value={room.floor}
                       onChange={(e) => updateRoom(i, 'floor', e.target.value)}
                     />
@@ -425,18 +424,18 @@ export const OnboardingPage = () => {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
-                        Type
+                        {t('onboarding.type')}
                       </label>
                       <select
                         className="input w-full"
                         value={room.type}
                         onChange={(e) => updateRoom(i, 'type', e.target.value)}
                       >
-                        {ROOM_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                        {ROOM_TYPES.map((rt) => <option key={rt} value={rt}>{rt}</option>)}
                       </select>
                     </div>
                     <Input
-                      label="Capacité"
+                      label={t('onboarding.capacity')}
                       type="number"
                       min={1}
                       max={10}
@@ -453,13 +452,13 @@ export const OnboardingPage = () => {
               className="flex items-center gap-2 text-sm font-semibold"
               style={{ color: '#5346A8' }}
             >
-              <Plus className="h-4 w-4" /> Ajouter une unité
+              <Plus className="h-4 w-4" /> {t('onboarding.addUnit')}
             </button>
 
             <div className="flex gap-3 pt-2">
-              <Button variant="ghost" onClick={() => setStep(STEP_DONE)}>Passer</Button>
+              <Button variant="ghost" onClick={() => setStep(STEP_DONE)}>{t('onboarding.skip')}</Button>
               <Button fullWidth loading={addRoomMut.isPending} onClick={handleRoomsNext}>
-                Enregistrer et continuer
+                {t('onboarding.saveAndContinue')}
               </Button>
             </div>
           </div>
@@ -472,9 +471,9 @@ export const OnboardingPage = () => {
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Tout est prêt !</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">{t('onboarding.doneTitle')}</h2>
               <p className="text-sm text-gray-500">
-                Votre établissement est configuré. Vous pouvez maintenant créer votre premier check-in.
+                {t('onboarding.doneBody')}
               </p>
             </div>
             <Button
@@ -483,7 +482,7 @@ export const OnboardingPage = () => {
               loading={completeMut.isPending}
               onClick={() => completeMut.mutate()}
             >
-              Accéder au tableau de bord
+              {t('onboarding.goToDashboard')}
             </Button>
           </div>
         )}

@@ -12,44 +12,47 @@
  */
 
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { CheckIn, HotelProfile, OrganizationInfo } from '@/types';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const fmtDate = (iso?: string | null): string => {
+const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
+
+const fmtDate = (iso: string | null | undefined, locale: string): string => {
   if (!iso) return '—';
   const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('fr-FR', {
+  return new Date(y, m - 1, d).toLocaleDateString(locale, {
     day: '2-digit', month: '2-digit', year: 'numeric',
   });
 };
 
 const SEX_LABELS: Record<string, string> = { M: 'M', F: 'F', X: 'X' };
 
-const DOC_LABELS: Record<string, string> = {
-  passport:         'Passeport',
-  national_id:      'Carte nat.',
-  residence_permit: 'Titre séjour',
-  driving_license:  'Permis',
-  other:            'Autre',
+const DOC_LABEL_KEYS: Record<string, string> = {
+  passport:         'policeFiche.docPassport',
+  national_id:      'policeFiche.docNationalId',
+  residence_permit: 'policeFiche.docResidencePermit',
+  driving_license:  'policeFiche.docDrivingLicense',
+  other:            'policeFiche.docOther',
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  hotel:       'Hôtel',
-  guesthouse:  "Maison d'hôtes",
-  appartement: 'Appartement',
-  villa:       'Villa',
-  hostel:      'Auberge',
-  riad:        'Riad',
-  motel:       'Motel',
-  residence:   'Résidence',
-  studio:      'Studio',
-  resort:      'Resort',
-  bungalow:    'Bungalow',
-  rental:      'Location saisonnière',
-  maison_hotes:"Maison d'hôtes",
-  maison_hote: "Maison d'hôtes",
-  autre:       'Autre',
+const TYPE_LABEL_KEYS: Record<string, string> = {
+  hotel:       'policeFiche.typeHotel',
+  guesthouse:  'policeFiche.typeGuesthouse',
+  appartement: 'policeFiche.typeApartment',
+  villa:       'policeFiche.typeVilla',
+  hostel:      'policeFiche.typeHostel',
+  riad:        'policeFiche.typeRiad',
+  motel:       'policeFiche.typeMotel',
+  residence:   'policeFiche.typeResidence',
+  studio:      'policeFiche.typeStudio',
+  resort:      'policeFiche.typeResort',
+  bungalow:    'policeFiche.typeBungalow',
+  rental:      'policeFiche.typeRental',
+  maison_hotes:'policeFiche.typeGuesthouse',
+  maison_hote: 'policeFiche.typeGuesthouse',
+  autre:       'policeFiche.docOther',
 };
 
 // ── Styles ────────────────────────────────────────────────────────────────────
@@ -108,12 +111,14 @@ interface Props {
 }
 
 export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Props) => {
-  const now = new Date().toLocaleDateString('fr-FR', {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
+  const now = new Date().toLocaleDateString(locale, {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   });
 
-  const typeLabel = hotel.type ? (TYPE_LABELS[hotel.type] ?? hotel.type) : '';
+  const typeLabel = hotel.type ? (hotel.type in TYPE_LABEL_KEYS ? t(TYPE_LABEL_KEYS[hotel.type]) : hotel.type) : '';
   const stars     = hotel.stars ? '★'.repeat(hotel.stars) : '';
   const addr      = [hotel.address?.line1, hotel.address?.city, hotel.address?.governorate]
                       .filter(Boolean).join(', ');
@@ -199,7 +204,7 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
                 )}
                 {hotel.registration_number && (
                   <div style={{ fontSize: '7pt', color: '#9ca3af' }}>
-                    RC / Matricule : {hotel.registration_number}
+                    {t('policeFiche.rcMatricule')} : {hotel.registration_number}
                   </div>
                 )}
               </td>
@@ -208,7 +213,7 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
                 {org ? (
                   <>
                     <div style={{ fontSize: '7.5pt', color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>
-                      {org.entity_type === 'individual' ? 'Particulier' : 'Société'}
+                      {org.entity_type === 'individual' ? t('policeFiche.individual') : t('policeFiche.company')}
                     </div>
                     <div style={{ fontSize: '10.5pt', fontWeight: '700', color: C, marginTop: '1px' }}>
                       {org.name}
@@ -221,7 +226,7 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
                     )}
                     {org.registration_number && (
                       <div style={{ fontSize: '7pt', color: '#9ca3af' }}>
-                        {org.entity_type === 'individual' ? 'CIN' : 'RC / Matricule'} : {org.registration_number}
+                        {org.entity_type === 'individual' ? t('policeFiche.cin') : t('policeFiche.rcMatricule')} : {org.registration_number}
                       </div>
                     )}
                   </>
@@ -239,7 +244,7 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
                     QAYED
                   </div>
                 )}
-                <div style={{ fontSize: '7pt', color: '#9ca3af', marginTop: '4px' }}>Imprimé le {now}</div>
+                <div style={{ fontSize: '7pt', color: '#9ca3af', marginTop: '4px' }}>{t('policeFiche.printedOn', { date: now })}</div>
               </td>
             </tr>
           </tbody>
@@ -258,7 +263,7 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
           textTransform: 'uppercase' as const,
           borderRadius: '2px',
         }}>
-          Fiche de Police
+          {t('policeFiche.title')}
         </div>
 
         {/* ══ SÉJOUR ═════════════════════════════════════════════════ */}
@@ -277,34 +282,34 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
                 letterSpacing: '1px',
                 textTransform: 'uppercase' as const,
               }}>
-                Séjour
+                {t('policeFiche.stay')}
               </th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style={lbl()}>Référence</td>
+              <td style={lbl()}>{t('policeFiche.reference')}</td>
               <td style={cell({ fontFamily: 'monospace', fontWeight: 'bold', color: C, fontSize: '8pt', whiteSpace: 'nowrap' })}>
                 {ci.reference}
               </td>
-              <td style={lbl()}>Unité</td>
+              <td style={lbl()}>{t('policeFiche.unit')}</td>
               <td style={cell()}>{ci.room?.number ?? '—'}</td>
-              <td style={lbl()}>Adultes / Enfants</td>
+              <td style={lbl()}>{t('policeFiche.adultsChildren')}</td>
               <td style={cell({ borderRight: 'none' })}>{ci.adults_count} / {ci.children_count}</td>
             </tr>
             <tr>
-              <td style={lbl()}>Arrivée</td>
-              <td style={cell()}>{fmtDate(ci.check_in_date)}</td>
-              <td style={lbl()}>Départ prévu</td>
-              <td style={cell()}>{fmtDate(ci.expected_check_out_date)}</td>
-              <td style={lbl()}>Départ réel</td>
+              <td style={lbl()}>{t('policeFiche.arrival')}</td>
+              <td style={cell()}>{fmtDate(ci.check_in_date, locale)}</td>
+              <td style={lbl()}>{t('policeFiche.expectedDeparture')}</td>
+              <td style={cell()}>{fmtDate(ci.expected_check_out_date, locale)}</td>
+              <td style={lbl()}>{t('policeFiche.actualDeparture')}</td>
               <td style={cell({ borderRight: 'none' })}>
-                {ci.actual_check_out_date ? fmtDate(ci.actual_check_out_date) : '—'}
+                {ci.actual_check_out_date ? fmtDate(ci.actual_check_out_date, locale) : '—'}
               </td>
             </tr>
             {ci.booking_reference && (
               <tr>
-                <td style={lbl()}>Réf. réservation</td>
+                <td style={lbl()}>{t('policeFiche.bookingRef')}</td>
                 <td colSpan={5} style={cell({ borderRight: 'none' })}>
                   {ci.booking_reference}{ci.booking_source ? ` · ${ci.booking_source}` : ''}
                 </td>
@@ -329,19 +334,19 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
                 letterSpacing: '1px',
                 textTransform: 'uppercase' as const,
               }}>
-                Voyageurs — {ci.guests?.length ?? 0} personne{(ci.guests?.length ?? 0) > 1 ? 's' : ''}
-                {extra > 0 && <span style={{ fontWeight: 'normal', fontSize: '7pt' }}> (5 premiers · {extra} non affich{extra > 1 ? 'és' : 'é'})</span>}
+                {t('policeFiche.guestsCount', { count: ci.guests?.length ?? 0 })}
+                {extra > 0 && <span style={{ fontWeight: 'normal', fontSize: '7pt' }}> ({t('policeFiche.notShown', { count: extra })})</span>}
               </th>
             </tr>
             <tr>
-              <th style={th()}>Nom &amp; Prénom</th>
-              <th style={th()}>Naissance</th>
-              <th style={th()}>Sexe</th>
-              <th style={th()}>Nationalité</th>
-              <th style={th()}>Type pièce</th>
-              <th style={th()}>N° document</th>
-              <th style={th()}>Pays émet.</th>
-              <th style={th({ borderRight: 'none' })}>Expiration</th>
+              <th style={th()}>{t('policeFiche.nameSurname')}</th>
+              <th style={th()}>{t('policeFiche.birth')}</th>
+              <th style={th()}>{t('policeFiche.sex')}</th>
+              <th style={th()}>{t('policeFiche.nationality')}</th>
+              <th style={th()}>{t('policeFiche.docType')}</th>
+              <th style={th()}>{t('policeFiche.docNumber')}</th>
+              <th style={th()}>{t('policeFiche.issuingCountry')}</th>
+              <th style={th({ borderRight: 'none' })}>{t('policeFiche.expiry')}</th>
             </tr>
           </thead>
           <tbody>
@@ -353,22 +358,22 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
                     <span style={{ marginLeft: '4px', fontSize: '7pt', color: C }}>★</span>
                   )}
                 </td>
-                <td style={td({ whiteSpace: 'nowrap' as const })}>{fmtDate(g.date_of_birth)}</td>
+                <td style={td({ whiteSpace: 'nowrap' as const })}>{fmtDate(g.date_of_birth, locale)}</td>
                 <td style={td({ textAlign: 'center' as const })}>{SEX_LABELS[g.sex] ?? g.sex}</td>
                 <td style={td({ textAlign: 'center' as const })}>{g.nationality_code}</td>
-                <td style={td()}>{g.document ? (DOC_LABELS[g.document.type] ?? g.document.type) : '—'}</td>
+                <td style={td()}>{g.document ? (g.document.type in DOC_LABEL_KEYS ? t(DOC_LABEL_KEYS[g.document.type]) : g.document.type) : '—'}</td>
                 <td style={td({ fontFamily: 'monospace', fontSize: '7.5pt', whiteSpace: 'nowrap' as const })}>
                   {g.document?.document_number ?? '—'}
                 </td>
                 <td style={td({ textAlign: 'center' as const })}>{g.document?.issuing_country_code ?? '—'}</td>
                 <td style={td({ borderRight: 'none', whiteSpace: 'nowrap' as const })}>
-                  {g.document?.expiry_date ? fmtDate(g.document.expiry_date) : '—'}
+                  {g.document?.expiry_date ? fmtDate(g.document.expiry_date, locale) : '—'}
                 </td>
               </tr>
             )) : (
               <tr>
                 <td colSpan={8} style={{ padding: '10px', textAlign: 'center', color: '#9ca3af', fontStyle: 'italic', fontSize: '8pt' }}>
-                  Aucun voyageur enregistré
+                  {t('policeFiche.noGuests')}
                 </td>
               </tr>
             )}
@@ -382,7 +387,7 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
               <td style={{ width: '47%', verticalAlign: 'top' }}>
                 <div style={{ borderTop: `1px solid #d1d5db`, paddingTop: '4px' }}>
                   <div style={{ fontSize: '7.5pt', color: '#6b7280', marginBottom: '22px' }}>
-                    Signature &amp; cachet de l'établissement
+                    {t('policeFiche.establishmentSignature')}
                   </div>
                 </div>
               </td>
@@ -390,7 +395,7 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
               <td style={{ width: '47%', verticalAlign: 'top' }}>
                 <div style={{ borderTop: `1px solid #d1d5db`, paddingTop: '4px' }}>
                   <div style={{ fontSize: '7.5pt', color: '#6b7280', marginBottom: '22px' }}>
-                    Signature du client principal (★)
+                    {t('policeFiche.primaryGuestSignature')}
                   </div>
                 </div>
               </td>

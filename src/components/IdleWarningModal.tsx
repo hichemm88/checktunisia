@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Clock } from 'lucide-react';
 
 interface Props {
@@ -7,11 +8,12 @@ interface Props {
 }
 
 export const IdleWarningModal = ({ onStay, onLogout }: Props) => {
+  const { t } = useTranslation();
   const [seconds, setSeconds] = useState(120);
 
   useEffect(() => {
-    const t = setInterval(() => setSeconds((s) => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(t);
+    const interval = setInterval(() => setSeconds((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -33,8 +35,8 @@ export const IdleWarningModal = ({ onStay, onLogout }: Props) => {
             <Clock style={{ color: '#D97706', width: 22, height: 22 }} />
           </div>
           <div>
-            <p style={{ fontWeight: 700, fontSize: 15, color: '#111827' }}>Session inactive</p>
-            <p style={{ fontSize: 13, color: '#6B7280' }}>Déconnexion automatique dans</p>
+            <p style={{ fontWeight: 700, fontSize: 15, color: '#111827' }}>{t('idleWarning.title')}</p>
+            <p style={{ fontSize: 13, color: '#6B7280' }}>{t('idleWarning.subtitle')}</p>
           </div>
         </div>
 
@@ -49,7 +51,7 @@ export const IdleWarningModal = ({ onStay, onLogout }: Props) => {
         </div>
 
         <p style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', marginBottom: '1.5rem' }}>
-          Vous êtes resté inactif trop longtemps. Pour protéger les données sensibles, la session va être fermée.
+          {t('idleWarning.body')}
         </p>
 
         <div style={{ display: 'flex', gap: 10 }}>
@@ -60,7 +62,7 @@ export const IdleWarningModal = ({ onStay, onLogout }: Props) => {
               background: '#fff', color: '#6B7280', fontWeight: 600, cursor: 'pointer', fontSize: 14,
             }}
           >
-            Se déconnecter
+            {t('idleWarning.logout')}
           </button>
           <button
             onClick={onStay}
@@ -69,7 +71,7 @@ export const IdleWarningModal = ({ onStay, onLogout }: Props) => {
               background: '#5346A8', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14,
             }}
           >
-            Rester connecté
+            {t('idleWarning.stay')}
           </button>
         </div>
       </div>

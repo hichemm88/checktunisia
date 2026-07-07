@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
 import { adminSubscriptionsApi } from '@/api/admin/subscriptions';
@@ -8,15 +9,16 @@ import { ListSkeleton } from '@/components/admin/ListSkeleton';
 import { Pagination } from '@/components/ui/Pagination';
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'Tous les statuts' },
-  { value: 'draft', label: 'Brouillon' },
-  { value: 'sent', label: 'Envoyée' },
-  { value: 'paid', label: 'Payée' },
-  { value: 'overdue', label: 'En retard' },
-  { value: 'void', label: 'Annulée' },
+  { value: '', labelKey: 'adminFacturation.statusAll' },
+  { value: 'draft', labelKey: 'adminFacturation.statusDraft' },
+  { value: 'sent', labelKey: 'adminFacturation.statusSent' },
+  { value: 'paid', labelKey: 'adminFacturation.statusPaid' },
+  { value: 'overdue', labelKey: 'adminFacturation.statusOverdue' },
+  { value: 'void', labelKey: 'adminFacturation.statusVoid' },
 ];
 
 export const AdminFacturationPage = () => {
+  const { t } = useTranslation();
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [hostSearch, setHostSearch] = useState('');
@@ -35,14 +37,14 @@ export const AdminFacturationPage = () => {
 
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
-      <h1 className="text-xl font-bold text-gray-900">Facturation</h1>
+      <h1 className="text-xl font-bold text-gray-900">{t('adminFacturation.title')}</h1>
 
       <div className="flex gap-3 flex-wrap">
         <div className="relative">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             className="input ps-9 w-64"
-            placeholder="Filtrer par hébergeur…"
+            placeholder={t('adminFacturation.filterByHost')}
             value={selectedHost ? selectedHost.name : hostSearch}
             onChange={(e) => { setHostSearch(e.target.value); setSelectedHost(null); setPage(1); }}
           />
@@ -64,7 +66,7 @@ export const AdminFacturationPage = () => {
         </div>
 
         <select className="input w-fit" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
-          {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{t(o.labelKey)}</option>)}
         </select>
       </div>
 
@@ -90,7 +92,7 @@ export const AdminFacturationPage = () => {
             </div>
           )
         ))}
-        {!isLoading && !data?.data.length && <p className="text-sm text-gray-400 text-center py-6">Aucune facture</p>}
+        {!isLoading && !data?.data.length && <p className="text-sm text-gray-400 text-center py-6">{t('adminFacturation.noInvoice')}</p>}
       </div>
 
       {data && (

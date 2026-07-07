@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Building2, MapPin, CheckCircle2, Layers, ChevronDown, ChevronUp,
@@ -9,8 +10,6 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import {
   organizationApi,
-  PROPERTY_TYPE_LABELS,
-  ROOM_TYPE_LABELS,
   Property,
   PropertyRoom,
 } from '@/api/organization';
@@ -19,39 +18,50 @@ import { useAuthStore } from '@/stores/authStore';
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const PROPERTY_TYPES = [
-  { value: 'hotel',        label: 'Hôtel' },
-  { value: 'appartement',  label: 'Appartement' },
-  { value: 'villa',        label: 'Villa' },
-  { value: 'riad',         label: 'Riad' },
-  { value: 'maison_hotes', label: "Maison d'hôtes" },
-  { value: 'guesthouse',   label: 'Guesthouse' },
-  { value: 'hostel',       label: 'Auberge de jeunesse' },
-  { value: 'resort',       label: 'Resort' },
-  { value: 'bungalow',     label: 'Bungalow' },
-  { value: 'rental',       label: 'Location saisonnière' },
+  { value: 'hotel',        labelKey: 'propertiesPage.typeHotel' },
+  { value: 'appartement',  labelKey: 'propertiesPage.typeApartment' },
+  { value: 'villa',        labelKey: 'propertiesPage.typeVilla' },
+  { value: 'riad',         labelKey: 'propertiesPage.typeRiad' },
+  { value: 'maison_hotes', labelKey: 'propertiesPage.typeGuesthouseFr' },
+  { value: 'guesthouse',   labelKey: 'propertiesPage.typeGuesthouse' },
+  { value: 'hostel',       labelKey: 'propertiesPage.typeHostel' },
+  { value: 'resort',       labelKey: 'propertiesPage.typeResort' },
+  { value: 'bungalow',     labelKey: 'propertiesPage.typeBungalow' },
+  { value: 'rental',       labelKey: 'propertiesPage.typeRental' },
 ];
+
+const PROPERTY_TYPE_KEYS: Record<string, string> = {
+  hotel: 'propertiesPage.typeHotel', appartement: 'propertiesPage.typeApartment',
+  villa: 'propertiesPage.typeVilla', riad: 'propertiesPage.typeRiad',
+  maison_hotes: 'propertiesPage.typeGuesthouseFr', guesthouse: 'propertiesPage.typeGuesthouse',
+  hostel: 'propertiesPage.typeHostel', resort: 'propertiesPage.typeResort',
+  bungalow: 'propertiesPage.typeBungalow', rental: 'propertiesPage.typeRental',
+  residence: 'propertiesPage.typeResidence',
+};
 
 const ROOM_TYPES = [
-  { value: 'single',       label: 'Chambre simple' },
-  { value: 'double',       label: 'Chambre double' },
-  { value: 'twin',         label: 'Chambre twin' },
-  { value: 'triple',       label: 'Chambre triple' },
-  { value: 'quadruple',    label: 'Chambre quadruple' },
-  { value: 'suite',        label: 'Suite' },
-  { value: 'junior_suite', label: 'Suite junior' },
-  { value: 'apartment',    label: 'Appartement' },
-  { value: 'studio',       label: 'Studio' },
-  { value: 'family',       label: 'Familiale' },
-  { value: 'villa',        label: 'Villa' },
-  { value: 'dormitory',    label: 'Dortoir' },
-  { value: 'standard',     label: 'Standard' },
+  { value: 'single',       labelKey: 'propertiesPage.roomTypeSingle' },
+  { value: 'double',       labelKey: 'propertiesPage.roomTypeDouble' },
+  { value: 'twin',         labelKey: 'propertiesPage.roomTypeTwin' },
+  { value: 'triple',       labelKey: 'propertiesPage.roomTypeTriple' },
+  { value: 'quadruple',    labelKey: 'propertiesPage.roomTypeQuadruple' },
+  { value: 'suite',        labelKey: 'propertiesPage.roomTypeSuite' },
+  { value: 'junior_suite', labelKey: 'propertiesPage.roomTypeJuniorSuite' },
+  { value: 'apartment',    labelKey: 'propertiesPage.typeApartment' },
+  { value: 'studio',       labelKey: 'propertiesPage.roomTypeStudio' },
+  { value: 'family',       labelKey: 'propertiesPage.roomTypeFamily' },
+  { value: 'villa',        labelKey: 'propertiesPage.typeVilla' },
+  { value: 'dormitory',    labelKey: 'propertiesPage.roomTypeDormitory' },
+  { value: 'standard',     labelKey: 'propertiesPage.roomTypeStandard' },
 ];
 
+const ROOM_TYPE_KEYS: Record<string, string> = Object.fromEntries(ROOM_TYPES.map((r) => [r.value, r.labelKey]));
+
 const ROOM_STATUSES = [
-  { value: 'available',   label: 'Disponible',  color: 'text-green-600' },
-  { value: 'occupied',    label: 'Occupée',     color: 'text-blue-600' },
-  { value: 'maintenance', label: 'Maintenance', color: 'text-orange-500' },
-  { value: 'inactive',    label: 'Inactive',    color: 'text-gray-400' },
+  { value: 'available',   labelKey: 'propertiesPage.statusAvailable',   color: 'text-green-600' },
+  { value: 'occupied',    labelKey: 'propertiesPage.statusOccupied',    color: 'text-blue-600' },
+  { value: 'maintenance', labelKey: 'propertiesPage.statusMaintenance', color: 'text-orange-500' },
+  { value: 'inactive',    labelKey: 'propertiesPage.statusInactive',    color: 'text-gray-400' },
 ];
 
 const GOVERNORATES = [
@@ -84,35 +94,36 @@ const RoomForm = ({
   onCancel: () => void;
   saving: boolean;
 }) => {
+  const { t } = useTranslation();
   const [form, setForm] = useState(initial);
   const set = (k: string, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
 
   return (
     <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-3">
-        <Input label="N° / Nom *" value={form.number} onChange={(e) => set('number', e.target.value)} placeholder="101" />
-        <Input label="Étage" type="number" value={form.floor} onChange={(e) => set('floor', e.target.value)} placeholder="1" />
+        <Input label={t('propertiesPage.numberOrNameRequired')} value={form.number} onChange={(e) => set('number', e.target.value)} placeholder="101" />
+        <Input label={t('onboarding.floor')} type="number" value={form.floor} onChange={(e) => set('floor', e.target.value)} placeholder="1" />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Type *</label>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('onboarding.typeRequired')}</label>
           <select className="input w-full" value={form.type} onChange={(e) => set('type', e.target.value)}>
-            {ROOM_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            {ROOM_TYPES.map((rt) => <option key={rt.value} value={rt.value}>{t(rt.labelKey)}</option>)}
           </select>
         </div>
-        <Input label="Capacité" type="number" min={1} max={20} value={form.capacity}
+        <Input label={t('onboarding.capacity')} type="number" min={1} max={20} value={form.capacity}
           onChange={(e) => set('capacity', Math.max(1, parseInt(e.target.value) || 1))} />
       </div>
       <div>
-        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Statut</label>
+        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('propertiesPage.status')}</label>
         <select className="input w-full" value={form.status} onChange={(e) => set('status', e.target.value)}>
-          {ROOM_STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          {ROOM_STATUSES.map((s) => <option key={s.value} value={s.value}>{t(s.labelKey)}</option>)}
         </select>
       </div>
       <div className="flex gap-2">
         <Button size="sm" loading={saving} disabled={!form.number || !form.type} onClick={() => onSave(form)}
-          className="gap-1.5"><Save className="h-3.5 w-3.5" /> Enregistrer</Button>
-        <Button size="sm" variant="ghost" onClick={onCancel}>Annuler</Button>
+          className="gap-1.5"><Save className="h-3.5 w-3.5" /> {t('common.save')}</Button>
+        <Button size="sm" variant="ghost" onClick={onCancel}>{t('common.cancel')}</Button>
       </div>
     </div>
   );
@@ -121,6 +132,7 @@ const RoomForm = ({
 // ── Rooms panel (per property) ────────────────────────────────────────────────
 
 const RoomsPanel = ({ property }: { property: Property }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [showAdd, setShowAdd]     = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -146,7 +158,7 @@ const RoomsPanel = ({ property }: { property: Property }) => {
       status:   d.status,
     }),
     onSuccess: () => { inv(); setShowAdd(false); setError(''); },
-    onError: (e: any) => setError(e?.response?.data?.message ?? 'Erreur'),
+    onError: (e: any) => setError(e?.response?.data?.message ?? t('common.error')),
   });
 
   const editMut = useMutation({
@@ -159,13 +171,13 @@ const RoomsPanel = ({ property }: { property: Property }) => {
         status:   d.status,
       }),
     onSuccess: () => { inv(); setEditingId(null); setError(''); },
-    onError: (e: any) => setError(e?.response?.data?.message ?? 'Erreur'),
+    onError: (e: any) => setError(e?.response?.data?.message ?? t('common.error')),
   });
 
   const delMut = useMutation({
     mutationFn: (id: string) => organizationApi.deleteRoom(property.id, id),
     onSuccess: () => { inv(); setDeletingId(null); },
-    onError: (e: any) => setError(e?.response?.data?.message ?? 'Erreur'),
+    onError: (e: any) => setError(e?.response?.data?.message ?? t('common.error')),
   });
 
   const statusInfo = (s: string) => ROOM_STATUSES.find((r) => r.value === s) ?? ROOM_STATUSES[0];
@@ -189,14 +201,14 @@ const RoomsPanel = ({ property }: { property: Property }) => {
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
           <BedDouble className="h-3.5 w-3.5" />
-          Unités / Chambres {rooms.length > 0 && <span className="font-normal">({rooms.length})</span>}
+          {t('propertiesPage.unitsRooms')} {rooms.length > 0 && <span className="font-normal">({rooms.length})</span>}
         </p>
         <button
           onClick={() => { setShowAdd((s) => !s); setEditingId(null); setError(''); }}
           className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity"
           style={{ color: '#5346A8' }}
         >
-          <Plus className="h-3.5 w-3.5" /> Ajouter une unité
+          <Plus className="h-3.5 w-3.5" /> {t('onboarding.addUnit')}
         </button>
       </div>
 
@@ -221,7 +233,7 @@ const RoomsPanel = ({ property }: { property: Property }) => {
 
       {!isLoading && rooms.length === 0 && !showAdd && (
         <p className="py-3 text-center text-xs text-gray-400">
-          Aucune unité enregistrée pour ce bien.
+          {t('propertiesPage.noRoomsForProperty')}
         </p>
       )}
 
@@ -229,7 +241,7 @@ const RoomsPanel = ({ property }: { property: Property }) => {
         <div key={floor} className="mb-2">
           {floors.length > 1 && (
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-              {floor === '—' ? 'Étage non précisé' : `Étage ${floor}`}
+              {floor === '—' ? t('propertiesPage.floorUnspecified') : t('propertiesPage.floorN', { floor })}
             </p>
           )}
           <div className="flex flex-col divide-y divide-gray-50">
@@ -256,11 +268,11 @@ const RoomsPanel = ({ property }: { property: Property }) => {
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold text-gray-900">{room.number}</span>
                         <span className={`text-xs font-medium ${statusInfo(room.status).color}`}>
-                          ● {statusInfo(room.status).label}
+                          ● {t(statusInfo(room.status).labelKey)}
                         </span>
                       </div>
                       <p className="text-xs text-gray-400">
-                        {ROOM_TYPE_LABELS[room.type] ?? room.type} · {room.capacity} pers.
+                        {room.type in ROOM_TYPE_KEYS ? t(ROOM_TYPE_KEYS[room.type]) : room.type} · {t('propertiesPage.peopleCount', { count: room.capacity })}
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
@@ -273,8 +285,8 @@ const RoomsPanel = ({ property }: { property: Property }) => {
                       {deletingId === room.id ? (
                         <div className="flex items-center gap-1.5 ms-1">
                           <button onClick={() => delMut.mutate(room.id)}
-                            className="text-xs text-red-600 font-semibold">Supprimer</button>
-                          <button onClick={() => setDeletingId(null)} className="text-xs text-gray-400">Annuler</button>
+                            className="text-xs text-red-600 font-semibold">{t('common.delete')}</button>
+                          <button onClick={() => setDeletingId(null)} className="text-xs text-gray-400">{t('common.cancel')}</button>
                         </div>
                       ) : (
                         <button
@@ -306,6 +318,7 @@ const EditPropertyForm = ({
   onCancel: () => void;
   saving: boolean;
 }) => {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     name:                property.name,
     type:                property.type,
@@ -323,28 +336,28 @@ const EditPropertyForm = ({
 
   return (
     <div className="flex flex-col gap-3 mt-3 border-t border-gray-100 pt-3">
-      <Input label="Nom *" value={form.name} onChange={(e) => set('name', e.target.value)} />
+      <Input label={t('onboarding.nameRequired')} value={form.name} onChange={(e) => set('name', e.target.value)} />
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Type</label>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('onboarding.type')}</label>
           <select className="input w-full" value={form.type} onChange={(e) => set('type', e.target.value)}>
-            {PROPERTY_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            {PROPERTY_TYPES.map((pt) => <option key={pt.value} value={pt.value}>{t(pt.labelKey)}</option>)}
           </select>
         </div>
-        <Input label="Unités" type="number" min={1} value={form.room_count}
+        <Input label={t('propertiesPage.units')} type="number" min={1} value={form.room_count}
           onChange={(e) => set('room_count', e.target.value)} />
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <Input label="Étoiles" type="number" min={1} max={5} value={form.stars}
+        <Input label={t('propertiesPage.stars')} type="number" min={1} max={5} value={form.stars}
           onChange={(e) => set('stars', e.target.value)} />
-        <Input label="N° RC" value={form.registration_number}
+        <Input label={t('propertiesPage.rcNumber')} value={form.registration_number}
           onChange={(e) => set('registration_number', e.target.value)} />
       </div>
-      <Input label="Adresse" value={form.address.line1} onChange={(e) => setAddr('line1', e.target.value)} />
+      <Input label={t('onboarding.address')} value={form.address.line1} onChange={(e) => setAddr('line1', e.target.value)} />
       <div className="grid grid-cols-2 gap-3">
-        <Input label="Ville" value={form.address.city} onChange={(e) => setAddr('city', e.target.value)} />
+        <Input label={t('propertiesPage.city')} value={form.address.city} onChange={(e) => setAddr('city', e.target.value)} />
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Gouvernorat</label>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('propertiesPage.governorate')}</label>
           <select className="input w-full" value={form.address.governorate} onChange={(e) => setAddr('governorate', e.target.value)}>
             {GOVERNORATES.map((g) => <option key={g} value={g}>{g}</option>)}
           </select>
@@ -361,9 +374,9 @@ const EditPropertyForm = ({
             address:             form.address,
           })}
           className="gap-1.5">
-          <Save className="h-3.5 w-3.5" /> Enregistrer
+          <Save className="h-3.5 w-3.5" /> {t('common.save')}
         </Button>
-        <Button size="sm" variant="ghost" onClick={onCancel}>Annuler</Button>
+        <Button size="sm" variant="ghost" onClick={onCancel}>{t('common.cancel')}</Button>
       </div>
     </div>
   );
@@ -380,6 +393,7 @@ const PropertyCard = ({
   isDefault: boolean;
   isOnly: boolean;
 }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { activePropertyId, setActiveProperty } = useAuthStore();
   const [expanded, setExpanded]   = useState(false);
@@ -397,7 +411,7 @@ const PropertyCard = ({
       setEditing(false);
       setError('');
     },
-    onError: (e: any) => setError(e?.response?.data?.message ?? 'Erreur lors de la mise à jour.'),
+    onError: (e: any) => setError(e?.response?.data?.message ?? t('propertiesPage.errorUpdate')),
   });
 
   const deleteMut = useMutation({
@@ -406,7 +420,7 @@ const PropertyCard = ({
       qc.invalidateQueries({ queryKey: ['org-info'] });
       setConfirmDelete(false);
     },
-    onError: (e: any) => setError(e?.response?.data?.message ?? 'Impossible de supprimer ce bien.'),
+    onError: (e: any) => setError(e?.response?.data?.message ?? t('propertiesPage.errorDelete')),
   });
 
   return (
@@ -435,7 +449,7 @@ const PropertyCard = ({
                 {isActive && (
                   <span className="inline-flex shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                     style={{ background: '#5346A818', color: '#5346A8' }}>
-                    Actif
+                    {t('propertiesPage.activeBadge')}
                   </span>
                 )}
               </div>
@@ -445,9 +459,9 @@ const PropertyCard = ({
                   ●
                 </span>
                 {' '}
-                {PROPERTY_TYPE_LABELS[property.type] ?? property.type}
+                {property.type in PROPERTY_TYPE_KEYS ? t(PROPERTY_TYPE_KEYS[property.type]) : property.type}
                 {' · '}
-                {property.room_count} unité{property.room_count !== 1 ? 's' : ''}
+                {t('propertiesPage.unitsCount', { count: property.room_count })}
                 {property.address?.city && ` · ${property.address.city}`}
               </p>
               {/* Étoiles */}
@@ -465,7 +479,7 @@ const PropertyCard = ({
               <button
                 onClick={() => { setEditing((e) => !e); setExpanded(false); setConfirmDelete(false); setError(''); }}
                 className="rounded-lg p-2 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors"
-                title="Modifier"
+                title={t('common.edit')}
               >
                 {editing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
               </button>
@@ -473,7 +487,7 @@ const PropertyCard = ({
                 <button
                   onClick={() => { setConfirmDelete((s) => !s); setEditing(false); setExpanded(false); setError(''); }}
                   className="rounded-lg p-2 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
-                  title="Supprimer ce bien"
+                  title={t('propertiesPage.deleteThisProperty')}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -481,7 +495,7 @@ const PropertyCard = ({
               <button
                 onClick={() => { setExpanded((e) => !e); setEditing(false); setConfirmDelete(false); }}
                 className="rounded-lg p-2 text-gray-400 hover:text-gray-700 transition-colors"
-                title={expanded ? 'Réduire' : 'Voir les chambres'}
+                title={expanded ? t('propertiesPage.collapse') : t('propertiesPage.viewRooms')}
               >
                 {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </button>
@@ -500,12 +514,12 @@ const PropertyCard = ({
               style={{ borderColor: '#5346A8', color: '#5346A8' }}
             >
               <CheckCircle2 className="h-4 w-4" />
-              Définir comme établissement actif
+              {t('propertiesPage.setAsActive')}
             </button>
           ) : (
             <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#5346A8' }}>
               <CheckCircle2 className="h-3.5 w-3.5" />
-              Établissement sélectionné
+              {t('propertiesPage.propertySelected')}
             </div>
           )}
         </div>
@@ -515,10 +529,10 @@ const PropertyCard = ({
       {confirmDelete && (
         <div className="mx-4 mb-4 rounded-xl border border-red-100 bg-red-50 p-4 flex flex-col gap-3">
           <p className="text-sm font-semibold text-red-800">
-            Supprimer «&nbsp;{property.name}&nbsp;» ?
+            {t('propertiesPage.confirmDeleteTitle', { name: property.name })}
           </p>
           <p className="text-xs text-red-600">
-            Cette action est irréversible. Toutes les unités et données associées seront supprimées.
+            {t('propertiesPage.confirmDeleteBody')}
           </p>
           {error && <p className="text-xs text-red-700 font-medium">{error}</p>}
           <div className="flex gap-2">
@@ -528,10 +542,10 @@ const PropertyCard = ({
               onClick={() => deleteMut.mutate()}
               className="!bg-red-600 hover:!bg-red-700 gap-1.5"
             >
-              <Trash2 className="h-3.5 w-3.5" /> Confirmer la suppression
+              <Trash2 className="h-3.5 w-3.5" /> {t('propertiesPage.confirmDeleteAction')}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => { setConfirmDelete(false); setError(''); }}>
-              Annuler
+              {t('common.cancel')}
             </Button>
           </div>
         </div>
@@ -568,6 +582,7 @@ const AddPropertyForm = ({
   onSuccess: () => void;
   onCancel: () => void;
 }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [form, setForm] = useState(PROP_INIT);
   const [error, setError] = useState('');
@@ -585,39 +600,39 @@ const AddPropertyForm = ({
       onSuccess();
       setError('');
     },
-    onError: (e: any) => setError(e?.response?.data?.message ?? 'Erreur lors de l\'ajout.'),
+    onError: (e: any) => setError(e?.response?.data?.message ?? t('propertiesPage.errorAdd')),
   });
 
   return (
     <div className="card p-6">
-      <h3 className="font-bold text-gray-900 mb-4">Nouveau bien</h3>
+      <h3 className="font-bold text-gray-900 mb-4">{t('propertiesPage.newProperty')}</h3>
       <div className="flex flex-col gap-4">
-        <Input label="Nom *" value={form.name} onChange={(e) => set('name', e.target.value)} />
+        <Input label={t('onboarding.nameRequired')} value={form.name} onChange={(e) => set('name', e.target.value)} />
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Type *</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('onboarding.typeRequired')}</label>
             <select className="input w-full" value={form.type} onChange={(e) => set('type', e.target.value)}>
-              {PROPERTY_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              {PROPERTY_TYPES.map((pt) => <option key={pt.value} value={pt.value}>{t(pt.labelKey)}</option>)}
             </select>
           </div>
-          <Input label="Unités/chambres *" type="number" min={1}
+          <Input label={t('onboarding.roomsCountRequired')} type="number" min={1}
             value={form.room_count} onChange={(e) => set('room_count', e.target.value)} />
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Input label="Étoiles (optionnel)" type="number" min={1} max={5}
+          <Input label={t('onboarding.starsOptional')} type="number" min={1} max={5}
             value={form.stars} onChange={(e) => set('stars', e.target.value)} />
-          <Input label="N° RC (optionnel)" value={form.registration_number}
+          <Input label={t('propertiesPage.rcNumberOptional')} value={form.registration_number}
             onChange={(e) => set('registration_number', e.target.value)} />
         </div>
         <div className="h-px bg-gray-100" />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Adresse</p>
-        <Input label="Adresse *" value={form.address.line1}
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('onboarding.address')}</p>
+        <Input label={t('onboarding.addressRequired')} value={form.address.line1}
           onChange={(e) => setAddr('line1', e.target.value)} />
         <div className="grid grid-cols-2 gap-3">
-          <Input label="Ville *" value={form.address.city}
+          <Input label={t('onboarding.cityRequired')} value={form.address.city}
             onChange={(e) => setAddr('city', e.target.value)} />
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Gouvernorat</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('propertiesPage.governorate')}</label>
             <select className="input w-full" value={form.address.governorate}
               onChange={(e) => setAddr('governorate', e.target.value)}>
               {GOVERNORATES.map((g) => <option key={g} value={g}>{g}</option>)}
@@ -626,11 +641,11 @@ const AddPropertyForm = ({
         </div>
         {error && <p className="text-xs text-red-500">{error}</p>}
         <div className="flex gap-3 pt-1">
-          <Button variant="ghost" onClick={onCancel}>Annuler</Button>
+          <Button variant="ghost" onClick={onCancel}>{t('common.cancel')}</Button>
           <Button fullWidth loading={addMut.isPending}
             disabled={!form.name || !form.address.line1 || !form.address.city}
             onClick={() => addMut.mutate()}>
-            Enregistrer
+            {t('common.save')}
           </Button>
         </div>
       </div>
@@ -641,6 +656,7 @@ const AddPropertyForm = ({
 // ── Receptionist view (read-only switcher — no add/edit/delete) ────────────────
 
 const ReceptionistPropertiesView = () => {
+  const { t } = useTranslation();
   const { activePropertyId, setActiveProperty } = useAuthStore();
   const qc = useQueryClient();
 
@@ -656,10 +672,10 @@ const ReceptionistPropertiesView = () => {
   }, [properties, activePropertyId]);
 
   return (
-    <HotelLayout title="Mes biens">
+    <HotelLayout title={t('propertiesPage.myProperties')}>
       <div className="p-4 flex flex-col gap-3">
         <p className="text-sm text-gray-500">
-          Sélectionnez le bien sur lequel vous travaillez actuellement.
+          {t('propertiesPage.selectActiveProperty')}
         </p>
         {isLoading && [1, 2].map((i) => <div key={i} className="h-16 animate-pulse rounded-2xl bg-gray-100" />)}
         {(properties ?? []).map((p) => {
@@ -676,14 +692,14 @@ const ReceptionistPropertiesView = () => {
               </div>
               {isActive ? (
                 <span className="flex items-center gap-1.5 text-xs font-semibold shrink-0" style={{ color: '#5346A8' }}>
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Actif
+                  <CheckCircle2 className="h-3.5 w-3.5" /> {t('propertiesPage.activeBadge')}
                 </span>
               ) : (
                 <Button size="sm" variant="secondary" onClick={() => {
                   setActiveProperty(p.id, p.name);
                   qc.invalidateQueries({ queryKey: ['dashboard'] });
                 }}>
-                  Sélectionner
+                  {t('propertiesPage.select')}
                 </Button>
               )}
             </div>
@@ -692,7 +708,7 @@ const ReceptionistPropertiesView = () => {
         {!isLoading && !properties?.length && (
           <div className="flex flex-col items-center gap-3 py-10 text-gray-400">
             <Building2 className="h-10 w-10 text-gray-200" />
-            <p className="text-sm font-medium">Aucun bien ne vous est encore assigné.</p>
+            <p className="text-sm font-medium">{t('propertiesPage.noPropertyAssigned')}</p>
           </div>
         )}
       </div>
@@ -703,6 +719,7 @@ const ReceptionistPropertiesView = () => {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export const PropertiesPage = () => {
+  const { t } = useTranslation();
   const [showForm, setShowForm] = useState(false);
   const { user, activePropertyId, setActiveProperty } = useAuthStore();
   const isAdmin = user?.role === 'hotel_admin';
@@ -728,10 +745,10 @@ export const PropertiesPage = () => {
   }, [org?.properties, activePropertyId, setActiveProperty]);
 
   // Derive display name: prefer org name, fallback to hotel name from auth store
-  const displayName = org?.name ?? user?.hotel?.name ?? 'Mon organisation';
+  const displayName = org?.name ?? user?.hotel?.name ?? t('propertiesPage.myOrganization');
 
   return (
-    <HotelLayout title="Mes biens">
+    <HotelLayout title={t('propertiesPage.myProperties')}>
       <div className="p-4 flex flex-col gap-4">
 
         {/* ── Org header ── */}
@@ -749,25 +766,25 @@ export const PropertiesPage = () => {
             <p className="text-sm text-gray-400">
               {org ? (
                 <>
-                  {org.entity_type === 'company' ? 'Société' : 'Particulier'}
+                  {org.entity_type === 'company' ? t('policeFiche.company') : t('policeFiche.individual')}
                   {' · '}
-                  {org.properties.length} bien{org.properties.length !== 1 ? 's' : ''}
+                  {t('propertiesPage.propertiesCount', { count: org.properties.length })}
                   {' · '}
-                  {org.total_rooms} unité{org.total_rooms !== 1 ? 's' : ''} au total
+                  {t('propertiesPage.unitsTotalCount', { count: org.total_rooms })}
                 </>
               ) : isLoading ? (
-                'Chargement…'
+                t('common.loading')
               ) : isError ? (
                 <button onClick={() => refetch()} className="underline hover:text-gray-600">
-                  Erreur — cliquer pour réessayer
+                  {t('propertiesPage.errorRetry')}
                 </button>
               ) : (
-                'Aucun bien enregistré'
+                t('propertiesPage.noPropertyRegistered')
               )}
             </p>
           </div>
           <Button size="sm" onClick={() => setShowForm(true)} className="gap-1.5 flex-shrink-0">
-            <Plus className="h-4 w-4" /> Ajouter un bien
+            <Plus className="h-4 w-4" /> {t('propertiesPage.addProperty')}
           </Button>
         </div>
 
@@ -792,9 +809,9 @@ export const PropertiesPage = () => {
             {!isLoading && (org?.properties ?? []).length === 0 && !showForm && (
               <div className="flex flex-col items-center gap-3 py-10 text-gray-400">
                 <Building2 className="h-10 w-10 text-gray-200" />
-                <p className="text-sm font-medium">Aucun bien enregistré</p>
+                <p className="text-sm font-medium">{t('propertiesPage.noPropertyRegistered')}</p>
                 <Button size="sm" onClick={() => setShowForm(true)} className="gap-1.5">
-                  <Plus className="h-4 w-4" /> Ajouter mon premier bien
+                  <Plus className="h-4 w-4" /> {t('propertiesPage.addFirstProperty')}
                 </Button>
               </div>
             )}
@@ -805,8 +822,7 @@ export const PropertiesPage = () => {
         <div className="flex items-start gap-3 rounded-xl p-4 text-sm text-gray-500" style={{ background: '#F6F5F1' }}>
           <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5 text-gray-400" />
           <p>
-            Le bien <strong>sélectionné</strong> est votre contexte actif pour les check-ins et le tableau de bord.
-            Développez un bien pour gérer ses unités. Basculez à tout moment sans vous déconnecter.
+            <Trans t={t} i18nKey="propertiesPage.infoNotice" components={{ strong: <strong /> }} />
           </p>
         </div>
 
