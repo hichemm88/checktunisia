@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building2, Search, CheckCircle2, XCircle, Clock, Plus, X, Trash2, RefreshCw,
@@ -14,19 +15,22 @@ import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { Pagination } from '@/components/ui/Pagination';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
-const STATUS: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
-  active:    { label: 'Actif',      color: '#1F9D6B', icon: CheckCircle2 },
-  suspended: { label: 'Suspendu',   color: '#ef4444', icon: XCircle },
-  pending:   { label: 'En attente', color: '#E3A008', icon: Clock },
-  closed:    { label: 'Fermé',      color: '#9ca3af', icon: XCircle },
+const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
+
+const STATUS: Record<string, { labelKey: string; color: string; icon: typeof CheckCircle2 }> = {
+  active:    { labelKey: 'adminHotels.statusActive',    color: '#1F9D6B', icon: CheckCircle2 },
+  suspended: { labelKey: 'adminHotels.statusSuspended', color: '#ef4444', icon: XCircle },
+  pending:   { labelKey: 'adminHotels.statusPending',   color: '#E3A008', icon: Clock },
+  closed:    { labelKey: 'adminHotels.statusClosed',    color: '#9ca3af', icon: XCircle },
 };
 
-const fmtDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+const fmtDate = (d: string | null | undefined, locale: string) =>
+  d ? new Date(d).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 // ─── Create form ────────────────────────────────────────────────────────────────
 
 const CreateHotelForm = ({ onDone }: { onDone: () => void }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
   const [form, setForm] = useState({
@@ -49,18 +53,18 @@ const CreateHotelForm = ({ onDone }: { onDone: () => void }) => {
       name: form.name, organization_id: selectedHost!.id, type: form.type, room_count: parseInt(form.room_count) || 1,
       address: { line1: form.line1, city: form.city, governorate: form.governorate },
     }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hotels'] }); toast('Établissement créé', 'success'); onDone(); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hotels'] }); toast(t('adminHotels.propertyCreated'), 'success'); onDone(); },
     onError: (err) => setError(extractErrors(err)),
   });
 
   return (
     <div className="card p-4 flex flex-col gap-3">
-      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Nouvel établissement</p>
+      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">{t('adminHotels.newProperty')}</p>
       <div className="relative">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         <input
           className="input w-full ps-9"
-          placeholder="Hébergeur propriétaire…"
+          placeholder={t('adminHotels.ownerHostPlaceholder')}
           value={selectedHost ? selectedHost.name : hostSearch}
           onChange={(e) => { setHostSearch(e.target.value); setSelectedHost(null); }}
         />
@@ -78,24 +82,24 @@ const CreateHotelForm = ({ onDone }: { onDone: () => void }) => {
           </div>
         ) : null}
       </div>
-      <Input label="Nom" value={form.name} onChange={(e) => set('name', e.target.value)} />
+      <Input label={t('common.name')} value={form.name} onChange={(e) => set('name', e.target.value)} />
       <div className="grid grid-cols-2 gap-2">
-        <Select label="Type" value={form.type} onChange={(e) => set('type', e.target.value)}
+        <Select label={t('onboarding.type')} value={form.type} onChange={(e) => set('type', e.target.value)}
           options={[
-            { value: 'hotel', label: 'Hôtel' }, { value: 'guesthouse', label: "Maison d'hôtes" },
-            { value: 'rental', label: 'Location' }, { value: 'hostel', label: 'Auberge' }, { value: 'resort', label: 'Resort' },
+            { value: 'hotel', label: t('propertiesPage.typeHotel') }, { value: 'guesthouse', label: t('propertiesPage.typeGuesthouseFr') },
+            { value: 'rental', label: t('adminHotels.typeRental') }, { value: 'hostel', label: t('propertiesPage.typeHostel') }, { value: 'resort', label: t('propertiesPage.typeResort') },
           ]} />
-        <Input label="Chambres" type="number" min={1} value={form.room_count} onChange={(e) => set('room_count', e.target.value)} />
+        <Input label={t('adminHotels.rooms')} type="number" min={1} value={form.room_count} onChange={(e) => set('room_count', e.target.value)} />
       </div>
-      <Input label="Adresse" value={form.line1} onChange={(e) => set('line1', e.target.value)} />
+      <Input label={t('onboarding.address')} value={form.line1} onChange={(e) => set('line1', e.target.value)} />
       <div className="grid grid-cols-2 gap-2">
-        <Input label="Ville" value={form.city} onChange={(e) => set('city', e.target.value)} />
-        <Input label="Gouvernorat" value={form.governorate} onChange={(e) => set('governorate', e.target.value)} />
+        <Input label={t('propertiesPage.city')} value={form.city} onChange={(e) => set('city', e.target.value)} />
+        <Input label={t('propertiesPage.governorate')} value={form.governorate} onChange={(e) => set('governorate', e.target.value)} />
       </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
       <div className="flex gap-2">
-        <Button size="sm" loading={mut.isPending} disabled={!selectedHost || !form.name || !form.line1 || !form.city || !form.governorate} onClick={() => mut.mutate()}>Créer</Button>
-        <Button size="sm" variant="ghost" onClick={onDone}>Annuler</Button>
+        <Button size="sm" loading={mut.isPending} disabled={!selectedHost || !form.name || !form.line1 || !form.city || !form.governorate} onClick={() => mut.mutate()}>{t('adminHotels.create')}</Button>
+        <Button size="sm" variant="ghost" onClick={onDone}>{t('common.cancel')}</Button>
       </div>
     </div>
   );
@@ -104,6 +108,8 @@ const CreateHotelForm = ({ onDone }: { onDone: () => void }) => {
 // ─── Main page ──────────────────────────────────────────────────────────────────
 
 export const AdminHotelsPage = () => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('');
@@ -126,17 +132,17 @@ export const AdminHotelsPage = () => {
 
   const suspendMut = useAdminMutation({
     mutationFn: () => adminHotelsApi.suspend(selected!.id, suspendReason),
-    successMessage: 'Établissement suspendu',
+    successMessage: t('adminHotels.propertySuspended'),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hotels'] }); setShowSuspend(false); setSuspendReason(''); },
   });
   const activateMut = useAdminMutation({
     mutationFn: () => adminHotelsApi.activate(selected!.id),
-    successMessage: 'Établissement réactivé',
+    successMessage: t('adminHotels.propertyReactivated'),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-hotels'] }),
   });
   const deleteMut = useAdminMutation({
     mutationFn: () => adminHotelsApi.remove(selected!.id),
-    successMessage: 'Établissement supprimé',
+    successMessage: t('adminHotels.propertyDeleted'),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hotels'] }); setSelected(null); setConfirmDelete(false); },
   });
 
@@ -146,9 +152,9 @@ export const AdminHotelsPage = () => {
   return (
     <div className="flex flex-col gap-4 max-w-6xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">Établissements</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t('adminHotels.title')}</h1>
         <Button size="sm" onClick={() => setShowCreate((s) => !s)} className="gap-1.5">
-          {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showCreate ? 'Annuler' : 'Ajouter'}
+          {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showCreate ? t('common.cancel') : t('common.add')}
         </Button>
       </div>
 
@@ -159,14 +165,14 @@ export const AdminHotelsPage = () => {
           <div className="flex gap-3">
             <div className="relative flex-1">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input className="input w-full ps-9" placeholder="Rechercher…" value={search}
+              <input className="input w-full ps-9" placeholder={t('common.search') + '…'} value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
             </div>
             <select className="input" value={filter} onChange={(e) => { setFilter(e.target.value); setPage(1); }}>
-              <option value="">Tous</option>
-              <option value="active">Actifs</option>
-              <option value="suspended">Suspendus</option>
-              <option value="pending">En attente</option>
+              <option value="">{t('common.all')}</option>
+              <option value="active">{t('adminDashboard.active')}</option>
+              <option value="suspended">{t('adminDashboard.suspended')}</option>
+              <option value="pending">{t('adminDashboard.pending')}</option>
             </select>
           </div>
 
@@ -186,12 +192,12 @@ export const AdminHotelsPage = () => {
                       </div>
                       <div className="min-w-0">
                         <p className="font-semibold text-gray-900 truncate">{h.name}</p>
-                        <p className="text-xs text-gray-400">{h.room_count} chambres · {h.check_ins_count} check-ins</p>
+                        <p className="text-xs text-gray-400">{t('adminHotels.roomsAndCheckins', { rooms: h.room_count, checkins: h.check_ins_count })}</p>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1 flex-shrink-0">
                       <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: s.color }}>
-                        <s.icon className="h-3 w-3" /> {s.label}
+                        <s.icon className="h-3 w-3" /> {t(s.labelKey)}
                       </span>
                       {h.subscription && <span className="text-xs text-gray-400">{h.subscription.plan}</span>}
                     </div>
@@ -199,7 +205,7 @@ export const AdminHotelsPage = () => {
                 </button>
               );
             })}
-            {!isLoading && !hotels.length && <p className="text-sm text-gray-400 text-center py-8">Aucun établissement</p>}
+            {!isLoading && !hotels.length && <p className="text-sm text-gray-400 text-center py-8">{t('adminHotels.noProperty')}</p>}
           </div>
 
           {meta && (
@@ -211,21 +217,21 @@ export const AdminHotelsPage = () => {
           {!selected ? (
             <div className="card p-8 text-center text-sm text-gray-400">
               <Building2 className="h-8 w-8 mx-auto mb-3 text-gray-200" />
-              Sélectionnez un établissement
+              {t('adminHotels.selectProperty')}
             </div>
           ) : (
             <div className="card p-5 flex flex-col gap-4">
               <div>
                 <h3 className="font-bold text-gray-900 text-lg leading-tight">{selected.name}</h3>
-                <p className="text-sm text-gray-400">{selected.type} · {selected.room_count} chambres</p>
-                <p className="text-xs text-gray-400 mt-0.5">Créé le {fmtDate(selected.created_at)}</p>
+                <p className="text-sm text-gray-400">{selected.type} · {t('adminHotels.roomsCount', { count: selected.room_count })}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{t('adminHotels.createdOn', { date: fmtDate(selected.created_at, locale) })}</p>
               </div>
 
               <div className="flex gap-2">
                 {selected.status !== 'suspended' ? (
-                  <Button variant="danger" size="sm" onClick={() => setShowSuspend(true)} className="flex-1">Suspendre</Button>
+                  <Button variant="danger" size="sm" onClick={() => setShowSuspend(true)} className="flex-1">{t('adminHotels.suspend')}</Button>
                 ) : (
-                  <Button size="sm" loading={activateMut.isPending} onClick={() => activateMut.mutate()} className="flex-1">Réactiver</Button>
+                  <Button size="sm" loading={activateMut.isPending} onClick={() => activateMut.mutate()} className="flex-1">{t('adminHotels.reactivate')}</Button>
                 )}
                 <Button variant="secondary" size="sm" onClick={() => qc.invalidateQueries({ queryKey: ['admin-hotel-users', selected.id] })}>
                   <RefreshCw className="h-4 w-4" />
@@ -237,40 +243,40 @@ export const AdminHotelsPage = () => {
 
               {showSuspend && (
                 <div className="flex flex-col gap-2 p-3 rounded-xl bg-red-50">
-                  <Input label="Motif" value={suspendReason} onChange={(e) => setSuspendReason(e.target.value)} />
+                  <Input label={t('adminHotels.reason')} value={suspendReason} onChange={(e) => setSuspendReason(e.target.value)} />
                   <div className="flex gap-2">
-                    <Button variant="danger" size="sm" loading={suspendMut.isPending} disabled={!suspendReason} onClick={() => suspendMut.mutate()} className="flex-1">Confirmer</Button>
-                    <Button variant="ghost" size="sm" onClick={() => setShowSuspend(false)}>Annuler</Button>
+                    <Button variant="danger" size="sm" loading={suspendMut.isPending} disabled={!suspendReason} onClick={() => suspendMut.mutate()} className="flex-1">{t('common.confirm')}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => setShowSuspend(false)}>{t('common.cancel')}</Button>
                   </div>
                 </div>
               )}
 
               {confirmDelete && (
                 <div className="flex flex-col gap-2 p-3 rounded-xl bg-red-50">
-                  <p className="text-sm text-gray-700">Supprimer définitivement cet établissement ?</p>
+                  <p className="text-sm text-gray-700">{t('adminHotels.confirmDeleteBody')}</p>
                   <div className="flex gap-2">
-                    <Button variant="danger" size="sm" loading={deleteMut.isPending} onClick={() => deleteMut.mutate()} className="flex-1">Supprimer</Button>
-                    <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>Annuler</Button>
+                    <Button variant="danger" size="sm" loading={deleteMut.isPending} onClick={() => deleteMut.mutate()} className="flex-1">{t('common.delete')}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>{t('common.cancel')}</Button>
                   </div>
                 </div>
               )}
 
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Abonnement</p>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('settingsPage.subscription')}</p>
                 {selected.subscription ? (
                   <div className="rounded-xl p-3 text-sm" style={{ background: '#F6F5F1' }}>
                     <p className="font-semibold">{selected.subscription.plan}</p>
-                    <p className="text-xs text-gray-400">Expire le {fmtDate(selected.subscription.expires_at)}</p>
+                    <p className="text-xs text-gray-400">{t('adminHotels.expiresOn', { date: fmtDate(selected.subscription.expires_at, locale) })}</p>
                     <span className={`text-xs font-medium ${selected.subscription.status === 'active' ? 'text-green-600' : 'text-red-500'}`}>
                       ● {selected.subscription.status}
                     </span>
                   </div>
-                ) : <p className="text-sm text-gray-400">Aucun abonnement</p>}
+                ) : <p className="text-sm text-gray-400">{t('adminHotels.noSubscription')}</p>}
               </div>
 
               {hotelUsers && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Utilisateurs</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('adminUsers.title')}</p>
                   <div className="flex flex-col gap-1.5">
                     {(hotelUsers as any[]).map((u) => (
                       <div key={u.id} className="flex items-center justify-between text-sm">

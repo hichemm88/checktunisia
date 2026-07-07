@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Users, Landmark, Plus, X, Trash2, Pencil, Save } from 'lucide-react';
 import { adminAuthorityApi, AdminAuthorityUser, AdminAuthorityOrganization } from '@/api/admin/authority';
@@ -9,14 +10,15 @@ import { extractErrors } from '@/lib/api';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
-const TYPE_LABELS: Record<string, string> = {
-  police: 'Police', immigration: 'Immigration', customs: 'Douanes',
-  judiciary: 'Justice', tax: 'Fiscalité', ministry: 'Ministère', other: 'Autre',
+const TYPE_KEYS: Record<string, string> = {
+  police: 'adminAuthority.typePolice', immigration: 'adminAuthority.typeImmigration', customs: 'adminAuthority.typeCustoms',
+  judiciary: 'adminAuthority.typeJudiciary', tax: 'adminAuthority.typeTax', ministry: 'adminAuthority.typeMinistry', other: 'adminAuthority.typeOther',
 };
 
 // ─── Organismes tab ─────────────────────────────────────────────────────────────
 
 const CreateOrgForm = ({ onDone }: { onDone: () => void }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [form, setForm] = useState({ name: '', type: 'police', governorate: '', code: '' });
   const [error, setError] = useState('');
@@ -30,21 +32,22 @@ const CreateOrgForm = ({ onDone }: { onDone: () => void }) => {
 
   return (
     <div className="card p-4 flex flex-col gap-3">
-      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Nouvel organisme</p>
-      <Input label="Nom" value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Poste de police de Sousse" />
-      <Select label="Type" value={form.type} onChange={(e) => set('type', e.target.value)}
-        options={Object.entries(TYPE_LABELS).map(([value, label]) => ({ value, label }))} />
-      <Input label="Gouvernorat" value={form.governorate} onChange={(e) => set('governorate', e.target.value)} />
+      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">{t('adminAuthority.newOrg')}</p>
+      <Input label={t('common.name')} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder={t('adminAuthority.orgNamePlaceholder')} />
+      <Select label={t('onboarding.type')} value={form.type} onChange={(e) => set('type', e.target.value)}
+        options={Object.entries(TYPE_KEYS).map(([value, labelKey]) => ({ value, label: t(labelKey) }))} />
+      <Input label={t('propertiesPage.governorate')} value={form.governorate} onChange={(e) => set('governorate', e.target.value)} />
       {error && <p className="text-xs text-red-500">{error}</p>}
       <div className="flex gap-2">
-        <Button size="sm" loading={mut.isPending} disabled={!form.name} onClick={() => mut.mutate()}>Créer</Button>
-        <Button size="sm" variant="ghost" onClick={onDone}>Annuler</Button>
+        <Button size="sm" loading={mut.isPending} disabled={!form.name} onClick={() => mut.mutate()}>{t('adminHotels.create')}</Button>
+        <Button size="sm" variant="ghost" onClick={onDone}>{t('common.cancel')}</Button>
       </div>
     </div>
   );
 };
 
 const OrgRow = ({ org }: { org: AdminAuthorityOrganization }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -58,23 +61,23 @@ const OrgRow = ({ org }: { org: AdminAuthorityOrganization }) => {
   });
   const deleteMut = useAdminMutation({
     mutationFn: () => adminAuthorityApi.organizations.remove(org.id),
-    successMessage: 'Organisme supprimé',
+    successMessage: t('adminAuthority.orgDeleted'),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-authority-orgs'] }),
   });
 
   if (editing) {
     return (
       <div className="py-3 border-b border-gray-50 last:border-0 flex flex-col gap-2">
-        <Input label="Nom" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+        <Input label={t('common.name')} value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
         <div className="grid grid-cols-2 gap-2">
-          <Select label="Type" value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-            options={Object.entries(TYPE_LABELS).map(([value, label]) => ({ value, label }))} />
-          <Input label="Gouvernorat" value={form.governorate} onChange={(e) => setForm((f) => ({ ...f, governorate: e.target.value }))} />
+          <Select label={t('onboarding.type')} value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
+            options={Object.entries(TYPE_KEYS).map(([value, labelKey]) => ({ value, label: t(labelKey) }))} />
+          <Input label={t('propertiesPage.governorate')} value={form.governorate} onChange={(e) => setForm((f) => ({ ...f, governorate: e.target.value }))} />
         </div>
         {error && <p className="text-xs text-red-500">{error}</p>}
         <div className="flex gap-2">
-          <Button size="sm" onClick={() => updateMut.mutate()} loading={updateMut.isPending} className="gap-1.5"><Save className="h-3.5 w-3.5" /> Enregistrer</Button>
-          <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Annuler</Button>
+          <Button size="sm" onClick={() => updateMut.mutate()} loading={updateMut.isPending} className="gap-1.5"><Save className="h-3.5 w-3.5" /> {t('common.save')}</Button>
+          <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>{t('common.cancel')}</Button>
         </div>
       </div>
     );
@@ -84,7 +87,7 @@ const OrgRow = ({ org }: { org: AdminAuthorityOrganization }) => {
     <div className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
       <div className="min-w-0">
         <p className="text-sm font-semibold text-gray-900 truncate">{org.name}</p>
-        <p className="text-xs text-gray-400">{TYPE_LABELS[org.type] ?? org.type}{org.governorate ? ` · ${org.governorate}` : ''}{org.user_profiles_count ? ` · ${org.user_profiles_count} utilisateur(s)` : ''}</p>
+        <p className="text-xs text-gray-400">{org.type in TYPE_KEYS ? t(TYPE_KEYS[org.type]) : org.type}{org.governorate ? ` · ${org.governorate}` : ''}{org.user_profiles_count ? ` · ${t('adminAuthority.usersCount', { count: org.user_profiles_count })}` : ''}</p>
       </div>
       <div className="flex items-center gap-1 shrink-0 ms-2">
         <button onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500"><Pencil className="h-3.5 w-3.5" /></button>
@@ -92,8 +95,8 @@ const OrgRow = ({ org }: { org: AdminAuthorityOrganization }) => {
           <button onClick={() => setConfirmDelete(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
         ) : (
           <div className="flex gap-1">
-            <button onClick={() => deleteMut.mutate()} className="text-xs font-bold text-red-600">Confirmer</button>
-            <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-400">Annuler</button>
+            <button onClick={() => deleteMut.mutate()} className="text-xs font-bold text-red-600">{t('common.confirm')}</button>
+            <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-400">{t('common.cancel')}</button>
           </div>
         )}
       </div>
@@ -102,6 +105,7 @@ const OrgRow = ({ org }: { org: AdminAuthorityOrganization }) => {
 };
 
 const OrganismesTab = () => {
+  const { t } = useTranslation();
   const [showCreate, setShowCreate] = useState(false);
   const { data, isLoading } = useQuery({ queryKey: ['admin-authority-orgs'], queryFn: () => adminAuthorityApi.organizations.list({ include_inactive: true }) });
 
@@ -109,14 +113,14 @@ const OrganismesTab = () => {
     <div className="flex flex-col gap-3">
       <div className="flex justify-end">
         <Button size="sm" onClick={() => setShowCreate((s) => !s)} className="gap-1.5">
-          {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showCreate ? 'Annuler' : 'Ajouter'}
+          {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showCreate ? t('common.cancel') : t('common.add')}
         </Button>
       </div>
       {showCreate && <CreateOrgForm onDone={() => setShowCreate(false)} />}
       <div className="card p-4">
         {isLoading && <ListSkeleton rows={3} />}
         {data?.map((org) => <OrgRow key={org.id} org={org} />)}
-        {!isLoading && !data?.length && <p className="text-sm text-gray-400 text-center py-6">Aucun organisme</p>}
+        {!isLoading && !data?.length && <p className="text-sm text-gray-400 text-center py-6">{t('adminAuthority.noOrg')}</p>}
       </div>
     </div>
   );
@@ -125,6 +129,7 @@ const OrganismesTab = () => {
 // ─── Utilisateurs tab ───────────────────────────────────────────────────────────
 
 const CreateAuthorityUserForm = ({ onDone }: { onDone: () => void }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '', organization_id: '', badge_number: '', rank: '' });
   const [error, setError] = useState('');
@@ -140,31 +145,32 @@ const CreateAuthorityUserForm = ({ onDone }: { onDone: () => void }) => {
 
   return (
     <div className="card p-4 flex flex-col gap-3">
-      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Nouvel utilisateur autorité</p>
+      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">{t('adminAuthority.newAuthorityUser')}</p>
       <div className="grid grid-cols-2 gap-2">
-        <Input label="Prénom" value={form.first_name} onChange={(e) => set('first_name', e.target.value)} />
-        <Input label="Nom" value={form.last_name} onChange={(e) => set('last_name', e.target.value)} />
+        <Input label={t('profile.firstName')} value={form.first_name} onChange={(e) => set('first_name', e.target.value)} />
+        <Input label={t('profile.lastName')} value={form.last_name} onChange={(e) => set('last_name', e.target.value)} />
       </div>
-      <Input label="Email" type="email" value={form.email} onChange={(e) => set('email', e.target.value)} />
-      <Input label="Mot de passe initial" type="password" value={form.password} onChange={(e) => set('password', e.target.value)} />
-      <Select label="Organisme" value={form.organization_id} onChange={(e) => set('organization_id', e.target.value)}
-        options={[{ value: '', label: 'Choisir…' }, ...(orgs ?? []).map((o) => ({ value: String(o.id), label: o.name }))]} />
+      <Input label={t('profile.email')} type="email" value={form.email} onChange={(e) => set('email', e.target.value)} />
+      <Input label={t('adminAuthority.initialPassword')} type="password" value={form.password} onChange={(e) => set('password', e.target.value)} />
+      <Select label={t('adminAuthority.organization')} value={form.organization_id} onChange={(e) => set('organization_id', e.target.value)}
+        options={[{ value: '', label: t('adminUsers.choose') }, ...(orgs ?? []).map((o) => ({ value: String(o.id), label: o.name }))]} />
       <div className="grid grid-cols-2 gap-2">
-        <Input label="Matricule" value={form.badge_number} onChange={(e) => set('badge_number', e.target.value)} />
-        <Input label="Grade" value={form.rank} onChange={(e) => set('rank', e.target.value)} />
+        <Input label={t('profile.badge')} value={form.badge_number} onChange={(e) => set('badge_number', e.target.value)} />
+        <Input label={t('profile.rank')} value={form.rank} onChange={(e) => set('rank', e.target.value)} />
       </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
       <div className="flex gap-2">
         <Button size="sm" loading={mut.isPending}
           disabled={!form.first_name || !form.last_name || !form.email || form.password.length < 8 || !form.organization_id}
-          onClick={() => mut.mutate()}>Créer</Button>
-        <Button size="sm" variant="ghost" onClick={onDone}>Annuler</Button>
+          onClick={() => mut.mutate()}>{t('adminHotels.create')}</Button>
+        <Button size="sm" variant="ghost" onClick={onDone}>{t('common.cancel')}</Button>
       </div>
     </div>
   );
 };
 
 const AuthorityUserRow = ({ u }: { u: AdminAuthorityUser }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -174,7 +180,7 @@ const AuthorityUserRow = ({ u }: { u: AdminAuthorityUser }) => {
   });
   const deleteMut = useAdminMutation({
     mutationFn: () => adminAuthorityApi.users.remove(u.id),
-    successMessage: 'Utilisateur supprimé',
+    successMessage: t('adminUsers.userDeleted'),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-authority-users'] }),
   });
 
@@ -189,16 +195,16 @@ const AuthorityUserRow = ({ u }: { u: AdminAuthorityUser }) => {
         <div className="flex items-center gap-2 shrink-0 ms-2">
           <span className={`text-xs font-semibold px-2 py-1 rounded-full ${u.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{u.status}</span>
           {u.status === 'active' ? (
-            <button onClick={() => statusMut.mutate('suspended')} className="text-xs text-gray-400 hover:text-red-500">Suspendre</button>
+            <button onClick={() => statusMut.mutate('suspended')} className="text-xs text-gray-400 hover:text-red-500">{t('adminHotels.suspend')}</button>
           ) : (
-            <button onClick={() => statusMut.mutate('active')} className="text-xs text-gray-400 hover:text-green-600">Réactiver</button>
+            <button onClick={() => statusMut.mutate('active')} className="text-xs text-gray-400 hover:text-green-600">{t('adminHotels.reactivate')}</button>
           )}
           {!confirmDelete ? (
             <button onClick={() => setConfirmDelete(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
           ) : (
             <div className="flex gap-1">
-              <button onClick={() => deleteMut.mutate()} className="text-xs font-bold text-red-600">Confirmer</button>
-              <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-400">Annuler</button>
+              <button onClick={() => deleteMut.mutate()} className="text-xs font-bold text-red-600">{t('common.confirm')}</button>
+              <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-400">{t('common.cancel')}</button>
             </div>
           )}
         </div>
@@ -208,6 +214,7 @@ const AuthorityUserRow = ({ u }: { u: AdminAuthorityUser }) => {
 };
 
 const AuthorityUsersTab = () => {
+  const { t } = useTranslation();
   const [showCreate, setShowCreate] = useState(false);
   const { data, isLoading } = useQuery({ queryKey: ['admin-authority-users'], queryFn: adminAuthorityApi.users.list });
 
@@ -215,14 +222,14 @@ const AuthorityUsersTab = () => {
     <div className="flex flex-col gap-3">
       <div className="flex justify-end">
         <Button size="sm" onClick={() => setShowCreate((s) => !s)} className="gap-1.5">
-          {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showCreate ? 'Annuler' : 'Ajouter'}
+          {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showCreate ? t('common.cancel') : t('common.add')}
         </Button>
       </div>
       {showCreate && <CreateAuthorityUserForm onDone={() => setShowCreate(false)} />}
       <div className="card p-4">
         {isLoading && <ListSkeleton rows={3} />}
         {data?.map((u) => <AuthorityUserRow key={u.id} u={u} />)}
-        {!isLoading && !data?.length && <p className="text-sm text-gray-400 text-center py-6">Aucun utilisateur</p>}
+        {!isLoading && !data?.length && <p className="text-sm text-gray-400 text-center py-6">{t('settingsPage.noUser')}</p>}
       </div>
     </div>
   );
@@ -231,17 +238,18 @@ const AuthorityUsersTab = () => {
 // ─── Main page ──────────────────────────────────────────────────────────────────
 
 export const AdminAuthorityPage = () => {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<'users' | 'orgs'>('users');
 
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
-      <h1 className="text-xl font-bold text-gray-900">Autorités</h1>
+      <h1 className="text-xl font-bold text-gray-900">{t('adminAuthority.title')}</h1>
       <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#DDD9CF' }}>
         <button onClick={() => setTab('users')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'users' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
-          <Users className="h-4 w-4" /> Utilisateurs
+          <Users className="h-4 w-4" /> {t('adminUsers.title')}
         </button>
         <button onClick={() => setTab('orgs')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'orgs' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
-          <Landmark className="h-4 w-4" /> Organismes
+          <Landmark className="h-4 w-4" /> {t('adminAuthority.organizations')}
         </button>
       </div>
       {tab === 'users' ? <AuthorityUsersTab /> : <OrganismesTab />}
