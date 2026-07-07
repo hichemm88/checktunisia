@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building2, Search, CheckCircle2, XCircle, Plus, X, Trash2,
@@ -16,12 +17,15 @@ import { Pagination } from '@/components/ui/Pagination';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
-const fmtDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
+
+const fmtDate = (d: string | null | undefined, locale: string) =>
+  d ? new Date(d).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 // ─── Create form ────────────────────────────────────────────────────────────────
 
 const CreateHostForm = ({ onDone }: { onDone: () => void }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
   const [form, setForm] = useState({ name: '', entity_type: 'company', contact_email: '', contact_phone: '', registration_number: '' });
@@ -30,23 +34,23 @@ const CreateHostForm = ({ onDone }: { onDone: () => void }) => {
 
   const mut = useMutation({
     mutationFn: () => adminHostsApi.create(form),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hosts'] }); toast('Hébergeur créé', 'success'); onDone(); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hosts'] }); toast(t('adminHosts.hostCreated'), 'success'); onDone(); },
     onError: (err) => setError(extractErrors(err)),
   });
 
   return (
     <div className="card p-4 flex flex-col gap-3">
-      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Nouvel hébergeur</p>
-      <Input label="Nom" value={form.name} onChange={(e) => set('name', e.target.value)} />
-      <Select label="Type" value={form.entity_type} onChange={(e) => set('entity_type', e.target.value)}
-        options={[{ value: 'company', label: 'Société' }, { value: 'individual', label: 'Particulier' }]} />
-      <Input label="Email de contact" type="email" value={form.contact_email} onChange={(e) => set('contact_email', e.target.value)} />
-      <Input label="Téléphone" value={form.contact_phone} onChange={(e) => set('contact_phone', e.target.value)} />
-      <Input label="RC / Matricule" value={form.registration_number} onChange={(e) => set('registration_number', e.target.value)} />
+      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">{t('adminHosts.newHost')}</p>
+      <Input label={t('common.name')} value={form.name} onChange={(e) => set('name', e.target.value)} />
+      <Select label={t('onboarding.type')} value={form.entity_type} onChange={(e) => set('entity_type', e.target.value)}
+        options={[{ value: 'company', label: t('policeFiche.company') }, { value: 'individual', label: t('policeFiche.individual') }]} />
+      <Input label={t('adminHosts.contactEmail')} type="email" value={form.contact_email} onChange={(e) => set('contact_email', e.target.value)} />
+      <Input label={t('profile.phone')} value={form.contact_phone} onChange={(e) => set('contact_phone', e.target.value)} />
+      <Input label={t('adminHosts.rcMatricule')} value={form.registration_number} onChange={(e) => set('registration_number', e.target.value)} />
       {error && <p className="text-xs text-red-500">{error}</p>}
       <div className="flex gap-2">
-        <Button size="sm" loading={mut.isPending} disabled={!form.name || !form.contact_email} onClick={() => mut.mutate()}>Créer</Button>
-        <Button size="sm" variant="ghost" onClick={onDone}>Annuler</Button>
+        <Button size="sm" loading={mut.isPending} disabled={!form.name || !form.contact_email} onClick={() => mut.mutate()}>{t('adminHotels.create')}</Button>
+        <Button size="sm" variant="ghost" onClick={onDone}>{t('common.cancel')}</Button>
       </div>
     </div>
   );
@@ -55,6 +59,8 @@ const CreateHostForm = ({ onDone }: { onDone: () => void }) => {
 // ─── Abonnement (éditable) ──────────────────────────────────────────────────────
 
 const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -74,7 +80,7 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
       expires_at: form.expires_at || undefined,
       custom_price: form.custom_price === '' ? null : parseFloat(String(form.custom_price)),
     }),
-    successMessage: 'Abonnement mis à jour',
+    successMessage: t('adminHosts.subscriptionUpdated'),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-detail', host.id] }); setEditing(false); },
   });
 
@@ -85,31 +91,31 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
       plan_id: parseInt(newSub.plan_id),
       custom_price: newSub.custom_price === '' ? null : parseFloat(String(newSub.custom_price)),
     }),
-    successMessage: 'Abonnement créé',
+    successMessage: t('adminSubscriptions.subscriptionCreated'),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-detail', host.id] }); setCreating(false); },
   });
 
   if (!sub) {
     return (
       <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Abonnement</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('settingsPage.subscription')}</p>
         {!creating ? (
           <div className="flex flex-col gap-2">
-            <p className="text-sm text-gray-400">Aucun abonnement</p>
-            <Button size="sm" variant="secondary" onClick={() => setCreating(true)} className="gap-1.5 w-fit"><Plus className="h-3.5 w-3.5" /> Nouvel abonnement</Button>
+            <p className="text-sm text-gray-400">{t('adminHotels.noSubscription')}</p>
+            <Button size="sm" variant="secondary" onClick={() => setCreating(true)} className="gap-1.5 w-fit"><Plus className="h-3.5 w-3.5" /> {t('adminSubscriptions.newSubscription')}</Button>
           </div>
         ) : (
           <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F6F5F1' }}>
-            <Select label="Pack" value={newSub.plan_id} onChange={(e) => setNewSub((f) => ({ ...f, plan_id: e.target.value }))}
-              options={[{ value: '', label: 'Choisir…' }, ...(plans ?? []).map((p) => ({ value: String(p.id), label: p.name }))]} />
+            <Select label={t('adminSubscriptions.plan')} value={newSub.plan_id} onChange={(e) => setNewSub((f) => ({ ...f, plan_id: e.target.value }))}
+              options={[{ value: '', label: t('adminUsers.choose') }, ...(plans ?? []).map((p) => ({ value: String(p.id), label: p.name }))]} />
             <div className="grid grid-cols-2 gap-2">
-              <Input label="Début" type="date" value={newSub.started_at} onChange={(e) => setNewSub((f) => ({ ...f, started_at: e.target.value }))} />
-              <Input label="Expiration" type="date" value={newSub.expires_at} onChange={(e) => setNewSub((f) => ({ ...f, expires_at: e.target.value }))} />
+              <Input label={t('adminSubscriptions.start')} type="date" value={newSub.started_at} onChange={(e) => setNewSub((f) => ({ ...f, started_at: e.target.value }))} />
+              <Input label={t('profile.expiration')} type="date" value={newSub.expires_at} onChange={(e) => setNewSub((f) => ({ ...f, expires_at: e.target.value }))} />
             </div>
-            <Input label="Prix personnalisé (optionnel)" type="number" value={newSub.custom_price} onChange={(e) => setNewSub((f) => ({ ...f, custom_price: e.target.value }))} />
+            <Input label={t('adminSubscriptions.customPriceOptional')} type="number" value={newSub.custom_price} onChange={(e) => setNewSub((f) => ({ ...f, custom_price: e.target.value }))} />
             <div className="flex gap-2">
-              <Button size="sm" loading={createMut.isPending} disabled={!newSub.plan_id || !newSub.expires_at} onClick={() => createMut.mutate()}>Créer</Button>
-              <Button size="sm" variant="ghost" onClick={() => setCreating(false)}>Annuler</Button>
+              <Button size="sm" loading={createMut.isPending} disabled={!newSub.plan_id || !newSub.expires_at} onClick={() => createMut.mutate()}>{t('adminHotels.create')}</Button>
+              <Button size="sm" variant="ghost" onClick={() => setCreating(false)}>{t('common.cancel')}</Button>
             </div>
           </div>
         )}
@@ -120,24 +126,24 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Abonnement</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('settingsPage.subscription')}</p>
         {!editing && <button onClick={() => setEditing(true)} className="text-gray-300 hover:text-blue-500"><Pencil className="h-3.5 w-3.5" /></button>}
       </div>
       {!editing ? (
         <div className="rounded-xl p-3 text-sm" style={{ background: '#F6F5F1' }}>
           <p className="font-semibold">{sub.plan?.name}</p>
-          <p className="text-xs text-gray-400">Expire le {fmtDate(sub.expires_at)}</p>
-          {sub.custom_price && <p className="text-xs text-gray-400">Prix négocié : {sub.custom_price} TND</p>}
+          <p className="text-xs text-gray-400">{t('adminHotels.expiresOn', { date: fmtDate(sub.expires_at, locale) })}</p>
+          {sub.custom_price && <p className="text-xs text-gray-400">{t('adminHosts.negotiatedPrice', { price: sub.custom_price })}</p>}
         </div>
       ) : (
         <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F6F5F1' }}>
-          <Select label="Pack" value={form.plan_id} onChange={(e) => setForm((f) => ({ ...f, plan_id: e.target.value }))}
+          <Select label={t('adminSubscriptions.plan')} value={form.plan_id} onChange={(e) => setForm((f) => ({ ...f, plan_id: e.target.value }))}
             options={(plans ?? []).map((p) => ({ value: String(p.id), label: p.name }))} />
-          <Input label="Expiration" type="date" value={form.expires_at} onChange={(e) => setForm((f) => ({ ...f, expires_at: e.target.value }))} />
-          <Input label="Prix personnalisé (optionnel)" type="number" value={String(form.custom_price)} onChange={(e) => setForm((f) => ({ ...f, custom_price: e.target.value }))} />
+          <Input label={t('profile.expiration')} type="date" value={form.expires_at} onChange={(e) => setForm((f) => ({ ...f, expires_at: e.target.value }))} />
+          <Input label={t('adminSubscriptions.customPriceOptional')} type="number" value={String(form.custom_price)} onChange={(e) => setForm((f) => ({ ...f, custom_price: e.target.value }))} />
           <div className="flex gap-2">
-            <Button size="sm" loading={updateMut.isPending} onClick={() => updateMut.mutate()} className="gap-1.5"><Check className="h-3.5 w-3.5" /> Enregistrer</Button>
-            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Annuler</Button>
+            <Button size="sm" loading={updateMut.isPending} onClick={() => updateMut.mutate()} className="gap-1.5"><Check className="h-3.5 w-3.5" /> {t('common.save')}</Button>
+            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>{t('common.cancel')}</Button>
           </div>
         </div>
       )}
@@ -148,6 +154,7 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
 // ─── Factures ───────────────────────────────────────────────────────────────────
 
 const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [error, setError] = useState('');
@@ -173,7 +180,7 @@ const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Factures</p>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('adminFacturation.title')}</p>
         {sub && (
           <button onClick={() => setShowCreate((s) => !s)} className="text-gray-300 hover:text-blue-500">
             {showCreate ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
@@ -183,20 +190,20 @@ const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
 
       {showCreate && sub && (
         <div className="rounded-xl p-3 flex flex-col gap-2 mb-2" style={{ background: '#F6F5F1' }}>
-          <Input label={`Montant (vide = ${sub.custom_price ?? sub.plan?.price_monthly ?? '—'} TND)`} type="number" value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} />
+          <Input label={t('adminHosts.amountEmptyHint', { price: sub.custom_price ?? sub.plan?.price_monthly ?? '—' })} type="number" value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} />
           <div className="grid grid-cols-2 gap-2">
-            <Input label="TVA" type="number" value={form.tax_amount} onChange={(e) => setForm((f) => ({ ...f, tax_amount: e.target.value }))} />
-            <Input label="Échéance" type="date" value={form.due_at} onChange={(e) => setForm((f) => ({ ...f, due_at: e.target.value }))} />
+            <Input label={t('adminHosts.tax')} type="number" value={form.tax_amount} onChange={(e) => setForm((f) => ({ ...f, tax_amount: e.target.value }))} />
+            <Input label={t('adminHosts.dueDate')} type="date" value={form.due_at} onChange={(e) => setForm((f) => ({ ...f, due_at: e.target.value }))} />
           </div>
           {error && <p className="text-xs text-red-500">{error}</p>}
-          <Button size="sm" loading={createMut.isPending} onClick={() => createMut.mutate()}>Créer la facture</Button>
+          <Button size="sm" loading={createMut.isPending} onClick={() => createMut.mutate()}>{t('adminHosts.createInvoice')}</Button>
         </div>
       )}
 
       {isLoading && <ListSkeleton rows={2} height="h-10" />}
       {!isLoading && !invoices?.length && (
         <div className="flex items-center gap-2 text-xs text-gray-400">
-          <FileText className="h-3.5 w-3.5" /> Aucune facture
+          <FileText className="h-3.5 w-3.5" /> {t('adminFacturation.noInvoice')}
         </div>
       )}
       {invoices?.map((inv) => (
@@ -209,6 +216,8 @@ const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
 // ─── Main page ──────────────────────────────────────────────────────────────────
 
 export const AdminHostsPage = () => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -232,17 +241,17 @@ export const AdminHostsPage = () => {
 
   const suspendMut = useAdminMutation({
     mutationFn: () => adminHostsApi.suspend(selected!.id, suspendReason),
-    successMessage: 'Hébergeur suspendu',
+    successMessage: t('adminHosts.hostSuspended'),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hosts'] }); setShowSuspend(false); setSuspendReason(''); },
   });
   const activateMut = useAdminMutation({
     mutationFn: () => adminHostsApi.activate(selected!.id),
-    successMessage: 'Hébergeur réactivé',
+    successMessage: t('adminHosts.hostReactivated'),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-hosts'] }),
   });
   const deleteMut = useAdminMutation({
     mutationFn: () => adminHostsApi.remove(selected!.id),
-    successMessage: 'Hébergeur supprimé',
+    successMessage: t('adminHosts.hostDeleted'),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-hosts'] }); setSelected(null); setConfirmDelete(false); },
   });
 
@@ -252,9 +261,9 @@ export const AdminHostsPage = () => {
   return (
     <div className="flex flex-col gap-4 max-w-6xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">Hébergeurs</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t('adminHosts.title')}</h1>
         <Button size="sm" onClick={() => setShowCreate((s) => !s)} className="gap-1.5">
-          {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showCreate ? 'Annuler' : 'Ajouter'}
+          {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showCreate ? t('common.cancel') : t('common.add')}
         </Button>
       </div>
 
@@ -265,13 +274,13 @@ export const AdminHostsPage = () => {
           <div className="flex gap-3">
             <div className="relative flex-1">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input className="input w-full ps-9" placeholder="Rechercher…" value={search}
+              <input className="input w-full ps-9" placeholder={t('common.search') + '…'} value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
             </div>
             <select className="input" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}>
-              <option value="">Tous</option>
-              <option value="active">Actifs</option>
-              <option value="suspended">Suspendus</option>
+              <option value="">{t('common.all')}</option>
+              <option value="active">{t('adminDashboard.active')}</option>
+              <option value="suspended">{t('adminDashboard.suspended')}</option>
             </select>
           </div>
 
@@ -289,19 +298,19 @@ export const AdminHostsPage = () => {
                     </div>
                     <div className="min-w-0">
                       <p className="font-semibold text-gray-900 truncate">{h.name}</p>
-                      <p className="text-xs text-gray-400">{h.entity_type === 'individual' ? 'Particulier' : 'Société'} · {h.properties_count} bien{h.properties_count !== 1 ? 's' : ''}</p>
+                      <p className="text-xs text-gray-400">{h.entity_type === 'individual' ? t('policeFiche.individual') : t('policeFiche.company')} · {t('propertiesPage.propertiesCount', { count: h.properties_count })}</p>
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1 flex-shrink-0">
                     <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: h.status === 'active' ? '#1F9D6B' : '#ef4444' }}>
-                      {h.status === 'active' ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />} {h.status === 'active' ? 'Actif' : 'Suspendu'}
+                      {h.status === 'active' ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />} {h.status === 'active' ? t('adminDashboard.active') : t('adminHotels.statusSuspended')}
                     </span>
                     {h.subscription && <span className="text-xs text-gray-400">{h.subscription.plan}</span>}
                   </div>
                 </div>
               </button>
             ))}
-            {!isLoading && !hosts.length && <p className="text-sm text-gray-400 text-center py-8">Aucun hébergeur</p>}
+            {!isLoading && !hosts.length && <p className="text-sm text-gray-400 text-center py-8">{t('adminHosts.noHost')}</p>}
           </div>
 
           {meta && (
@@ -313,21 +322,21 @@ export const AdminHostsPage = () => {
           {!selected ? (
             <div className="card p-8 text-center text-sm text-gray-400">
               <Building2 className="h-8 w-8 mx-auto mb-3 text-gray-200" />
-              Sélectionnez un hébergeur
+              {t('adminHosts.selectHost')}
             </div>
           ) : (
             <div className="card p-5 flex flex-col gap-4">
               <div>
                 <h3 className="font-bold text-gray-900 text-lg leading-tight">{selected.name}</h3>
                 <p className="text-sm text-gray-400">{selected.contact_email}{selected.contact_phone ? ` · ${selected.contact_phone}` : ''}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Créé le {fmtDate(selected.created_at)}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{t('adminHotels.createdOn', { date: fmtDate(selected.created_at, locale) })}</p>
               </div>
 
               <div className="flex gap-2">
                 {selected.status !== 'suspended' ? (
-                  <Button variant="danger" size="sm" onClick={() => setShowSuspend(true)} className="flex-1">Suspendre</Button>
+                  <Button variant="danger" size="sm" onClick={() => setShowSuspend(true)} className="flex-1">{t('adminHotels.suspend')}</Button>
                 ) : (
-                  <Button size="sm" loading={activateMut.isPending} onClick={() => activateMut.mutate()} className="flex-1">Réactiver</Button>
+                  <Button size="sm" loading={activateMut.isPending} onClick={() => activateMut.mutate()} className="flex-1">{t('adminHotels.reactivate')}</Button>
                 )}
                 <Button variant="secondary" size="sm" onClick={() => setConfirmDelete(true)}>
                   <Trash2 className="h-4 w-4" />
@@ -336,20 +345,20 @@ export const AdminHostsPage = () => {
 
               {showSuspend && (
                 <div className="flex flex-col gap-2 p-3 rounded-xl bg-red-50">
-                  <Input label="Motif" value={suspendReason} onChange={(e) => setSuspendReason(e.target.value)} />
+                  <Input label={t('adminHotels.reason')} value={suspendReason} onChange={(e) => setSuspendReason(e.target.value)} />
                   <div className="flex gap-2">
-                    <Button variant="danger" size="sm" loading={suspendMut.isPending} disabled={!suspendReason} onClick={() => suspendMut.mutate()} className="flex-1">Confirmer</Button>
-                    <Button variant="ghost" size="sm" onClick={() => setShowSuspend(false)}>Annuler</Button>
+                    <Button variant="danger" size="sm" loading={suspendMut.isPending} disabled={!suspendReason} onClick={() => suspendMut.mutate()} className="flex-1">{t('common.confirm')}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => setShowSuspend(false)}>{t('common.cancel')}</Button>
                   </div>
                 </div>
               )}
 
               {confirmDelete && (
                 <div className="flex flex-col gap-2 p-3 rounded-xl bg-red-50">
-                  <p className="text-sm text-gray-700">Supprimer définitivement cet hébergeur ?</p>
+                  <p className="text-sm text-gray-700">{t('adminHosts.confirmDeleteBody')}</p>
                   <div className="flex gap-2">
-                    <Button variant="danger" size="sm" loading={deleteMut.isPending} onClick={() => deleteMut.mutate()} className="flex-1">Supprimer</Button>
-                    <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>Annuler</Button>
+                    <Button variant="danger" size="sm" loading={deleteMut.isPending} onClick={() => deleteMut.mutate()} className="flex-1">{t('common.delete')}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>{t('common.cancel')}</Button>
                   </div>
                 </div>
               )}
@@ -361,7 +370,7 @@ export const AdminHostsPage = () => {
                   <InvoicesSection host={detail} />
 
                   <div>
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Biens ({detail.properties.length})</p>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('adminHosts.propertiesWithCount', { count: detail.properties.length })}</p>
                     <div className="flex flex-col gap-1">
                       {detail.properties.map((p) => (
                         <div key={p.id} className="flex items-center justify-between text-sm">
@@ -369,12 +378,12 @@ export const AdminHostsPage = () => {
                           <span className="text-xs text-gray-400">{p.status}</span>
                         </div>
                       ))}
-                      {!detail.properties.length && <p className="text-xs text-gray-400">Aucun bien</p>}
+                      {!detail.properties.length && <p className="text-xs text-gray-400">{t('adminHosts.noProperty')}</p>}
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Utilisateurs ({detail.users.length})</p>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('adminHosts.usersWithCount', { count: detail.users.length })}</p>
                     <div className="flex flex-col gap-1.5">
                       {detail.users.map((u) => (
                         <div key={u.id} className="flex items-center justify-between text-sm">
@@ -382,7 +391,7 @@ export const AdminHostsPage = () => {
                           <span className="text-xs text-gray-400 ms-2 flex-shrink-0">{u.role}</span>
                         </div>
                       ))}
-                      {!detail.users.length && <p className="text-xs text-gray-400">Aucun utilisateur</p>}
+                      {!detail.users.length && <p className="text-xs text-gray-400">{t('settingsPage.noUser')}</p>}
                     </div>
                   </div>
                 </>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Package, CreditCard, Plus, X, Pencil, Check, Trash2, Search } from 'lucide-react';
 import { adminPlansApi, adminSubscriptionsApi, AdminPlan } from '@/api/admin/subscriptions';
@@ -11,12 +12,15 @@ import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
-const fmtDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
+
+const fmtDate = (d: string | null | undefined, locale: string) =>
+  d ? new Date(d).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 // ─── Packs tab ──────────────────────────────────────────────────────────────────
 
 const CreatePlanForm = ({ onDone }: { onDone: () => void }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [form, setForm] = useState({ name: '', slug: '', min_rooms: '1', max_rooms: '', price_monthly: '', price_yearly: '' });
   const [error, setError] = useState('');
@@ -35,29 +39,30 @@ const CreatePlanForm = ({ onDone }: { onDone: () => void }) => {
 
   return (
     <div className="flex flex-col gap-3 p-4 rounded-xl border border-gray-100 bg-white">
-      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Nouveau pack</p>
+      <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">{t('adminSubscriptions.newPlan')}</p>
       <div className="grid grid-cols-2 gap-2">
-        <Input label="Nom" value={form.name} onChange={(e) => set('name', e.target.value)} />
+        <Input label={t('common.name')} value={form.name} onChange={(e) => set('name', e.target.value)} />
         <Input label="Slug" value={form.slug} onChange={(e) => set('slug', e.target.value)} />
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Input label="Chambres min" type="number" value={form.min_rooms} onChange={(e) => set('min_rooms', e.target.value)} />
-        <Input label="Chambres max (vide = illimité)" type="number" value={form.max_rooms} onChange={(e) => set('max_rooms', e.target.value)} />
+        <Input label={t('adminSubscriptions.minRooms')} type="number" value={form.min_rooms} onChange={(e) => set('min_rooms', e.target.value)} />
+        <Input label={t('adminSubscriptions.maxRoomsHint')} type="number" value={form.max_rooms} onChange={(e) => set('max_rooms', e.target.value)} />
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Input label="Prix mensuel (TND)" type="number" value={form.price_monthly} onChange={(e) => set('price_monthly', e.target.value)} />
-        <Input label="Prix annuel (TND)" type="number" value={form.price_yearly} onChange={(e) => set('price_yearly', e.target.value)} />
+        <Input label={t('adminSubscriptions.monthlyPrice')} type="number" value={form.price_monthly} onChange={(e) => set('price_monthly', e.target.value)} />
+        <Input label={t('adminSubscriptions.yearlyPrice')} type="number" value={form.price_yearly} onChange={(e) => set('price_yearly', e.target.value)} />
       </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
       <div className="flex gap-2">
-        <Button size="sm" loading={mut.isPending} disabled={!form.name || !form.slug || !form.price_monthly} onClick={() => mut.mutate()}>Créer</Button>
-        <Button size="sm" variant="ghost" onClick={onDone}>Annuler</Button>
+        <Button size="sm" loading={mut.isPending} disabled={!form.name || !form.slug || !form.price_monthly} onClick={() => mut.mutate()}>{t('adminHotels.create')}</Button>
+        <Button size="sm" variant="ghost" onClick={onDone}>{t('common.cancel')}</Button>
       </div>
     </div>
   );
 };
 
 const PlanRow = ({ plan }: { plan: AdminPlan }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -75,7 +80,7 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
   });
   const deleteMut = useAdminMutation({
     mutationFn: () => adminPlansApi.remove(plan.id),
-    successMessage: 'Pack supprimé',
+    successMessage: t('adminSubscriptions.planDeleted'),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-plans'] }),
   });
 
@@ -88,11 +93,11 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
           </div>
           <div>
             <p className="font-bold text-gray-900">{plan.name}</p>
-            <p className="text-xs text-gray-400">{plan.min_rooms}–{plan.max_rooms ?? '∞'} chambres</p>
+            <p className="text-xs text-gray-400">{t('adminSubscriptions.roomsRange', { min: plan.min_rooms, max: plan.max_rooms ?? '∞' })}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${plan.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{plan.is_active ? 'Actif' : 'Inactif'}</span>
+          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${plan.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{plan.is_active ? t('adminDashboard.active') : t('adminSubscriptions.inactive')}</span>
           {!editing && (
             <>
               <button onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500"><Pencil className="h-3.5 w-3.5" /></button>
@@ -105,30 +110,30 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
       {editing ? (
         <div className="flex flex-col gap-2">
           <div className="grid grid-cols-2 gap-2">
-            <Input label="Prix mensuel" type="number" value={form.price_monthly} onChange={(e) => setForm((f) => ({ ...f, price_monthly: e.target.value }))} />
-            <Input label="Prix annuel" type="number" value={String(form.price_yearly)} onChange={(e) => setForm((f) => ({ ...f, price_yearly: e.target.value }))} />
+            <Input label={t('adminSubscriptions.monthlyPriceShort')} type="number" value={form.price_monthly} onChange={(e) => setForm((f) => ({ ...f, price_monthly: e.target.value }))} />
+            <Input label={t('adminSubscriptions.yearlyPriceShort')} type="number" value={String(form.price_yearly)} onChange={(e) => setForm((f) => ({ ...f, price_yearly: e.target.value }))} />
           </div>
-          <Input label="Chambres max" type="number" value={String(form.max_rooms)} onChange={(e) => setForm((f) => ({ ...f, max_rooms: e.target.value }))} />
+          <Input label={t('adminSubscriptions.maxRooms')} type="number" value={String(form.max_rooms)} onChange={(e) => setForm((f) => ({ ...f, max_rooms: e.target.value }))} />
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} /> Actif
+            <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} /> {t('adminDashboard.active')}
           </label>
           <div className="flex gap-2">
-            <Button size="sm" loading={updateMut.isPending} onClick={() => updateMut.mutate()} className="gap-1.5"><Check className="h-3.5 w-3.5" /> Enregistrer</Button>
-            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Annuler</Button>
+            <Button size="sm" loading={updateMut.isPending} onClick={() => updateMut.mutate()} className="gap-1.5"><Check className="h-3.5 w-3.5" /> {t('common.save')}</Button>
+            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>{t('common.cancel')}</Button>
           </div>
         </div>
       ) : (
         <div className="flex gap-4 text-sm text-gray-600">
-          <span>{plan.price_monthly} TND/mois</span>
-          {plan.price_yearly && <span>{plan.price_yearly} TND/an</span>}
+          <span>{t('adminSubscriptions.priceMonth', { price: plan.price_monthly })}</span>
+          {plan.price_yearly && <span>{t('adminSubscriptions.priceYear', { price: plan.price_yearly })}</span>}
         </div>
       )}
 
       {confirmDelete && (
         <div className="flex gap-2 p-2 rounded-lg bg-red-50">
-          <p className="text-xs text-gray-700 flex-1">Supprimer ce pack ?</p>
-          <button onClick={() => deleteMut.mutate()} className="text-xs font-bold text-red-600">Confirmer</button>
-          <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-400">Annuler</button>
+          <p className="text-xs text-gray-700 flex-1">{t('adminSubscriptions.confirmDeletePlan')}</p>
+          <button onClick={() => deleteMut.mutate()} className="text-xs font-bold text-red-600">{t('common.confirm')}</button>
+          <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-400">{t('common.cancel')}</button>
         </div>
       )}
     </div>
@@ -136,6 +141,7 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
 };
 
 const PacksTab = () => {
+  const { t } = useTranslation();
   const [showCreate, setShowCreate] = useState(false);
   const { data: plans, isLoading } = useQuery({ queryKey: ['admin-plans'], queryFn: adminPlansApi.list });
 
@@ -143,7 +149,7 @@ const PacksTab = () => {
     <div className="flex flex-col gap-3">
       <div className="flex justify-end">
         <Button size="sm" onClick={() => setShowCreate((s) => !s)} className="gap-1.5">
-          {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showCreate ? 'Annuler' : 'Ajouter'}
+          {showCreate ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {showCreate ? t('common.cancel') : t('common.add')}
         </Button>
       </div>
       {showCreate && <CreatePlanForm onDone={() => setShowCreate(false)} />}
@@ -156,6 +162,8 @@ const PacksTab = () => {
 // ─── Abonnements (par hébergeur) tab ────────────────────────────────────────────
 
 const AbonnementsActifsTab = () => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [selectedHost, setSelectedHost] = useState<{ id: string; name: string } | null>(null);
@@ -185,7 +193,7 @@ const AbonnementsActifsTab = () => {
     mutationFn: () => adminSubscriptionsApi.createForHost(selectedHost!.id, {
       ...newSub, plan_id: parseInt(newSub.plan_id), custom_price: newSub.custom_price === '' ? null : parseFloat(newSub.custom_price),
     }),
-    successMessage: 'Abonnement créé',
+    successMessage: t('adminSubscriptions.subscriptionCreated'),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-subs-host', selectedHost?.id] }); setShowNewSub(false); },
   });
   const updateSubMut = useAdminMutation({
@@ -199,7 +207,7 @@ const AbonnementsActifsTab = () => {
     <div className="flex flex-col gap-4">
       <div className="relative">
         <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <input className="input w-full ps-9" placeholder="Chercher un hébergeur…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input className="input w-full ps-9" placeholder={t('adminSubscriptions.searchHostPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
         {hosts?.data?.length ? (
           <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-100 bg-white shadow-lg">
             {hosts.data.map((h) => (
@@ -215,38 +223,38 @@ const AbonnementsActifsTab = () => {
       {!selectedHost ? (
         <div className="card p-8 text-center text-sm text-gray-400">
           <CreditCard className="h-8 w-8 mx-auto mb-3 text-gray-200" />
-          Cherchez un hébergeur pour voir/gérer son abonnement
+          {t('adminSubscriptions.searchHostHint')}
         </div>
       ) : (
         <>
           <div className="flex items-center justify-between">
             <p className="font-bold text-gray-900">{selectedHost.name}</p>
             <Button size="sm" onClick={() => setShowNewSub((s) => !s)} className="gap-1.5">
-              {showNewSub ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} Nouvel abonnement
+              {showNewSub ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {t('adminSubscriptions.newSubscription')}
             </Button>
           </div>
 
           {showNewSub && (
             <div className="card p-4 flex flex-col gap-2">
-              <Select label="Pack" value={newSub.plan_id} onChange={(e) => setNewSub((f) => ({ ...f, plan_id: e.target.value }))}
-                options={[{ value: '', label: 'Choisir…' }, ...(plans ?? []).map((p) => ({ value: String(p.id), label: p.name }))]} />
+              <Select label={t('adminSubscriptions.plan')} value={newSub.plan_id} onChange={(e) => setNewSub((f) => ({ ...f, plan_id: e.target.value }))}
+                options={[{ value: '', label: t('adminUsers.choose') }, ...(plans ?? []).map((p) => ({ value: String(p.id), label: p.name }))]} />
               <div className="grid grid-cols-2 gap-2">
-                <Input label="Début" type="date" value={newSub.started_at} onChange={(e) => setNewSub((f) => ({ ...f, started_at: e.target.value }))} />
-                <Input label="Expiration" type="date" value={newSub.expires_at} onChange={(e) => setNewSub((f) => ({ ...f, expires_at: e.target.value }))} />
+                <Input label={t('adminSubscriptions.start')} type="date" value={newSub.started_at} onChange={(e) => setNewSub((f) => ({ ...f, started_at: e.target.value }))} />
+                <Input label={t('profile.expiration')} type="date" value={newSub.expires_at} onChange={(e) => setNewSub((f) => ({ ...f, expires_at: e.target.value }))} />
               </div>
-              <Input label="Prix personnalisé (optionnel)" type="number" value={newSub.custom_price} onChange={(e) => setNewSub((f) => ({ ...f, custom_price: e.target.value }))} />
-              <Button size="sm" loading={createSubMut.isPending} disabled={!newSub.plan_id || !newSub.expires_at} onClick={() => createSubMut.mutate()}>Créer</Button>
+              <Input label={t('adminSubscriptions.customPriceOptional')} type="number" value={newSub.custom_price} onChange={(e) => setNewSub((f) => ({ ...f, custom_price: e.target.value }))} />
+              <Button size="sm" loading={createSubMut.isPending} disabled={!newSub.plan_id || !newSub.expires_at} onClick={() => createSubMut.mutate()}>{t('adminHotels.create')}</Button>
             </div>
           )}
 
           <div className="card p-4">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Abonnements</p>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('settingsPage.subscription')}</p>
             {subs?.map((s) => (
               <div key={s.id} className="flex flex-col gap-1.5 py-2 border-b border-gray-50 last:border-0 text-sm">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="font-medium">{s.plan?.name ?? `Pack #${s.plan_id}`}</span>
-                    <span className="text-xs text-gray-400 ms-2">jusqu'au {fmtDate(s.expires_at)}</span>
+                    <span className="font-medium">{s.plan?.name ?? t('adminSubscriptions.planHash', { id: s.plan_id })}</span>
+                    <span className="text-xs text-gray-400 ms-2">{t('adminSubscriptions.until', { date: fmtDate(s.expires_at, locale) })}</span>
                     {s.custom_price && <span className="text-xs text-gray-400 ms-2">· {s.custom_price} TND</span>}
                   </div>
                   <div className="flex items-center gap-2">
@@ -257,30 +265,30 @@ const AbonnementsActifsTab = () => {
                       </button>
                     )}
                     {s.status === 'active' ? (
-                      <button onClick={() => updateSubMut.mutate({ id: s.id, data: { status: 'cancelled' } })} className="text-xs text-red-500">Annuler</button>
+                      <button onClick={() => updateSubMut.mutate({ id: s.id, data: { status: 'cancelled' } })} className="text-xs text-red-500">{t('common.cancel')}</button>
                     ) : s.status !== 'cancelled' && (
-                      <button onClick={() => updateSubMut.mutate({ id: s.id, data: { status: 'active' } })} className="text-xs text-green-600">Réactiver</button>
+                      <button onClick={() => updateSubMut.mutate({ id: s.id, data: { status: 'active' } })} className="text-xs text-green-600">{t('adminHotels.reactivate')}</button>
                     )}
                   </div>
                 </div>
                 {editingExpiry && s.status === 'active' && (
                   <div className="flex items-end gap-2 p-2 rounded-lg" style={{ background: '#F6F5F1' }}>
-                    <Input label="Expiration" type="date" value={expiryForm.expires_at} onChange={(e) => setExpiryForm((f) => ({ ...f, expires_at: e.target.value }))} />
-                    <Input label="Prix personnalisé" type="number" value={String(expiryForm.custom_price)} onChange={(e) => setExpiryForm((f) => ({ ...f, custom_price: e.target.value }))} />
+                    <Input label={t('profile.expiration')} type="date" value={expiryForm.expires_at} onChange={(e) => setExpiryForm((f) => ({ ...f, expires_at: e.target.value }))} />
+                    <Input label={t('adminSubscriptions.customPrice')} type="number" value={String(expiryForm.custom_price)} onChange={(e) => setExpiryForm((f) => ({ ...f, custom_price: e.target.value }))} />
                     <Button size="sm" loading={updateSubMut.isPending} onClick={() => updateSubMut.mutate({ id: s.id, data: { expires_at: expiryForm.expires_at, custom_price: expiryForm.custom_price === '' ? null : parseFloat(String(expiryForm.custom_price)) } })} className="gap-1"><Check className="h-3.5 w-3.5" /></Button>
                   </div>
                 )}
               </div>
             ))}
-            {!subs?.length && <p className="text-sm text-gray-400 py-2">Aucun abonnement</p>}
+            {!subs?.length && <p className="text-sm text-gray-400 py-2">{t('adminHotels.noSubscription')}</p>}
           </div>
 
           <div className="card p-4">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Factures</p>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('adminFacturation.title')}</p>
             {invoices?.map((inv) => (
               <InvoiceRow key={inv.id} hostId={selectedHost.id} invoice={inv} invalidateKey={['admin-invoices-host', selectedHost.id]} />
             ))}
-            {!invoices?.length && <p className="text-sm text-gray-400 py-2">Aucune facture</p>}
+            {!invoices?.length && <p className="text-sm text-gray-400 py-2">{t('adminFacturation.noInvoice')}</p>}
           </div>
         </>
       )}
@@ -291,17 +299,18 @@ const AbonnementsActifsTab = () => {
 // ─── Main page ──────────────────────────────────────────────────────────────────
 
 export const AdminSubscriptionsPage = () => {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<'packs' | 'active'>('packs');
 
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
-      <h1 className="text-xl font-bold text-gray-900">Abonnements</h1>
+      <h1 className="text-xl font-bold text-gray-900">{t('settingsPage.subscription')}</h1>
       <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#DDD9CF' }}>
         <button onClick={() => setTab('packs')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'packs' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
-          <Package className="h-4 w-4" /> Packs
+          <Package className="h-4 w-4" /> {t('adminSubscriptions.plans')}
         </button>
         <button onClick={() => setTab('active')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'active' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
-          <CreditCard className="h-4 w-4" /> Abonnements
+          <CreditCard className="h-4 w-4" /> {t('settingsPage.subscription')}
         </button>
       </div>
       {tab === 'packs' ? <PacksTab /> : <AbonnementsActifsTab />}
