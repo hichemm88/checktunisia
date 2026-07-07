@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AlertTriangle, FileWarning, MapPin, Calendar, ChevronRight } from 'lucide-react';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Badge } from '@/components/ui/Badge';
@@ -14,9 +15,11 @@ const urgencyStyle = (days: number): { bg: string; text: string; border: string 
 };
 
 const AlertCard = ({ alert, onClick }: { alert: AuthorityAlert; onClick: () => void }) => {
+  const { t } = useTranslation();
   const style = urgencyStyle(alert.days_until_expiry);
   const docTypeLabel: Record<string, string> = {
-    passport: 'Passeport', national_id: 'CNI', travel_document: 'Titre de voyage', visa: 'Visa',
+    passport: t('guestScan.passport'), national_id: t('authorityAlerts.nationalIdShort'),
+    travel_document: t('authorityAlerts.travelDocument'), visa: t('authorityAlerts.visa'),
   };
 
   return (
@@ -34,12 +37,12 @@ const AlertCard = ({ alert, onClick }: { alert: AuthorityAlert; onClick: () => v
           <span className="text-lg font-black leading-none" style={{ color: style.text }}>
             {alert.days_until_expiry}
           </span>
-          <span className="text-[9px] font-medium" style={{ color: style.text }}>jours</span>
+          <span className="text-[9px] font-medium" style={{ color: style.text }}>{t('authorityAlerts.days')}</span>
         </div>
 
         <div className="min-w-0">
           <p className="font-semibold text-gray-900 truncate">
-            {alert.guest_name ?? 'Voyageur inconnu'}
+            {alert.guest_name ?? t('authorityAlerts.unknownGuest')}
             {alert.nationality_code && (
               <span className="ms-2 text-xs font-normal text-gray-500">· {alert.nationality_code}</span>
             )}
@@ -52,7 +55,7 @@ const AlertCard = ({ alert, onClick }: { alert: AuthorityAlert; onClick: () => v
             </span>
             <span className="flex items-center gap-1 text-xs text-gray-500">
               <Calendar className="h-3 w-3" />
-              Expire le {alert.expiry_date}
+              {t('authorityAlerts.expiresOn', { date: alert.expiry_date })}
             </span>
           </div>
 
@@ -62,7 +65,7 @@ const AlertCard = ({ alert, onClick }: { alert: AuthorityAlert; onClick: () => v
               <span className="truncate">
                 {alert.hotel.name}
                 {alert.hotel.city ? `, ${alert.hotel.city}` : ''}
-                {alert.room_number ? ` · Ch. ${alert.room_number}` : ''}
+                {alert.room_number ? ` · ${t('checkinWizard.roomShort')} ${alert.room_number}` : ''}
               </span>
             </div>
           )}
@@ -71,7 +74,7 @@ const AlertCard = ({ alert, onClick }: { alert: AuthorityAlert; onClick: () => v
 
       <div className="flex items-center gap-2 shrink-0">
         <Badge variant={alert.days_until_expiry <= 7 ? 'cancelled' : alert.days_until_expiry <= 15 ? 'draft' : 'active'}>
-          {alert.days_until_expiry <= 7 ? 'Urgent' : alert.days_until_expiry <= 15 ? 'Attention' : 'À surveiller'}
+          {alert.days_until_expiry <= 7 ? t('authorityAlerts.urgent') : alert.days_until_expiry <= 15 ? t('authorityAlerts.attention') : t('authorityAlerts.toWatch')}
         </Badge>
         <ChevronRight className="h-4 w-4 text-gray-300" />
       </div>
@@ -80,6 +83,7 @@ const AlertCard = ({ alert, onClick }: { alert: AuthorityAlert; onClick: () => v
 };
 
 export const AlertsPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const { data, isLoading, isError } = useQuery({
@@ -113,7 +117,7 @@ export const AlertsPage = () => {
     );
 
   return (
-    <AuthorityLayout title="Alertes — Documents expirants">
+    <AuthorityLayout title={t('authorityAlerts.title')}>
       <div className="flex flex-col gap-6">
 
         {/* Summary banner */}
@@ -126,16 +130,16 @@ export const AlertsPage = () => {
             <div>
               <p className="font-semibold" style={{ color: alerts.length > 0 ? '#8A6206' : '#15803D' }}>
                 {alerts.length === 0
-                  ? "Aucun document n'expire dans les 30 prochains jours."
-                  : `${alerts.length} document${alerts.length > 1 ? 's' : ''} expirant dans les 30 prochains jours`}
+                  ? t('authorityAlerts.noneExpiring')
+                  : t('authorityAlerts.expiringCount', { count: alerts.length })}
               </p>
               {data?.meta.governorate && (
                 <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
-                  <MapPin className="h-3 w-3" /> Zone : {data.meta.governorate}
+                  <MapPin className="h-3 w-3" /> {t('authoritySearch.zone')} : {data.meta.governorate}
                 </p>
               )}
               {data?.meta.is_national && (
-                <p className="text-xs text-gray-500 mt-0.5">Périmètre national</p>
+                <p className="text-xs text-gray-500 mt-0.5">{t('authorityAlerts.nationalScope')}</p>
               )}
             </div>
           </div>
@@ -147,15 +151,15 @@ export const AlertsPage = () => {
 
         {isError && (
           <div className="rounded-2xl bg-red-50 border border-red-200 p-6 text-center">
-            <p className="text-red-600 font-medium">Impossible de charger les alertes.</p>
+            <p className="text-red-600 font-medium">{t('authorityAlerts.loadError')}</p>
           </div>
         )}
 
         {!isLoading && !isError && (
           <>
-            <Section title="Urgents (≤ 7 jours)"    items={urgent}  color="#DC2626" />
-            <Section title="Attention (≤ 15 jours)"  items={warning} color="#5346A8" />
-            <Section title="À surveiller (≤ 30 jours)" items={watch}   color="#137453" />
+            <Section title={t('authorityAlerts.urgentSection')}    items={urgent}  color="#DC2626" />
+            <Section title={t('authorityAlerts.attentionSection')}  items={warning} color="#5346A8" />
+            <Section title={t('authorityAlerts.watchSection')} items={watch}   color="#137453" />
             {alerts.length === 0 && (
               <div className="py-16 text-center">
                 <div
@@ -164,8 +168,8 @@ export const AlertsPage = () => {
                 >
                   <AlertTriangle className="h-8 w-8" style={{ color: '#5346A8' }} />
                 </div>
-                <p className="text-gray-500">Tout est en ordre.</p>
-                <p className="text-sm text-gray-400 mt-1">Aucun document n'expire dans les 30 prochains jours.</p>
+                <p className="text-gray-500">{t('authorityAlerts.allGood')}</p>
+                <p className="text-sm text-gray-400 mt-1">{t('authorityAlerts.noneExpiring')}</p>
               </div>
             )}
           </>

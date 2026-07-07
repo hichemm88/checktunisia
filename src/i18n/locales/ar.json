@@ -38,6 +38,35 @@
     "other": "آخر",
     "sex": "الجنس"
   },
+  "authorityHotels": {
+    "zoneLimited": "العرض محصور بمؤسسات منطقتك:",
+    "namePlaceholder": "اسم المؤسسة...",
+    "governoratePlaceholder": "الولاية...",
+    "propertiesCount_other": "{{count}} مؤسسة",
+    "presentCount_other": "{{count}} حاضر",
+    "roomsCount_other": "{{count}} غرفة",
+    "noneFound": "لم يُعثر على مؤسسة"
+  },
+  "authorityAlerts": {
+    "title": "التنبيهات — وثائق منتهية الصلاحية",
+    "nationalIdShort": "بطاقة تعريف",
+    "travelDocument": "وثيقة سفر",
+    "visa": "تأشيرة",
+    "days": "أيام",
+    "unknownGuest": "نزيل غير معروف",
+    "expiresOn": "تنتهي في {{date}}",
+    "urgent": "عاجل",
+    "attention": "تنبيه",
+    "toWatch": "للمراقبة",
+    "noneExpiring": "لا توجد وثيقة تنتهي خلال الثلاثين يومًا القادمة.",
+    "expiringCount_other": "{{count}} وثيقة تنتهي خلال الثلاثين يومًا القادمة",
+    "nationalScope": "نطاق وطني",
+    "loadError": "تعذّر تحميل التنبيهات.",
+    "urgentSection": "عاجل (≤ 7 أيام)",
+    "attentionSection": "تنبيه (≤ 15 يومًا)",
+    "watchSection": "للمراقبة (≤ 30 يومًا)",
+    "allGood": "كل شيء على ما يرام."
+  },
   "authorityDashboard": {
     "activeGuests": "النزلاء الحاضرون",
     "checkinsToday": "الوصول اليوم",

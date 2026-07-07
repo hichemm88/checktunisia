@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Building2, Search, ChevronRight, Users, Star, MapPin, Lock } from 'lucide-react';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Input } from '@/components/ui/Input';
@@ -9,6 +10,7 @@ import { authorityApi } from '@/api/authority';
 import { useAuthStore } from '@/stores/authStore';
 
 export const HotelsPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const profile   = user?.authority_profile;
@@ -31,7 +33,7 @@ export const HotelsPage = () => {
   const totalPages = data ? Math.ceil(data.meta.total / data.meta.per_page) : 1;
 
   return (
-    <AuthorityLayout title="Établissements">
+    <AuthorityLayout title={t('authorityLayout.nav.hotels')}>
       <div className="flex flex-col gap-5">
 
         {/* Police zone banner */}
@@ -42,7 +44,7 @@ export const HotelsPage = () => {
           >
             <MapPin className="h-4 w-4 shrink-0" style={{ color: '#5346A8' }} />
             <p className="text-sm text-gray-700">
-              Affichage limité aux établissements de votre zone :{' '}
+              {t('authorityHotels.zoneLimited')}{' '}
               <span className="font-semibold" style={{ color: '#5346A8' }}>{zone}</span>
             </p>
           </div>
@@ -51,17 +53,17 @@ export const HotelsPage = () => {
         {/* Filters */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Input
-            placeholder="Nom de l'établissement..."
+            placeholder={t('authorityHotels.namePlaceholder')}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             leftIcon={<Search className="h-4 w-4" />}
           />
           <Input
-            placeholder="Gouvernorat..."
+            placeholder={t('authorityHotels.governoratePlaceholder')}
             value={governorate}
             onChange={(e) => { if (!isPolice) { setGovernorate(e.target.value); setPage(1); } }}
             readOnly={isPolice}
-            hint={isPolice ? 'Fixé à votre zone' : undefined}
+            hint={isPolice ? t('authoritySearch.fixedToZone') : undefined}
             leftIcon={isPolice ? <Lock className="h-3.5 w-3.5 text-gray-400" /> : undefined}
           />
         </div>
@@ -69,9 +71,9 @@ export const HotelsPage = () => {
         {/* Count */}
         {data && (
           <p className="text-sm text-gray-500">
-            {data.meta.total} établissement{data.meta.total !== 1 ? 's' : ''}
+            {t('authorityHotels.propertiesCount', { count: data.meta.total })}
             {isPolice && zone && (
-              <span className="ms-1 text-xs" style={{ color: '#5346A8' }}>· Zone {zone}</span>
+              <span className="ms-1 text-xs" style={{ color: '#5346A8' }}>· {t('authoritySearch.zone')} {zone}</span>
             )}
           </p>
         )}
@@ -113,15 +115,15 @@ export const HotelsPage = () => {
                   <div className="flex items-center gap-3 mt-1.5">
                     <span className="flex items-center gap-1 text-xs text-gray-400">
                       <Users className="h-3 w-3" />
-                      {hotel.active_guests_count ?? 0} présents
+                      {t('authorityHotels.presentCount', { count: hotel.active_guests_count ?? 0 })}
                     </span>
-                    <span className="text-xs text-gray-400">{hotel.room_count} chambres</span>
+                    <span className="text-xs text-gray-400">{t('authorityHotels.roomsCount', { count: hotel.room_count })}</span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Badge variant={hotel.status === 'active' ? 'active' : 'suspended'}>
-                  {hotel.status === 'active' ? 'Actif' : 'Suspendu'}
+                  {hotel.status === 'active' ? t('checkinStatus.active') : t('checkinStatus.suspended')}
                 </Badge>
                 <ChevronRight className="h-4 w-4 text-gray-300" />
               </div>
@@ -131,7 +133,7 @@ export const HotelsPage = () => {
           {!isLoading && data?.data.length === 0 && (
             <div className="py-12 text-center">
               <Building2 className="mx-auto h-10 w-10 text-gray-200 mb-3" />
-              <p className="text-gray-500">Aucun établissement trouvé</p>
+              <p className="text-gray-500">{t('authorityHotels.noneFound')}</p>
             </div>
           )}
         </div>
@@ -144,17 +146,17 @@ export const HotelsPage = () => {
               onClick={() => setPage((p) => p - 1)}
               className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs disabled:opacity-40"
             >
-              ← Précédent
+              ← {t('common.previous')}
             </button>
             <span className="flex items-center text-xs text-gray-500">
-              Page {page} / {totalPages}
+              {t('common.page')} {page} / {totalPages}
             </span>
             <button
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
               className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs disabled:opacity-40"
             >
-              Suivant →
+              {t('common.next')} →
             </button>
           </div>
         )}
