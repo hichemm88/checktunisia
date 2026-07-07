@@ -1,21 +1,12 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Activity, Search, Eye, User, Calendar, Globe2 } from 'lucide-react';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { authorityApi } from '@/api/authority';
 import { AuthorityActivity } from '@/types';
-
-// Human-readable action labels
-const actionLabel = (action: string): string => {
-  const map: Record<string, string> = {
-    'authority.search':      'Recherche de voyageur',
-    'authority.guest_viewed':'Consultation fiche voyageur',
-    'authority.hotel_viewed':'Consultation fiche hôtel',
-  };
-  return map[action] ?? action;
-};
 
 const actionIcon = (action: string) => {
   if (action.includes('search'))       return <Search className="h-4 w-4" />;
@@ -30,9 +21,19 @@ const actionColor = (action: string): string => {
 };
 
 const LogRow = ({ log }: { log: AuthorityActivity }) => {
+  const { t, i18n } = useTranslation();
+  const actionLabel = (action: string): string => {
+    const map: Record<string, string> = {
+      'authority.search':      t('authorityActivity.actionSearch'),
+      'authority.guest_viewed':t('authorityActivity.actionGuestViewed'),
+      'authority.hotel_viewed':t('authorityActivity.actionHotelViewed'),
+    };
+    return map[action] ?? action;
+  };
   const color = actionColor(log.action);
   const params = log.new_values?.search_params as Record<string, string> | undefined;
   const resultCount = log.new_values?.result_count as number | undefined;
+  const locale = i18n.language === 'ar' ? 'ar-TN' : i18n.language === 'en' ? 'en-GB' : 'fr-TN';
 
   return (
     <div className="flex items-start gap-4 py-4 border-b border-gray-100 last:border-0">
@@ -47,7 +48,7 @@ const LogRow = ({ log }: { log: AuthorityActivity }) => {
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <p className="text-sm font-semibold text-gray-800">{actionLabel(log.action)}</p>
           <span className="text-xs text-gray-400 shrink-0">
-            {new Date(log.created_at).toLocaleString('fr-TN', {
+            {new Date(log.created_at).toLocaleString(locale, {
               day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
             })}
           </span>
@@ -65,7 +66,7 @@ const LogRow = ({ log }: { log: AuthorityActivity }) => {
               className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
               style={{ background: `${color}15`, color }}
             >
-              {resultCount} résultat{resultCount !== 1 ? 's' : ''}
+              {t('authorityActivity.resultCount', { count: resultCount })}
             </span>
           )}
         </div>
@@ -92,6 +93,7 @@ const LogRow = ({ log }: { log: AuthorityActivity }) => {
 };
 
 export const ActivityPage = () => {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [from, setFrom] = useState('');
   const [to, setTo]   = useState('');
@@ -112,7 +114,7 @@ export const ActivityPage = () => {
   const isNational = (data?.meta as any)?.is_national as boolean | undefined;
 
   return (
-    <AuthorityLayout title="Journal d'activité">
+    <AuthorityLayout title={t('authorityLayout.nav.activity')}>
       <div className="flex flex-col gap-6">
 
         {/* Scope banner */}
@@ -124,8 +126,8 @@ export const ActivityPage = () => {
             <Activity className="h-4 w-4 shrink-0" style={{ color: '#5346A8' }} />
             <p className="text-sm text-gray-700">
               {isNational
-                ? 'Vous consultez toutes les actions de toutes les autorités (accès ministère).'
-                : 'Vous consultez uniquement vos propres actions.'}
+                ? t('authorityActivity.nationalScopeHint')
+                : t('authorityActivity.ownScopeHint')}
             </p>
           </div>
         )}
@@ -135,13 +137,13 @@ export const ActivityPage = () => {
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-gray-400 shrink-0" />
             <Input
-              type="date" placeholder="Du" value={from}
+              type="date" placeholder={t('authorityActivity.from')} value={from}
               onChange={(e) => { setFrom(e.target.value); setPage(1); }}
               className="w-40"
             />
             <span className="text-gray-400 text-sm">→</span>
             <Input
-              type="date" placeholder="Au" value={to}
+              type="date" placeholder={t('authorityActivity.to')} value={to}
               onChange={(e) => { setTo(e.target.value); setPage(1); }}
               className="w-40"
             />
@@ -151,7 +153,7 @@ export const ActivityPage = () => {
               onClick={() => { setFrom(''); setTo(''); setPage(1); }}
               className="text-xs text-gray-400 hover:text-gray-600 underline"
             >
-              Réinitialiser
+              {t('authoritySearch.reset')}
             </button>
           )}
         </div>
@@ -163,13 +165,13 @@ export const ActivityPage = () => {
           ))}
 
           {isError && (
-            <p className="text-center text-red-500 py-8">Impossible de charger le journal.</p>
+            <p className="text-center text-red-500 py-8">{t('authorityActivity.loadError')}</p>
           )}
 
           {!isLoading && !isError && logs.length === 0 && (
             <div className="py-12 text-center">
               <Activity className="mx-auto h-10 w-10 text-gray-200 mb-3" />
-              <p className="text-gray-500">Aucune activité sur cette période.</p>
+              <p className="text-gray-500">{t('authorityActivity.noActivity')}</p>
             </div>
           )}
 
@@ -186,18 +188,18 @@ export const ActivityPage = () => {
               onClick={() => setPage((p) => p - 1)}
               className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm disabled:opacity-40 hover:bg-gray-50"
             >
-              ← Précédent
+              ← {t('common.previous')}
             </button>
             <span className="text-sm text-gray-500">
-              Page {page} / {totalPages}
-              {data && <span className="text-gray-400"> · {data.meta.total} entrées</span>}
+              {t('common.page')} {page} / {totalPages}
+              {data && <span className="text-gray-400"> · {t('authorityActivity.entriesCount', { count: data.meta.total })}</span>}
             </span>
             <button
               disabled={page >= totalPages}
               onClick={() => setPage((p) => p + 1)}
               className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm disabled:opacity-40 hover:bg-gray-50"
             >
-              Suivant →
+              {t('common.next')} →
             </button>
           </div>
         )}

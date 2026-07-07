@@ -38,6 +38,36 @@
     "other": "آخر",
     "sex": "الجنس"
   },
+  "authorityActivity": {
+    "actionSearch": "بحث عن نزيل",
+    "actionGuestViewed": "الاطلاع على ملف نزيل",
+    "actionHotelViewed": "الاطلاع على ملف مؤسسة",
+    "resultCount_other": "{{count}} نتيجة",
+    "nationalScopeHint": "أنت تطّلع على جميع إجراءات جميع السلطات (صلاحية الوزارة).",
+    "ownScopeHint": "أنت تطّلع فقط على إجراءاتك الخاصة.",
+    "from": "من",
+    "to": "إلى",
+    "loadError": "تعذّر تحميل السجل.",
+    "noActivity": "لا نشاط خلال هذه الفترة.",
+    "entriesCount_other": "{{count}} سجل"
+  },
+  "guestProfile": {
+    "title": "ملف النزيل",
+    "backToSearch": "الرجوع إلى البحث",
+    "pdfSheet": "بطاقة PDF",
+    "csvStays": "CSV الإقامات",
+    "travelDocuments": "وثائق السفر",
+    "documentsCount_other": "{{count}} وثيقة",
+    "verified": "موثّق",
+    "notVerified": "غير موثّق",
+    "issueDate": "تاريخ الإصدار",
+    "expiryDate": "تاريخ الانتهاء",
+    "noDocument": "لا توجد وثيقة مسجّلة",
+    "stayHistory": "سجل الإقامات",
+    "staysCount_other": "{{count}} إقامة",
+    "noStay": "لا توجد إقامة مسجّلة",
+    "registrationAbbrev": "تسجيل"
+  },
   "authorityHotels": {
     "zoneLimited": "العرض محصور بمؤسسات منطقتك:",
     "namePlaceholder": "اسم المؤسسة...",

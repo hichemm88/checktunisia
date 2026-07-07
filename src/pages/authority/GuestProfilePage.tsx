@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, User, FileText, MapPin, Download } from 'lucide-react';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -9,8 +10,9 @@ import { Button } from '@/components/ui/Button';
 import { authorityApi } from '@/api/authority';
 import { api } from '@/lib/api';
 
-const fmtDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
+const fmtDate = (d: string | null | undefined, locale: string) =>
+  d ? new Date(d).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const DetailRow = ({ label, value }: { label: string; value?: string | null }) => (
   <div className="flex justify-between py-2 text-sm border-b border-gray-50 last:border-0">
@@ -29,6 +31,8 @@ const downloadBlob = (blob: Blob, filename: string) => {
 };
 
 export const GuestProfilePage = () => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null);
@@ -60,7 +64,7 @@ export const GuestProfilePage = () => {
   });
 
   if (isLoading) return (
-    <AuthorityLayout title="Profil voyageur">
+    <AuthorityLayout title={t('guestProfile.title')}>
       <div className="flex flex-col gap-4">
         {[1,2,3].map(i => <div key={i} className="h-40 animate-pulse rounded-card bg-gray-100" />)}
       </div>
@@ -70,21 +74,21 @@ export const GuestProfilePage = () => {
   if (!profile) return null;
 
   return (
-    <AuthorityLayout title="Profil voyageur">
+    <AuthorityLayout title={t('guestProfile.title')}>
       <div className="flex flex-col gap-5">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-1.5 text-sm text-gray-500"
           >
-            <ArrowLeft className="h-4 w-4" /> Retour à la recherche
+            <ArrowLeft className="h-4 w-4" /> {t('guestProfile.backToSearch')}
           </button>
           <div className="flex gap-2">
             <Button variant="secondary" size="sm" loading={exporting === 'pdf'} onClick={exportPdf} className="gap-1.5">
-              <Download className="h-3.5 w-3.5" /> Fiche PDF
+              <Download className="h-3.5 w-3.5" /> {t('guestProfile.pdfSheet')}
             </Button>
             <Button variant="secondary" size="sm" loading={exporting === 'csv'} onClick={exportCsv} className="gap-1.5">
-              <Download className="h-3.5 w-3.5" /> CSV séjours
+              <Download className="h-3.5 w-3.5" /> {t('guestProfile.csvStays')}
             </Button>
           </div>
         </div>
@@ -102,9 +106,9 @@ export const GuestProfilePage = () => {
               </div>
             </div>
           </CardHeader>
-          <DetailRow label="Date de naissance" value={fmtDate(profile.date_of_birth)} />
-          <DetailRow label="Sexe" value={profile.sex === 'M' ? 'Masculin' : profile.sex === 'F' ? 'Féminin' : 'Autre'} />
-          <DetailRow label="Nationalité" value={profile.nationality_code} />
+          <DetailRow label={t('guestScan.dateOfBirth')} value={fmtDate(profile.date_of_birth, locale)} />
+          <DetailRow label={t('common.sex')} value={profile.sex === 'M' ? t('common.male') : profile.sex === 'F' ? t('common.female') : t('common.other')} />
+          <DetailRow label={t('guestScan.nationality')} value={profile.nationality_code} />
         </Card>
 
         {/* Documents */}
@@ -113,26 +117,26 @@ export const GuestProfilePage = () => {
             <CardTitle>
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-gray-400" />
-                Documents de voyage
+                {t('guestProfile.travelDocuments')}
               </div>
             </CardTitle>
-            <span className="text-xs text-gray-400">{profile.documents.length} document{profile.documents.length !== 1 ? 's' : ''}</span>
+            <span className="text-xs text-gray-400">{t('guestProfile.documentsCount', { count: profile.documents.length })}</span>
           </CardHeader>
           {profile.documents.map((doc) => (
             <div key={doc.id} className="mb-3 last:mb-0 rounded-lg border border-gray-100 p-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold uppercase text-gray-500">{doc.type}</span>
                 <Badge variant={doc.is_verified ? 'active' : 'draft'}>
-                  {doc.is_verified ? 'Vérifié' : 'Non vérifié'}
+                  {doc.is_verified ? t('guestProfile.verified') : t('guestProfile.notVerified')}
                 </Badge>
               </div>
-              <DetailRow label="N° document" value={doc.document_number} />
-              <DetailRow label="Pays délivrance" value={doc.issuing_country_code} />
-              <DetailRow label="Date émission" value={fmtDate(doc.issue_date)} />
-              <DetailRow label="Date expiration" value={fmtDate(doc.expiry_date)} />
+              <DetailRow label={t('guestScan.documentNumber')} value={doc.document_number} />
+              <DetailRow label={t('guestScan.issuingCountry')} value={doc.issuing_country_code} />
+              <DetailRow label={t('guestProfile.issueDate')} value={fmtDate(doc.issue_date, locale)} />
+              <DetailRow label={t('guestProfile.expiryDate')} value={fmtDate(doc.expiry_date, locale)} />
             </div>
           ))}
-          {!profile.documents.length && <p className="text-sm text-gray-400">Aucun document enregistré</p>}
+          {!profile.documents.length && <p className="text-sm text-gray-400">{t('guestProfile.noDocument')}</p>}
         </Card>
 
         {/* Stays */}
@@ -141,10 +145,10 @@ export const GuestProfilePage = () => {
             <CardTitle>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-gray-400" />
-                Historique des séjours
+                {t('guestProfile.stayHistory')}
               </div>
             </CardTitle>
-            <span className="text-xs text-gray-400">{profile.stays.length} séjour{profile.stays.length !== 1 ? 's' : ''}</span>
+            <span className="text-xs text-gray-400">{t('guestProfile.staysCount', { count: profile.stays.length })}</span>
           </CardHeader>
           <div className="flex flex-col gap-3">
             {profile.stays.map((stay) => (
@@ -155,16 +159,16 @@ export const GuestProfilePage = () => {
                 </div>
                 <p className="text-xs text-gray-500">
                   {stay.hotel.city}{stay.hotel.governorate ? `, ${stay.hotel.governorate}` : ''}
-                  {stay.hotel.registration_number && ` · Rég. ${stay.hotel.registration_number}`}
+                  {stay.hotel.registration_number && ` · ${t('guestProfile.registrationAbbrev')} ${stay.hotel.registration_number}`}
                 </p>
                 <div className="mt-2 flex gap-4 text-xs text-gray-500">
-                  <span>Arrivée: <strong className="text-gray-700">{fmtDate(stay.check_in_date)}</strong></span>
-                  <span>Départ: <strong className="text-gray-700">{fmtDate(stay.actual_check_out_date ?? stay.expected_check_out_date)}</strong></span>
-                  {stay.room_number && <span>Ch. <strong className="text-gray-700">{stay.room_number}</strong></span>}
+                  <span>{t('checkinWizard.arrivalLabel')}: <strong className="text-gray-700">{fmtDate(stay.check_in_date, locale)}</strong></span>
+                  <span>{t('hotelHistoryDetail.departure')}: <strong className="text-gray-700">{fmtDate(stay.actual_check_out_date ?? stay.expected_check_out_date, locale)}</strong></span>
+                  {stay.room_number && <span>{t('checkinWizard.roomShort')} <strong className="text-gray-700">{stay.room_number}</strong></span>}
                 </div>
               </div>
             ))}
-            {!profile.stays.length && <p className="text-sm text-gray-400">Aucun séjour enregistré</p>}
+            {!profile.stays.length && <p className="text-sm text-gray-400">{t('guestProfile.noStay')}</p>}
           </div>
         </Card>
       </div>
