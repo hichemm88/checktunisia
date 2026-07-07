@@ -1,32 +1,25 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Shield, Plus, Upload, Download, Trash2, ToggleLeft, ToggleRight, Search, AlertTriangle, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
+import { Shield, Plus, Upload, Download, Trash2, ToggleLeft, ToggleRight, Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
 import { authorityApi } from '@/api/authority';
 import { WatchlistEntry, WatchlistSeverity, WatchlistReasonCode } from '@/types';
 import { extractErrors } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 
-// ─── Severity helpers ─────────────────────────────────────────────────────────
-const SEVERITY_CONFIG: Record<WatchlistSeverity, { label: string; color: string; bg: string; border: string }> = {
-  critique: { label: 'CRITIQUE', color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
-  eleve:    { label: 'ÉLEVÉ',    color: '#8A6206', bg: '#FBF0D7', border: '#FBF0D7' },
-  moyen:    { label: 'MOYEN',    color: '#10222E', bg: '#EEEBFA', border: '#5346A8' },
-};
-
-const REASON_LABELS: Record<WatchlistReasonCode, string> = {
-  MANDAT_ARRET: "Mandat d'arrêt",
-  FRAUDE:       'Fraude documentaire',
-  MIGRATION:    'Contrôle migration',
-  AUTRE:        'Autre',
-};
-
 // ─── Add Entry Modal ──────────────────────────────────────────────────────────
 const AddEntryModal = ({ onClose, isMinistry }: { onClose: () => void; isMinistry: boolean }) => {
+  const { t } = useTranslation();
+  const REASON_LABELS: Record<WatchlistReasonCode, string> = {
+    MANDAT_ARRET: t('authorityWatchlist.reasonWarrant'),
+    FRAUDE:       t('authorityWatchlist.reasonFraud'),
+    MIGRATION:    t('authorityWatchlist.reasonMigration'),
+    AUTRE:        t('authorityWatchlist.reasonOther'),
+  };
   const qc = useQueryClient();
   const [form, setForm] = useState({
     document_number: '', document_type: 'passport',
@@ -58,61 +51,63 @@ const AddEntryModal = ({ onClose, isMinistry }: { onClose: () => void; isMinistr
       <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-            <Shield className="h-4 w-4" style={{ color: '#5346A8' }} /> Ajouter une personne surveillée
+            <Shield className="h-4 w-4" style={{ color: '#5346A8' }} /> {t('authorityWatchlist.addPerson')}
           </h2>
           <button onClick={onClose}><X className="h-5 w-5 text-gray-400" /></button>
         </div>
 
         <div className="px-6 py-5 space-y-4">
-          <p className="text-xs text-gray-500">Au moins un critère d'identification est requis (numéro de document <strong>ou</strong> nom de famille).</p>
+          <p className="text-xs text-gray-500">
+            <Trans t={t as any} i18nKey="authorityWatchlist.identCriteriaHint" components={{ strong: <strong /> }} />
+          </p>
 
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Numéro de document" placeholder="Passeport / CIN" value={form.document_number} onChange={e => set('document_number', e.target.value)} />
+            <Input label={t('authorityWatchlist.documentNumberLabel')} placeholder={t('authoritySearch.documentNumberPlaceholder')} value={form.document_number} onChange={e => set('document_number', e.target.value)} />
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-600">Type de document</label>
-              <select className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200" value={form.document_type} onChange={e => set('document_type', e.target.value)}>
-                <option value="passport">Passeport</option>
-                <option value="national_id">Carte nationale</option>
-                <option value="any">Tout type</option>
+              <label className="text-xs font-medium text-gray-600">{t('guestScan.documentType')}</label>
+              <select className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-qayed-cachet/20" value={form.document_type} onChange={e => set('document_type', e.target.value)}>
+                <option value="passport">{t('guestScan.passport')}</option>
+                <option value="national_id">{t('authorityWatchlist.nationalCard')}</option>
+                <option value="any">{t('authorityWatchlist.anyType')}</option>
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Prénom" value={form.first_name} onChange={e => set('first_name', e.target.value)} />
-            <Input label="Nom de famille" value={form.last_name} onChange={e => set('last_name', e.target.value)} />
+            <Input label={t('guestScan.firstName')} value={form.first_name} onChange={e => set('first_name', e.target.value)} />
+            <Input label={t('authorityWatchlist.lastNameLabel')} value={form.last_name} onChange={e => set('last_name', e.target.value)} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Date de naissance" type="date" value={form.date_of_birth} onChange={e => set('date_of_birth', e.target.value)} />
-            <Input label="Nationalité (code)" placeholder="TUN" maxLength={3} value={form.nationality_code} onChange={e => set('nationality_code', e.target.value.toUpperCase())} />
+            <Input label={t('guestScan.dateOfBirth')} type="date" value={form.date_of_birth} onChange={e => set('date_of_birth', e.target.value)} />
+            <Input label={t('authoritySearch.nationalityCode')} placeholder="TUN" maxLength={3} value={form.nationality_code} onChange={e => set('nationality_code', e.target.value.toUpperCase())} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-600">Degré d'alerte</label>
-              <select className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200" value={form.severity} onChange={e => set('severity', e.target.value)}>
-                <option value="critique">🔴 Critique</option>
-                <option value="eleve">🟠 Élevé</option>
-                <option value="moyen">🟡 Moyen</option>
+              <label className="text-xs font-medium text-gray-600">{t('authorityWatchlist.severityLabel')}</label>
+              <select className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-qayed-cachet/20" value={form.severity} onChange={e => set('severity', e.target.value)}>
+                <option value="critique">🔴 {t('authoritySearch.severityCritical')}</option>
+                <option value="eleve">🟠 {t('authoritySearch.severityHigh')}</option>
+                <option value="moyen">🟡 {t('authorityWatchlist.severityMedium')}</option>
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-600">Motif (code)</label>
-              <select className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200" value={form.reason_code} onChange={e => set('reason_code', e.target.value)}>
+              <label className="text-xs font-medium text-gray-600">{t('authorityWatchlist.reasonCodeLabel')}</label>
+              <select className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-qayed-cachet/20" value={form.reason_code} onChange={e => set('reason_code', e.target.value)}>
                 {Object.entries(REASON_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
             </div>
           </div>
 
-          <Input label="Expire le (optionnel)" type="date" value={form.expires_at} onChange={e => set('expires_at', e.target.value)} hint="Laisser vide = pas d'expiration" />
+          <Input label={t('authorityWatchlist.expiresOptional')} type="date" value={form.expires_at} onChange={e => set('expires_at', e.target.value)} hint={t('authorityWatchlist.expiresHint')} />
 
           {isMinistry && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-600">Note confidentielle (Ministère seulement)</label>
+              <label className="text-xs font-medium text-gray-600">{t('authorityWatchlist.confidentialNote')}</label>
               <textarea
-                className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200 resize-none"
-                rows={2} placeholder="Détails du dossier..." value={form.reason} onChange={e => set('reason', e.target.value)}
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-qayed-cachet/20 resize-none"
+                rows={2} placeholder={t('authorityWatchlist.caseDetails')} value={form.reason} onChange={e => set('reason', e.target.value)}
               />
             </div>
           )}
@@ -121,9 +116,9 @@ const AddEntryModal = ({ onClose, isMinistry }: { onClose: () => void; isMinistr
         </div>
 
         <div className="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
-          <Button variant="ghost" onClick={onClose}>Annuler</Button>
+          <Button variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
           <Button onClick={() => mutation.mutate()} loading={mutation.isPending} style={{ background: '#5346A8', color: '#fff' }}>
-            Ajouter
+            {t('common.add')}
           </Button>
         </div>
       </div>
@@ -133,6 +128,7 @@ const AddEntryModal = ({ onClose, isMinistry }: { onClose: () => void; isMinistr
 
 // ─── Import Modal ─────────────────────────────────────────────────────────────
 const ImportModal = ({ onClose }: { onClose: () => void }) => {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<{ created: number; skipped: number; errors: string[] } | null>(null);
@@ -158,7 +154,7 @@ const ImportModal = ({ onClose }: { onClose: () => void }) => {
       <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-            <Upload className="h-4 w-4" /> Importer depuis CSV
+            <Upload className="h-4 w-4" /> {t('authorityWatchlist.importFromCsv')}
           </h2>
           <button onClick={onClose}><X className="h-5 w-5 text-gray-400" /></button>
         </div>
@@ -167,29 +163,29 @@ const ImportModal = ({ onClose }: { onClose: () => void }) => {
           {!result ? (
             <>
               <button onClick={downloadTemplate} className="flex items-center gap-2 text-sm underline" style={{ color: '#5346A8' }}>
-                <Download className="h-4 w-4" /> Télécharger le modèle CSV
+                <Download className="h-4 w-4" /> {t('authorityWatchlist.downloadTemplate')}
               </button>
               <div className="rounded-xl border-2 border-dashed border-gray-200 p-6 text-center">
                 {file
                   ? <p className="text-sm font-medium text-gray-700">{file.name}</p>
-                  : <p className="text-sm text-gray-400">Glissez un fichier CSV ou cliquez</p>
+                  : <p className="text-sm text-gray-400">{t('authorityWatchlist.dropCsvHint')}</p>
                 }
                 <input type="file" accept=".csv,.txt" className="hidden" id="csv-upload"
                   onChange={e => setFile(e.target.files?.[0] ?? null)} />
                 <label htmlFor="csv-upload" className="mt-3 inline-block cursor-pointer rounded-lg px-4 py-2 text-sm font-medium" style={{ background: '#EEEBFA', color: '#5346A8' }}>
-                  Choisir un fichier
+                  {t('authorityWatchlist.chooseFile')}
                 </label>
               </div>
             </>
           ) : (
             <div className="space-y-3">
               <div className="rounded-xl p-4" style={{ background: '#E4F5EC' }}>
-                <p className="text-sm font-semibold text-green-800">{result.created} enregistrement(s) importé(s)</p>
-                {result.skipped > 0 && <p className="text-xs text-green-700 mt-1">{result.skipped} ligne(s) ignorées (doublons ou données manquantes)</p>}
+                <p className="text-sm font-semibold text-green-800">{t('authorityWatchlist.recordsImported', { count: result.created })}</p>
+                {result.skipped > 0 && <p className="text-xs text-green-700 mt-1">{t('authorityWatchlist.linesSkipped', { count: result.skipped })}</p>}
               </div>
               {result.errors.length > 0 && (
                 <div className="rounded-xl p-4" style={{ background: '#FEF2F2' }}>
-                  <p className="text-xs font-semibold text-red-800 mb-1">Erreurs :</p>
+                  <p className="text-xs font-semibold text-red-800 mb-1">{t('authorityWatchlist.errors')} :</p>
                   {result.errors.map((e, i) => <p key={i} className="text-xs text-red-700">{e}</p>)}
                 </div>
               )}
@@ -198,10 +194,10 @@ const ImportModal = ({ onClose }: { onClose: () => void }) => {
         </div>
 
         <div className="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
-          <Button variant="ghost" onClick={onClose}>{result ? 'Fermer' : 'Annuler'}</Button>
+          <Button variant="ghost" onClick={onClose}>{result ? t('common.close') : t('common.cancel')}</Button>
           {!result && (
             <Button onClick={() => mutation.mutate()} loading={mutation.isPending} disabled={!file} style={{ background: '#5346A8', color: '#fff' }}>
-              Importer
+              {t('authorityWatchlist.import')}
             </Button>
           )}
         </div>
@@ -212,6 +208,19 @@ const ImportModal = ({ onClose }: { onClose: () => void }) => {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export const WatchlistPage = () => {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'ar' ? 'ar-TN' : i18n.language === 'en' ? 'en-GB' : 'fr-TN';
+  const SEVERITY_CONFIG: Record<WatchlistSeverity, { label: string; color: string; bg: string; border: string }> = {
+    critique: { label: t('authorityWatchlist.severityCriticalShort'), color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
+    eleve:    { label: t('authorityWatchlist.severityHighShort'),    color: '#8A6206', bg: '#FBF0D7', border: '#FBF0D7' },
+    moyen:    { label: t('authorityWatchlist.severityMedium'),    color: '#10222E', bg: '#EEEBFA', border: '#5346A8' },
+  };
+  const REASON_LABELS: Record<WatchlistReasonCode, string> = {
+    MANDAT_ARRET: t('authorityWatchlist.reasonWarrant'),
+    FRAUDE:       t('authorityWatchlist.reasonFraud'),
+    MIGRATION:    t('authorityWatchlist.reasonMigration'),
+    AUTRE:        t('authorityWatchlist.reasonOther'),
+  };
   const { user } = useAuthStore();
   const isMinistry = user?.authority_profile?.org_type === 'ministry';
   const qc = useQueryClient();
@@ -243,7 +252,7 @@ export const WatchlistPage = () => {
   });
 
   return (
-    <AuthorityLayout title="Personnes surveillées">
+    <AuthorityLayout title={t('authorityWatchlist.title')}>
       {showAdd && <AddEntryModal onClose={() => setShowAdd(false)} isMinistry={isMinistry} />}
       {showImport && <ImportModal onClose={() => setShowImport(false)} />}
 
@@ -251,14 +260,14 @@ export const WatchlistPage = () => {
         {/* Header actions */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-gray-500">
-            {data?.meta.total ?? 0} personne{(data?.meta.total ?? 0) !== 1 ? 's' : ''} surveillée{(data?.meta.total ?? 0) !== 1 ? 's' : ''}
+            {t('authorityWatchlist.watchedCount', { count: data?.meta.total ?? 0 })}
           </p>
           <div className="flex gap-2">
             <Button variant="ghost" className="gap-2" onClick={() => setShowImport(true)}>
-              <Upload className="h-4 w-4" /> Importer CSV
+              <Upload className="h-4 w-4" /> {t('authorityWatchlist.importCsv')}
             </Button>
             <Button className="gap-2" onClick={() => setShowAdd(true)} style={{ background: '#5346A8', color: '#fff' }}>
-              <Plus className="h-4 w-4" /> Ajouter
+              <Plus className="h-4 w-4" /> {t('common.add')}
             </Button>
           </div>
         </div>
@@ -268,20 +277,20 @@ export const WatchlistPage = () => {
           <div className="flex flex-wrap gap-3 items-end">
             <div className="flex-1 min-w-48">
               <Input
-                label="Rechercher"
-                placeholder="Nom, prénom, numéro de document..."
+                label={t('common.search')}
+                placeholder={t('authorityWatchlist.searchPlaceholder')}
                 value={search}
                 onChange={e => handleSearch(e.target.value)}
                 leftIcon={<Search className="h-3.5 w-3.5 text-gray-400" />}
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-600">Degré</label>
+              <label className="text-xs font-medium text-gray-600">{t('authorityWatchlist.degree')}</label>
               <select className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none" value={severity} onChange={e => handleSeverity(e.target.value)}>
-                <option value="">Tous</option>
-                <option value="critique">🔴 Critique</option>
-                <option value="eleve">🟠 Élevé</option>
-                <option value="moyen">🟡 Moyen</option>
+                <option value="">{t('common.all')}</option>
+                <option value="critique">🔴 {t('authoritySearch.severityCritical')}</option>
+                <option value="eleve">🟠 {t('authoritySearch.severityHigh')}</option>
+                <option value="moyen">🟡 {t('authorityWatchlist.severityMedium')}</option>
               </select>
             </div>
           </div>
@@ -289,12 +298,12 @@ export const WatchlistPage = () => {
 
         {/* Entries list */}
         {isLoading ? (
-          <div className="py-12 text-center text-gray-400">Chargement...</div>
+          <div className="py-12 text-center text-gray-400">{t('common.loading')}</div>
         ) : data?.data.length === 0 ? (
           <div className="py-12 text-center">
             <Shield className="mx-auto h-10 w-10 text-gray-200 mb-3" />
-            <p className="text-gray-500">Aucune personne surveillée</p>
-            <p className="text-sm text-gray-400 mt-1">Ajoutez des personnes manuellement ou importez un fichier CSV.</p>
+            <p className="text-gray-500">{t('authorityWatchlist.noWatchedPerson')}</p>
+            <p className="text-sm text-gray-400 mt-1">{t('authorityWatchlist.addOrImportHint')}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -302,7 +311,7 @@ export const WatchlistPage = () => {
               const cfg = SEVERITY_CONFIG[entry.severity];
               const isGlobal = entry.source === 'opensanctions';
               const fmtDob = entry.date_of_birth
-                ? new Date(entry.date_of_birth + 'T00:00:00').toLocaleDateString('fr-TN', { day: '2-digit', month: 'short', year: 'numeric' })
+                ? new Date(entry.date_of_birth + 'T00:00:00').toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })
                 : null;
 
               return (
@@ -340,12 +349,12 @@ export const WatchlistPage = () => {
                       <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1">
                         {fmtDob && (
                           <span className="text-xs text-gray-500 flex items-center gap-1">
-                            <span className="text-gray-300">Né(e)</span> {fmtDob}
+                            <span className="text-gray-300">{t('authorityWatchlist.bornOn')}</span> {fmtDob}
                           </span>
                         )}
                         {entry.document_number && (
                           <span className="text-xs text-gray-500 flex items-center gap-1">
-                            <span className="text-gray-300">Doc.</span> {entry.document_number}
+                            <span className="text-gray-300">{t('authorityWatchlist.docAbbrev')}</span> {entry.document_number}
                           </span>
                         )}
                         <span className="text-xs text-gray-400">{REASON_LABELS[entry.reason_code]}</span>
@@ -353,7 +362,7 @@ export const WatchlistPage = () => {
 
                       {/* Optional rows */}
                       {entry.expires_at && (
-                        <p className="text-xs text-orange-500 mt-0.5">Expire le {entry.expires_at}</p>
+                        <p className="text-xs text-orange-500 mt-0.5">{t('authorityAlerts.expiresOn', { date: entry.expires_at })}</p>
                       )}
                       {isMinistry && entry.reason && (
                         <p className="text-xs italic text-gray-400 mt-0.5 line-clamp-1">"{entry.reason}"</p>
@@ -373,7 +382,7 @@ export const WatchlistPage = () => {
                           : { background: '#F3F4F6', color: '#9CA3AF' }
                         }
                       >
-                        {isGlobal ? '🌐 Interpol/ONU' : entry.source === 'import' ? 'Import CSV' : 'Manuel'}
+                        {isGlobal ? `🌐 ${t('authorityWatchlist.sourceInterpolUn')}` : entry.source === 'import' ? t('authorityWatchlist.sourceCsvImport') : t('authorityWatchlist.sourceManual')}
                       </span>
 
                       {/* Actions */}
@@ -381,7 +390,7 @@ export const WatchlistPage = () => {
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => toggleMutation.mutate(entry)}
-                            title={entry.status === 'active' ? 'Désactiver' : 'Activer'}
+                            title={entry.status === 'active' ? t('authorityWatchlist.deactivate') : t('authorityWatchlist.activate')}
                             className="text-gray-300 hover:text-gray-600 transition-colors"
                           >
                             {entry.status === 'active'
@@ -390,7 +399,7 @@ export const WatchlistPage = () => {
                             }
                           </button>
                           <button
-                            onClick={() => { if (confirm('Supprimer cette entrée ?')) deleteMutation.mutate(entry.id); }}
+                            onClick={() => { if (confirm(t('authorityWatchlist.confirmDelete'))) deleteMutation.mutate(entry.id); }}
                             className="text-gray-200 hover:text-red-500 transition-colors"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -410,8 +419,8 @@ export const WatchlistPage = () => {
         {data && data.meta.last_page > 1 && (
           <div className="flex items-center justify-between pt-2">
             <p className="text-xs text-gray-400">
-              Page {data.meta.current_page} / {data.meta.last_page}
-              <span className="ms-2">· {data.meta.total} entrée{data.meta.total !== 1 ? 's' : ''}</span>
+              {t('common.page')} {data.meta.current_page} / {data.meta.last_page}
+              <span className="ms-2">· {t('authorityActivity.entriesCount', { count: data.meta.total })}</span>
             </p>
             <div className="flex items-center gap-1">
               <button
@@ -462,9 +471,9 @@ export const WatchlistPage = () => {
 
         {/* Legend */}
         <div className="flex flex-wrap gap-4 text-xs text-gray-400 pt-2">
-          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-red-600 inline-block"></span> Critique — action immédiate requise</span>
-          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-orange-400 inline-block"></span> Élevé — surveiller de près</span>
-          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-blue-400 inline-block"></span> Moyen — signalement à vérifier</span>
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-red-600 inline-block"></span> {t('authorityWatchlist.legendCritical')}</span>
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-orange-400 inline-block"></span> {t('authorityWatchlist.legendHigh')}</span>
+          <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-blue-400 inline-block"></span> {t('authorityWatchlist.legendMedium')}</span>
         </div>
       </div>
     </AuthorityLayout>

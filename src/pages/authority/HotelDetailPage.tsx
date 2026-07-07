@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft, Building2, MapPin, Hash, Star, Users, Calendar,
   Search, ChevronRight, ChevronLeft, Mail, Phone, Briefcase,
@@ -24,34 +25,25 @@ const Row = ({ label, value }: { label: string; value?: string | number | null }
     </div>
   ) : null;
 
-const fmtDate = (iso?: string | null) => {
+const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
+
+const fmtDate = (iso: string | null | undefined, locale: string) => {
   if (!iso) return '—';
   const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(y, m - 1, d).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
-const fmtRange = (from: string, to: string) => {
+const fmtRange = (from: string, to: string, locale: string) => {
   const f = from.slice(0, 10).split('-').map(Number);
   const t = to.slice(0, 10).split('-').map(Number);
   const dFrom = new Date(f[0], f[1] - 1, f[2]);
   const dTo   = new Date(t[0], t[1] - 1, t[2]);
   const sameMonth = f[0] === t[0] && f[1] === t[1];
-  if (sameMonth) return `${f[2]} → ${dTo.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-  return `${dFrom.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} → ${dTo.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-};
-
-const STATUS_STYLE: Record<string, { color: string; label: string }> = {
-  active:    { color: '#1F9D6B', label: 'Actif' },
-  draft:     { color: '#5346A8', label: 'Brouillon' },
-  completed: { color: '#9ca3af', label: 'Terminé' },
-  cancelled: { color: '#9ca3af', label: 'Annulé' },
-  no_show:   { color: '#E3A008', label: 'No-show' },
+  if (sameMonth) return `${f[2]} → ${dTo.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  return `${dFrom.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} → ${dTo.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`;
 };
 
 const STATUS_FILTERS = ['all', 'active', 'completed', 'draft'] as const;
-const STATUS_LABELS: Record<string, string> = {
-  all: 'Tous', active: 'Actif', completed: 'Terminé', draft: 'Brouillon',
-};
 
 // ─── Flag image component ─────────────────────────────────────────────────────
 
@@ -70,13 +62,13 @@ const FlagImg = ({ code, size = 16 }: { code?: string | null; size?: number }) =
 
 // ─── Staff card ───────────────────────────────────────────────────────────────
 
-const ROLE_LABELS: Record<string, string> = {
-  hotel_admin: 'Manager',
-  receptionist: 'Réceptionniste',
-  manager: 'Manager',
-};
-
 const StaffCard = ({ s }: { s: AuthorityHotelStaff }) => {
+  const { t } = useTranslation();
+  const ROLE_LABELS: Record<string, string> = {
+    hotel_admin: t('authorityHotelDetail.manager'),
+    receptionist: t('authorityHotelDetail.receptionist'),
+    manager: t('authorityHotelDetail.manager'),
+  };
   const isManager = s.role === 'hotel_admin' || s.role === 'manager';
   return (
     <div
@@ -122,6 +114,18 @@ const StaffCard = ({ s }: { s: AuthorityHotelStaff }) => {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export const HotelDetailPage = () => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
+  const STATUS_STYLE: Record<string, { color: string; label: string }> = {
+    active:    { color: '#1F9D6B', label: t('checkinStatus.active') },
+    draft:     { color: '#5346A8', label: t('checkinStatus.draft') },
+    completed: { color: '#9ca3af', label: t('checkinStatus.completed') },
+    cancelled: { color: '#9ca3af', label: t('checkinStatus.cancelled') },
+    no_show:   { color: '#E3A008', label: t('checkinStatus.noShow') },
+  };
+  const STATUS_LABELS: Record<string, string> = {
+    all: t('common.all'), active: t('checkinStatus.active'), completed: t('checkinStatus.completed'), draft: t('checkinStatus.draft'),
+  };
   const { id }   = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -146,7 +150,7 @@ export const HotelDetailPage = () => {
   });
 
   if (isLoading) return (
-    <AuthorityLayout title="Établissement">
+    <AuthorityLayout title={t('authorityHotelDetail.property')}>
       <div className="flex flex-col gap-4">
         {[1, 2, 3].map(i => <div key={i} className="h-40 animate-pulse rounded-2xl bg-gray-100" />)}
       </div>
@@ -162,14 +166,14 @@ export const HotelDetailPage = () => {
   const reception  = staff.filter(s => s.role === 'receptionist');
 
   return (
-    <AuthorityLayout title="Fiche établissement">
+    <AuthorityLayout title={t('authorityHotelDetail.propertySheet')}>
       <div className="flex flex-col gap-5">
 
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
         >
-          <ArrowLeft className="h-4 w-4" /> Retour aux établissements
+          <ArrowLeft className="h-4 w-4" /> {t('authorityHotelDetail.backToProperties')}
         </button>
 
         {/* ── Hotel header ── */}
@@ -194,7 +198,7 @@ export const HotelDetailPage = () => {
                   )}
                 </div>
                 <Badge variant={hotel.status === 'active' ? 'active' : 'suspended'}>
-                  {hotel.status === 'active' ? 'Actif' : 'Suspendu'}
+                  {hotel.status === 'active' ? t('checkinStatus.active') : t('checkinStatus.suspended')}
                 </Badge>
               </div>
               {hotel.address_full && (
@@ -212,16 +216,16 @@ export const HotelDetailPage = () => {
           <CardHeader>
             <CardTitle>
               <div className="flex items-center gap-2">
-                <Hash className="h-4 w-4 text-gray-400" /> Informations administratives
+                <Hash className="h-4 w-4 text-gray-400" /> {t('authorityHotelDetail.adminInfo')}
               </div>
             </CardTitle>
           </CardHeader>
-          <Row label="Type"                value={hotel.type_label ?? hotel.type} />
-          <Row label="N° d'enregistrement" value={hotel.registration_number} />
-          <Row label="Capacité"            value={hotel.room_count ? `${hotel.room_count} chambres` : null} />
-          <Row label="Statut abonnement"   value={hotel.subscription_status} />
+          <Row label={t('authorityHotelDetail.type')}                value={hotel.type_label ?? hotel.type} />
+          <Row label={t('authorityHotelDetail.registrationNumber')} value={hotel.registration_number} />
+          <Row label={t('authorityHotelDetail.capacity')}            value={hotel.room_count ? t('authorityHotels.roomsCount', { count: hotel.room_count }) : null} />
+          <Row label={t('authorityHotelDetail.subscriptionStatus')}   value={hotel.subscription_status} />
           {hotel.subscription_expires_at && (
-            <Row label="Abonnement expire le" value={new Date(hotel.subscription_expires_at).toLocaleDateString('fr-TN')} />
+            <Row label={t('authorityHotelDetail.subscriptionExpires')} value={new Date(hotel.subscription_expires_at).toLocaleDateString(locale)} />
           )}
         </Card>
 
@@ -234,17 +238,17 @@ export const HotelDetailPage = () => {
                   {owner.entity_type === 'company'
                     ? <Building className="h-4 w-4 text-gray-400" />
                     : <User    className="h-4 w-4 text-gray-400" />}
-                  {owner.entity_type === 'company' ? 'Propriétaire — Société' : 'Propriétaire — Particulier'}
+                  {owner.entity_type === 'company' ? t('authorityHotelDetail.ownerCompany') : t('authorityHotelDetail.ownerIndividual')}
                 </div>
               </CardTitle>
             </CardHeader>
-            <Row label="Nom / Raison sociale" value={owner.name} />
+            <Row label={t('authorityHotelDetail.nameOrCompanyName')} value={owner.name} />
             {owner.entity_type === 'company' && (
-              <Row label="N° registre du commerce" value={owner.registration_number} />
+              <Row label={t('authorityHotelDetail.businessRegNumber')} value={owner.registration_number} />
             )}
             {owner.contact_email && (
               <div className="flex justify-between py-2 text-sm border-b border-gray-50">
-                <span className="text-gray-500">Email</span>
+                <span className="text-gray-500">{t('common.email')}</span>
                 <a href={`mailto:${owner.contact_email}`} className="font-medium text-blue-600 hover:underline">
                   {owner.contact_email}
                 </a>
@@ -252,14 +256,14 @@ export const HotelDetailPage = () => {
             )}
             {owner.contact_phone && (
               <div className="flex justify-between py-2 text-sm border-b border-gray-50">
-                <span className="text-gray-500">Téléphone</span>
+                <span className="text-gray-500">{t('common.phone')}</span>
                 <a href={`tel:${owner.contact_phone}`} className="font-medium text-gray-900 hover:underline">
                   {owner.contact_phone}
                 </a>
               </div>
             )}
             {owner.address && typeof owner.address === 'object' && Object.keys(owner.address).length > 0 && (
-              <Row label="Adresse"
+              <Row label={t('authorityHotelDetail.address')}
                 value={[owner.address['line1'], owner.address['city'], owner.address['governorate']].filter(Boolean).join(', ')}
               />
             )}
@@ -272,7 +276,7 @@ export const HotelDetailPage = () => {
             <CardHeader>
               <CardTitle>
                 <div className="flex items-center gap-2">
-                  <UserCheck className="h-4 w-4 text-gray-400" /> Personnel
+                  <UserCheck className="h-4 w-4 text-gray-400" /> {t('authorityHotelDetail.staff')}
                 </div>
               </CardTitle>
             </CardHeader>
@@ -283,7 +287,7 @@ export const HotelDetailPage = () => {
               <>
                 {managers.length > 0 && <div className="mt-1" />}
                 <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
-                  Réception
+                  {t('authorityHotelDetail.reception')}
                 </p>
                 {reception.map(s => <StaffCard key={s.id} s={s} />)}
               </>
@@ -296,12 +300,12 @@ export const HotelDetailPage = () => {
           <Card className="text-center py-4">
             <Users className="h-5 w-5 mx-auto mb-1" style={{ color: '#5346A8' }} />
             <p className="text-2xl font-bold text-gray-900">{hotel.active_guests_count ?? 0}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Voyageurs présents</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t('authorityDashboard.activeGuests')}</p>
           </Card>
           <Card className="text-center py-4">
             <Calendar className="h-5 w-5 mx-auto mb-1" style={{ color: '#5346A8' }} />
             <p className="text-2xl font-bold text-gray-900">{hotel.total_check_ins ?? 0}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Check-ins total</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t('authorityHotelDetail.totalCheckins')}</p>
           </Card>
         </div>
 
@@ -309,10 +313,10 @@ export const HotelDetailPage = () => {
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-gray-900">
-              Historique des check-ins
+              {t('authorityHotelDetail.checkinHistory')}
               {checkIns && (
                 <span className="ms-2 text-xs font-normal text-gray-400">
-                  · {checkIns.meta.total} entrée{checkIns.meta.total !== 1 ? 's' : ''}
+                  · {t('authorityActivity.entriesCount', { count: checkIns.meta.total })}
                 </span>
               )}
             </h3>
@@ -320,7 +324,7 @@ export const HotelDetailPage = () => {
 
           {/* Search */}
           <Input
-            placeholder="Nom, référence, numéro de document…"
+            placeholder={t('authorityHotelDetail.searchPlaceholder')}
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
             leftIcon={<Search className="h-4 w-4 text-gray-400" />}
@@ -351,7 +355,7 @@ export const HotelDetailPage = () => {
           ) : checkIns?.data.length === 0 ? (
             <div className="py-10 text-center">
               <Search className="h-8 w-8 mx-auto text-gray-200 mb-2" />
-              <p className="text-sm text-gray-400">Aucun check-in trouvé</p>
+              <p className="text-sm text-gray-400">{t('authorityHotelDetail.noCheckinFound')}</p>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
@@ -359,7 +363,7 @@ export const HotelDetailPage = () => {
                 const st      = STATUS_STYLE[ci.status] ?? { color: '#9ca3af', label: ci.status };
                 const guests  = ci.guests ?? [];
                 const pg      = guests.find(g => g.is_primary) ?? guests[0] ?? ci.primary_guest ?? null;
-                const name    = pg ? `${pg.last_name} ${pg.first_name}` : 'Sans voyageur';
+                const name    = pg ? `${pg.last_name} ${pg.first_name}` : t('hotelHistory.noGuest');
                 const initials = pg
                   ? `${pg.first_name?.[0] ?? ''}${pg.last_name?.[0] ?? ''}`.toUpperCase()
                   : '?';
@@ -422,13 +426,13 @@ export const HotelDetailPage = () => {
                         )}
 
                         <span className="text-xs text-gray-500 truncate">
-                          {ci.room_number ? `Ch. ${ci.room_number}` : 'Sans chambre'}
+                          {ci.room_number ? `${t('checkinWizard.roomShort')} ${ci.room_number}` : t('hotelHistory.noUnit')}
                           {' · '}{ci.reference}
-                          {ci.guests_count > 1 && ` · ${ci.guests_count} voy.`}
+                          {ci.guests_count > 1 && ` · ${t('authorityHotelDetail.guestsAbbrev', { count: ci.guests_count })}`}
                         </span>
                         <span className="text-xs text-gray-400">
-                          {fmtRange(ci.check_in_date, ci.expected_check_out_date)}
-                          {ci.actual_check_out_date && ` · départ réel ${fmtDate(ci.actual_check_out_date)}`}
+                          {fmtRange(ci.check_in_date, ci.expected_check_out_date, locale)}
+                          {ci.actual_check_out_date && ` · ${t('authorityHotelDetail.actualDeparture')} ${fmtDate(ci.actual_check_out_date, locale)}`}
                         </span>
                       </div>
 
@@ -447,7 +451,7 @@ export const HotelDetailPage = () => {
           {checkIns && lastPage > 1 && (
             <div className="flex items-center justify-between pt-1">
               <p className="text-xs text-gray-400">
-                Page {checkIns.meta.current_page} / {lastPage}
+                {t('common.page')} {checkIns.meta.current_page} / {lastPage}
               </p>
               <div className="flex items-center gap-1">
                 <button
