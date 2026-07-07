@@ -11,9 +11,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants = {
   primary:   'text-white active:scale-[0.98]',
-  gold:      'text-white active:scale-[0.98]',
-  secondary: 'bg-white border border-gray-200 text-gray-800 hover:bg-warm-100 active:scale-[0.98]',
-  ghost:     'bg-transparent text-gray-600 hover:bg-warm-100 active:scale-[0.98]',
+  gold:      'text-white active:scale-[0.98]', // deprecated alias — renders identically to primary
+  secondary: 'bg-transparent border-[1.5px] border-qayed-encre text-qayed-encre hover:bg-qayed-papier active:scale-[0.98]',
+  ghost:     'bg-qayed-cachet-dilue text-qayed-cachet hover:bg-qayed-cachet-dilue/70 active:scale-[0.98]',
   danger:    'bg-red-600 text-white hover:bg-red-700 active:scale-[0.98]',
 };
 
@@ -25,13 +25,10 @@ const sizes = {
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', loading, fullWidth, children, disabled, style, ...props }, ref) => {
-    const isPrimary = variant === 'primary';
-    const isGold    = variant === 'gold';
+    const isPrimary = variant === 'primary' || variant === 'gold';
 
     const inlineStyle = isPrimary
-      ? { background: 'linear-gradient(135deg, #1B3A5F 0%, #2A5090 100%)', boxShadow: '0 4px 14px rgba(27,54,84,0.35)', ...style }
-      : isGold
-      ? { background: 'linear-gradient(135deg, #C8943A 0%, #E0A040 100%)', boxShadow: '0 4px 14px rgba(200,148,58,0.40)', ...style }
+      ? { background: 'var(--qayed-cachet)', ...style }
       : style;
 
     return (
@@ -39,8 +36,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         style={inlineStyle}
+        onMouseEnter={isPrimary ? (e) => { e.currentTarget.style.background = 'var(--qayed-cachet-fonce)'; } : undefined}
+        onMouseLeave={isPrimary ? (e) => { e.currentTarget.style.background = 'var(--qayed-cachet)'; } : undefined}
         className={cn(
-          'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none',
+          'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-qayed-cachet focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none',
           variants[variant],
           sizes[size],
           fullWidth && 'w-full',

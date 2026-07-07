@@ -77,7 +77,7 @@ export const GuestScanPanel = ({
   return (
     <div
       className="flex flex-col gap-4 rounded-2xl p-4"
-      style={{ background: '#F5F4EF', border: '1.5px solid #E0DDD7' }}
+      style={{ background: '#F6F5F1', border: '1.5px solid #DDD9CF' }}
     >
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -98,14 +98,14 @@ export const GuestScanPanel = ({
       {(scanState === 'idle' || scanState === 'error') && (
         <div
           className="flex flex-col items-center gap-5 rounded-2xl bg-white py-8 px-4"
-          style={{ border: '2px dashed #D4E1F4' }}
+          style={{ border: '2px dashed #EEEBFA' }}
         >
           {scanState === 'error' && (
             <p className="text-sm text-red-600 font-medium text-center">Scan échoué. Réessayez ou saisissez manuellement.</p>
           )}
           <div
             className="flex h-16 w-16 items-center justify-center rounded-2xl"
-            style={{ background: 'linear-gradient(135deg, #1B3A5F 0%, #2A5090 100%)' }}
+            style={{ background: 'var(--qayed-cachet)' }}
           >
             <ScanLine className="h-8 w-8 text-white" />
           </div>
@@ -131,15 +131,15 @@ export const GuestScanPanel = ({
         <div className="flex flex-col items-center gap-4 rounded-2xl bg-white py-9">
           <div
             className="flex h-14 w-14 items-center justify-center rounded-2xl animate-pulse"
-            style={{ background: '#E8EEFB' }}
+            style={{ background: '#EEEBFA' }}
           >
-            <Loader2 className="h-7 w-7 animate-spin" style={{ color: '#1B3A5F' }} />
+            <Loader2 className="h-7 w-7 animate-spin" style={{ color: '#5346A8' }} />
           </div>
           <p className="text-sm font-semibold text-gray-700">Lecture MRZ en cours…</p>
           <div className="w-full max-w-xs rounded-full bg-gray-100 h-2">
             <div
               className="h-2 rounded-full transition-all duration-300"
-              style={{ width: `${ocrProgress}%`, background: 'linear-gradient(90deg, #1B3A5F, #2A5090)' }}
+              style={{ width: `${ocrProgress}%`, background: 'var(--qayed-cachet)' }}
             />
           </div>
           <p className="text-xs text-gray-400">{ocrProgress}%</p>
@@ -192,7 +192,7 @@ export const GuestScanPanel = ({
             Confirmer le voyageur <ArrowRight className="h-4 w-4" />
           </Button>
 
-          <button className="text-center text-sm font-medium" style={{ color: '#1B3A5F' }} onClick={reset}>
+          <button className="text-center text-sm font-medium" style={{ color: '#5346A8' }} onClick={reset}>
             ↩ Rescanner ou corriger
           </button>
         </>

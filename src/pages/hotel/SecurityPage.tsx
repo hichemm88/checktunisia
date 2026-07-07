@@ -28,7 +28,7 @@ export const SecurityPage = () => {
         {/* Header banner */}
         <div
           className="rounded-2xl px-5 py-4"
-          style={{ background: 'linear-gradient(135deg, #7F1D1D 0%, #991B1B 100%)' }}
+          style={{ background: '#991B1B' }}
         >
           <div className="flex items-center gap-3">
             <ShieldAlert className="h-7 w-7 text-red-200 shrink-0" />

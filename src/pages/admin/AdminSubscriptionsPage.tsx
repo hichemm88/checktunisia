@@ -83,8 +83,8 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
     <div className="flex flex-col gap-3 p-4 rounded-xl border border-gray-100 bg-white">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: '#1B3A5F18' }}>
-            <Package className="h-4 w-4" style={{ color: '#1B3A5F' }} />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: '#5346A818' }}>
+            <Package className="h-4 w-4" style={{ color: '#5346A8' }} />
           </div>
           <div>
             <p className="font-bold text-gray-900">{plan.name}</p>
@@ -264,7 +264,7 @@ const AbonnementsActifsTab = () => {
                   </div>
                 </div>
                 {editingExpiry && s.status === 'active' && (
-                  <div className="flex items-end gap-2 p-2 rounded-lg" style={{ background: '#F5F4EF' }}>
+                  <div className="flex items-end gap-2 p-2 rounded-lg" style={{ background: '#F6F5F1' }}>
                     <Input label="Expiration" type="date" value={expiryForm.expires_at} onChange={(e) => setExpiryForm((f) => ({ ...f, expires_at: e.target.value }))} />
                     <Input label="Prix personnalisé" type="number" value={String(expiryForm.custom_price)} onChange={(e) => setExpiryForm((f) => ({ ...f, custom_price: e.target.value }))} />
                     <Button size="sm" loading={updateSubMut.isPending} onClick={() => updateSubMut.mutate({ id: s.id, data: { expires_at: expiryForm.expires_at, custom_price: expiryForm.custom_price === '' ? null : parseFloat(String(expiryForm.custom_price)) } })} className="gap-1"><Check className="h-3.5 w-3.5" /></Button>
@@ -296,7 +296,7 @@ export const AdminSubscriptionsPage = () => {
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
       <h1 className="text-xl font-bold text-gray-900">Abonnements</h1>
-      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#E0DDD7' }}>
+      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#DDD9CF' }}>
         <button onClick={() => setTab('packs')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'packs' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
           <Package className="h-4 w-4" /> Packs
         </button>

@@ -205,7 +205,7 @@ export const OnboardingPage = () => {
 
   if (statusLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#F5F4EF' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#F6F5F1' }}>
         <div className="text-sm text-gray-400">Chargement…</div>
       </div>
     );
@@ -214,13 +214,13 @@ export const OnboardingPage = () => {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-10" style={{ background: '#F5F4EF' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-10" style={{ background: '#F6F5F1' }}>
       {/* Logo */}
       <div className="flex items-center gap-2 mb-8">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: '#1B3A5F' }}>
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: '#5346A8' }}>
           <ShieldCheck className="h-5 w-5 text-white" />
         </div>
-        <span className="font-bold text-lg" style={{ color: '#1B3A5F' }}>Qayed</span>
+        <span className="font-bold text-lg" style={{ color: '#5346A8' }}>Qayed</span>
       </div>
 
       {/* Step indicator */}
@@ -230,7 +230,7 @@ export const OnboardingPage = () => {
             <div className="flex items-center gap-1.5">
               <div
                 className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all"
-                style={{ background: i <= step ? '#1B3A5F' : '#E0DDD7', color: i <= step ? '#fff' : '#9ca3af' }}
+                style={{ background: i <= step ? '#5346A8' : '#DDD9CF', color: i <= step ? '#fff' : '#9ca3af' }}
               >
                 {i < step ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
               </div>
@@ -250,7 +250,7 @@ export const OnboardingPage = () => {
           <div className="flex flex-col items-center text-center gap-5">
             <div
               className="flex h-16 w-16 items-center justify-center rounded-2xl"
-              style={{ background: 'linear-gradient(135deg,#1B3A5F,#2A5090)' }}
+              style={{ background: 'var(--qayed-cachet)' }}
             >
               <Building2 className="h-8 w-8 text-white" />
             </div>
@@ -264,7 +264,7 @@ export const OnboardingPage = () => {
                   : 'Votre compte est créé. Commençons par ajouter votre premier établissement, puis vos unités.'}
               </p>
             </div>
-            <div className="w-full flex flex-col gap-2 text-left p-4 rounded-xl" style={{ background: '#F5F4EF' }}>
+            <div className="w-full flex flex-col gap-2 text-left p-4 rounded-xl" style={{ background: '#F6F5F1' }}>
               {(hasProperty
                 ? ['Ajouter vos unités', 'Scanner votre premier passeport', 'Gérer vos check-ins']
                 : ['Créer votre premier établissement', 'Ajouter vos unités', 'Gérer vos check-ins']
@@ -272,7 +272,7 @@ export const OnboardingPage = () => {
                 <div key={item} className="flex items-center gap-3 text-sm">
                   <div
                     className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
-                    style={{ background: '#1B3A5F' }}
+                    style={{ background: '#5346A8' }}
                   >
                     {i + 1}
                   </div>
@@ -401,7 +401,7 @@ export const OnboardingPage = () => {
 
             <div className="flex flex-col gap-3 max-h-72 overflow-y-auto pr-1">
               {rooms.map((room, i) => (
-                <div key={i} className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F5F4EF' }}>
+                <div key={i} className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F6F5F1' }}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold text-gray-500">Unité {i + 1}</span>
                     {rooms.length > 1 && (
@@ -451,7 +451,7 @@ export const OnboardingPage = () => {
             <button
               onClick={addRoom}
               className="flex items-center gap-2 text-sm font-semibold"
-              style={{ color: '#1B3A5F' }}
+              style={{ color: '#5346A8' }}
             >
               <Plus className="h-4 w-4" /> Ajouter une unité
             </button>

@@ -24,9 +24,9 @@ const actionIcon = (action: string) => {
 };
 
 const actionColor = (action: string): string => {
-  if (action.includes('search'))       return '#1B3A5F';
-  if (action.includes('hotel_viewed')) return '#0EA5E9';
-  return '#9333EA';
+  if (action.includes('search'))       return '#5346A8';
+  if (action.includes('hotel_viewed')) return '#5346A8';
+  return '#8B7FE0';
 };
 
 const LogRow = ({ log }: { log: AuthorityActivity }) => {
@@ -119,9 +119,9 @@ export const ActivityPage = () => {
         {!isLoading && isNational !== undefined && (
           <div
             className="flex items-center gap-3 rounded-xl px-4 py-3"
-            style={{ background: '#EEF3FC', border: '1px solid #D4E1F4' }}
+            style={{ background: '#EEEBFA', border: '1px solid #EEEBFA' }}
           >
-            <Activity className="h-4 w-4 shrink-0" style={{ color: '#1B3A5F' }} />
+            <Activity className="h-4 w-4 shrink-0" style={{ color: '#5346A8' }} />
             <p className="text-sm text-gray-700">
               {isNational
                 ? 'Vous consultez toutes les actions de toutes les autorités (accès ministère).'

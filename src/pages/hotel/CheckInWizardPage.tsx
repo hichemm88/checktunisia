@@ -37,14 +37,14 @@ const Stepper = ({
     <label className="label">{label}</label>
     <div
       className="flex items-center rounded-xl overflow-hidden h-[52px] bg-white"
-      style={{ border: '1.5px solid #E0DDD7' }}
+      style={{ border: '1.5px solid #DDD9CF' }}
     >
       <button
         type="button"
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={value <= min}
         className="flex items-center justify-center w-[52px] h-full text-gray-500 hover:bg-warm-100 active:bg-warm-200 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors shrink-0"
-        style={{ borderRight: '1.5px solid #E0DDD7' }}
+        style={{ borderRight: '1.5px solid #DDD9CF' }}
       >
         <Minus className="h-4 w-4" />
       </button>
@@ -56,7 +56,7 @@ const Stepper = ({
         onClick={() => onChange(Math.min(max, value + 1))}
         disabled={value >= max}
         className="flex items-center justify-center w-[52px] h-full text-gray-500 hover:bg-warm-100 active:bg-warm-200 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors shrink-0"
-        style={{ borderLeft: '1.5px solid #E0DDD7' }}
+        style={{ borderLeft: '1.5px solid #DDD9CF' }}
       >
         <Plus className="h-4 w-4" />
       </button>
@@ -221,7 +221,7 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
               >
                 <div
                   className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center text-sm font-bold"
-                  style={{ background: '#1B3A5F', color: '#fff' }}
+                  style={{ background: '#5346A8', color: '#fff' }}
                 >
                   {gInitials}
                 </div>
@@ -259,15 +259,15 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
               onClick={() => setAddingSlot(slot.index)}
               className="flex items-center gap-3 rounded-2xl p-3.5 text-left transition-all"
               style={{
-                border: `2px dashed ${slot.isRequired ? '#fca5a5' : '#D4E1F4'}`,
-                background: slot.isRequired ? '#FFF5F5' : '#F5F4EF',
+                border: `2px dashed ${slot.isRequired ? '#fca5a5' : '#EEEBFA'}`,
+                background: slot.isRequired ? '#FFF5F5' : '#F6F5F1',
               }}
             >
               <div
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
                 style={{
-                  background: slot.isRequired ? '#fee2e2' : '#E8EEFB',
-                  color: slot.isRequired ? '#ef4444' : '#1B3A5F',
+                  background: slot.isRequired ? '#fee2e2' : '#EEEBFA',
+                  color: slot.isRequired ? '#ef4444' : '#5346A8',
                 }}
               >
                 <UserPlus className="h-4 w-4" />
@@ -324,7 +324,7 @@ export const CheckInWizardPage = () => {
             <DocumentStep checkIn={checkIn} onNext={() => setStep(2)} />
             <button
               className="flex items-center justify-center gap-1.5 text-sm font-medium"
-              style={{ color: '#1B3A5F' }}
+              style={{ color: '#5346A8' }}
               onClick={() => setStep(2)}
             >
               Passer <ArrowRight className="h-4 w-4" />

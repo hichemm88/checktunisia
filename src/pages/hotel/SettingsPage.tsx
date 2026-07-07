@@ -96,7 +96,7 @@ const SocieteTab = () => {
           </div>
         </CardTitle>
         {!editing
-          ? <button onClick={startEdit} className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity" style={{ color: '#1B3A5F' }}>
+          ? <button onClick={startEdit} className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity" style={{ color: '#5346A8' }}>
               <Pencil className="h-3.5 w-3.5" /> Modifier
             </button>
           : <button onClick={cancelEdit} className="text-gray-400 hover:text-gray-600">
@@ -300,7 +300,7 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
       <div className="flex items-center gap-3 min-w-0">
         <div
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold"
-          style={{ background: '#E8EEFB', color: '#1B3A5F' }}
+          style={{ background: '#EEEBFA', color: '#5346A8' }}
         >
           {u.first_name?.[0]}{u.last_name?.[0]}
         </div>
@@ -437,7 +437,7 @@ const EquipeTab = () => {
         <button
           onClick={() => setShowAdd(s => !s)}
           className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity"
-          style={{ color: '#1B3A5F' }}
+          style={{ color: '#5346A8' }}
         >
           {showAdd ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
           {showAdd ? 'Annuler' : 'Ajouter'}
@@ -486,7 +486,7 @@ const AbonnementTab = () => {
           <div className="mt-3 flex flex-col gap-2">
             <div className="flex justify-between py-1.5 border-b border-gray-50">
               <span className="text-sm text-gray-500">Plan</span>
-              <span className="text-sm font-bold" style={{ color: '#1B3A5F' }}>
+              <span className="text-sm font-bold" style={{ color: '#5346A8' }}>
                 {typeof sub.plan === 'object' && sub.plan !== null ? sub.plan.name : (sub.plan ?? '—')}
               </span>
             </div>
@@ -509,7 +509,7 @@ const AbonnementTab = () => {
           </div>
 
           {sub.days_remaining <= 30 && (
-            <div className="mt-3 rounded-xl p-3 flex items-start gap-2" style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}>
+            <div className="mt-3 rounded-xl p-3 flex items-start gap-2" style={{ background: '#FBF0D7', border: '1px solid #FBF0D7' }}>
               <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-amber-800">Renouvellement à prévoir</p>
@@ -587,8 +587,8 @@ const ActiviteTab = () => {
             onClick={() => { setRole(f.value); setPage(1); }}
             className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
             style={role === f.value
-              ? { background: '#1B3A5F', color: '#fff' }
-              : { background: '#F5F4EF', color: '#6B7280' }}
+              ? { background: '#5346A8', color: '#fff' }
+              : { background: '#F6F5F1', color: '#6B7280' }}
           >
             {f.label}
           </button>
@@ -604,7 +604,7 @@ const ActiviteTab = () => {
           <div key={entry.id} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
             <div
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold mt-0.5"
-              style={{ background: '#E8EEFB', color: '#1B3A5F' }}
+              style={{ background: '#EEEBFA', color: '#5346A8' }}
             >
               {entry.actor?.name?.[0] ?? '?'}
             </div>
@@ -686,7 +686,7 @@ export const SettingsPage = () => {
               onClick={() => setTab(t.id)}
               className="flex items-center gap-1.5 px-3 py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap"
               style={tab === t.id
-                ? { borderColor: '#1B3A5F', color: '#1B3A5F' }
+                ? { borderColor: '#5346A8', color: '#5346A8' }
                 : { borderColor: 'transparent', color: '#9CA3AF' }
               }
             >

@@ -41,11 +41,11 @@ const fmtRange = (from: string, to: string) => {
 };
 
 const STATUS_STYLE: Record<string, { color: string; label: string }> = {
-  active:    { color: '#22c55e', label: 'Actif' },
-  draft:     { color: '#3b82f6', label: 'Brouillon' },
+  active:    { color: '#1F9D6B', label: 'Actif' },
+  draft:     { color: '#5346A8', label: 'Brouillon' },
   completed: { color: '#9ca3af', label: 'Terminé' },
   cancelled: { color: '#9ca3af', label: 'Annulé' },
-  no_show:   { color: '#f97316', label: 'No-show' },
+  no_show:   { color: '#E3A008', label: 'No-show' },
 };
 
 const STATUS_FILTERS = ['all', 'active', 'completed', 'draft'] as const;
@@ -84,7 +84,7 @@ const StaffCard = ({ s }: { s: AuthorityHotelStaff }) => {
     >
       <div
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold"
-        style={{ background: isManager ? '#1B3A5F' : '#E8EEFB', color: isManager ? '#fff' : '#1B3A5F' }}
+        style={{ background: isManager ? '#5346A8' : '#EEEBFA', color: isManager ? '#fff' : '#5346A8' }}
       >
         {s.first_name?.[0]}{s.last_name?.[0]}
       </div>
@@ -95,7 +95,7 @@ const StaffCard = ({ s }: { s: AuthorityHotelStaff }) => {
           </span>
           <span
             className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full"
-            style={{ background: isManager ? '#EEF3FC' : '#F3F4F6', color: isManager ? '#1B3A5F' : '#6B7280' }}
+            style={{ background: isManager ? '#EEEBFA' : '#F3F4F6', color: isManager ? '#5346A8' : '#6B7280' }}
           >
             {ROLE_LABELS[s.role] ?? s.role}
           </span>
@@ -177,7 +177,7 @@ export const HotelDetailPage = () => {
           <div className="flex items-start gap-4">
             <div
               className="flex h-14 w-14 items-center justify-center rounded-2xl shrink-0"
-              style={{ background: '#1B3A5F' }}
+              style={{ background: '#5346A8' }}
             >
               <Building2 className="h-7 w-7 text-white" />
             </div>
@@ -294,12 +294,12 @@ export const HotelDetailPage = () => {
         {/* ── Stats ── */}
         <div className="grid grid-cols-2 gap-3">
           <Card className="text-center py-4">
-            <Users className="h-5 w-5 mx-auto mb-1" style={{ color: '#1B3A5F' }} />
+            <Users className="h-5 w-5 mx-auto mb-1" style={{ color: '#5346A8' }} />
             <p className="text-2xl font-bold text-gray-900">{hotel.active_guests_count ?? 0}</p>
             <p className="text-xs text-gray-500 mt-0.5">Voyageurs présents</p>
           </Card>
           <Card className="text-center py-4">
-            <Calendar className="h-5 w-5 mx-auto mb-1" style={{ color: '#1B3A5F' }} />
+            <Calendar className="h-5 w-5 mx-auto mb-1" style={{ color: '#5346A8' }} />
             <p className="text-2xl font-bold text-gray-900">{hotel.total_check_ins ?? 0}</p>
             <p className="text-xs text-gray-500 mt-0.5">Check-ins total</p>
           </Card>
@@ -334,7 +334,7 @@ export const HotelDetailPage = () => {
                 onClick={() => { setStatus(s); setPage(1); }}
                 className="whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold transition-all"
                 style={status === s
-                  ? { background: '#1B3A5F', color: '#fff' }
+                  ? { background: '#5346A8', color: '#fff' }
                   : { background: '#fff', color: '#6B7280', border: '1px solid #E5E7EB' }
                 }
               >
@@ -376,7 +376,7 @@ export const HotelDetailPage = () => {
                       <div className="relative shrink-0 mt-0.5">
                         <div
                           className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-bold"
-                          style={{ background: '#E8EEFB', color: '#1B3A5F' }}
+                          style={{ background: '#EEEBFA', color: '#5346A8' }}
                         >
                           {initials}
                         </div>

@@ -42,7 +42,7 @@ const RecentCheckInsSection = () => {
           onClick={() => navigate(`/authority/guests/${c.guest_id}`)}
           className="flex items-start gap-3 rounded-card bg-white p-4 shadow-card hover:shadow-card-hover transition-shadow text-left w-full"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: '#1B3A5F' }}>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: '#5346A8' }}>
             {[c.first_name[0], c.last_name[0]].join('').toUpperCase()}
           </div>
           <div className="flex flex-col gap-0.5 min-w-0 flex-1">
@@ -98,8 +98,8 @@ const RecentCheckInsSection = () => {
 
 const WATCHLIST_COLORS: Record<WatchlistSeverity, { bg: string; border: string; text: string; label: string }> = {
   critique: { bg: '#FEF2F2', border: '#EF4444', text: '#991B1B', label: 'RECHERCHÉ — CRITIQUE' },
-  eleve:    { bg: '#FFFBEB', border: '#F59E0B', text: '#92400E', label: 'RECHERCHÉ — ÉLEVÉ'   },
-  moyen:    { bg: '#EFF6FF', border: '#3B82F6', text: '#1E40AF', label: 'SIGNALÉ'              },
+  eleve:    { bg: '#FBF0D7', border: '#E3A008', text: '#8A6206', label: 'RECHERCHÉ — ÉLEVÉ'   },
+  moyen:    { bg: '#EEEBFA', border: '#5346A8', text: '#5346A8', label: 'SIGNALÉ'              },
 };
 
 export const SearchPage = () => {
@@ -135,12 +135,12 @@ export const SearchPage = () => {
         {isPolice && zone && (
           <div
             className="flex items-center gap-3 rounded-xl px-4 py-3"
-            style={{ background: '#EEF3FC', border: '1px solid #D4E1F4' }}
+            style={{ background: '#EEEBFA', border: '1px solid #EEEBFA' }}
           >
-            <MapPin className="h-4 w-4 shrink-0" style={{ color: '#1B3A5F' }} />
+            <MapPin className="h-4 w-4 shrink-0" style={{ color: '#5346A8' }} />
             <p className="text-sm text-gray-700">
               Recherche limitée à votre zone de compétence :{' '}
-              <span className="font-semibold" style={{ color: '#1B3A5F' }}>{zone}</span>
+              <span className="font-semibold" style={{ color: '#5346A8' }}>{zone}</span>
             </p>
           </div>
         )}
@@ -244,7 +244,7 @@ export const SearchPage = () => {
               {results.meta.total} résultat{results.meta.total !== 1 ? 's' : ''} trouvé
               {results.meta.total !== 1 ? 's' : ''}
               {isPolice && zone && (
-                <span className="ml-2 inline-flex items-center gap-1 text-xs font-medium" style={{ color: '#1B3A5F' }}>
+                <span className="ml-2 inline-flex items-center gap-1 text-xs font-medium" style={{ color: '#5346A8' }}>
                   · <MapPin className="h-3 w-3" /> Zone {zone}
                 </span>
               )}
@@ -263,7 +263,7 @@ export const SearchPage = () => {
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div
                       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                      style={{ background: wl ? wl.border : '#1B3A5F' }}
+                      style={{ background: wl ? wl.border : '#5346A8' }}
                     >
                       {hit ? <ShieldAlert className="h-5 w-5" /> : [g.first_name[0], g.last_name[0]].join('').toUpperCase()}
                     </div>

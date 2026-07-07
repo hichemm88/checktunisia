@@ -14,8 +14,8 @@ import { useAuthStore } from '@/stores/authStore';
 // ─── Severity helpers ─────────────────────────────────────────────────────────
 const SEVERITY_CONFIG: Record<WatchlistSeverity, { label: string; color: string; bg: string; border: string }> = {
   critique: { label: 'CRITIQUE', color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
-  eleve:    { label: 'ÉLEVÉ',    color: '#92400E', bg: '#FFFBEB', border: '#FDE68A' },
-  moyen:    { label: 'MOYEN',    color: '#1E3A5F', bg: '#EFF6FF', border: '#BFDBFE' },
+  eleve:    { label: 'ÉLEVÉ',    color: '#8A6206', bg: '#FBF0D7', border: '#FBF0D7' },
+  moyen:    { label: 'MOYEN',    color: '#10222E', bg: '#EEEBFA', border: '#5346A8' },
 };
 
 const REASON_LABELS: Record<WatchlistReasonCode, string> = {
@@ -58,7 +58,7 @@ const AddEntryModal = ({ onClose, isMinistry }: { onClose: () => void; isMinistr
       <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-            <Shield className="h-4 w-4" style={{ color: '#1B3A5F' }} /> Ajouter une personne surveillée
+            <Shield className="h-4 w-4" style={{ color: '#5346A8' }} /> Ajouter une personne surveillée
           </h2>
           <button onClick={onClose}><X className="h-5 w-5 text-gray-400" /></button>
         </div>
@@ -122,7 +122,7 @@ const AddEntryModal = ({ onClose, isMinistry }: { onClose: () => void; isMinistr
 
         <div className="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
           <Button variant="ghost" onClick={onClose}>Annuler</Button>
-          <Button onClick={() => mutation.mutate()} loading={mutation.isPending} style={{ background: '#1B3A5F', color: '#fff' }}>
+          <Button onClick={() => mutation.mutate()} loading={mutation.isPending} style={{ background: '#5346A8', color: '#fff' }}>
             Ajouter
           </Button>
         </div>
@@ -166,7 +166,7 @@ const ImportModal = ({ onClose }: { onClose: () => void }) => {
         <div className="px-6 py-5 space-y-4">
           {!result ? (
             <>
-              <button onClick={downloadTemplate} className="flex items-center gap-2 text-sm underline" style={{ color: '#1B3A5F' }}>
+              <button onClick={downloadTemplate} className="flex items-center gap-2 text-sm underline" style={{ color: '#5346A8' }}>
                 <Download className="h-4 w-4" /> Télécharger le modèle CSV
               </button>
               <div className="rounded-xl border-2 border-dashed border-gray-200 p-6 text-center">
@@ -176,14 +176,14 @@ const ImportModal = ({ onClose }: { onClose: () => void }) => {
                 }
                 <input type="file" accept=".csv,.txt" className="hidden" id="csv-upload"
                   onChange={e => setFile(e.target.files?.[0] ?? null)} />
-                <label htmlFor="csv-upload" className="mt-3 inline-block cursor-pointer rounded-lg px-4 py-2 text-sm font-medium" style={{ background: '#EEF3FC', color: '#1B3A5F' }}>
+                <label htmlFor="csv-upload" className="mt-3 inline-block cursor-pointer rounded-lg px-4 py-2 text-sm font-medium" style={{ background: '#EEEBFA', color: '#5346A8' }}>
                   Choisir un fichier
                 </label>
               </div>
             </>
           ) : (
             <div className="space-y-3">
-              <div className="rounded-xl p-4" style={{ background: '#F0FDF4' }}>
+              <div className="rounded-xl p-4" style={{ background: '#E4F5EC' }}>
                 <p className="text-sm font-semibold text-green-800">{result.created} enregistrement(s) importé(s)</p>
                 {result.skipped > 0 && <p className="text-xs text-green-700 mt-1">{result.skipped} ligne(s) ignorées (doublons ou données manquantes)</p>}
               </div>
@@ -200,7 +200,7 @@ const ImportModal = ({ onClose }: { onClose: () => void }) => {
         <div className="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
           <Button variant="ghost" onClick={onClose}>{result ? 'Fermer' : 'Annuler'}</Button>
           {!result && (
-            <Button onClick={() => mutation.mutate()} loading={mutation.isPending} disabled={!file} style={{ background: '#1B3A5F', color: '#fff' }}>
+            <Button onClick={() => mutation.mutate()} loading={mutation.isPending} disabled={!file} style={{ background: '#5346A8', color: '#fff' }}>
               Importer
             </Button>
           )}
@@ -257,7 +257,7 @@ export const WatchlistPage = () => {
             <Button variant="ghost" className="gap-2" onClick={() => setShowImport(true)}>
               <Upload className="h-4 w-4" /> Importer CSV
             </Button>
-            <Button className="gap-2" onClick={() => setShowAdd(true)} style={{ background: '#1B3A5F', color: '#fff' }}>
+            <Button className="gap-2" onClick={() => setShowAdd(true)} style={{ background: '#5346A8', color: '#fff' }}>
               <Plus className="h-4 w-4" /> Ajouter
             </Button>
           </div>
@@ -439,7 +439,7 @@ export const WatchlistPage = () => {
                         onClick={() => setPage(p as number)}
                         className="h-8 w-8 rounded-lg text-sm font-medium border transition-colors"
                         style={page === p
-                          ? { background: '#1B3A5F', color: '#fff', borderColor: '#1B3A5F' }
+                          ? { background: '#5346A8', color: '#fff', borderColor: '#5346A8' }
                           : { borderColor: '#E5E7EB', color: '#6B7280' }
                         }
                       >

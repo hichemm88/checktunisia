@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  ShieldCheck, LayoutDashboard, Building2, Home, Users, Landmark,
+  LayoutDashboard, Building2, Home, Users, Landmark,
   CreditCard, Wallet, Mail, Activity, LogOut, Search, X, FileText, Menu,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
 import { adminSearchApi, GlobalSearchResult } from '@/api/admin/search';
+import { QayedStamp } from '@/components/ui/QayedStamp';
 
 const NAV_ITEMS = [
   { to: '/admin/dashboard',    icon: LayoutDashboard, label: 'Tableau de bord' },
@@ -83,10 +84,8 @@ const GlobalSearch = () => {
 const SidebarContent = ({ onNavigate, onLogout }: { onNavigate?: () => void; onLogout: () => void }) => (
   <>
     <div className="flex items-center gap-2.5 px-5 h-16 border-b border-gray-100 shrink-0">
-      <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: '#1B3A5F' }}>
-        <ShieldCheck className="h-4 w-4 text-white" />
-      </div>
-      <span className="font-bold text-gray-900">Qayed <span className="text-xs font-normal text-gray-400">Admin</span></span>
+      <QayedStamp size={30} />
+      <span className="qayed-display text-lg text-qayed-encre">QAYED <span className="qayed-mono text-xs font-normal normal-case tracking-normal text-qayed-fiche">Admin</span></span>
     </div>
     <nav className="flex-1 flex flex-col gap-0.5 p-3 overflow-y-auto">
       {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
@@ -96,10 +95,10 @@ const SidebarContent = ({ onNavigate, onLogout }: { onNavigate?: () => void; onL
           onClick={onNavigate}
           className={({ isActive }) =>
             `flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-              isActive ? 'text-white' : 'text-gray-500 hover:bg-warm-100 hover:text-gray-800'
+              isActive ? 'text-white' : 'text-gray-500 hover:bg-qayed-papier hover:text-gray-800'
             }`
           }
-          style={({ isActive }) => (isActive ? { background: '#1B3A5F' } : undefined)}
+          style={({ isActive }) => (isActive ? { background: 'var(--qayed-cachet)' } : undefined)}
         >
           <Icon className="h-4 w-4 shrink-0" />
           {label}
@@ -129,7 +128,7 @@ export const AdminLayout = () => {
   };
 
   return (
-    <div className="flex min-h-screen" style={{ background: '#F5F4EF' }}>
+    <div className="flex min-h-screen" style={{ background: 'var(--qayed-papier)' }}>
       {/* ── Sidebar (desktop) ── */}
       <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-gray-100 bg-white">
         <SidebarContent onLogout={handleLogout} />

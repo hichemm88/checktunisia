@@ -113,7 +113,7 @@ const UserRow = ({ u }: { u: AdminUser }) => {
     <div className="py-3 border-b border-gray-50 last:border-0">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold" style={{ background: '#E8EEFB', color: '#1B3A5F' }}>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold" style={{ background: '#EEEBFA', color: '#5346A8' }}>
             {u.first_name?.[0]}{u.last_name?.[0]}
           </div>
           <div className="min-w-0">
@@ -123,7 +123,7 @@ const UserRow = ({ u }: { u: AdminUser }) => {
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0 ml-2">
-          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ background: '#1B3A5F18', color: '#1B3A5F' }}>{ROLE_LABELS[u.role] ?? u.role}</span>
+          <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ background: '#5346A818', color: '#5346A8' }}>{ROLE_LABELS[u.role] ?? u.role}</span>
           {!u.last_login_at && (
             <button onClick={() => resendMut.mutate()} disabled={resendMut.isPending} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors" title="Renvoyer l'invitation">
               <Send className="h-3.5 w-3.5" />

@@ -115,10 +115,10 @@ const STATUS_FILTER_LABELS: Record<string, string> = {
 
 // Left border + subtle bg per status
 const STATUS_ROW_STYLE: Record<string, { border: string; dot: string }> = {
-  active:    { border: '#22c55e', dot: '#22c55e' },
-  draft:     { border: '#3b82f6', dot: '#3b82f6' },
+  active:    { border: '#1F9D6B', dot: '#1F9D6B' },
+  draft:     { border: '#5346A8', dot: '#5346A8' },
   completed: { border: '#d1d5db', dot: '#d1d5db' },
-  no_show:   { border: '#f97316', dot: '#f97316' },
+  no_show:   { border: '#E3A008', dot: '#E3A008' },
   cancelled: { border: '#d1d5db', dot: '#d1d5db' },
 };
 
@@ -182,7 +182,7 @@ export const HistoryPage = () => {
               className="whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-bold transition-all"
               style={
                 status === s
-                  ? { background: '#1B3A5F', color: '#fff', boxShadow: '0 4px 14px rgba(27,54,84,0.3)' }
+                  ? { background: '#5346A8', color: '#fff', boxShadow: '0 4px 14px rgba(83,70,168,0.25)' }
                   : { background: '#fff', color: '#6B7280', border: '1px solid #E5E7EB' }
               }
             >
@@ -212,8 +212,8 @@ export const HistoryPage = () => {
               <div
                 className="flex items-center rounded-card shadow-card overflow-hidden"
                 style={{
-                  borderLeft: `4px solid ${checkoutDue ? '#F59E0B' : style.border}`,
-                  background: checkoutDue ? '#FFFBEB' : '#fff',
+                  borderLeft: `4px solid ${checkoutDue ? '#E3A008' : style.border}`,
+                  background: checkoutDue ? '#FBF0D7' : '#fff',
                 }}
               >
                 <button
@@ -224,7 +224,7 @@ export const HistoryPage = () => {
                   <div className="relative shrink-0">
                     <div
                       className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-bold"
-                      style={{ background: '#E8EEFB', color: '#1B3A5F' }}
+                      style={{ background: '#EEEBFA', color: '#5346A8' }}
                     >
                       {initials}
                     </div>
@@ -251,7 +251,7 @@ export const HistoryPage = () => {
                   {/* Status dot + label + chevron */}
                   <div className="flex items-center gap-2 shrink-0">
                     {checkoutDue ? (
-                      <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: '#FEF3C7', color: '#92400E' }}>
+                      <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: '#FBF0D7', color: '#8A6206' }}>
                         <LogOut className="h-3 w-3" /> Départ
                       </span>
                     ) : (

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Smartphone, CheckCircle, Copy, KeyRound } from 'lucide-react';
+import { Smartphone, CheckCircle, Copy, KeyRound } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { authApi } from '@/api/auth';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { QayedStamp } from '@/components/ui/QayedStamp';
 import { extractErrors } from '@/lib/api';
 
 type Step = 'loading' | 'show_qr' | 'confirm' | 'done';
@@ -71,17 +72,17 @@ export const TwoFactorSetupPage = () => {
   if (step === 'loading') {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-qayed-cachet border-t-transparent" />
       </div>
     );
   }
 
   if (step === 'done') {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
+      <div className="flex min-h-screen flex-col items-center justify-center px-4" style={{ background: 'var(--qayed-papier)' }}>
         <div className="card w-full max-w-sm p-8 flex flex-col items-center gap-5 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle className="h-8 w-8 text-green-600" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full" style={{ background: 'var(--qayed-conforme-fond)' }}>
+            <CheckCircle className="h-8 w-8" style={{ color: 'var(--qayed-conforme)' }} />
           </div>
           <div>
             <h2 className="text-lg font-bold text-gray-900">Authentification activée</h2>
@@ -98,15 +99,13 @@ export const TwoFactorSetupPage = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-8">
+    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-8" style={{ background: 'var(--qayed-papier)' }}>
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-navy-900 shadow-lg">
-            <Shield className="h-7 w-7 text-gold-500" />
-          </div>
+          <QayedStamp size={56} />
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Sécurité renforcée requise</h1>
+            <h1 className="qayed-display text-xl text-qayed-encre">Sécurité renforcée requise</h1>
             <p className="text-sm text-gray-500">
               L'accès à la plateforme autorité nécessite une authentification à deux facteurs.
             </p>
@@ -116,7 +115,7 @@ export const TwoFactorSetupPage = () => {
         <div className="card p-6 flex flex-col gap-6">
           {/* Step 1 */}
           <div className="flex gap-3">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">1</div>
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-qayed-cachet text-xs font-bold text-white">1</div>
             <div>
               <p className="text-sm font-medium text-gray-900">Installer une application d'authentification</p>
               <p className="mt-0.5 text-xs text-gray-500">
@@ -127,7 +126,7 @@ export const TwoFactorSetupPage = () => {
 
           {/* Step 2 — QR Code */}
           <div className="flex gap-3">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">2</div>
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-qayed-cachet text-xs font-bold text-white">2</div>
             <div className="flex flex-col gap-3 w-full">
               <p className="text-sm font-medium text-gray-900">Scanner le QR code</p>
 
@@ -160,7 +159,7 @@ export const TwoFactorSetupPage = () => {
 
           {/* Step 3 — Confirm */}
           <div className="flex gap-3">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">3</div>
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-qayed-cachet text-xs font-bold text-white">3</div>
             <div className="flex flex-col gap-3 w-full">
               <p className="text-sm font-medium text-gray-900">Confirmer avec le premier code</p>
 
@@ -181,7 +180,7 @@ export const TwoFactorSetupPage = () => {
                 }}
                 maxLength={6}
                 placeholder="000000"
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-center text-2xl font-mono font-bold tracking-[0.5em] text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder:text-gray-300 placeholder:tracking-[0.5em]"
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-center text-2xl font-mono font-bold tracking-[0.5em] text-gray-900 outline-none focus:border-qayed-cachet focus:ring-2 focus:ring-qayed-cachet/20 placeholder:text-gray-300 placeholder:tracking-[0.5em]"
               />
 
               <Button

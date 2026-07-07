@@ -61,8 +61,8 @@ const GOVERNORATES = [
 ];
 
 const STATUS_COLOR: Record<string, string> = {
-  active:    '#22c55e',
-  pending:   '#f59e0b',
+  active:    '#1F9D6B',
+  pending:   '#E3A008',
   suspended: '#ef4444',
   closed:    '#9ca3af',
 };
@@ -194,7 +194,7 @@ const RoomsPanel = ({ property }: { property: Property }) => {
         <button
           onClick={() => { setShowAdd((s) => !s); setEditingId(null); setError(''); }}
           className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity"
-          style={{ color: '#1B3A5F' }}
+          style={{ color: '#5346A8' }}
         >
           <Plus className="h-3.5 w-3.5" /> Ajouter une unité
         </button>
@@ -412,14 +412,14 @@ const PropertyCard = ({
   return (
     <div
       className="card overflow-hidden transition-all duration-200"
-      style={{ outline: isActive ? '2px solid #1B3A5F' : 'none' }}
+      style={{ outline: isActive ? '2px solid #5346A8' : 'none' }}
     >
       {/* ── Header ── */}
       <div className="p-4 flex items-start gap-3">
         {/* Icon */}
         <div
           className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 mt-0.5 transition-colors"
-          style={{ background: isActive ? '#1B3A5F' : '#F5F4EF' }}
+          style={{ background: isActive ? '#5346A8' : '#F6F5F1' }}
         >
           <Building2 className={`h-5 w-5 transition-colors ${isActive ? 'text-white' : 'text-gray-400'}`} />
         </div>
@@ -434,7 +434,7 @@ const PropertyCard = ({
                 <p className="font-bold text-gray-900 leading-snug break-words">{property.name}</p>
                 {isActive && (
                   <span className="inline-flex shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                    style={{ background: '#1B3A5F18', color: '#1B3A5F' }}>
+                    style={{ background: '#5346A818', color: '#5346A8' }}>
                     Actif
                   </span>
                 )}
@@ -497,13 +497,13 @@ const PropertyCard = ({
                 qc.invalidateQueries({ queryKey: ['onboarding-status'] });
               }}
               className="mt-3 w-full flex items-center justify-center gap-2 text-sm font-semibold py-2 rounded-xl border transition-all hover:bg-blue-50 active:scale-[0.98]"
-              style={{ borderColor: '#1B3A5F', color: '#1B3A5F' }}
+              style={{ borderColor: '#5346A8', color: '#5346A8' }}
             >
               <CheckCircle2 className="h-4 w-4" />
               Définir comme établissement actif
             </button>
           ) : (
-            <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#1B3A5F' }}>
+            <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#5346A8' }}>
               <CheckCircle2 className="h-3.5 w-3.5" />
               Établissement sélectionné
             </div>
@@ -666,16 +666,16 @@ const ReceptionistPropertiesView = () => {
           const isActive = activePropertyId ? activePropertyId === p.id : properties?.[0]?.id === p.id;
           return (
             <div key={p.id} className="card p-4 flex items-center justify-between"
-              style={{ outline: isActive ? '2px solid #1B3A5F' : 'none' }}>
+              style={{ outline: isActive ? '2px solid #5346A8' : 'none' }}>
               <div className="flex items-center gap-3 min-w-0">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl flex-shrink-0"
-                  style={{ background: isActive ? '#1B3A5F' : '#F5F4EF' }}>
+                  style={{ background: isActive ? '#5346A8' : '#F6F5F1' }}>
                   <Building2 className={`h-4 w-4 ${isActive ? 'text-white' : 'text-gray-400'}`} />
                 </div>
                 <p className="font-semibold text-gray-900 truncate">{p.name}</p>
               </div>
               {isActive ? (
-                <span className="flex items-center gap-1.5 text-xs font-semibold shrink-0" style={{ color: '#1B3A5F' }}>
+                <span className="flex items-center gap-1.5 text-xs font-semibold shrink-0" style={{ color: '#5346A8' }}>
                   <CheckCircle2 className="h-3.5 w-3.5" /> Actif
                 </span>
               ) : (
@@ -737,8 +737,8 @@ export const PropertiesPage = () => {
         {/* ── Org header ── */}
         <div className="card p-5 flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl flex-shrink-0"
-            style={{ background: '#1B3A5F18' }}>
-            <Layers className="h-6 w-6" style={{ color: '#1B3A5F' }} />
+            style={{ background: '#5346A818' }}>
+            <Layers className="h-6 w-6" style={{ color: '#5346A8' }} />
           </div>
           <div className="flex-1 min-w-0">
             {isLoading ? (
@@ -802,7 +802,7 @@ export const PropertiesPage = () => {
         )}
 
         {/* ── Info notice ── */}
-        <div className="flex items-start gap-3 rounded-xl p-4 text-sm text-gray-500" style={{ background: '#F5F4EF' }}>
+        <div className="flex items-start gap-3 rounded-xl p-4 text-sm text-gray-500" style={{ background: '#F6F5F1' }}>
           <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5 text-gray-400" />
           <p>
             Le bien <strong>sélectionné</strong> est votre contexte actif pour les check-ins et le tableau de bord.

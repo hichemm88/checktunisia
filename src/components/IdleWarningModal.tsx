@@ -29,7 +29,7 @@ export const IdleWarningModal = ({ onStay, onLogout }: Props) => {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-          <div style={{ background: '#FEF3C7', borderRadius: 10, padding: 10 }}>
+          <div style={{ background: '#FBF0D7', borderRadius: 10, padding: 10 }}>
             <Clock style={{ color: '#D97706', width: 22, height: 22 }} />
           </div>
           <div>
@@ -41,7 +41,7 @@ export const IdleWarningModal = ({ onStay, onLogout }: Props) => {
         <div
           style={{
             textAlign: 'center', fontSize: 48, fontWeight: 800,
-            color: seconds <= 30 ? '#DC2626' : '#1B3A5F',
+            color: seconds <= 30 ? '#DC2626' : '#5346A8',
             margin: '1rem 0',
           }}
         >
@@ -66,7 +66,7 @@ export const IdleWarningModal = ({ onStay, onLogout }: Props) => {
             onClick={onStay}
             style={{
               flex: 1, padding: '10px', borderRadius: 10, border: 'none',
-              background: '#1B3A5F', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14,
+              background: '#5346A8', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14,
             }}
           >
             Rester connecté

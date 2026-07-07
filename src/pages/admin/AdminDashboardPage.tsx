@@ -41,20 +41,20 @@ export const AdminDashboardPage = () => {
       {stats && (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Stat icon={Building2}    label="Établissements" value={stats.hotels.total}     color="#1B3A5F" />
-            <Stat icon={CheckCircle2} label="Actifs"         value={stats.hotels.active}    color="#22c55e" />
+            <Stat icon={Building2}    label="Établissements" value={stats.hotels.total}     color="#5346A8" />
+            <Stat icon={CheckCircle2} label="Actifs"         value={stats.hotels.active}    color="#1F9D6B" />
             <Stat icon={XCircle}      label="Suspendus"      value={stats.hotels.suspended} color="#ef4444" />
-            <Stat icon={Clock}        label="En attente"     value={stats.hotels.pending}   color="#f59e0b" />
+            <Stat icon={Clock}        label="En attente"     value={stats.hotels.pending}   color="#E3A008" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Stat icon={TrendingUp} label="Check-ins aujourd'hui" value={stats.check_ins.today}      color="#8b5cf6" />
-            <Stat icon={Users}      label="Check-ins ce mois"     value={stats.check_ins.this_month} color="#0ea5e9" />
+            <Stat icon={TrendingUp} label="Check-ins aujourd'hui" value={stats.check_ins.today}      color="#8B7FE0" />
+            <Stat icon={Users}      label="Check-ins ce mois"     value={stats.check_ins.this_month} color="#8B7FE0" />
           </div>
 
           <div>
             <p className="text-sm font-bold text-gray-700 mb-3">À surveiller</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <AlertCard icon={CreditCard} title="Abonnements qui expirent (30j)" color="#f59e0b" empty={!stats.alerts.expiring_subscriptions.length}>
+              <AlertCard icon={CreditCard} title="Abonnements qui expirent (30j)" color="#E3A008" empty={!stats.alerts.expiring_subscriptions.length}>
                 {stats.alerts.expiring_subscriptions.map((s) => (
                   <div key={s.id} className="flex items-center justify-between text-sm">
                     <span className="truncate font-medium text-gray-800">{s.name}</span>

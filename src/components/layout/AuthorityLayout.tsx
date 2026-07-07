@@ -1,11 +1,12 @@
 import { ReactNode } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Search, Building2, Bell, Activity, LogOut, Shield, MapPin, ShieldAlert,
+  LayoutDashboard, Search, Building2, Bell, Activity, LogOut, MapPin, ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
+import { QayedStamp } from '@/components/ui/QayedStamp';
 
 interface AuthorityLayoutProps { children: ReactNode; title?: string }
 
@@ -44,23 +45,23 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
   const initials = [user?.first_name?.[0], user?.last_name?.[0]].filter(Boolean).join('').toUpperCase();
 
   return (
-    <div className="min-h-screen" style={{ background: '#F5F4EF' }}>
+    <div className="min-h-screen" style={{ background: 'var(--qayed-papier)' }}>
       {/* ── Top bar ──────────────────────────────────────────────────── */}
       <header
-        className="sticky top-0 z-30 shadow-lg"
-        style={{ background: 'linear-gradient(135deg, #1B3A5F 0%, #0F2440 100%)' }}
+        className="sticky top-0 z-30 shadow-lg relative overflow-hidden"
+        style={{ background: 'var(--qayed-encre)' }}
       >
+        {/* Motif "lignes de registre" — uniquement sur fond encre nuit */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{ background: 'repeating-linear-gradient(to bottom, transparent 0 39px, var(--qayed-papier) 39px 40px)' }}
+        />
         {/* Brand + identity row */}
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+        <div className="relative mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
 
           {/* Left: logo + org identity */}
           <div className="flex items-center gap-3 min-w-0">
-            <div
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-              style={{ background: '#C8943A' }}
-            >
-              <Shield className="h-4 w-4 text-white" />
-            </div>
+            <QayedStamp size={30} onDark />
 
             <div className="hidden sm:flex flex-col leading-tight min-w-0">
               <span className="text-xs font-bold text-white/90 truncate">
@@ -77,7 +78,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
             {isMinistry && (
               <span
                 className="hidden sm:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
-                style={{ background: '#C8943A22', color: '#C8943A', border: '1px solid #C8943A55' }}
+                style={{ background: 'var(--qayed-cachet-sombre)22', color: 'var(--qayed-cachet-sombre)', border: '1px solid var(--qayed-cachet-sombre)55' }}
               >
                 Ministère
               </span>
@@ -85,7 +86,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
             {isPolice && (
               <span
                 className="hidden sm:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
-                style={{ background: '#3B82F622', color: '#93C5FD', border: '1px solid #3B82F655' }}
+                style={{ background: 'var(--qayed-cachet-sombre)22', color: 'var(--qayed-cachet-sombre)', border: '1px solid var(--qayed-cachet-sombre)55' }}
               >
                 Police
               </span>
@@ -107,7 +108,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
             <Link
               to="/profile"
               className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white shrink-0 hover:opacity-80 transition-opacity"
-              style={{ background: '#2A5090' }}
+              style={{ background: 'var(--qayed-cachet)' }}
               title="Mon profil"
             >
               {initials || '?'}
@@ -147,7 +148,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
       {title && (
         <div className="border-b border-gray-200 bg-white/60 px-4 py-3">
           <div className="mx-auto max-w-6xl">
-            <h1 className="text-sm font-semibold" style={{ color: '#1B3A5F' }}>{title}</h1>
+            <h1 className="text-sm font-semibold" style={{ color: 'var(--qayed-cachet)' }}>{title}</h1>
           </div>
         </div>
       )}

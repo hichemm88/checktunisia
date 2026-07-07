@@ -236,7 +236,7 @@ export const AdminAuthorityPage = () => {
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
       <h1 className="text-xl font-bold text-gray-900">Autorités</h1>
-      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#E0DDD7' }}>
+      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#DDD9CF' }}>
         <button onClick={() => setTab('users')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'users' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
           <Users className="h-4 w-4" /> Utilisateurs
         </button>

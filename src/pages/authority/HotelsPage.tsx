@@ -38,12 +38,12 @@ export const HotelsPage = () => {
         {isPolice && zone && (
           <div
             className="flex items-center gap-3 rounded-xl px-4 py-3"
-            style={{ background: '#EEF3FC', border: '1px solid #D4E1F4' }}
+            style={{ background: '#EEEBFA', border: '1px solid #EEEBFA' }}
           >
-            <MapPin className="h-4 w-4 shrink-0" style={{ color: '#1B3A5F' }} />
+            <MapPin className="h-4 w-4 shrink-0" style={{ color: '#5346A8' }} />
             <p className="text-sm text-gray-700">
               Affichage limité aux établissements de votre zone :{' '}
-              <span className="font-semibold" style={{ color: '#1B3A5F' }}>{zone}</span>
+              <span className="font-semibold" style={{ color: '#5346A8' }}>{zone}</span>
             </p>
           </div>
         )}
@@ -71,7 +71,7 @@ export const HotelsPage = () => {
           <p className="text-sm text-gray-500">
             {data.meta.total} établissement{data.meta.total !== 1 ? 's' : ''}
             {isPolice && zone && (
-              <span className="ml-1 text-xs" style={{ color: '#1B3A5F' }}>· Zone {zone}</span>
+              <span className="ml-1 text-xs" style={{ color: '#5346A8' }}>· Zone {zone}</span>
             )}
           </p>
         )}
@@ -91,9 +91,9 @@ export const HotelsPage = () => {
               <div className="flex items-start gap-3">
                 <div
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                  style={{ background: '#EEF3FC' }}
+                  style={{ background: '#EEEBFA' }}
                 >
-                  <Building2 className="h-5 w-5" style={{ color: '#1B3A5F' }} />
+                  <Building2 className="h-5 w-5" style={{ color: '#5346A8' }} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">

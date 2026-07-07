@@ -1,9 +1,10 @@
 import { useState, FormEvent, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Shield, KeyRound } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
 import { authApi } from '@/api/auth';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
+import { QayedStamp } from '@/components/ui/QayedStamp';
 import { extractErrors } from '@/lib/api';
 
 /**
@@ -58,15 +59,13 @@ export const TwoFactorVerifyPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center px-4" style={{ background: 'var(--qayed-papier)' }}>
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-navy-900 shadow-lg">
-            <Shield className="h-7 w-7 text-gold-500" />
-          </div>
+          <QayedStamp size={56} />
           <div className="text-center">
-            <h1 className="text-xl font-bold text-gray-900">Qayed</h1>
+            <h1 className="qayed-display text-2xl text-qayed-encre">QAYED</h1>
             <p className="text-sm text-gray-500">Vérification en deux étapes</p>
           </div>
         </div>

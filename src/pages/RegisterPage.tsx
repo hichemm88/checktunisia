@@ -63,7 +63,7 @@ export const RegisterPage = () => {
 
   // ── Success screen ──────────────────────────────────────────────────────────
   if (done) return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#F5F4EF' }}>
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#F6F5F1' }}>
       <div className="card w-full max-w-md p-10 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mx-auto mb-5">
           <CheckCircle2 className="h-8 w-8 text-green-600" />
@@ -88,17 +88,17 @@ export const RegisterPage = () => {
 
   // ── Wizard ──────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen px-4 py-10" style={{ background: '#F5F4EF' }}>
+    <div className="min-h-screen px-4 py-10" style={{ background: '#F6F5F1' }}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-8 max-w-xl mx-auto">
         <Link to="/" className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800">
           <ArrowLeft className="h-4 w-4" /> Retour
         </Link>
         <div className="flex items-center gap-2 ml-auto">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: '#1B3A5F' }}>
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: '#5346A8' }}>
             <ShieldCheck className="h-4 w-4 text-white" />
           </div>
-          <span className="font-bold text-sm" style={{ color: '#1B3A5F' }}>Qayed</span>
+          <span className="font-bold text-sm" style={{ color: '#5346A8' }}>Qayed</span>
         </div>
       </div>
 
@@ -109,7 +109,7 @@ export const RegisterPage = () => {
             <div className="flex items-center gap-1">
               <div
                 className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-all"
-                style={{ background: i <= step ? '#1B3A5F' : '#E0DDD7', color: i <= step ? '#fff' : '#9ca3af' }}
+                style={{ background: i <= step ? '#5346A8' : '#DDD9CF', color: i <= step ? '#fff' : '#9ca3af' }}
               >
                 {i < step ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
               </div>
@@ -144,13 +144,13 @@ export const RegisterPage = () => {
                   onClick={() => set('entity_type', val)}
                   className="flex flex-col items-center gap-3 rounded-2xl p-5 text-center transition-all"
                   style={{
-                    border: form.entity_type === val ? '2px solid #1B3A5F' : '1.5px solid #E0DDD7',
-                    background: form.entity_type === val ? 'rgba(27,58,95,0.04)' : '#fff',
+                    border: form.entity_type === val ? '2px solid #5346A8' : '1.5px solid #DDD9CF',
+                    background: form.entity_type === val ? 'rgba(83,70,168,0.05)' : '#fff',
                   }}
                 >
                   <div
                     className="flex h-12 w-12 items-center justify-center rounded-xl"
-                    style={{ background: form.entity_type === val ? '#1B3A5F' : '#F5F4EF' }}
+                    style={{ background: form.entity_type === val ? '#5346A8' : '#F6F5F1' }}
                   >
                     <Icon className={`h-6 w-6 ${form.entity_type === val ? 'text-white' : 'text-gray-400'}`} />
                   </div>
@@ -158,7 +158,7 @@ export const RegisterPage = () => {
                     <p className="font-bold text-gray-900">{label}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
                   </div>
-                  {form.entity_type === val && <CheckCircle2 className="h-4 w-4" style={{ color: '#1B3A5F' }} />}
+                  {form.entity_type === val && <CheckCircle2 className="h-4 w-4" style={{ color: '#5346A8' }} />}
                 </button>
               ))}
             </div>
@@ -186,7 +186,7 @@ export const RegisterPage = () => {
               value={form.org_phone ?? ''}
               onChange={(e) => set('org_phone', e.target.value)}
             />
-            <div className="rounded-xl p-4 text-sm text-gray-500" style={{ background: '#F5F4EF' }}>
+            <div className="rounded-xl p-4 text-sm text-gray-500" style={{ background: '#F6F5F1' }}>
               Vous pourrez ajouter vos établissements (appartements, villas, hôtels…)
               directement après la connexion.
             </div>
@@ -254,20 +254,20 @@ export const RegisterPage = () => {
                 onClick={() => set('plan_slug', p.slug)}
                 className="flex items-start gap-4 rounded-2xl p-4 text-left transition-all"
                 style={{
-                  border: form.plan_slug === p.slug ? '2px solid #1B3A5F' : '1.5px solid #E0DDD7',
-                  background: form.plan_slug === p.slug ? 'rgba(27,58,95,0.04)' : '#fff',
+                  border: form.plan_slug === p.slug ? '2px solid #5346A8' : '1.5px solid #DDD9CF',
+                  background: form.plan_slug === p.slug ? 'rgba(83,70,168,0.05)' : '#fff',
                 }}
               >
                 <div
                   className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0"
-                  style={{ background: form.plan_slug === p.slug ? '#1B3A5F' : '#F5F4EF' }}
+                  style={{ background: form.plan_slug === p.slug ? '#5346A8' : '#F6F5F1' }}
                 >
                   <Building2 className={`h-5 w-5 ${form.plan_slug === p.slug ? 'text-white' : 'text-gray-400'}`} />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-gray-900">{p.name}</span>
-                    <span className="text-lg font-extrabold" style={{ color: '#1B3A5F' }}>
+                    <span className="text-lg font-extrabold" style={{ color: '#5346A8' }}>
                       {p.price_monthly} TND<span className="text-xs font-normal text-gray-400">/mois</span>
                     </span>
                   </div>
@@ -278,7 +278,7 @@ export const RegisterPage = () => {
                   </p>
                 </div>
                 {form.plan_slug === p.slug && (
-                  <CheckCircle2 className="h-5 w-5 flex-shrink-0" style={{ color: '#1B3A5F' }} />
+                  <CheckCircle2 className="h-5 w-5 flex-shrink-0" style={{ color: '#5346A8' }} />
                 )}
               </button>
             ))}
@@ -311,7 +311,7 @@ export const RegisterPage = () => {
 
         <p className="mt-5 text-center text-xs text-gray-400">
           Déjà un compte ?{' '}
-          <Link to="/login" className="font-semibold" style={{ color: '#1B3A5F' }}>Se connecter</Link>
+          <Link to="/login" className="font-semibold" style={{ color: '#5346A8' }}>Se connecter</Link>
         </p>
       </div>
     </div>

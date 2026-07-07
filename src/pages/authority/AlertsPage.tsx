@@ -9,8 +9,8 @@ import { AuthorityAlert } from '@/types';
 // Urgency color by days remaining
 const urgencyStyle = (days: number): { bg: string; text: string; border: string } => {
   if (days <= 7)  return { bg: '#FEF2F2', text: '#DC2626', border: '#FCA5A5' };
-  if (days <= 15) return { bg: '#FFF8EE', text: '#C8943A', border: '#FCD38C' };
-  return           { bg: '#F0FDF4', text: '#16A34A', border: '#86EFAC' };
+  if (days <= 15) return { bg: '#FFF8EE', text: '#5346A8', border: '#FBF0D7' };
+  return           { bg: '#E4F5EC', text: '#137453', border: '#1F9D6B' };
 };
 
 const AlertCard = ({ alert, onClick }: { alert: AuthorityAlert; onClick: () => void }) => {
@@ -120,11 +120,11 @@ export const AlertsPage = () => {
         {!isLoading && !isError && (
           <div
             className="flex items-center gap-4 rounded-2xl px-5 py-4"
-            style={{ background: alerts.length > 0 ? '#FFF8EE' : '#F0FDF4', border: `1px solid ${alerts.length > 0 ? '#FCD38C' : '#86EFAC'}` }}
+            style={{ background: alerts.length > 0 ? '#FFF8EE' : '#E4F5EC', border: `1px solid ${alerts.length > 0 ? '#FBF0D7' : '#1F9D6B'}` }}
           >
-            <AlertTriangle className="h-5 w-5 shrink-0" style={{ color: alerts.length > 0 ? '#C8943A' : '#16A34A' }} />
+            <AlertTriangle className="h-5 w-5 shrink-0" style={{ color: alerts.length > 0 ? '#5346A8' : '#137453' }} />
             <div>
-              <p className="font-semibold" style={{ color: alerts.length > 0 ? '#92620A' : '#15803D' }}>
+              <p className="font-semibold" style={{ color: alerts.length > 0 ? '#8A6206' : '#15803D' }}>
                 {alerts.length === 0
                   ? "Aucun document n'expire dans les 30 prochains jours."
                   : `${alerts.length} document${alerts.length > 1 ? 's' : ''} expirant dans les 30 prochains jours`}
@@ -154,15 +154,15 @@ export const AlertsPage = () => {
         {!isLoading && !isError && (
           <>
             <Section title="Urgents (≤ 7 jours)"    items={urgent}  color="#DC2626" />
-            <Section title="Attention (≤ 15 jours)"  items={warning} color="#C8943A" />
-            <Section title="À surveiller (≤ 30 jours)" items={watch}   color="#16A34A" />
+            <Section title="Attention (≤ 15 jours)"  items={warning} color="#5346A8" />
+            <Section title="À surveiller (≤ 30 jours)" items={watch}   color="#137453" />
             {alerts.length === 0 && (
               <div className="py-16 text-center">
                 <div
                   className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
-                  style={{ background: '#EEF3FC' }}
+                  style={{ background: '#EEEBFA' }}
                 >
-                  <AlertTriangle className="h-8 w-8" style={{ color: '#1B3A5F' }} />
+                  <AlertTriangle className="h-8 w-8" style={{ color: '#5346A8' }} />
                 </div>
                 <p className="text-gray-500">Tout est en ordre.</p>
                 <p className="text-sm text-gray-400 mt-1">Aucun document n'expire dans les 30 prochains jours.</p>

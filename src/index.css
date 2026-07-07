@@ -1,14 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  /* ============================================
+     QAYED — Design tokens v1.0 (Juillet 2026)
+     ============================================ */
+  --qayed-encre: #10222E;
+  --qayed-papier: #F6F5F1;
+  --qayed-cachet: #5346A8;
+  --qayed-cachet-fonce: #443896;
+  --qayed-cachet-sombre: #8B7FE0;
+  --qayed-cachet-dilue: #EEEBFA;
+  --qayed-conforme: #1F9D6B;
+  --qayed-conforme-fond: #E4F5EC;
+  --qayed-conforme-texte: #137453;
+  --qayed-vigilance: #E3A008;
+  --qayed-vigilance-fond: #FBF0D7;
+  --qayed-vigilance-texte: #8A6206;
+  --qayed-fiche: #8A94A0;
+  --qayed-ligne: #DDD9CF;
+  --qayed-blanc: #FFFFFF;
+
+  --qayed-font-display: 'Archivo', sans-serif;
+  --qayed-font-body: 'IBM Plex Sans', sans-serif;
+  --qayed-font-arabic: 'IBM Plex Sans Arabic', sans-serif;
+  --qayed-font-mono: 'IBM Plex Mono', monospace;
+
+  --qayed-radius-sm: 10px;
+  --qayed-radius-md: 14px;
+  --qayed-radius-lg: 18px;
+  --qayed-stamp-tilt: -6deg;
+}
 
 @layer base {
   * { box-sizing: border-box; }
 
   body {
-    background-color: #F5F4EF;
-    color: #1a1a2e;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: var(--qayed-papier);
+    color: var(--qayed-encre);
+    font-family: var(--qayed-font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -23,8 +56,8 @@
   .input-field {
     @apply h-input w-full px-4 bg-white border border-warm-300 rounded-input
            text-gray-900 placeholder:text-gray-400
-           focus:outline-none focus:border-navy-700
-           focus:ring-4 focus:ring-navy-600/10
+           focus:outline-none focus:border-qayed-cachet
+           focus:ring-4 focus:ring-qayed-cachet/10
            transition-all duration-150;
   }
 
@@ -32,26 +65,48 @@
   .card {
     background: #ffffff;
     border-radius: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
+    box-shadow: 0 1px 3px rgba(16,34,46,0.05), 0 0 0 1px rgba(16,34,46,0.04);
     padding: 20px;
   }
 
   /* ── Label ── */
   .label {
-    @apply block text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2;
+    @apply block text-[11px] font-bold uppercase tracking-widest text-qayed-fiche mb-2;
   }
+
+  /* ── Display headings (Archivo) ── */
+  .qayed-display {
+    font-family: var(--qayed-font-display);
+    font-variation-settings: 'wdth' 120;
+    font-weight: 900;
+    letter-spacing: -0.015em;
+    line-height: 1.05;
+  }
+  .qayed-mono { font-family: var(--qayed-font-mono); }
+  .qayed-arabic { font-family: var(--qayed-font-arabic); }
+
+  /* ── Sceau قيد ── */
+  .qayed-stamp {
+    border: 2.5px solid var(--qayed-cachet);
+    border-radius: 22%;
+    transform: rotate(var(--qayed-stamp-tilt));
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--qayed-font-arabic); font-weight: 700;
+    color: var(--qayed-cachet); line-height: 1;
+  }
+  .qayed-stamp--on-dark { color: var(--qayed-cachet-sombre); border-color: var(--qayed-cachet-sombre); }
 
   /* ── Badges ── */
   .badge {
-    @apply inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide;
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide;
   }
-  .badge-active    { @apply badge bg-emerald-50  text-emerald-700  ring-1 ring-emerald-200; }
-  .badge-draft     { @apply badge bg-blue-50     text-blue-700     ring-1 ring-blue-200; }
-  .badge-completed { @apply badge bg-gray-100    text-gray-500; }
-  .badge-suspended { @apply badge bg-red-50      text-red-700      ring-1 ring-red-200; }
-  .badge-expired   { @apply badge bg-amber-50    text-amber-700    ring-1 ring-amber-200; }
-  .badge-cancelled { @apply badge bg-gray-100    text-gray-500; }
-  .badge-no_show   { @apply badge bg-orange-50   text-orange-700   ring-1 ring-orange-200; }
+  .badge-active    { @apply badge; background: var(--qayed-conforme-fond); color: var(--qayed-conforme-texte); }
+  .badge-draft     { @apply badge; background: var(--qayed-cachet-dilue); color: var(--qayed-cachet); }
+  .badge-completed { @apply badge bg-gray-100 text-gray-500; }
+  .badge-suspended { @apply badge bg-red-50 text-red-700 ring-1 ring-red-200; }
+  .badge-expired   { @apply badge; background: var(--qayed-vigilance-fond); color: var(--qayed-vigilance-texte); }
+  .badge-cancelled { @apply badge bg-gray-100 text-gray-500; }
+  .badge-no_show   { @apply badge; background: var(--qayed-vigilance-fond); color: var(--qayed-vigilance-texte); }
 }
 
 @layer utilities {

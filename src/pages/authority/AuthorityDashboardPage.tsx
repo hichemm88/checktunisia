@@ -29,7 +29,7 @@ const KpiTile = ({
     </div>
     <div className="min-w-0">
       <p className="text-xs font-medium text-gray-400 uppercase tracking-wide truncate">{label}</p>
-      <p className="mt-0.5 text-2xl font-bold" style={{ color: '#1B3A5F' }}>{value}</p>
+      <p className="mt-0.5 text-2xl font-bold" style={{ color: '#5346A8' }}>{value}</p>
       {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
     </div>
   </div>
@@ -47,7 +47,7 @@ const WeeklyTrend = ({ trend }: { trend: Array<{ date: string; label: string; co
             className="w-full rounded-t-md transition-all"
             style={{
               height: `${Math.max((t.count / max) * 80, 4)}px`,
-              background: 'linear-gradient(180deg, #1B3A5F 0%, #2A5090 100%)',
+              background: 'var(--qayed-cachet)',
             }}
           />
           <span className="text-[10px] text-gray-400 capitalize">{t.label}</span>
@@ -70,7 +70,7 @@ const NationalityList = ({ items }: { items: Array<{ nationality_code: string; c
               className="h-full rounded-full"
               style={{
                 width: `${Math.round((n.count / total) * 100)}%`,
-                background: 'linear-gradient(90deg, #1B3A5F, #2A5090)',
+                background: 'var(--qayed-cachet)',
               }}
             />
           </div>
@@ -89,15 +89,15 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
     <div className="flex flex-col gap-6">
       {/* KPI grid */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <KpiTile icon={Users}          label="Voyageurs présents" value={data.active_guests}    color="#1B3A5F" />
-        <KpiTile icon={ArrowDownToLine} label="Arrivées aujourd'hui" value={data.check_ins_today}  color="#16A34A" />
-        <KpiTile icon={ArrowUpFromLine} label="Départs aujourd'hui" value={data.check_outs_today} color="#9333EA" />
-        <KpiTile icon={Building2}      label="Établissements actifs" value={data.active_hotels}   color="#0EA5E9" />
+        <KpiTile icon={Users}          label="Voyageurs présents" value={data.active_guests}    color="#5346A8" />
+        <KpiTile icon={ArrowDownToLine} label="Arrivées aujourd'hui" value={data.check_ins_today}  color="#137453" />
+        <KpiTile icon={ArrowUpFromLine} label="Départs aujourd'hui" value={data.check_outs_today} color="#8B7FE0" />
+        <KpiTile icon={Building2}      label="Établissements actifs" value={data.active_hotels}   color="#5346A8" />
         <KpiTile
           icon={AlertTriangle}
           label="Docs expirant ≤ 30j"
           value={data.expiring_docs_30d}
-          color={data.expiring_docs_30d > 0 ? '#C8943A' : '#6B7280'}
+          color={data.expiring_docs_30d > 0 ? '#5346A8' : '#6B7280'}
           sub={data.expiring_docs_30d > 0 ? 'Voir alertes →' : undefined}
         />
       </div>
@@ -107,8 +107,8 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
         {/* Weekly trend */}
         <Card>
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="h-4 w-4" style={{ color: '#1B3A5F' }} />
-            <p className="text-sm font-semibold" style={{ color: '#1B3A5F' }}>Tendance 7 jours</p>
+            <TrendingUp className="h-4 w-4" style={{ color: '#5346A8' }} />
+            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>Tendance 7 jours</p>
           </div>
           <WeeklyTrend trend={data.weekly_trend} />
         </Card>
@@ -116,8 +116,8 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
         {/* Top nationalities */}
         <Card>
           <div className="flex items-center gap-2 mb-4">
-            <Globe2 className="h-4 w-4" style={{ color: '#1B3A5F' }} />
-            <p className="text-sm font-semibold" style={{ color: '#1B3A5F' }}>Nationalités présentes</p>
+            <Globe2 className="h-4 w-4" style={{ color: '#5346A8' }} />
+            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>Nationalités présentes</p>
           </div>
           <NationalityList items={data.top_nationalities} />
         </Card>
@@ -127,8 +127,8 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
       <Card>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" style={{ color: '#1B3A5F' }} />
-            <p className="text-sm font-semibold" style={{ color: '#1B3A5F' }}>Répartition par gouvernorat</p>
+            <MapPin className="h-4 w-4" style={{ color: '#5346A8' }} />
+            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>Répartition par gouvernorat</p>
           </div>
           <span className="text-xs text-gray-400">{data.by_governorate.length} gouvernorats</span>
         </div>
@@ -153,7 +153,7 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
                   <td className="py-2.5 text-right">
                     <span
                       className="inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                      style={{ background: '#EEF3FC', color: '#1B3A5F' }}
+                      style={{ background: '#EEEBFA', color: '#5346A8' }}
                     >
                       {row.active_guests}
                     </span>
@@ -185,7 +185,7 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
       {data.governorate && (
         <div
           className="flex items-center gap-3 rounded-2xl px-5 py-4"
-          style={{ background: 'linear-gradient(135deg, #1B3A5F 0%, #2A5090 100%)' }}
+          style={{ background: 'var(--qayed-cachet)' }}
         >
           <MapPin className="h-5 w-5 text-white/70 shrink-0" />
           <div>
@@ -197,10 +197,10 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <KpiTile icon={Users}          label="Voyageurs présents" value={data.active_guests}    color="#1B3A5F" />
-        <KpiTile icon={ArrowDownToLine} label="Arrivées aujourd'hui" value={data.check_ins_today}  color="#16A34A" />
-        <KpiTile icon={ArrowUpFromLine} label="Départs aujourd'hui" value={data.check_outs_today} color="#9333EA" />
-        <KpiTile icon={Building2}      label="Établissements zone" value={data.hotels_in_zone}   color="#0EA5E9" />
+        <KpiTile icon={Users}          label="Voyageurs présents" value={data.active_guests}    color="#5346A8" />
+        <KpiTile icon={ArrowDownToLine} label="Arrivées aujourd'hui" value={data.check_ins_today}  color="#137453" />
+        <KpiTile icon={ArrowUpFromLine} label="Départs aujourd'hui" value={data.check_outs_today} color="#8B7FE0" />
+        <KpiTile icon={Building2}      label="Établissements zone" value={data.hotels_in_zone}   color="#5346A8" />
       </div>
 
       {/* Alert card for expiring docs */}
@@ -208,16 +208,16 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
         <button
           onClick={() => navigate('/authority/alerts')}
           className="flex items-center gap-4 rounded-2xl p-5 text-left transition-shadow hover:shadow-md w-full"
-          style={{ background: '#FFF8EE', border: '1px solid #C8943A55' }}
+          style={{ background: '#FFF8EE', border: '1px solid #5346A855' }}
         >
           <div
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-            style={{ background: '#C8943A20' }}
+            style={{ background: '#5346A820' }}
           >
-            <AlertTriangle className="h-5 w-5" style={{ color: '#C8943A' }} />
+            <AlertTriangle className="h-5 w-5" style={{ color: '#5346A8' }} />
           </div>
           <div>
-            <p className="font-semibold" style={{ color: '#92620A' }}>
+            <p className="font-semibold" style={{ color: '#8A6206' }}>
               {data.expiring_docs_30d} document{data.expiring_docs_30d > 1 ? 's' : ''} expirant dans 30 jours
             </p>
             <p className="text-sm" style={{ color: '#B07820' }}>Cliquer pour voir les alertes →</p>
@@ -230,8 +230,8 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
         {/* Nationalities present */}
         <Card>
           <div className="flex items-center gap-2 mb-4">
-            <Globe2 className="h-4 w-4" style={{ color: '#1B3A5F' }} />
-            <p className="text-sm font-semibold" style={{ color: '#1B3A5F' }}>Nationalités dans la zone</p>
+            <Globe2 className="h-4 w-4" style={{ color: '#5346A8' }} />
+            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>Nationalités dans la zone</p>
           </div>
           {data.nationalities.length > 0
             ? <NationalityList items={data.nationalities} />
@@ -242,8 +242,8 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
         {/* Recent arrivals */}
         <Card>
           <div className="flex items-center gap-2 mb-4">
-            <Clock className="h-4 w-4" style={{ color: '#1B3A5F' }} />
-            <p className="text-sm font-semibold" style={{ color: '#1B3A5F' }}>Arrivées récentes (24h)</p>
+            <Clock className="h-4 w-4" style={{ color: '#5346A8' }} />
+            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>Arrivées récentes (24h)</p>
           </div>
           <div className="flex flex-col gap-2">
             {data.recent_arrivals.length === 0 && (
@@ -258,7 +258,7 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
                 <div className="flex items-center gap-3 min-w-0">
                   <div
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                    style={{ background: '#1B3A5F' }}
+                    style={{ background: '#5346A8' }}
                   >
                     {arrival.guest_name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
                   </div>

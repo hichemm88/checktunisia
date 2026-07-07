@@ -60,7 +60,7 @@ const WeeklyChart = ({ data }: { data: { label: string; count: number }[] }) => 
         return (
           <div key={d.label} className="flex flex-1 flex-col items-center gap-1">
             {d.count > 0 && (
-              <span className="text-[10px] font-semibold leading-none" style={{ color: isToday ? '#1B3A5F' : '#9CA3AF' }}>
+              <span className="text-[10px] font-semibold leading-none" style={{ color: isToday ? '#5346A8' : '#9CA3AF' }}>
                 {d.count}
               </span>
             )}
@@ -68,10 +68,10 @@ const WeeklyChart = ({ data }: { data: { label: string; count: number }[] }) => 
               className="w-full rounded-t-md transition-all"
               style={{
                 height: `${pct}%`,
-                background: isToday ? '#1B3A5F' : '#D4E1F4',
+                background: isToday ? '#5346A8' : '#EEEBFA',
               }}
             />
-            <span className="text-[9px] leading-none truncate" style={{ color: isToday ? '#1B3A5F' : '#9CA3AF', fontWeight: isToday ? 700 : 400 }}>
+            <span className="text-[9px] leading-none truncate" style={{ color: isToday ? '#5346A8' : '#9CA3AF', fontWeight: isToday ? 700 : 400 }}>
               {d.label}
             </span>
           </div>
@@ -136,10 +136,10 @@ export const DashboardPage = () => {
         {/* ── Hero: greeting + occupancy ring ── */}
         <div
           className="px-4 pt-5 pb-5 flex items-center justify-between gap-4"
-          style={{ background: 'linear-gradient(135deg, #1B3A5F 0%, #2A5090 100%)' }}
+          style={{ background: 'var(--qayed-cachet)' }}
         >
           <div className="flex flex-col gap-1 flex-1 min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#C8943A' }}>
+            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#5346A8' }}>
               {greeting()}
             </p>
             <h1 className="text-xl font-black text-white leading-tight truncate">
@@ -165,7 +165,7 @@ export const DashboardPage = () => {
             <button
               onClick={() => navigate('/hotel/check-ins/new')}
               className="mt-3 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all active:scale-95 self-start"
-              style={{ background: '#C8943A', color: '#fff', boxShadow: '0 4px 14px rgba(200,148,58,0.45)' }}
+              style={{ background: '#5346A8', color: '#fff', boxShadow: '0 2px 8px rgba(83,70,168,0.3)' }}
             >
               <Plus className="h-4 w-4" />
               Nouveau check-in
@@ -237,12 +237,12 @@ export const DashboardPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              <StatTile icon={UserCheck}  label="Arrivées prévues"  value={d.today.arrivals_expected} accent="#1B3A5F" />
-              <StatTile icon={Users}      label="Check-ins faits"   value={d.today.arrivals_done}     accent="#22c55e" />
-              <StatTile icon={DoorOpen}   label="Présents"          value={d.today.currently_present} accent="#2A5090" />
-              <StatTile icon={Calendar}   label="Départs auj."      value={d.today.departures_today}  accent="#C8943A" />
-              <StatTile icon={Percent}    label="Taux d'occupation" value={`${d.today.occupancy_rate}%`} accent={d.today.occupancy_rate >= 80 ? '#22c55e' : '#C8943A'} />
-              <StatTile icon={TrendingUp} label="Check-ins ce mois" value={d.month.check_ins_total}   accent="#8b5cf6" />
+              <StatTile icon={UserCheck}  label="Arrivées prévues"  value={d.today.arrivals_expected} accent="#5346A8" />
+              <StatTile icon={Users}      label="Check-ins faits"   value={d.today.arrivals_done}     accent="#1F9D6B" />
+              <StatTile icon={DoorOpen}   label="Présents"          value={d.today.currently_present} accent="#443896" />
+              <StatTile icon={Calendar}   label="Départs auj."      value={d.today.departures_today}  accent="#5346A8" />
+              <StatTile icon={Percent}    label="Taux d'occupation" value={`${d.today.occupancy_rate}%`} accent={d.today.occupancy_rate >= 80 ? '#1F9D6B' : '#5346A8'} />
+              <StatTile icon={TrendingUp} label="Check-ins ce mois" value={d.month.check_ins_total}   accent="#8B7FE0" />
             </div>
           )}
 
@@ -307,7 +307,7 @@ export const DashboardPage = () => {
               <button
                 onClick={() => navigate('/hotel/history')}
                 className="text-xs font-semibold"
-                style={{ color: '#1B3A5F' }}
+                style={{ color: '#5346A8' }}
               >
                 Voir tout →
               </button>
@@ -326,7 +326,7 @@ export const DashboardPage = () => {
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ background: '#E8EEFB', color: '#1B3A5F' }}
+                        style={{ background: '#EEEBFA', color: '#5346A8' }}
                       >
                         {initials}
                       </div>
@@ -350,9 +350,9 @@ export const DashboardPage = () => {
                 <div className="flex flex-col items-center gap-3 px-5 py-10">
                   <div
                     className="h-12 w-12 rounded-full flex items-center justify-center"
-                    style={{ background: '#E8EEFB' }}
+                    style={{ background: '#EEEBFA' }}
                   >
-                    <UserCheck className="h-5 w-5" style={{ color: '#1B3A5F' }} />
+                    <UserCheck className="h-5 w-5" style={{ color: '#5346A8' }} />
                   </div>
                   <p className="text-sm text-gray-400">Aucun check-in récent</p>
                   <Button size="sm" onClick={() => navigate('/hotel/check-ins/new')}>

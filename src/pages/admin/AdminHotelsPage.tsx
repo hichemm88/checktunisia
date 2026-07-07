@@ -15,9 +15,9 @@ import { Pagination } from '@/components/ui/Pagination';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
 const STATUS: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
-  active:    { label: 'Actif',      color: '#22c55e', icon: CheckCircle2 },
+  active:    { label: 'Actif',      color: '#1F9D6B', icon: CheckCircle2 },
   suspended: { label: 'Suspendu',   color: '#ef4444', icon: XCircle },
-  pending:   { label: 'En attente', color: '#f59e0b', icon: Clock },
+  pending:   { label: 'En attente', color: '#E3A008', icon: Clock },
   closed:    { label: 'Fermé',      color: '#9ca3af', icon: XCircle },
 };
 
@@ -178,11 +178,11 @@ export const AdminHotelsPage = () => {
               return (
                 <button key={h.id} onClick={() => setSelected(h)}
                   className="card p-4 text-left hover:shadow-md transition-all"
-                  style={{ outline: selected?.id === h.id ? '2px solid #1B3A5F' : 'none' }}>
+                  style={{ outline: selected?.id === h.id ? '2px solid #5346A8' : 'none' }}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0" style={{ background: '#1B3A5F18' }}>
-                        <Building2 className="h-5 w-5" style={{ color: '#1B3A5F' }} />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0" style={{ background: '#5346A818' }}>
+                        <Building2 className="h-5 w-5" style={{ color: '#5346A8' }} />
                       </div>
                       <div className="min-w-0">
                         <p className="font-semibold text-gray-900 truncate">{h.name}</p>
@@ -258,7 +258,7 @@ export const AdminHotelsPage = () => {
               <div>
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Abonnement</p>
                 {selected.subscription ? (
-                  <div className="rounded-xl p-3 text-sm" style={{ background: '#F5F4EF' }}>
+                  <div className="rounded-xl p-3 text-sm" style={{ background: '#F6F5F1' }}>
                     <p className="font-semibold">{selected.subscription.plan}</p>
                     <p className="text-xs text-gray-400">Expire le {fmtDate(selected.subscription.expires_at)}</p>
                     <span className={`text-xs font-medium ${selected.subscription.status === 'active' ? 'text-green-600' : 'text-red-500'}`}>

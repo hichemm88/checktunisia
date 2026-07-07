@@ -99,7 +99,7 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
             <Button size="sm" variant="secondary" onClick={() => setCreating(true)} className="gap-1.5 w-fit"><Plus className="h-3.5 w-3.5" /> Nouvel abonnement</Button>
           </div>
         ) : (
-          <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F5F4EF' }}>
+          <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F6F5F1' }}>
             <Select label="Pack" value={newSub.plan_id} onChange={(e) => setNewSub((f) => ({ ...f, plan_id: e.target.value }))}
               options={[{ value: '', label: 'Choisir…' }, ...(plans ?? []).map((p) => ({ value: String(p.id), label: p.name }))]} />
             <div className="grid grid-cols-2 gap-2">
@@ -124,13 +124,13 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
         {!editing && <button onClick={() => setEditing(true)} className="text-gray-300 hover:text-blue-500"><Pencil className="h-3.5 w-3.5" /></button>}
       </div>
       {!editing ? (
-        <div className="rounded-xl p-3 text-sm" style={{ background: '#F5F4EF' }}>
+        <div className="rounded-xl p-3 text-sm" style={{ background: '#F6F5F1' }}>
           <p className="font-semibold">{sub.plan?.name}</p>
           <p className="text-xs text-gray-400">Expire le {fmtDate(sub.expires_at)}</p>
           {sub.custom_price && <p className="text-xs text-gray-400">Prix négocié : {sub.custom_price} TND</p>}
         </div>
       ) : (
-        <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F5F4EF' }}>
+        <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F6F5F1' }}>
           <Select label="Pack" value={form.plan_id} onChange={(e) => setForm((f) => ({ ...f, plan_id: e.target.value }))}
             options={(plans ?? []).map((p) => ({ value: String(p.id), label: p.name }))} />
           <Input label="Expiration" type="date" value={form.expires_at} onChange={(e) => setForm((f) => ({ ...f, expires_at: e.target.value }))} />
@@ -182,7 +182,7 @@ const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
       </div>
 
       {showCreate && sub && (
-        <div className="rounded-xl p-3 flex flex-col gap-2 mb-2" style={{ background: '#F5F4EF' }}>
+        <div className="rounded-xl p-3 flex flex-col gap-2 mb-2" style={{ background: '#F6F5F1' }}>
           <Input label={`Montant (vide = ${sub.custom_price ?? sub.plan?.price_monthly ?? '—'} TND)`} type="number" value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} />
           <div className="grid grid-cols-2 gap-2">
             <Input label="TVA" type="number" value={form.tax_amount} onChange={(e) => setForm((f) => ({ ...f, tax_amount: e.target.value }))} />
@@ -281,11 +281,11 @@ export const AdminHostsPage = () => {
             {hosts.map((h) => (
               <button key={h.id} onClick={() => setSelected(h)}
                 className="card p-4 text-left hover:shadow-md transition-all"
-                style={{ outline: selected?.id === h.id ? '2px solid #1B3A5F' : 'none' }}>
+                style={{ outline: selected?.id === h.id ? '2px solid #5346A8' : 'none' }}>
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0" style={{ background: '#1B3A5F18' }}>
-                      <Building2 className="h-5 w-5" style={{ color: '#1B3A5F' }} />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0" style={{ background: '#5346A818' }}>
+                      <Building2 className="h-5 w-5" style={{ color: '#5346A8' }} />
                     </div>
                     <div className="min-w-0">
                       <p className="font-semibold text-gray-900 truncate">{h.name}</p>
@@ -293,7 +293,7 @@ export const AdminHostsPage = () => {
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: h.status === 'active' ? '#22c55e' : '#ef4444' }}>
+                    <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: h.status === 'active' ? '#1F9D6B' : '#ef4444' }}>
                       {h.status === 'active' ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />} {h.status === 'active' ? 'Actif' : 'Suspendu'}
                     </span>
                     {h.subscription && <span className="text-xs text-gray-400">{h.subscription.plan}</span>}

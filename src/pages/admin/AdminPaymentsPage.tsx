@@ -10,7 +10,7 @@ import { extractErrors } from '@/lib/api';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 import { Pagination } from '@/components/ui/Pagination';
 
-const C = { navy: '#1B3A5F' };
+const C = { navy: '#5346A8' };
 
 const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
   <label className="flex items-center gap-3 cursor-pointer select-none">
@@ -135,7 +135,7 @@ export const AdminPaymentsPage = () => {
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
       <h1 className="text-xl font-bold text-gray-900">Paiements</h1>
-      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#E0DDD7' }}>
+      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#DDD9CF' }}>
         <button onClick={() => setTab('config')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'config' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
           <Wallet className="h-4 w-4" /> Moyens de paiement
         </button>

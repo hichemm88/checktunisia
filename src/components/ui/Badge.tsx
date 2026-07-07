@@ -4,14 +4,14 @@ import { cn } from '@/lib/cn';
 type BadgeVariant = 'active' | 'draft' | 'completed' | 'suspended' | 'expired' | 'cancelled' | 'no_show' | 'default';
 
 const variantMap: Record<BadgeVariant, string> = {
-  active:    'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
-  draft:     'bg-blue-50    text-blue-700    ring-1 ring-blue-200',
-  completed: 'bg-gray-100   text-gray-600',
-  suspended: 'bg-red-50     text-red-700     ring-1 ring-red-200',
-  expired:   'bg-amber-50   text-amber-700   ring-1 ring-amber-200',
-  cancelled: 'bg-gray-100   text-gray-500',
-  no_show:   'bg-orange-50  text-orange-700  ring-1 ring-orange-200',
-  default:   'bg-gray-100   text-gray-600',
+  active:    'bg-[--qayed-conforme-fond] text-[--qayed-conforme-texte]',
+  draft:     'bg-[--qayed-cachet-dilue] text-[--qayed-cachet]',
+  completed: 'bg-gray-100 text-gray-600',
+  suspended: 'bg-red-50 text-red-700 ring-1 ring-red-200',
+  expired:   'bg-[--qayed-vigilance-fond] text-[--qayed-vigilance-texte]',
+  cancelled: 'bg-gray-100 text-gray-500',
+  no_show:   'bg-[--qayed-vigilance-fond] text-[--qayed-vigilance-texte]',
+  default:   'bg-gray-100 text-gray-600',
 };
 
 const labelMap: Record<string, string> = {

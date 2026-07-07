@@ -107,7 +107,7 @@ export const HistoryDetailPage = () => {
         {/* ── Hero ── */}
         <div
           className="px-4 pt-4 pb-6 flex flex-col"
-          style={{ background: 'linear-gradient(135deg, #1B3A5F 0%, #2A5090 100%)' }}
+          style={{ background: 'var(--qayed-cachet)' }}
         >
           <button
             onClick={() => navigate(-1)}
@@ -179,7 +179,7 @@ export const HistoryDetailPage = () => {
                   <div className="relative shrink-0">
                     <div
                       className="h-11 w-11 rounded-xl flex items-center justify-center text-sm font-bold"
-                      style={{ background: g.is_primary ? '#1B3A5F' : '#E8EEFB', color: g.is_primary ? '#fff' : '#1B3A5F' }}
+                      style={{ background: g.is_primary ? '#5346A8' : '#EEEBFA', color: g.is_primary ? '#fff' : '#5346A8' }}
                     >
                       {gInitials}
                     </div>
@@ -199,7 +199,7 @@ export const HistoryDetailPage = () => {
                       {g.is_primary && (
                         <span
                           className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
-                          style={{ background: '#E8EEFB', color: '#1B3A5F' }}
+                          style={{ background: '#EEEBFA', color: '#5346A8' }}
                         >
                           Principal
                         </span>
@@ -239,15 +239,15 @@ export const HistoryDetailPage = () => {
                   onClick={() => setAddingSlot(slot.index)}
                   className="flex items-center gap-3 rounded-2xl p-3.5 text-left transition-all"
                   style={{
-                    border: `2px dashed ${slot.isRequired ? '#fca5a5' : '#D4E1F4'}`,
-                    background: slot.isRequired ? '#FFF5F5' : '#F5F4EF',
+                    border: `2px dashed ${slot.isRequired ? '#fca5a5' : '#EEEBFA'}`,
+                    background: slot.isRequired ? '#FFF5F5' : '#F6F5F1',
                   }}
                 >
                   <div
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
                     style={{
-                      background: slot.isRequired ? '#fee2e2' : '#E8EEFB',
-                      color: slot.isRequired ? '#ef4444' : '#1B3A5F',
+                      background: slot.isRequired ? '#fee2e2' : '#EEEBFA',
+                      color: slot.isRequired ? '#ef4444' : '#5346A8',
                     }}
                   >
                     <UserPlus className="h-4 w-4" />

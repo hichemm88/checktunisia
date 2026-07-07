@@ -17,7 +17,7 @@ export const StepIndicator = ({ steps, currentStep }: StepIndicatorProps) => (
             {i > 0 && (
               <div
                 className="h-0.5 flex-1 transition-colors duration-300"
-                style={{ background: i <= currentStep ? '#1B3A5F' : '#E5E7EB' }}
+                style={{ background: i <= currentStep ? '#5346A8' : '#E5E7EB' }}
               />
             )}
 
@@ -26,9 +26,9 @@ export const StepIndicator = ({ steps, currentStep }: StepIndicatorProps) => (
               className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
               style={
                 done
-                  ? { background: '#1B3A5F', color: '#fff' }
+                  ? { background: '#5346A8', color: '#fff' }
                   : active
-                  ? { background: '#fff', color: '#1B3A5F', border: '2px solid #1B3A5F', boxShadow: '0 0 0 4px rgba(27,58,95,0.1)' }
+                  ? { background: '#fff', color: '#5346A8', border: '2px solid #5346A8', boxShadow: '0 0 0 4px rgba(83,70,168,0.15)' }
                   : { background: '#fff', color: '#9CA3AF', border: '2px solid #E5E7EB' }
               }
             >
@@ -39,7 +39,7 @@ export const StepIndicator = ({ steps, currentStep }: StepIndicatorProps) => (
             {i < steps.length - 1 && (
               <div
                 className="h-0.5 flex-1 transition-colors duration-300"
-                style={{ background: done ? '#1B3A5F' : '#E5E7EB' }}
+                style={{ background: done ? '#5346A8' : '#E5E7EB' }}
               />
             )}
           </div>
@@ -50,7 +50,7 @@ export const StepIndicator = ({ steps, currentStep }: StepIndicatorProps) => (
               'mt-2 text-[10px] font-bold tracking-wide text-center transition-colors duration-200',
               active ? '' : done ? 'text-gray-600' : 'text-gray-400',
             )}
-            style={active ? { color: '#1B3A5F' } : undefined}
+            style={active ? { color: '#5346A8' } : undefined}
           >
             {step.label}
           </span>

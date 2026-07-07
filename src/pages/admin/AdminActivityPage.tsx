@@ -59,7 +59,7 @@ export const AdminActivityPage = () => {
         {isLoading && <ListSkeleton rows={3} />}
         {data?.data.map((entry) => (
           <div key={entry.id} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold mt-0.5" style={{ background: '#E8EEFB', color: '#1B3A5F' }}>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold mt-0.5" style={{ background: '#EEEBFA', color: '#5346A8' }}>
               {entry.actor?.first_name?.[0] ?? '?'}
             </div>
             <div className="min-w-0 flex-1">

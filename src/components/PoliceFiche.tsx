@@ -54,7 +54,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const C = '#1B3A5F'; // bleu principal
+const C = '#5346A8'; // bleu principal
 
 const cell = (extra?: CSSProperties): CSSProperties => ({
   padding: '3px 7px',

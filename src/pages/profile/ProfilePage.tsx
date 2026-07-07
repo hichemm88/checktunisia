@@ -104,7 +104,7 @@ export const ProfilePage = () => {
       : '/hotel/dashboard';
 
   return (
-    <div className="min-h-screen" style={{ background: '#F5F4EF' }}>
+    <div className="min-h-screen" style={{ background: '#F6F5F1' }}>
 
       {/* ── Header ───────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-20 bg-white shadow-sm">
@@ -125,13 +125,13 @@ export const ProfilePage = () => {
         {profile && (
           <div
             className="rounded-2xl p-4 text-white"
-            style={{ background: 'linear-gradient(135deg, #1B3A5F 0%, #0F2440 100%)' }}
+            style={{ background: 'var(--qayed-cachet)' }}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                  style={{ background: '#C8943A' }}
+                  style={{ background: '#5346A8' }}
                 >
                   <Shield className="h-5 w-5 text-white" />
                 </div>
@@ -142,7 +142,7 @@ export const ProfilePage = () => {
               </div>
               <span
                 className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
-                style={{ background: '#C8943A33', color: '#C8943A', border: '1px solid #C8943A66' }}
+                style={{ background: '#5346A833', color: '#5346A8', border: '1px solid #5346A866' }}
               >
                 Autorité
               </span>
@@ -185,7 +185,7 @@ export const ProfilePage = () => {
         <div className="rounded-2xl bg-white p-4 flex items-center gap-4 shadow-sm">
           <div
             className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white"
-            style={{ background: '#1B3A5F' }}
+            style={{ background: '#5346A8' }}
           >
             {[user?.first_name?.[0], user?.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'}
           </div>
@@ -209,7 +209,7 @@ export const ProfilePage = () => {
                   ? 'border-b-2 text-gray-900'
                   : 'text-gray-400 hover:text-gray-600'
               }`}
-              style={tab === t ? { borderColor: '#1B3A5F', color: '#1B3A5F' } : undefined}
+              style={tab === t ? { borderColor: '#5346A8', color: '#5346A8' } : undefined}
             >
               {t === 'info'
                 ? <><User className="h-4 w-4" /> Informations</>
