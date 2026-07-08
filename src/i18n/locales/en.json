@@ -263,7 +263,10 @@
     "trialsExpiringSoon": "Trials ending within 7d",
     "failedPayments": "Failed payments (30d)",
     "recentlySuspended": "Recently suspended (7d)",
-    "nothingToReport": "Nothing to report"
+    "nothingToReport": "Nothing to report",
+    "checkInsLast30Days": "Check-ins over 30 days",
+    "topHotels": "Top properties (check-ins this month)",
+    "recentSignups": "Recent signups"
   },
   "settingsPage": {
     "title": "Settings",

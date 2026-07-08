@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown } from 'lucide-react';
+import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown, Wallet, Award, UserPlus } from 'lucide-react';
 import { adminDashboardApi } from '@/api/admin/dashboard';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { formatTND } from '@/lib/money';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 
@@ -21,6 +22,32 @@ const Stat = ({ icon: Icon, label, value, suffix, color }: { icon: typeof Buildi
     <p className="text-3xl font-extrabold text-gray-900">{value != null ? `${value}${suffix ?? ''}` : '—'}</p>
   </div>
 );
+
+const CheckInsChart = ({ data }: { data: { date: string; count: number }[] }) => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
+  const max = Math.max(1, ...data.map((d) => d.count));
+
+  return (
+    <div className="card p-5">
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">{t('adminDashboard.checkInsLast30Days')}</p>
+      <div className="flex items-end gap-1 h-28">
+        {data.map((d) => (
+          <div key={d.date} className="flex-1 group relative flex flex-col justify-end h-full">
+            <div
+              className="w-full rounded-sm transition-all"
+              style={{ height: `${Math.max(3, (d.count / max) * 100)}%`, background: 'var(--qayed-cachet)', opacity: d.count === 0 ? 0.15 : 0.85 }}
+            />
+            <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white z-10">
+              <span className="font-mono">{d.count}</span>
+              <span>{new Date(d.date).toLocaleDateString(locale, { day: '2-digit', month: 'short' })}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const AlertCard = ({ icon: Icon, title, color, children, empty }: { icon: typeof AlertTriangle; title: string; color: string; children: React.ReactNode; empty: boolean }) => {
   const { t } = useTranslation();
@@ -54,10 +81,21 @@ export const AdminDashboardPage = () => {
             <Stat icon={XCircle}      label={t('adminDashboard.suspended')}  value={stats.hotels.suspended} color="#ef4444" />
             <Stat icon={Clock}        label={t('adminDashboard.pending')}    value={stats.hotels.pending}   color="var(--qayed-vigilance)" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Stat icon={TrendingUp} label={t('adminDashboard.checkinsToday')}     value={stats.check_ins.today}      color="var(--qayed-cachet-sombre)" />
             <Stat icon={Users}      label={t('adminDashboard.checkinsThisMonth')} value={stats.check_ins.this_month} color="var(--qayed-cachet-sombre)" />
+            <div className="card p-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">MRR</p>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: 'var(--qayed-conforme)18' }}>
+                  <Wallet className="h-4 w-4" style={{ color: 'var(--qayed-conforme)' }} />
+                </div>
+              </div>
+              <p className="font-mono text-3xl font-extrabold text-gray-900">{formatTND(stats.mrr)}</p>
+            </div>
           </div>
+
+          <CheckInsChart data={stats.check_ins_chart} />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Stat icon={Hourglass}    label={t('adminDashboard.trialsInProgress')}    value={stats.trials.in_progress}    color="var(--qayed-cachet)" />
@@ -100,6 +138,25 @@ export const AdminDashboardPage = () => {
                 ))}
               </AlertCard>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AlertCard icon={Award} title={t('adminDashboard.topHotels')} color="var(--qayed-cachet)" empty={!stats.top_hotels.length}>
+              {stats.top_hotels.map((h, i) => (
+                <Link key={h.id} to="/admin/hotels" className="flex items-center justify-between text-sm hover:text-gray-900">
+                  <span className="truncate font-medium text-gray-800">{i + 1}. {h.name}</span>
+                  <span className="font-mono text-xs text-gray-400 shrink-0 ms-2">{h.check_ins_count}</span>
+                </Link>
+              ))}
+            </AlertCard>
+            <AlertCard icon={UserPlus} title={t('adminDashboard.recentSignups')} color="var(--qayed-cachet-sombre)" empty={!stats.recent_signups.length}>
+              {stats.recent_signups.map((o) => (
+                <Link key={o.id} to={`/admin/hosts/${o.id}`} className="flex items-center justify-between text-sm hover:text-gray-900">
+                  <span className="truncate font-medium text-gray-800">{o.name}</span>
+                  <span className="text-xs text-gray-400 shrink-0 ms-2">{fmtDate(o.created_at, locale)}</span>
+                </Link>
+              ))}
+            </AlertCard>
           </div>
         </>
       )}

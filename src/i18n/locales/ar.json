@@ -263,7 +263,10 @@
     "trialsExpiringSoon": "فترات تجريبية تنتهي خلال 7 أيام",
     "failedPayments": "مدفوعات فاشلة (30 يومًا)",
     "recentlySuspended": "معلّقة مؤخرًا (7 أيام)",
-    "nothingToReport": "لا شيء للإبلاغ عنه"
+    "nothingToReport": "لا شيء للإبلاغ عنه",
+    "checkInsLast30Days": "تسجيلات النزلاء خلال 30 يومًا",
+    "topHotels": "أفضل المؤسسات (تسجيلات هذا الشهر)",
+    "recentSignups": "أحدث التسجيلات"
   },
   "settingsPage": {
     "title": "الإعدادات",

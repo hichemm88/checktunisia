@@ -263,7 +263,10 @@
     "trialsExpiringSoon": "Essais expirant sous 7j",
     "failedPayments": "Paiements en échec (30j)",
     "recentlySuspended": "Suspendus récemment (7j)",
-    "nothingToReport": "Rien à signaler"
+    "nothingToReport": "Rien à signaler",
+    "checkInsLast30Days": "Check-ins sur 30 jours",
+    "topHotels": "Top établissements (check-ins ce mois)",
+    "recentSignups": "Dernières inscriptions"
   },
   "settingsPage": {
     "title": "Paramètres",

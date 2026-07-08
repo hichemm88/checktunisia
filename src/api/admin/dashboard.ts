@@ -13,6 +13,10 @@ export interface AdminDashboardStats {
     failed_payments: { id: string; hotel_name: string | null; amount: string; created_at: string }[];
     recently_suspended: { id: string; name: string; updated_at: string }[];
   };
+  mrr: string;
+  check_ins_chart: { date: string; count: number }[];
+  top_hotels: { id: string; name: string; check_ins_count: number }[];
+  recent_signups: { id: string; name: string; created_at: string }[];
 }
 
 export const adminDashboardApi = {
