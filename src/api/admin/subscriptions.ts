@@ -62,6 +62,7 @@ export const adminSubscriptionsApi = {
   invoicesForHost: (hostId: string) => api.get<{ data: AdminInvoice[] }>(`/admin/hosts/${hostId}/invoices`).then((r) => r.data.data),
   createInvoiceForHost: (hostId: string, data: object) => api.post<{ data: AdminInvoice }>(`/admin/hosts/${hostId}/invoices`, data).then((r) => r.data.data),
   updateInvoiceForHost: (hostId: string, id: string, data: object) => api.patch<{ data: AdminInvoice }>(`/admin/hosts/${hostId}/invoices/${id}`, data).then((r) => r.data.data),
+  deleteInvoiceForHost: (hostId: string, id: string) => api.delete(`/admin/hosts/${hostId}/invoices/${id}`),
 
   allInvoices: (params?: { status?: string; organization_id?: string; from?: string; to?: string; page?: number; per_page?: number }) =>
     api.get<{ data: AdminInvoiceListItem[]; meta: { total: number; current_page: number; per_page: number } }>('/admin/invoices', { params }).then((r) => r.data),

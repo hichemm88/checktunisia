@@ -166,8 +166,10 @@
     "virementRejected": "Virement rejeté."
   },
   "adminShared": {
-    "invoiceMarkedPaid": "Facture marquée payée",
-    "markPaid": "Marquer payée"
+    "invoiceStatusUpdated": "Statut de la facture mis à jour",
+    "invoiceDeleted": "Facture supprimée",
+    "deleteInvoice": "Supprimer la facture",
+    "changeStatus": "Modifier le statut"
   },
   "adminFacturation": {
     "title": "Facturation",
@@ -214,6 +216,7 @@
       "trialExpired": "essai gratuit terminé (automatique)",
       "subscriptionExpired": "abonnement expiré (automatique)",
       "invoiceUpdated": "a modifié une facture",
+      "invoiceDeleted": "a supprimé une facture",
       "checkinCreated": "a créé un check-in",
       "checkinUpdated": "a modifié un check-in",
       "checkinCompleted": "a finalisé un check-in",
