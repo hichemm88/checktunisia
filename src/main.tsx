@@ -13,6 +13,22 @@ const queryClient = new QueryClient({
   },
 });
 
+// ── Chunks périmés après un déploiement ─────────────────────────────────────
+// Un onglet chargé avant un déploiement référence des chunks lazy (éditeur
+// Puck…) dont les fichiers hashés n'existent plus sur Vercel : l'import
+// échoue avec « Unable to preload CSS/module ». Vite émet vite:preloadError
+// dans ce cas — on recharge une fois pour récupérer l'index.html à jour.
+// Garde-fou sessionStorage : si l'erreur persiste après rechargement (vrai
+// problème réseau), on laisse l'ErrorBoundary l'afficher au lieu de boucler.
+window.addEventListener('vite:preloadError', (event) => {
+  const key = 'qayed-chunk-reload';
+  if (sessionStorage.getItem(key)) return; // déjà tenté — ne pas boucler
+  sessionStorage.setItem(key, '1');
+  setTimeout(() => sessionStorage.removeItem(key), 30_000);
+  event.preventDefault();
+  window.location.reload();
+});
+
 // ── Error boundary — prevents blank page on React render crash ─────────────
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null };
