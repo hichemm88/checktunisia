@@ -259,20 +259,24 @@ const AbonnementsActifsTab = () => {
                     {s.custom_price && <span className="font-mono text-xs text-gray-400 ms-2">· {formatTND(s.custom_price)}</span>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs font-semibold ${s.status === 'active' ? 'text-green-600' : 'text-gray-400'}`}>{s.status}</span>
-                    {s.status === 'active' && (
+                    <span className={`text-xs font-semibold ${s.status === 'active' ? 'text-green-600' : s.status === 'trial' ? 'text-[#5346A8]' : 'text-gray-400'}`}>
+                      {t(`settingsPage.subscriptionStatus.${s.status}`, s.status)}
+                    </span>
+                    {(s.status === 'active' || s.status === 'trial') && (
                       <button onClick={() => { setEditingExpiry(!editingExpiry); setExpiryForm({ expires_at: s.expires_at.slice(0, 10), custom_price: s.custom_price ?? '' }); }} className="text-gray-300 hover:text-blue-500">
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                     )}
                     {s.status === 'active' ? (
                       <button onClick={() => updateSubMut.mutate({ id: s.id, data: { status: 'cancelled' } })} className="text-xs text-red-500">{t('common.cancel')}</button>
+                    ) : s.status === 'trial' ? (
+                      <button onClick={() => updateSubMut.mutate({ id: s.id, data: { status: 'active' } })} className="text-xs text-green-600">{t('adminSubscriptions.convertToPaid')}</button>
                     ) : s.status !== 'cancelled' && (
                       <button onClick={() => updateSubMut.mutate({ id: s.id, data: { status: 'active' } })} className="text-xs text-green-600">{t('adminHotels.reactivate')}</button>
                     )}
                   </div>
                 </div>
-                {editingExpiry && s.status === 'active' && (
+                {editingExpiry && (s.status === 'active' || s.status === 'trial') && (
                   <div className="flex items-end gap-2 p-2 rounded-lg" style={{ background: '#F6F5F1' }}>
                     <Input label={t('profile.expiration')} type="date" value={expiryForm.expires_at} onChange={(e) => setExpiryForm((f) => ({ ...f, expires_at: e.target.value }))} />
                     <Input label={t('adminSubscriptions.customPrice')} type="number" value={String(expiryForm.custom_price)} onChange={(e) => setExpiryForm((f) => ({ ...f, custom_price: e.target.value }))} />

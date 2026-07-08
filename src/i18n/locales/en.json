@@ -46,7 +46,8 @@
     "customPriceOptional": "Custom price (optional)",
     "customPrice": "Custom price",
     "planHash": "Plan #{{id}}",
-    "until": "until {{date}}"
+    "until": "until {{date}}",
+    "convertToPaid": "Convert to paid"
   },
   "adminAuthority": {
     "title": "Authorities",
@@ -204,8 +205,11 @@
     "pending": "Pending",
     "checkinsToday": "Check-ins today",
     "checkinsThisMonth": "Check-ins this month",
+    "trialsInProgress": "Trials in progress",
+    "trialConversionRate": "Trial → paid conversion rate",
     "toWatch": "To watch",
     "expiringSubscriptions": "Subscriptions expiring (30d)",
+    "trialsExpiringSoon": "Trials ending within 7d",
     "failedPayments": "Failed payments (30d)",
     "recentlySuspended": "Recently suspended (7d)",
     "nothingToReport": "Nothing to report"
@@ -216,6 +220,15 @@
     "team": "Team",
     "activity": "Activity",
     "subscription": "Subscription",
+    "subscriptionStatus": {
+      "active": "Active",
+      "trial": "Free trial",
+      "suspended": "Suspended",
+      "expired": "Expired",
+      "trial_expired": "Trial ended",
+      "pending": "Pending",
+      "cancelled": "Cancelled"
+    },
     "companyInfo": "Company information",
     "type": "Type",
     "legalName": "Legal name",
@@ -900,6 +913,8 @@
     "subInactive": "Inactive subscription",
     "subExpiresIn_one": "Expires in {{count}} day",
     "subExpiresIn_other": "Expires in {{count}} days",
+    "trialExpiresIn_one": "Free trial — ends in {{count}} day",
+    "trialExpiresIn_other": "Free trial — ends in {{count}} days",
     "contactSupport": "Contact support@qayed.tn",
     "statArrivalsExpected": "Expected arrivals",
     "statCheckinsDone": "Check-ins done",

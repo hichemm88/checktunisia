@@ -22,6 +22,10 @@ import { organizationApi, OrgInfo } from '@/api/organization';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-TN');
 
+const SUB_BADGE_VARIANT: Record<string, 'active' | 'draft' | 'suspended' | 'expired'> = {
+  active: 'active', trial: 'draft', suspended: 'suspended', expired: 'expired', trial_expired: 'expired',
+};
+
 const Alert = ({ msg, type }: { msg: string; type: 'success' | 'error' }) => (
   <div className={`rounded-lg px-3 py-2 text-sm flex items-start gap-2 ${
     type === 'success'
@@ -489,7 +493,7 @@ const AbonnementTab = () => {
             </div>
             <div className="flex justify-between py-1.5 border-b border-gray-50">
               <span className="text-sm text-gray-500">{t('common.status')}</span>
-              <Badge variant={sub.status === 'active' ? 'active' : 'suspended'}>{sub.status}</Badge>
+              <Badge variant={SUB_BADGE_VARIANT[sub.status] ?? 'suspended'}>{t(`settingsPage.subscriptionStatus.${sub.status}`, sub.status)}</Badge>
             </div>
             <div className="flex justify-between py-1.5 border-b border-gray-50">
               <span className="text-sm text-gray-500">{t('settingsPage.expiresOn')}</span>

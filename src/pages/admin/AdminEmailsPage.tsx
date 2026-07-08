@@ -12,10 +12,12 @@ import { ListSkeleton } from '@/components/admin/ListSkeleton';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 
 const PLACEHOLDER_HINTS: Record<string, string[]> = {
-  welcome: ['first_name', 'last_name', 'hotel_name', 'role_label', 'credentials_box', 'cta_button'],
+  welcome: ['first_name', 'last_name', 'hotel_name', 'role_label', 'cta_button'],
   account_suspended: ['name', 'reason'],
   payment_received: ['name', 'plan_name', 'expires_at', 'credentials_box'],
   subscription_reminder: ['name', 'plan_name', 'expires_at', 'days_remaining'],
+  trial_ending: ['name', 'trial_message', 'cta_button'],
+  invoice_available: ['name', 'plan_name', 'invoice_number', 'credentials_box', 'cta_button'],
 };
 
 const TemplateCard = ({ template }: { template: EmailTemplateItem }) => {

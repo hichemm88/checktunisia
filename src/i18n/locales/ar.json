@@ -46,7 +46,8 @@
     "customPriceOptional": "سعر مخصص (اختياري)",
     "customPrice": "سعر مخصص",
     "planHash": "باقة #{{id}}",
-    "until": "حتى {{date}}"
+    "until": "حتى {{date}}",
+    "convertToPaid": "التحويل إلى مدفوع"
   },
   "adminAuthority": {
     "title": "السلطات",
@@ -204,8 +205,11 @@
     "pending": "قيد الانتظار",
     "checkinsToday": "تسجيلات اليوم",
     "checkinsThisMonth": "تسجيلات هذا الشهر",
+    "trialsInProgress": "فترات تجريبية جارية",
+    "trialConversionRate": "معدل التحويل من تجريبي إلى مدفوع",
     "toWatch": "للمراقبة",
     "expiringSubscriptions": "اشتراكات تنتهي (30 يومًا)",
+    "trialsExpiringSoon": "فترات تجريبية تنتهي خلال 7 أيام",
     "failedPayments": "مدفوعات فاشلة (30 يومًا)",
     "recentlySuspended": "معلّقة مؤخرًا (7 أيام)",
     "nothingToReport": "لا شيء للإبلاغ عنه"
@@ -216,6 +220,15 @@
     "team": "الفريق",
     "activity": "النشاط",
     "subscription": "الاشتراك",
+    "subscriptionStatus": {
+      "active": "نشط",
+      "trial": "فترة تجريبية مجانية",
+      "suspended": "موقوف",
+      "expired": "منتهي الصلاحية",
+      "trial_expired": "انتهت الفترة التجريبية",
+      "pending": "قيد الانتظار",
+      "cancelled": "ملغى"
+    },
     "companyInfo": "معلومات الشركة",
     "type": "النوع",
     "legalName": "الاسم القانوني",
@@ -880,6 +893,7 @@
     "contactAuthorities": "اتصل بالسلطات المختصة فورًا.",
     "subInactive": "الاشتراك غير مفعّل",
     "subExpiresIn_other": "ينتهي خلال {{count}} يوم",
+    "trialExpiresIn_other": "الفترة التجريبية — تنتهي خلال {{count}} يوم",
     "contactSupport": "تواصل مع support@qayed.tn",
     "statArrivalsExpected": "الوصول المتوقع",
     "statCheckinsDone": "تسجيلات الوصول المنجزة",

@@ -120,7 +120,12 @@ export const DashboardPage = () => {
 
   const d   = data ?? EMPTY_DASH;
   const sub = d.subscription;
-  const isSubWarning       = sub.status !== 'none' && (sub.status !== 'active' || (sub.days_remaining ?? 99) <= 7);
+  const isTrial = sub.status === 'trial';
+  const isSubWarning =
+    sub.status !== 'none' &&
+    ((sub.status !== 'active' && sub.status !== 'trial')
+      || (isTrial && (sub.days_remaining ?? 99) <= 2)
+      || (sub.status === 'active' && (sub.days_remaining ?? 99) <= 7));
   const hasAlerts          = d.expiry_alerts.length > 0;
   const securityHitCount   = d.pending_watchlist_hits ?? 0;
 
@@ -225,9 +230,11 @@ export const DashboardPage = () => {
               <AlertCircle className="mt-0.5 h-4 w-4 text-amber-600 shrink-0" />
               <div>
                 <p className="text-sm font-semibold text-amber-800">
-                  {sub.status !== 'active'
+                  {sub.status !== 'active' && sub.status !== 'trial'
                     ? t('hotelDashboard.subInactive')
-                    : t('hotelDashboard.subExpiresIn', { count: sub.days_remaining })}
+                    : isTrial
+                      ? t('hotelDashboard.trialExpiresIn', { count: sub.days_remaining })
+                      : t('hotelDashboard.subExpiresIn', { count: sub.days_remaining })}
                 </p>
                 <p className="text-xs text-amber-600 mt-0.5">{t('hotelDashboard.contactSupport')}</p>
               </div>

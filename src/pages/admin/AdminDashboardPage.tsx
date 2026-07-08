@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban } from 'lucide-react';
+import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown } from 'lucide-react';
 import { adminDashboardApi } from '@/api/admin/dashboard';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
@@ -10,7 +10,7 @@ const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 
 const fmtDate = (d: string | null | undefined, locale: string) =>
   d ? new Date(d).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
-const Stat = ({ icon: Icon, label, value, color }: { icon: typeof Building2; label: string; value?: number; color: string }) => (
+const Stat = ({ icon: Icon, label, value, suffix, color }: { icon: typeof Building2; label: string; value?: number | null; suffix?: string; color: string }) => (
   <div className="card p-5">
     <div className="flex items-center justify-between mb-2">
       <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{label}</p>
@@ -18,7 +18,7 @@ const Stat = ({ icon: Icon, label, value, color }: { icon: typeof Building2; lab
         <Icon className="h-4 w-4" style={{ color }} />
       </div>
     </div>
-    <p className="text-3xl font-extrabold text-gray-900">{value ?? '—'}</p>
+    <p className="text-3xl font-extrabold text-gray-900">{value != null ? `${value}${suffix ?? ''}` : '—'}</p>
   </div>
 );
 
@@ -59,11 +59,24 @@ export const AdminDashboardPage = () => {
             <Stat icon={Users}      label={t('adminDashboard.checkinsThisMonth')} value={stats.check_ins.this_month} color="#8B7FE0" />
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Stat icon={Hourglass}    label={t('adminDashboard.trialsInProgress')}    value={stats.trials.in_progress}    color="#5346A8" />
+            <Stat icon={TrendingDown} label={t('adminDashboard.trialConversionRate')} value={stats.trials.conversion_rate} suffix="%" color="#1F9D6B" />
+          </div>
+
           <div>
             <p className="text-sm font-bold text-gray-700 mb-3">{t('adminDashboard.toWatch')}</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               <AlertCard icon={CreditCard} title={t('adminDashboard.expiringSubscriptions')} color="#E3A008" empty={!stats.alerts.expiring_subscriptions.length}>
                 {stats.alerts.expiring_subscriptions.map((s) => (
+                  <div key={s.id} className="flex items-center justify-between text-sm">
+                    <span className="truncate font-medium text-gray-800">{s.name}</span>
+                    <span className="text-xs text-gray-400 shrink-0 ms-2">{fmtDate(s.expires_at, locale)}</span>
+                  </div>
+                ))}
+              </AlertCard>
+              <AlertCard icon={Hourglass} title={t('adminDashboard.trialsExpiringSoon')} color="#5346A8" empty={!stats.trials.expiring_soon.length}>
+                {stats.trials.expiring_soon.map((s) => (
                   <div key={s.id} className="flex items-center justify-between text-sm">
                     <span className="truncate font-medium text-gray-800">{s.name}</span>
                     <span className="text-xs text-gray-400 shrink-0 ms-2">{fmtDate(s.expires_at, locale)}</span>

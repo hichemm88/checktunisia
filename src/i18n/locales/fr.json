@@ -46,7 +46,8 @@
     "customPriceOptional": "Prix personnalisé (optionnel)",
     "customPrice": "Prix personnalisé",
     "planHash": "Pack #{{id}}",
-    "until": "jusqu'au {{date}}"
+    "until": "jusqu'au {{date}}",
+    "convertToPaid": "Convertir en payant"
   },
   "adminAuthority": {
     "title": "Autorités",
@@ -204,8 +205,11 @@
     "pending": "En attente",
     "checkinsToday": "Check-ins aujourd'hui",
     "checkinsThisMonth": "Check-ins ce mois",
+    "trialsInProgress": "Essais en cours",
+    "trialConversionRate": "Taux de conversion essai → payant",
     "toWatch": "À surveiller",
     "expiringSubscriptions": "Abonnements qui expirent (30j)",
+    "trialsExpiringSoon": "Essais expirant sous 7j",
     "failedPayments": "Paiements en échec (30j)",
     "recentlySuspended": "Suspendus récemment (7j)",
     "nothingToReport": "Rien à signaler"
@@ -216,6 +220,15 @@
     "team": "Équipe",
     "activity": "Activité",
     "subscription": "Abonnement",
+    "subscriptionStatus": {
+      "active": "Actif",
+      "trial": "Essai gratuit",
+      "suspended": "Suspendu",
+      "expired": "Expiré",
+      "trial_expired": "Essai terminé",
+      "pending": "En attente",
+      "cancelled": "Annulé"
+    },
     "companyInfo": "Informations de la société",
     "type": "Type",
     "legalName": "Raison sociale",
@@ -900,6 +913,8 @@
     "subInactive": "Abonnement inactif",
     "subExpiresIn_one": "Expire dans {{count}} jour",
     "subExpiresIn_other": "Expire dans {{count}} jours",
+    "trialExpiresIn_one": "Essai gratuit — expire dans {{count}} jour",
+    "trialExpiresIn_other": "Essai gratuit — expire dans {{count}} jours",
     "contactSupport": "Contactez support@qayed.tn",
     "statArrivalsExpected": "Arrivées prévues",
     "statCheckinsDone": "Check-ins faits",
