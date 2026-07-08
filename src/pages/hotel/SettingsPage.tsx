@@ -20,6 +20,7 @@ import { formatTND } from '@/lib/money';
 import { HotelUser, CreateUserPayload } from '@/types';
 import { organizationApi, OrgInfo } from '@/api/organization';
 import { fetchPlatformSettings } from '@/api/public';
+import { paymentApi } from '@/api/payment';
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -560,6 +561,12 @@ const InvoicesSection = () => {
     onError: (err) => toast(extractErrors(err), 'error'),
   });
 
+  const payMut = useMutation({
+    mutationFn: (invoiceId: string) => paymentApi.initiate(invoiceId),
+    onSuccess: (result) => { window.location.href = result.payment_url; },
+    onError: (err) => toast(extractErrors(err), 'error'),
+  });
+
   return (
     <Card>
       <CardHeader>
@@ -597,6 +604,16 @@ const InvoicesSection = () => {
                 </button>
               </div>
             </div>
+
+            {inv.status !== 'paid' && inv.status !== 'void' && (
+              <div className="flex items-center gap-3">
+                {platformSettings?.flouci_enabled && (
+                  <Button size="sm" loading={payMut.isPending && payMut.variables === inv.id} onClick={() => payMut.mutate(inv.id)}>
+                    {t('settingsPage.payOnline')}
+                  </Button>
+                )}
+              </div>
+            )}
 
             {inv.status !== 'paid' && inv.status !== 'void' && (
               declaringFor === inv.id ? (
