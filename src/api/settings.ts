@@ -42,4 +42,35 @@ export const settingsApi = {
   getActivity: (params: { page?: number; role?: string }) =>
     api.get<{ data: ActivityLogEntry[]; meta: { total: number; current_page: number; last_page: number } }>('/hotel/activity', { params })
       .then((r) => r.data),
+
+  // Invoices (hotel_admin only) — org-scoped, reachable before any property exists
+  getInvoices: (params?: { page?: number; per_page?: number }) =>
+    api.get<{ data: HotelInvoice[]; meta: { total: number; current_page: number; per_page: number } }>('/hotel/invoices', { params })
+      .then((r) => r.data),
+
+  downloadInvoicePdf: async (id: string, filename: string) => {
+    const res = await api.get(`/hotel/invoices/${id}/pdf`, { responseType: 'blob' });
+    const url = URL.createObjectURL(res.data as Blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  declareVirement: (payload: { invoice_id: string; reference: string; date: string }) =>
+    api.post<{ data: { id: string; status: string } }>('/hotel/payments/declare-virement', payload).then((r) => r.data.data),
 };
+
+export interface HotelInvoice {
+  id: string;
+  invoice_number: string;
+  amount: string;
+  tax_amount: string;
+  total_amount: string;
+  currency: string;
+  status: string;
+  due_at: string | null;
+  paid_at: string | null;
+  created_at: string;
+}

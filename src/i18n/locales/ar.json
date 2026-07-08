@@ -148,7 +148,13 @@
     "statusPending": "قيد الانتظار",
     "statusFailed": "فاشلة",
     "statusExpired": "منتهية الصلاحية",
-    "noPayment": "لا توجد مدفوعات"
+    "noPayment": "لا توجد مدفوعات",
+    "ref": "المرجع",
+    "validate": "تحقّق",
+    "reject": "رفض",
+    "rejectReason": "سبب الرفض",
+    "virementValidated": "تم التحقق من التحويل — الفاتورة مُعلّمة كمدفوعة.",
+    "virementRejected": "تم رفض التحويل."
   },
   "adminShared": {
     "invoiceMarkedPaid": "تم وضع علامة على الفاتورة كمدفوعة",
@@ -192,6 +198,10 @@
       "authorityOrgUpdated": "عدّل هيئة",
       "authorityOrgDeleted": "حذف هيئة",
       "subscriptionActivated": "أنشأ/فعّل اشتراكًا",
+      "subscriptionReminderSent": "أرسل تذكيرًا بانتهاء الصلاحية",
+      "trialReminderSent": "أرسل تذكيرًا بانتهاء الفترة التجريبية",
+      "trialExpired": "انتهت الفترة التجريبية (تلقائي)",
+      "subscriptionExpired": "انتهى الاشتراك (تلقائي)",
       "invoiceUpdated": "عدّل فاتورة",
       "checkinCreated": "أنشأ تسجيل نزيل",
       "checkinDeleted": "حذف تسجيل نزيل"
@@ -264,6 +274,13 @@
     "daysCount_other": "{{count}} أيام",
     "renewalDue": "التجديد مطلوب قريبًا",
     "renewalContact": "تواصل مع <a>support@qayed.tn</a> لتجديد اشتراكك.",
+    "invoices": "الفواتير",
+    "noInvoice": "لا توجد فواتير بعد.",
+    "declareTransfer": "الإعلان عن تحويل بنكي",
+    "transferReference": "مرجع التحويل",
+    "transferDate": "تاريخ التحويل",
+    "transferTo": "التحويل إلى {{beneficiary}} — IBAN {{iban}}",
+    "virementDeclared": "تم الإعلان عن التحويل — في انتظار التحقق من فريق قيد.",
     "deletedAccount": "حساب محذوف",
     "noActivity": "لا يوجد نشاط",
     "action": {

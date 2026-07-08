@@ -148,7 +148,13 @@
     "statusPending": "Pending",
     "statusFailed": "Failed",
     "statusExpired": "Expired",
-    "noPayment": "No payment"
+    "noPayment": "No payment",
+    "ref": "ref.",
+    "validate": "Validate",
+    "reject": "Reject",
+    "rejectReason": "Rejection reason",
+    "virementValidated": "Transfer validated — invoice marked paid.",
+    "virementRejected": "Transfer rejected."
   },
   "adminShared": {
     "invoiceMarkedPaid": "Invoice marked as paid",
@@ -192,6 +198,10 @@
       "authorityOrgUpdated": "updated an organization",
       "authorityOrgDeleted": "deleted an organization",
       "subscriptionActivated": "created/activated a subscription",
+      "subscriptionReminderSent": "sent an expiry reminder",
+      "trialReminderSent": "sent a trial-ending reminder",
+      "trialExpired": "free trial ended (automatic)",
+      "subscriptionExpired": "subscription expired (automatic)",
       "invoiceUpdated": "updated an invoice",
       "checkinCreated": "created a check-in",
       "checkinDeleted": "deleted a check-in"
@@ -264,6 +274,13 @@
     "daysCount_other": "{{count}} days",
     "renewalDue": "Renewal due soon",
     "renewalContact": "Contact <a>support@qayed.tn</a> to renew your subscription.",
+    "invoices": "Invoices",
+    "noInvoice": "No invoices yet.",
+    "declareTransfer": "Declare a bank transfer",
+    "transferReference": "Transfer reference",
+    "transferDate": "Transfer date",
+    "transferTo": "Transfer to {{beneficiary}} — IBAN {{iban}}",
+    "virementDeclared": "Transfer declared — pending validation by the Qayed team.",
     "deletedAccount": "Deleted account",
     "noActivity": "No activity",
     "action": {

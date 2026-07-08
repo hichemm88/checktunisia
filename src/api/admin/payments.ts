@@ -22,6 +22,8 @@ export interface AdminPayment {
   currency: string;
   hotel_name: string | null;
   invoice_number: string | null;
+  declared_reference: string | null;
+  declared_at: string | null;
   completed_at: string | null;
   created_at: string;
 }
@@ -31,4 +33,8 @@ export const adminPaymentsApi = {
   updateSettings: (data: object) => api.patch<{ data: PlatformSettings }>('/admin/platform-settings', data).then((r) => r.data.data),
   list: (params?: { status?: string; provider?: string; page?: number; per_page?: number }) =>
     api.get<{ data: AdminPayment[]; meta: { total: number; current_page: number; per_page: number } }>('/admin/payments', { params }).then((r) => r.data),
+  validateVirement: (paymentId: string) =>
+    api.post<{ data: { id: string; status: string } }>(`/admin/payments/${paymentId}/validate-virement`).then((r) => r.data.data),
+  rejectVirement: (paymentId: string, reason: string) =>
+    api.post<{ data: { id: string; status: string } }>(`/admin/payments/${paymentId}/reject-virement`, { reason }).then((r) => r.data.data),
 };

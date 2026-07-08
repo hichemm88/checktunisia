@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Building2, CreditCard, Landmark, Save, Wallet } from 'lucide-react';
+import { Building2, CheckCircle2, CreditCard, Landmark, Save, Wallet } from 'lucide-react';
 import { adminPaymentsApi } from '@/api/admin/payments';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -117,9 +117,25 @@ const ConfigTab = () => {
 
 const HistoriqueTab = () => {
   const { t } = useTranslation();
+  const { toast } = useToast();
+  const qc = useQueryClient();
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
   const { data, isLoading } = useQuery({ queryKey: ['admin-payments', status, page], queryFn: () => adminPaymentsApi.list({ status: status || undefined, page, per_page: 30 }) });
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['admin-payments'] });
+  const validateMut = useMutation({
+    mutationFn: (id: string) => adminPaymentsApi.validateVirement(id),
+    onSuccess: () => { toast(t('adminPayments.virementValidated'), 'success'); invalidate(); },
+    onError: (err) => toast(extractErrors(err), 'error'),
+  });
+  const rejectMut = useMutation({
+    mutationFn: (id: string) => adminPaymentsApi.rejectVirement(id, rejectReason),
+    onSuccess: () => { toast(t('adminPayments.virementRejected'), 'success'); setRejectingId(null); setRejectReason(''); invalidate(); },
+    onError: (err) => toast(extractErrors(err), 'error'),
+  });
 
   return (
     <div className="flex flex-col gap-3">
@@ -133,15 +149,34 @@ const HistoriqueTab = () => {
       <Card>
         {isLoading && <ListSkeleton rows={3} height="h-14" />}
         {data?.data.map((p) => (
-          <div key={p.id} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0 text-sm">
-            <div className="min-w-0">
-              <p className="font-medium text-gray-900 truncate">{p.hotel_name ?? '—'}</p>
-              <p className="text-xs text-gray-400">{p.invoice_number ?? '—'} · {p.provider}</p>
+          <div key={p.id} className="flex flex-col gap-2 py-2.5 border-b border-gray-50 last:border-0 text-sm">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0">
+                <p className="font-medium text-gray-900 truncate">{p.hotel_name ?? '—'}</p>
+                <p className="text-xs text-gray-400">
+                  {p.invoice_number ?? '—'} · {p.provider}
+                  {p.declared_reference && <> · {t('adminPayments.ref')} {p.declared_reference}</>}
+                </p>
+              </div>
+              <div className="text-end shrink-0 ms-2">
+                <p className="font-mono font-semibold">{formatTND(p.amount)}</p>
+                <p className={`text-xs font-medium ${p.status === 'completed' ? 'text-green-600' : p.status === 'failed' ? 'text-red-500' : 'text-gray-400'}`}>{p.status}</p>
+              </div>
             </div>
-            <div className="text-end shrink-0 ms-2">
-              <p className="font-mono font-semibold">{formatTND(p.amount)}</p>
-              <p className={`text-xs font-medium ${p.status === 'completed' ? 'text-green-600' : p.status === 'failed' ? 'text-red-500' : 'text-gray-400'}`}>{p.status}</p>
-            </div>
+            {p.provider === 'virement' && p.status === 'pending' && (
+              rejectingId === p.id ? (
+                <div className="flex items-end gap-2 rounded-lg p-2" style={{ background: '#F6F5F1' }}>
+                  <Input label={t('adminPayments.rejectReason')} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
+                  <Button size="sm" variant="ghost" loading={rejectMut.isPending} disabled={!rejectReason} onClick={() => rejectMut.mutate(p.id)}>{t('common.confirm')}</Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setRejectingId(null); setRejectReason(''); }}>{t('common.cancel')}</Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Button size="sm" loading={validateMut.isPending} onClick={() => validateMut.mutate(p.id)} className="gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> {t('adminPayments.validate')}</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setRejectingId(p.id)} className="!text-red-600">{t('adminPayments.reject')}</Button>
+                </div>
+              )
+            )}
           </div>
         ))}
         {!isLoading && !data?.data.length && <p className="text-sm text-gray-400 text-center py-6">{t('adminPayments.noPayment')}</p>}

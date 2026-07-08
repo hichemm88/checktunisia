@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building, CreditCard, Users, Plus, Trash2, Save,
   Pencil, X, MapPin, Send, Activity,
-  CheckCircle, AlertCircle,
+  CheckCircle, AlertCircle, Download, Landmark,
 } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -12,11 +12,14 @@ import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 import { useAuthStore } from '@/stores/authStore';
 import { settingsApi } from '@/api/settings';
 import { extractErrors } from '@/lib/api';
+import { formatTND } from '@/lib/money';
 import { HotelUser, CreateUserPayload } from '@/types';
 import { organizationApi, OrgInfo } from '@/api/organization';
+import { fetchPlatformSettings } from '@/api/public';
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -524,7 +527,104 @@ const AbonnementTab = () => {
       ) : (
         <div className="h-32 animate-pulse rounded-2xl bg-gray-100" />
       )}
+
+      <InvoicesSection />
     </div>
+  );
+};
+
+// ─── Invoice history + manual bank-transfer declaration ────────────────────────
+
+const INVOICE_STATUS_VARIANT: Record<string, 'active' | 'draft' | 'suspended' | 'expired'> = {
+  paid: 'active', sent: 'draft', draft: 'draft', overdue: 'expired', void: 'suspended',
+};
+
+const InvoicesSection = () => {
+  const { t, i18n } = useTranslation();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [declaringFor, setDeclaringFor] = useState<string | null>(null);
+  const [form, setForm] = useState({ reference: '', date: new Date().toISOString().slice(0, 10) });
+
+  const { data: invoices, isLoading } = useQuery({ queryKey: ['hotel-invoices'], queryFn: () => settingsApi.getInvoices() });
+  const { data: platformSettings } = useQuery({ queryKey: ['public-platform-settings'], queryFn: fetchPlatformSettings });
+
+  const declareMut = useMutation({
+    mutationFn: () => settingsApi.declareVirement({ invoice_id: declaringFor!, reference: form.reference, date: form.date }),
+    onSuccess: () => {
+      toast(t('settingsPage.virementDeclared'), 'success');
+      setDeclaringFor(null);
+      setForm({ reference: '', date: new Date().toISOString().slice(0, 10) });
+      qc.invalidateQueries({ queryKey: ['hotel-invoices'] });
+    },
+    onError: (err) => toast(extractErrors(err), 'error'),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <div className="flex items-center gap-2">
+            <Landmark className="h-4 w-4 text-gray-400" /> {t('settingsPage.invoices')}
+          </div>
+        </CardTitle>
+      </CardHeader>
+
+      {isLoading && <div className="mt-3 h-16 animate-pulse rounded-xl bg-gray-100" />}
+
+      {!isLoading && !invoices?.data.length && (
+        <p className="mt-3 text-sm text-gray-400 py-2">{t('settingsPage.noInvoice')}</p>
+      )}
+
+      <div className="mt-2 flex flex-col">
+        {invoices?.data.map((inv) => (
+          <div key={inv.id} className="flex flex-col gap-2 py-2.5 border-b border-gray-50 last:border-0">
+            <div className="flex items-center justify-between text-sm">
+              <div className="min-w-0">
+                <p className="font-mono text-xs font-semibold">{inv.invoice_number}</p>
+                <p className="text-xs text-gray-400">
+                  {new Date(inv.created_at).toLocaleDateString(dateLocaleFor(i18n.language), { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="font-mono text-xs text-gray-600">{formatTND(inv.total_amount)}</span>
+                <Badge variant={INVOICE_STATUS_VARIANT[inv.status] ?? 'suspended'}>{inv.status}</Badge>
+                <button
+                  onClick={() => settingsApi.downloadInvoicePdf(inv.id, `facture-${inv.invoice_number}.pdf`)}
+                  className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {inv.status !== 'paid' && inv.status !== 'void' && (
+              declaringFor === inv.id ? (
+                <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F6F5F1' }}>
+                  {platformSettings?.virement_iban && (
+                    <p className="text-xs text-gray-500">
+                      {t('settingsPage.transferTo', { beneficiary: platformSettings.virement_beneficiary, iban: platformSettings.virement_iban })}
+                    </p>
+                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input label={t('settingsPage.transferReference')} value={form.reference} onChange={(e) => setForm((f) => ({ ...f, reference: e.target.value }))} />
+                    <Input label={t('settingsPage.transferDate')} type="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" loading={declareMut.isPending} disabled={!form.reference} onClick={() => declareMut.mutate()}>{t('common.save')}</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setDeclaringFor(null)}>{t('common.cancel')}</Button>
+                  </div>
+                </div>
+              ) : (
+                <button onClick={() => setDeclaringFor(inv.id)} className="self-start text-xs font-semibold" style={{ color: 'var(--qayed-cachet)' }}>
+                  {t('settingsPage.declareTransfer')}
+                </button>
+              )
+            )}
+          </div>
+        ))}
+      </div>
+    </Card>
   );
 };
 

@@ -148,7 +148,13 @@
     "statusPending": "En attente",
     "statusFailed": "Échoués",
     "statusExpired": "Expirés",
-    "noPayment": "Aucun paiement"
+    "noPayment": "Aucun paiement",
+    "ref": "réf.",
+    "validate": "Valider",
+    "reject": "Rejeter",
+    "rejectReason": "Motif du rejet",
+    "virementValidated": "Virement validé — facture marquée payée.",
+    "virementRejected": "Virement rejeté."
   },
   "adminShared": {
     "invoiceMarkedPaid": "Facture marquée payée",
@@ -192,6 +198,10 @@
       "authorityOrgUpdated": "a modifié un organisme",
       "authorityOrgDeleted": "a supprimé un organisme",
       "subscriptionActivated": "a créé/activé un abonnement",
+      "subscriptionReminderSent": "a envoyé un rappel d'expiration",
+      "trialReminderSent": "a envoyé un rappel de fin d'essai",
+      "trialExpired": "essai gratuit terminé (automatique)",
+      "subscriptionExpired": "abonnement expiré (automatique)",
       "invoiceUpdated": "a modifié une facture",
       "checkinCreated": "a créé un check-in",
       "checkinDeleted": "a supprimé un check-in"
@@ -264,6 +274,13 @@
     "daysCount_other": "{{count}} jours",
     "renewalDue": "Renouvellement à prévoir",
     "renewalContact": "Contactez <a>support@qayed.tn</a> pour renouveler votre abonnement.",
+    "invoices": "Factures",
+    "noInvoice": "Aucune facture pour le moment.",
+    "declareTransfer": "Déclarer un virement",
+    "transferReference": "Référence du virement",
+    "transferDate": "Date du virement",
+    "transferTo": "À virer à {{beneficiary}} — IBAN {{iban}}",
+    "virementDeclared": "Virement déclaré — en attente de validation par l'équipe Qayed.",
     "deletedAccount": "Compte supprimé",
     "noActivity": "Aucune activité",
     "action": {
