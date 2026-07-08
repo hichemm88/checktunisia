@@ -71,18 +71,6 @@ const ACTION_KEYS: Record<string, string> = {
   'watchlist.import': 'adminActivity.action.watchlistImport',
   'watchlist.hits_viewed': 'adminActivity.action.watchlistHitsViewed',
   'watchlist.hit_acknowledged': 'adminActivity.action.watchlistHitAcknowledged',
-  'plan.created': 'adminActivity.action.planCreated',
-  'plan.updated': 'adminActivity.action.planUpdated',
-  'plan.deleted': 'adminActivity.action.planDeleted',
-  'page.created': 'adminActivity.action.pageCreated',
-  'page.updated': 'adminActivity.action.pageUpdated',
-  'page.published': 'adminActivity.action.pagePublished',
-  'page.deleted': 'adminActivity.action.pageDeleted',
-  'menu_item.created': 'adminActivity.action.menuItemCreated',
-  'menu_item.updated': 'adminActivity.action.menuItemUpdated',
-  'menu_item.deleted': 'adminActivity.action.menuItemDeleted',
-  'media.uploaded': 'adminActivity.action.mediaUploaded',
-  'media.deleted': 'adminActivity.action.mediaDeleted',
 };
 
 export const AdminActivityPage = () => {
