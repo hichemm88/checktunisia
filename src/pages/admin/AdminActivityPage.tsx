@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import { X } from 'lucide-react';
 import { adminActivityApi } from '@/api/admin/activity';
 import { Card } from '@/components/ui/Card';
 import { Pagination } from '@/components/ui/Pagination';
@@ -77,10 +78,11 @@ export const AdminActivityPage = () => {
   const actionLabel = (action: string) => action in ACTION_KEYS ? t(ACTION_KEYS[action]) : action.replace(/[._]/g, ' ');
   const [page, setPage] = useState(1);
   const [action, setAction] = useState('');
+  const [actor, setActor] = useState<{ id: string; name: string } | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-activity', page, action],
-    queryFn: () => adminActivityApi.list({ page, per_page: 30, action: action || undefined }),
+    queryKey: ['admin-activity', page, action, actor?.id],
+    queryFn: () => adminActivityApi.list({ page, per_page: 30, action: action || undefined, actor_id: actor?.id }),
   });
 
   return (
@@ -88,10 +90,18 @@ export const AdminActivityPage = () => {
       <div className="flex items-center justify-between">
         <h1 className="qayed-display text-xl text-gray-900">{t('adminActivity.title')}</h1>
       </div>
-      <select className="input w-fit" value={action} onChange={(e) => { setAction(e.target.value); setPage(1); }}>
-        <option value="">{t('adminActivity.allActions')}</option>
-        {Object.keys(ACTION_KEYS).map((a) => <option key={a} value={a}>{a}</option>)}
-      </select>
+      <div className="flex items-center gap-2 flex-wrap">
+        <select className="input w-fit" value={action} onChange={(e) => { setAction(e.target.value); setPage(1); }}>
+          <option value="">{t('adminActivity.allActions')}</option>
+          {Object.keys(ACTION_KEYS).map((a) => <option key={a} value={a}>{a}</option>)}
+        </select>
+        {actor && (
+          <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}>
+            {t('adminActivity.filteredByAgent', { name: actor.name })}
+            <button onClick={() => { setActor(null); setPage(1); }} className="hover:opacity-70"><X className="h-3 w-3" /></button>
+          </span>
+        )}
+      </div>
 
       <Card>
         {isLoading && <ListSkeleton rows={3} />}
@@ -102,7 +112,17 @@ export const AdminActivityPage = () => {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm text-gray-800">
-                <span className="font-semibold">{entry.actor ? `${entry.actor.first_name} ${entry.actor.last_name}` : t('settingsPage.deletedAccount')}</span>
+                {entry.actor ? (
+                  <button
+                    className="font-semibold hover:underline"
+                    onClick={() => { setActor({ id: entry.actor!.id, name: `${entry.actor!.first_name} ${entry.actor!.last_name}` }); setPage(1); }}
+                    title={t('adminActivity.filterByThisAgent')}
+                  >
+                    {entry.actor.first_name} {entry.actor.last_name}
+                  </button>
+                ) : (
+                  <span className="font-semibold">{t('settingsPage.deletedAccount')}</span>
+                )}
                 {' '}{actionLabel(entry.action)}
                 {entry.hotel && <span className="text-xs text-gray-400"> ({entry.hotel.name})</span>}
               </p>

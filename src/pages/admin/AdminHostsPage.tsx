@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building2, Search, CheckCircle2, XCircle, Plus, X, Trash2,
-  Pencil, Check, FileText,
+  Pencil, Check, FileText, CalendarClock, TrendingUp, BedDouble,
 } from 'lucide-react';
 import { adminHostsApi, AdminHost, AdminHostDetail } from '@/api/admin/hosts';
 import { adminSubscriptionsApi, adminPlansApi } from '@/api/admin/subscriptions';
@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
-import { formatTNDAmount } from '@/lib/money';
+import { formatTND, formatTNDAmount } from '@/lib/money';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { Pagination } from '@/components/ui/Pagination';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
@@ -148,6 +148,31 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+// ─── Métriques (dernier check-in, volume mensuel, MRR) ─────────────────────────
+
+const HostMetrics = ({ host }: { host: AdminHostDetail }) => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
+  const m = host.metrics;
+
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      <div className="rounded-xl p-2.5 flex flex-col gap-1" style={{ background: 'var(--qayed-papier)' }}>
+        <span className="flex items-center gap-1 text-xs text-gray-400"><CalendarClock className="h-3 w-3" /> {t('adminHosts.lastCheckIn')}</span>
+        <span className="text-sm font-semibold text-gray-900">{fmtDate(m.last_check_in_at, locale)}</span>
+      </div>
+      <div className="rounded-xl p-2.5 flex flex-col gap-1" style={{ background: 'var(--qayed-papier)' }}>
+        <span className="flex items-center gap-1 text-xs text-gray-400"><BedDouble className="h-3 w-3" /> {t('adminHosts.checkInsThisMonth')}</span>
+        <span className="text-sm font-semibold text-gray-900">{m.check_ins_this_month}</span>
+      </div>
+      <div className="rounded-xl p-2.5 flex flex-col gap-1" style={{ background: 'var(--qayed-papier)' }}>
+        <span className="flex items-center gap-1 text-xs text-gray-400"><TrendingUp className="h-3 w-3" /> MRR</span>
+        <span className="font-mono text-sm font-semibold text-gray-900">{m.mrr != null ? formatTND(m.mrr) : '—'}</span>
+      </div>
     </div>
   );
 };
@@ -366,6 +391,8 @@ export const AdminHostsPage = () => {
 
               {detail && (
                 <>
+                  <HostMetrics host={detail} />
+
                   <SubscriptionSection host={detail} />
 
                   <InvoicesSection host={detail} />

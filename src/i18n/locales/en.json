@@ -6,6 +6,8 @@
     "contactEmail": "Contact email",
     "rcMatricule": "Reg. No.",
     "subscriptionUpdated": "Subscription updated",
+    "lastCheckIn": "Last check-in",
+    "checkInsThisMonth": "Check-ins this month",
     "negotiatedPrice": "Negotiated price: {{price}} TND",
     "amountEmptyHint": "Amount (empty = {{price}} TND)",
     "tax": "Tax",
@@ -67,7 +69,9 @@
     "noOrg": "No organization",
     "newAuthorityUser": "New authority user",
     "initialPassword": "Initial password",
-    "organization": "Organization"
+    "organization": "Organization",
+    "twoFaEnabled": "Two-factor authentication enabled",
+    "twoFaDisabled": "Two-factor authentication not set up"
   },
   "adminHotels": {
     "title": "Properties",
@@ -106,7 +110,10 @@
     "userDeleted": "User deleted",
     "passwordRegeneratedNoEmailShort": "Password regenerated, email not sent.",
     "searchPlaceholder": "Name, email…",
-    "allRoles": "All roles"
+    "allRoles": "All roles",
+    "allProperties": "All properties",
+    "lastLoginOn": "Last login {{date}}",
+    "neverLoggedIn": "Never logged in"
   },
   "adminEmails": {
     "title": "Emails",
@@ -120,7 +127,9 @@
     "preview": "Preview",
     "sendRemindersNow": "Send reminders now",
     "remindersSent": "{{sent}}/{{candidates}} reminder(s) sent",
-    "remindersHint": "The expiration reminder isn't automatic yet (requires a server-side scheduler) — use this button to notify subscriptions expiring within 7 days."
+    "remindersHint": "Reminders are sent automatically every day (D-30/D-7/D-1 subscriptions, D-2/D-0 trials) — this button stays available to force an immediate send.",
+    "sendTest": "Send me a test",
+    "testSent": "Test email sent to {{email}}"
   },
   "adminPayments": {
     "title": "Payments",
@@ -174,6 +183,8 @@
   "adminActivity": {
     "title": "Activity log",
     "allActions": "All actions",
+    "filteredByAgent": "Filtered by {{name}}",
+    "filterByThisAgent": "Filter by this agent",
     "action": {
       "hotelCreated": "created a property",
       "hotelUpdated": "updated a property",
@@ -1056,7 +1067,8 @@
     "searchPlaceholder": "Search a host, property, user…",
     "searchResultHost": "Host",
     "searchResultProperty": "Property",
-    "searchResultUser": "User"
+    "searchResultUser": "User",
+    "searchResultCheckIn": "Check-in"
   },
   "hotelLayout": {
     "nav": {

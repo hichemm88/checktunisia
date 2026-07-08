@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Mail, Save, Eye, Send } from 'lucide-react';
+import { Mail, Save, Eye, Send, MailCheck } from 'lucide-react';
 import { adminEmailsApi, EmailTemplateItem } from '@/api/admin/emails';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
+import { useAuthStore } from '@/stores/authStore';
 
 const PLACEHOLDER_HINTS: Record<string, string[]> = {
   welcome: ['first_name', 'last_name', 'hotel_name', 'role_label', 'cta_button'],
@@ -24,6 +25,7 @@ const TemplateCard = ({ template }: { template: EmailTemplateItem }) => {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
+  const currentUser = useAuthStore((s) => s.user);
   const [form, setForm] = useState({ subject: template.subject, body_html: template.body_html });
   const [showPreview, setShowPreview] = useState(false);
   const [error, setError] = useState('');
@@ -32,6 +34,11 @@ const TemplateCard = ({ template }: { template: EmailTemplateItem }) => {
     mutationFn: () => adminEmailsApi.update(template.key, form),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-emails'] }); toast(t('adminEmails.templateSaved'), 'success'); },
     onError: (err) => setError(extractErrors(err)),
+  });
+
+  const sendTestMut = useAdminMutation({
+    mutationFn: () => adminEmailsApi.sendTest(template.key),
+    successMessage: t('adminEmails.testSent', { email: currentUser?.email ?? '' }),
   });
 
   const { data: preview, refetch: refetchPreview, isFetching: previewLoading } = useQuery({
@@ -78,6 +85,9 @@ const TemplateCard = ({ template }: { template: EmailTemplateItem }) => {
           <Button size="sm" loading={saveMut.isPending} onClick={() => saveMut.mutate()} className="gap-1.5"><Save className="h-3.5 w-3.5" /> {t('common.save')}</Button>
           <Button size="sm" variant="secondary" loading={previewLoading} onClick={togglePreview} className="gap-1.5">
             <Eye className="h-3.5 w-3.5" /> {showPreview ? t('adminEmails.hide') : t('adminEmails.preview')}
+          </Button>
+          <Button size="sm" variant="ghost" loading={sendTestMut.isPending} onClick={() => sendTestMut.mutate()} className="gap-1.5">
+            <MailCheck className="h-3.5 w-3.5" /> {t('adminEmails.sendTest')}
           </Button>
         </div>
 

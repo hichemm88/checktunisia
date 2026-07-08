@@ -6,6 +6,8 @@
     "contactEmail": "Email de contact",
     "rcMatricule": "RC / Matricule",
     "subscriptionUpdated": "Abonnement mis à jour",
+    "lastCheckIn": "Dernier check-in",
+    "checkInsThisMonth": "Check-ins ce mois-ci",
     "negotiatedPrice": "Prix négocié : {{price}} TND",
     "amountEmptyHint": "Montant (vide = {{price}} TND)",
     "tax": "TVA",
@@ -67,7 +69,9 @@
     "noOrg": "Aucun organisme",
     "newAuthorityUser": "Nouvel utilisateur autorité",
     "initialPassword": "Mot de passe initial",
-    "organization": "Organisme"
+    "organization": "Organisme",
+    "twoFaEnabled": "Double authentification activée",
+    "twoFaDisabled": "Double authentification non configurée"
   },
   "adminHotels": {
     "title": "Établissements",
@@ -106,7 +110,10 @@
     "userDeleted": "Utilisateur supprimé",
     "passwordRegeneratedNoEmailShort": "Mot de passe régénéré, email non envoyé.",
     "searchPlaceholder": "Nom, email…",
-    "allRoles": "Tous les rôles"
+    "allRoles": "Tous les rôles",
+    "allProperties": "Tous les établissements",
+    "lastLoginOn": "Connecté le {{date}}",
+    "neverLoggedIn": "Jamais connecté"
   },
   "adminEmails": {
     "title": "Emails",
@@ -120,7 +127,9 @@
     "preview": "Aperçu",
     "sendRemindersNow": "Envoyer les rappels maintenant",
     "remindersSent": "{{sent}}/{{candidates}} rappel(s) envoyé(s)",
-    "remindersHint": "Le rappel d'expiration n'est pas encore automatique (nécessite un scheduler côté serveur) — utilisez ce bouton pour notifier les abonnements qui expirent sous 7 jours."
+    "remindersHint": "Les rappels sont envoyés automatiquement chaque jour (J-30/J-7/J-1 abonnements, J-2/J-0 essais) — ce bouton reste disponible pour forcer un envoi immédiat.",
+    "sendTest": "M'envoyer un test",
+    "testSent": "Email de test envoyé à {{email}}"
   },
   "adminPayments": {
     "title": "Paiements",
@@ -174,6 +183,8 @@
   "adminActivity": {
     "title": "Journal d'activité",
     "allActions": "Toutes les actions",
+    "filteredByAgent": "Filtré par {{name}}",
+    "filterByThisAgent": "Filtrer par cet agent",
     "action": {
       "hotelCreated": "a créé un établissement",
       "hotelUpdated": "a modifié un établissement",
@@ -1056,7 +1067,8 @@
     "searchPlaceholder": "Rechercher un hébergeur, établissement, utilisateur…",
     "searchResultHost": "Hébergeur",
     "searchResultProperty": "Établissement",
-    "searchResultUser": "Utilisateur"
+    "searchResultUser": "Utilisateur",
+    "searchResultCheckIn": "Check-in"
   },
   "hotelLayout": {
     "nav": {

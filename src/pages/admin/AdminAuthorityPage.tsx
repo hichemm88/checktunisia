@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Users, Landmark, Plus, X, Trash2, Pencil, Save } from 'lucide-react';
+import { Users, Landmark, Plus, X, Trash2, Pencil, Save, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { adminAuthorityApi, AdminAuthorityUser, AdminAuthorityOrganization } from '@/api/admin/authority';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -9,6 +9,7 @@ import { Select } from '@/components/ui/Select';
 import { extractErrors } from '@/lib/api';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { Pagination } from '@/components/ui/Pagination';
 
 const TYPE_KEYS: Record<string, string> = {
   police: 'adminAuthority.typePolice', immigration: 'adminAuthority.typeImmigration', customs: 'adminAuthority.typeCustoms',
@@ -107,7 +108,12 @@ const OrgRow = ({ org }: { org: AdminAuthorityOrganization }) => {
 const OrganismesTab = () => {
   const { t } = useTranslation();
   const [showCreate, setShowCreate] = useState(false);
-  const { data, isLoading } = useQuery({ queryKey: ['admin-authority-orgs'], queryFn: () => adminAuthorityApi.organizations.list({ include_inactive: true }) });
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-authority-orgs', page],
+    queryFn: () => adminAuthorityApi.organizations.list({ include_inactive: true, page, per_page: 20 }),
+  });
+  const orgs = data?.data ?? [];
 
   return (
     <div className="flex flex-col gap-3">
@@ -119,9 +125,12 @@ const OrganismesTab = () => {
       {showCreate && <CreateOrgForm onDone={() => setShowCreate(false)} />}
       <div className="card p-4">
         {isLoading && <ListSkeleton rows={3} />}
-        {data?.map((org) => <OrgRow key={org.id} org={org} />)}
-        {!isLoading && !data?.length && <p className="text-sm text-gray-400 text-center py-6">{t('adminAuthority.noOrg')}</p>}
+        {orgs.map((org) => <OrgRow key={org.id} org={org} />)}
+        {!isLoading && !orgs.length && <p className="text-sm text-gray-400 text-center py-6">{t('adminAuthority.noOrg')}</p>}
       </div>
+      {data?.meta && (
+        <Pagination meta={data.meta} currentCount={orgs.length} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => p + 1)} />
+      )}
     </div>
   );
 };
@@ -135,7 +144,8 @@ const CreateAuthorityUserForm = ({ onDone }: { onDone: () => void }) => {
   const [error, setError] = useState('');
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-  const { data: orgs } = useQuery({ queryKey: ['admin-authority-orgs-active'], queryFn: () => adminAuthorityApi.organizations.list() });
+  const { data: orgsResult } = useQuery({ queryKey: ['admin-authority-orgs-active'], queryFn: () => adminAuthorityApi.organizations.list({ per_page: 200 }) });
+  const orgs = orgsResult?.data;
 
   const mut = useMutation({
     mutationFn: () => adminAuthorityApi.users.create(form),
@@ -193,6 +203,15 @@ const AuthorityUserRow = ({ u }: { u: AdminAuthorityUser }) => {
           <p className="text-xs text-gray-400 truncate">{u.organization ?? '—'}{u.badge_number ? ` · ${u.badge_number}` : ''}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0 ms-2">
+          {u.two_factor_confirmed_at ? (
+            <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--qayed-conforme)' }} title={t('adminAuthority.twoFaEnabled')}>
+              <ShieldCheck className="h-3.5 w-3.5" />
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--qayed-vigilance)' }} title={t('adminAuthority.twoFaDisabled')}>
+              <ShieldAlert className="h-3.5 w-3.5" />
+            </span>
+          )}
           <span className={`text-xs font-semibold px-2 py-1 rounded-full ${u.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{u.status}</span>
           {u.status === 'active' ? (
             <button onClick={() => statusMut.mutate('suspended')} className="text-xs text-gray-400 hover:text-red-500">{t('adminHotels.suspend')}</button>
@@ -216,7 +235,12 @@ const AuthorityUserRow = ({ u }: { u: AdminAuthorityUser }) => {
 const AuthorityUsersTab = () => {
   const { t } = useTranslation();
   const [showCreate, setShowCreate] = useState(false);
-  const { data, isLoading } = useQuery({ queryKey: ['admin-authority-users'], queryFn: adminAuthorityApi.users.list });
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-authority-users', page],
+    queryFn: () => adminAuthorityApi.users.list({ page, per_page: 20 }),
+  });
+  const users = data?.data ?? [];
 
   return (
     <div className="flex flex-col gap-3">
@@ -228,9 +252,12 @@ const AuthorityUsersTab = () => {
       {showCreate && <CreateAuthorityUserForm onDone={() => setShowCreate(false)} />}
       <div className="card p-4">
         {isLoading && <ListSkeleton rows={3} />}
-        {data?.map((u) => <AuthorityUserRow key={u.id} u={u} />)}
-        {!isLoading && !data?.length && <p className="text-sm text-gray-400 text-center py-6">{t('settingsPage.noUser')}</p>}
+        {users.map((u) => <AuthorityUserRow key={u.id} u={u} />)}
+        {!isLoading && !users.length && <p className="text-sm text-gray-400 text-center py-6">{t('settingsPage.noUser')}</p>}
       </div>
+      {data?.meta && (
+        <Pagination meta={data.meta} currentCount={users.length} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => p + 1)} />
+      )}
     </div>
   );
 };

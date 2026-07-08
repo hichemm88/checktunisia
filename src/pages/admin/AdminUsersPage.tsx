@@ -123,7 +123,12 @@ const UserRow = ({ u }: { u: AdminUser }) => {
             <p className="text-xs text-gray-400 truncate">{u.organization ?? u.hotels.map((h) => h.name).join(', ')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1 shrink-0 ms-2">
+        <div className="flex items-center gap-2 shrink-0 ms-2">
+          <span className="text-xs text-gray-400 whitespace-nowrap hidden sm:inline">
+            {u.last_login_at
+              ? t('adminUsers.lastLoginOn', { date: new Date(u.last_login_at).toLocaleDateString() })
+              : t('adminUsers.neverLoggedIn')}
+          </span>
           <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ background: 'var(--qayed-cachet)18', color: 'var(--qayed-cachet)' }}>{u.role === 'hotel_admin' ? t('settingsPage.roleAdmin') : u.role === 'receptionist' ? t('settingsPage.roleReceptionist') : u.role}</span>
           {!u.last_login_at && (
             <button onClick={() => resendMut.mutate()} disabled={resendMut.isPending} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors" title={t('settingsPage.resendInvite')}>
@@ -148,12 +153,15 @@ export const AdminUsersPage = () => {
   const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('');
+  const [hotelId, setHotelId] = useState('');
   const [page, setPage] = useState(1);
   const [showCreate, setShowCreate] = useState(false);
 
+  const { data: hotels } = useQuery({ queryKey: ['admin-hotels-all'], queryFn: () => adminHotelsApi.list({ per_page: 200 }) });
+
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-users', search, role, page],
-    queryFn: () => adminUsersApi.list({ search: search || undefined, role: role || undefined, page, per_page: 20 }),
+    queryKey: ['admin-users', search, role, hotelId, page],
+    queryFn: () => adminUsersApi.list({ search: search || undefined, role: role || undefined, hotel_id: hotelId || undefined, page, per_page: 20 }),
   });
 
   const users = data?.data ?? [];
@@ -179,6 +187,10 @@ export const AdminUsersPage = () => {
           <option value="">{t('adminUsers.allRoles')}</option>
           <option value="hotel_admin">{t('settingsPage.roleAdmins')}</option>
           <option value="receptionist">{t('settingsPage.roleReceptionists')}</option>
+        </select>
+        <select className="input" value={hotelId} onChange={(e) => { setHotelId(e.target.value); setPage(1); }}>
+          <option value="">{t('adminUsers.allProperties')}</option>
+          {(hotels?.data ?? []).map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
         </select>
       </div>
 

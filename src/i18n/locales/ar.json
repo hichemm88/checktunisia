@@ -6,6 +6,8 @@
     "contactEmail": "بريد التواصل",
     "rcMatricule": "السجل التجاري",
     "subscriptionUpdated": "تم تحديث الاشتراك",
+    "lastCheckIn": "آخر تسجيل نزيل",
+    "checkInsThisMonth": "تسجيلات النزلاء هذا الشهر",
     "negotiatedPrice": "السعر المتفاوض عليه: {{price}} دينار",
     "amountEmptyHint": "المبلغ (فارغ = {{price}} دينار)",
     "tax": "الضريبة",
@@ -67,7 +69,9 @@
     "noOrg": "لا توجد هيئة",
     "newAuthorityUser": "مستخدم سلطة جديد",
     "initialPassword": "كلمة المرور الأولية",
-    "organization": "الهيئة"
+    "organization": "الهيئة",
+    "twoFaEnabled": "المصادقة الثنائية مفعّلة",
+    "twoFaDisabled": "المصادقة الثنائية غير مفعّلة"
   },
   "adminHotels": {
     "title": "المؤسسات",
@@ -106,7 +110,10 @@
     "userDeleted": "تم حذف المستخدم",
     "passwordRegeneratedNoEmailShort": "تم إعادة توليد كلمة المرور، لم يُرسل البريد الإلكتروني.",
     "searchPlaceholder": "الاسم، البريد الإلكتروني…",
-    "allRoles": "جميع الأدوار"
+    "allRoles": "جميع الأدوار",
+    "allProperties": "جميع المؤسسات",
+    "lastLoginOn": "آخر تسجيل دخول {{date}}",
+    "neverLoggedIn": "لم يسجل الدخول بعد"
   },
   "adminEmails": {
     "title": "البريد الإلكتروني",
@@ -120,7 +127,9 @@
     "preview": "معاينة",
     "sendRemindersNow": "إرسال التذكيرات الآن",
     "remindersSent": "تم إرسال {{sent}}/{{candidates}} تذكيرًا",
-    "remindersHint": "تذكير انتهاء الصلاحية ليس تلقائيًا بعد (يتطلب مجدولًا من جانب الخادم) — استخدم هذا الزر لإخطار الاشتراكات التي تنتهي خلال 7 أيام."
+    "remindersHint": "تُرسل التذكيرات تلقائيًا كل يوم (ج-30/ج-7/ج-1 للاشتراكات، ج-2/ج-0 للتجارب) — يبقى هذا الزر متاحًا لفرض إرسال فوري.",
+    "sendTest": "أرسل لي رسالة تجريبية",
+    "testSent": "تم إرسال رسالة تجريبية إلى {{email}}"
   },
   "adminPayments": {
     "title": "المدفوعات",
@@ -174,6 +183,8 @@
   "adminActivity": {
     "title": "سجل النشاط",
     "allActions": "جميع الإجراءات",
+    "filteredByAgent": "مُصفّى حسب {{name}}",
+    "filterByThisAgent": "التصفية حسب هذا العون",
     "action": {
       "hotelCreated": "أنشأ مؤسسة",
       "hotelUpdated": "عدّل مؤسسة",
@@ -1034,7 +1045,8 @@
     "searchPlaceholder": "البحث عن مضيف، مؤسسة، مستخدم…",
     "searchResultHost": "مضيف",
     "searchResultProperty": "مؤسسة",
-    "searchResultUser": "مستخدم"
+    "searchResultUser": "مستخدم",
+    "searchResultCheckIn": "تسجيل نزيل"
   },
   "hotelLayout": {
     "nav": {

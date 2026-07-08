@@ -14,7 +14,7 @@ export interface AdminUser {
 }
 
 export const adminUsersApi = {
-  list: (params?: { search?: string; role?: string; status?: string; organization_id?: string; page?: number; per_page?: number }) =>
+  list: (params?: { search?: string; role?: string; status?: string; organization_id?: string; hotel_id?: string; page?: number; per_page?: number }) =>
     api.get<{ data: AdminUser[]; meta: { total: number; current_page: number; per_page: number } }>('/admin/users', { params }).then((r) => r.data),
   create: (data: { first_name: string; last_name: string; email: string; role: string; hotel_id: string }) =>
     api.post('/admin/users', data).then((r) => r.data.data),

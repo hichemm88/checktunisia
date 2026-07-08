@@ -20,6 +20,7 @@ export interface AdminHostDetail extends Omit<AdminHost, 'properties_count' | 's
     plan?: { id: number; name: string; price_monthly: string; price_yearly: string | null };
   } | null;
   users: { id: string; first_name: string; last_name: string; email: string; role: string; status: string }[];
+  metrics: { last_check_in_at: string | null; check_ins_this_month: number; mrr: string | null };
 }
 
 export const adminHostsApi = {
