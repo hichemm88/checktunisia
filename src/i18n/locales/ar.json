@@ -946,7 +946,7 @@
     "passwordLabel": "كلمة المرور *",
     "passwordHint": "12 حرفًا على الأقل · حرف كبير · رقم · رمز",
     "passwordConfirmLabel": "تأكيد كلمة المرور *",
-    "planHint": "الباقة تُطبّق على <strong>جميع مؤسساتك</strong>. تشمل <strong>فترة تجريبية مجانية لمدة 30 يومًا</strong> — لا حاجة للدفع الآن.",
+    "planHint": "الباقة تُطبّق على <strong>جميع مؤسساتك</strong>. تشمل <strong>فترة تجريبية مجانية لمدة 7 أيام</strong> — لا حاجة للدفع الآن.",
     "perMonth": "شهر",
     "upToUnits": "حتى {{count}} وحدة إجمالاً",
     "plusUnits": "{{count}}+ وحدة",

@@ -968,7 +968,7 @@
     "passwordLabel": "Mot de passe *",
     "passwordHint": "12 car. min · majuscule · chiffre · symbole",
     "passwordConfirmLabel": "Confirmer le mot de passe *",
-    "planHint": "Plan appliqué à <strong>l'ensemble de vos hébergements</strong>. <strong>30 jours d'essai gratuit</strong> inclus — aucun paiement maintenant.",
+    "planHint": "Plan appliqué à <strong>l'ensemble de vos hébergements</strong>. <strong>7 jours d'essai gratuit</strong> inclus — aucun paiement maintenant.",
     "perMonth": "mois",
     "upToUnits": "jusqu'à {{count}} unités au total",
     "plusUnits": "{{count}}+ unités",

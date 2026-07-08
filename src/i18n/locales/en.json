@@ -968,7 +968,7 @@
     "passwordLabel": "Password *",
     "passwordHint": "12 char. min · uppercase · number · symbol",
     "passwordConfirmLabel": "Confirm password *",
-    "planHint": "Plan applied to <strong>all your properties</strong>. <strong>30-day free trial</strong> included — no payment now.",
+    "planHint": "Plan applied to <strong>all your properties</strong>. <strong>7-day free trial</strong> included — no payment now.",
     "perMonth": "month",
     "upToUnits": "up to {{count}} units total",
     "plusUnits": "{{count}}+ units",
