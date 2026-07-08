@@ -270,7 +270,19 @@
       "watchlistEntryRemoved": "حذف إدخالاً من قائمة المراقبة",
       "watchlistImport": "استورد قائمة مراقبة",
       "watchlistHitsViewed": "اطّلع على تنبيهات المراقبة",
-      "watchlistHitAcknowledged": "عالج تنبيه مراقبة"
+      "watchlistHitAcknowledged": "عالج تنبيه مراقبة",
+      "planCreated": "أنشأ باقة",
+      "planUpdated": "عدّل باقة",
+      "planDeleted": "حذف باقة",
+      "pageCreated": "أنشأ صفحة في الموقع",
+      "pageUpdated": "عدّل صفحة في الموقع",
+      "pagePublished": "نشر صفحة في الموقع",
+      "pageDeleted": "حذف صفحة من الموقع",
+      "menuItemCreated": "أضاف إدخال قائمة",
+      "menuItemUpdated": "عدّل إدخال قائمة",
+      "menuItemDeleted": "حذف إدخال قائمة",
+      "mediaUploaded": "رفع ملف وسائط",
+      "mediaDeleted": "حذف ملف وسائط"
     }
   },
   "adminDashboard": {
@@ -1075,7 +1087,9 @@
       "facturation": "الفوترة",
       "payments": "المدفوعات",
       "emails": "البريد الإلكتروني",
-      "activity": "سجل النشاط"
+      "activity": "سجل النشاط",
+      "pages": "صفحات الموقع",
+      "menus": "القوائم"
     },
     "searchPlaceholder": "البحث عن مضيف، مؤسسة، مستخدم…",
     "searchResultHost": "مضيف",
@@ -1103,5 +1117,41 @@
       "watchlist": "قائمة المراقبة",
       "activity": "النشاط"
     }
+  },
+  "adminPages": {
+    "title": "صفحات الموقع",
+    "hint": "محتوى الصفحة الرئيسية والصفحات العامة، قابل للتحرير بالكتل (سحب وإفلات) بالفرنسية والإنجليزية والعربية.",
+    "slugLabel": "المعرّف (رابط الصفحة)",
+    "pageCreated": "تم إنشاء الصفحة — افتحها لبناء محتواها.",
+    "pageDeleted": "تم حذف الصفحة.",
+    "confirmDelete": "حذف هذه الصفحة نهائيًا؟",
+    "published": "منشورة",
+    "draft": "مسودة",
+    "view": "عرض الصفحة",
+    "noContent": "لا يوجد محتوى",
+    "empty": "لا توجد صفحات بعد.",
+    "unsaved": "تغييرات غير محفوظة",
+    "savedToast": "تم حفظ الصفحة.",
+    "publishedToast": "تم نشر الصفحة.",
+    "publish": "نشر",
+    "unpublish": "إلغاء النشر",
+    "copyFromFr": "نسخ من الفرنسية",
+    "copyFromFrHint": "ينسخ البنية الفرنسية إلى هذه اللغة لترجمتها.",
+    "metaTitle": "عنوان SEO",
+    "metaDescription": "وصف SEO"
+  },
+  "adminMenus": {
+    "title": "قوائم الموقع",
+    "hint": "روابط شريط التنقل وتذييل الصفحة العامة — صفحات داخلية أو روابط خارجية، بثلاث لغات.",
+    "label": "التسمية",
+    "location": "الموقع",
+    "navbar": "شريط التنقل",
+    "footer": "تذييل الصفحة",
+    "target": "الوجهة",
+    "internalPage": "صفحة داخلية",
+    "externalUrl": "رابط خارجي",
+    "saved": "تم حفظ القائمة.",
+    "deleted": "تم حذف الإدخال.",
+    "empty": "لا توجد إدخالات."
   }
 }

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore, Role } from '@/stores/authStore';
@@ -10,7 +11,7 @@ import { LoginPage } from '@/pages/auth/LoginPage';
 import { SetPasswordPage } from '@/pages/auth/SetPasswordPage';
 import { TwoFactorVerifyPage } from '@/pages/auth/TwoFactorVerifyPage';
 import { TwoFactorSetupPage } from '@/pages/authority/TwoFactorSetupPage';
-import { LandingPage } from '@/pages/LandingPage';
+import { CmsPage } from '@/pages/CmsPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/hotel/DashboardPage';
 import { CheckInWizardPage } from '@/pages/hotel/CheckInWizardPage';
@@ -41,7 +42,13 @@ import { AdminFacturationPage } from '@/pages/admin/AdminFacturationPage';
 import { AdminPaymentsPage } from '@/pages/admin/AdminPaymentsPage';
 import { AdminEmailsPage } from '@/pages/admin/AdminEmailsPage';
 import { AdminActivityPage } from '@/pages/admin/AdminActivityPage';
+import { AdminPagesPage } from '@/pages/admin/AdminPagesPage';
+import { AdminMenusPage } from '@/pages/admin/AdminMenusPage';
 import { ProfilePage } from '@/pages/profile/ProfilePage';
+
+// Éditeur Puck : lazy — son bundle (drag-and-drop) ne doit jamais être servi
+// aux visiteurs du site public ni aux autres portails.
+const AdminPageEditorPage = lazy(() => import('@/pages/admin/AdminPageEditorPage'));
 
 // ─── Guards ─────────────────────────────────────────────────────────────────
 const RequireAuth = () => {
@@ -101,8 +108,9 @@ export const App = () => (
   <>
   <IdleGuard />
   <Routes>
-    {/* Public — redirect to role home if already authenticated */}
-    <Route path="/"         element={<PublicRoute element={<LandingPage />} />} />
+    {/* Public — redirect to role home if already authenticated.
+        La homepage est la page CMS `home` (langue active), gérée dans l'admin. */}
+    <Route path="/"         element={<PublicRoute element={<CmsPage slugOverride="home" />} />} />
     <Route path="/register" element={<PublicRoute element={<RegisterPage />} />} />
     <Route path="/login"                element={<LoginPage />} />
     <Route path="/set-password"         element={<SetPasswordPage />} />
@@ -162,10 +170,26 @@ export const App = () => (
           <Route path="/admin/payments"      element={<AdminPaymentsPage />} />
           <Route path="/admin/emails"        element={<AdminEmailsPage />} />
           <Route path="/admin/activity"      element={<AdminActivityPage />} />
+          <Route path="/admin/pages"         element={<AdminPagesPage />} />
+          <Route path="/admin/menus"         element={<AdminMenusPage />} />
           <Route path="/admin/settings"      element={<Navigate to="/admin/payments" replace />} />
         </Route>
+        {/* Éditeur Puck — plein écran, hors AdminLayout */}
+        <Route path="/admin/pages/:id/edit" element={
+          <Suspense fallback={<div className="p-8 text-sm text-gray-400">…</div>}>
+            <AdminPageEditorPage />
+          </Suspense>
+        } />
       </Route>
     </Route>
+
+    {/* Pages CMS publiques — /:locale (home) et /:locale/:slug. Déclarées en
+        dernier avant le fallback : les routes applicatives ci-dessus priment,
+        et Page::RESERVED_SLUGS interdit les slugs en collision côté backend. */}
+    <Route path="/fr" element={<CmsPage slugOverride="home" localeOverride="fr" />} />
+    <Route path="/en" element={<CmsPage slugOverride="home" localeOverride="en" />} />
+    <Route path="/ar" element={<CmsPage slugOverride="home" localeOverride="ar" />} />
+    <Route path="/:locale/:slug" element={<CmsPage />} />
 
     {/* Fallback */}
     <Route path="*" element={<Navigate to="/" replace />} />

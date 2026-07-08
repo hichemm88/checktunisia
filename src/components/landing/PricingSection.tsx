@@ -52,7 +52,25 @@ const PricingCard = ({ plan, lang, cycle }: { plan: SubscriptionPlan; lang: stri
  * La bascule Mensuel/Annuel (1 mois offert : annuel = 11 × mensuel) est de
  * l'état React — pas le script vanilla de la landing.
  */
-export const PricingSection = () => {
+export interface PricingSectionProps {
+  eyebrow?: string;
+  title?: string;
+  lead?: string;
+  monthlyLabel?: string;
+  yearlyLabel?: string;
+  yearlyBadge?: string;
+  footnote?: string;
+}
+
+export const PricingSection = ({
+  eyebrow = 'Abonnement',
+  title = 'Simple et transparent.',
+  lead = 'Sans engagement. Sans frais cachés. Changez de plan à tout moment.',
+  monthlyLabel = 'Mensuel',
+  yearlyLabel = 'Annuel',
+  yearlyBadge = '1 mois offert',
+  footnote = "Aucune carte bancaire requise pour démarrer l'essai · Résiliable à tout moment",
+}: PricingSectionProps) => {
   const { i18n } = useTranslation();
   const lang = i18n.resolvedLanguage ?? 'fr';
   const [cycle, setCycle] = useState<BillingCycle>('monthly');
@@ -65,25 +83,25 @@ export const PricingSection = () => {
   return (
     <section className="section section-alt" id="tarifs">
       <div className="wrap">
-        <div className="eyebrow fade-in" style={{ justifyContent: 'center' }}>Abonnement</div>
-        <h2 className="section-h2 fade-in" style={{ textAlign: 'center' }}>Simple et transparent.</h2>
+        <div className="eyebrow fade-in" style={{ justifyContent: 'center' }}>{eyebrow}</div>
+        <h2 className="section-h2 fade-in" style={{ textAlign: 'center' }}>{title}</h2>
         <p className="section-lead fade-in" style={{ textAlign: 'center', margin: '0 auto 32px', maxWidth: 480 }}>
-          Sans engagement. Sans frais cachés. Changez de plan à tout moment.
+          {lead}
         </p>
         <div className="pricing-toggle fade-in">
           <button type="button" className={`pt-btn${cycle === 'monthly' ? ' active' : ''}`} onClick={() => setCycle('monthly')}>
-            Mensuel
+            {monthlyLabel}
           </button>
           <button type="button" className={`pt-btn${cycle === 'yearly' ? ' active' : ''}`} onClick={() => setCycle('yearly')}>
-            Annuel <span className="pt-badge">1 mois offert</span>
+            {yearlyLabel} <span className="pt-badge">{yearlyBadge}</span>
           </button>
         </div>
         <div className="pricing-grid fade-in">
           {(plans ?? []).map((p) => <PricingCard key={p.id} plan={p} lang={lang} cycle={cycle} />)}
         </div>
-        <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--fiche)' }}>
-          Aucune carte bancaire requise pour démarrer l'essai · Résiliable à tout moment
-        </p>
+        {footnote && (
+          <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--fiche)' }}>{footnote}</p>
+        )}
       </div>
     </section>
   );
