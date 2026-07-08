@@ -49,7 +49,14 @@
     "customPrice": "سعر مخصص",
     "planHash": "باقة #{{id}}",
     "until": "حتى {{date}}",
-    "convertToPaid": "التحويل إلى مدفوع"
+    "convertToPaid": "التحويل إلى مدفوع",
+    "billingCycle": "دورة الفوترة",
+    "cycleMonthly": "شهري",
+    "cycleYearly": "سنوي (شهر مجاني)",
+    "yearlyBadge": "سنوي",
+    "planPriceHint": "سعر الباقة: {{price}}",
+    "oneMonthFree": "شهر مجاني",
+    "yearlyAutoHint": "(تلقائي: 11 × السعر الشهري — شهر مجاني)"
   },
   "adminAuthority": {
     "title": "السلطات",
@@ -355,7 +362,10 @@
       "userInviteResent": "أعاد إرسال دعوة",
       "profileUpdated": "عدّل ملفه الشخصي",
       "profilePasswordChanged": "غيّر كلمة مروره"
-    }
+    },
+    "billingCycle": "دورة الفوترة",
+    "cycleMonthly": "شهري",
+    "cycleYearly": "سنوي"
   },
   "propertiesPage": {
     "typeHotel": "فندق",
@@ -1018,7 +1028,11 @@
     "unlimitedUsers": "مستخدمون غير محدودين",
     "nUsers": "{{count}} مستخدمين",
     "createAccount": "إنشاء حسابي",
-    "alreadyHaveAccount": "لديك حساب بالفعل؟"
+    "alreadyHaveAccount": "لديك حساب بالفعل؟",
+    "perYear": "سنة",
+    "billingMonthly": "شهري",
+    "billingYearly": "سنوي",
+    "oneMonthFree": "شهر مجاني"
   },
   "authority2fa": {
     "loadError": "تعذّر تحميل إعدادات التحقق بخطوتين. أعد المحاولة.",

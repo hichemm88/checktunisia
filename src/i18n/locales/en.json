@@ -49,7 +49,14 @@
     "customPrice": "Custom price",
     "planHash": "Plan #{{id}}",
     "until": "until {{date}}",
-    "convertToPaid": "Convert to paid"
+    "convertToPaid": "Convert to paid",
+    "billingCycle": "Billing cycle",
+    "cycleMonthly": "Monthly",
+    "cycleYearly": "Yearly (1 month free)",
+    "yearlyBadge": "Yearly",
+    "planPriceHint": "Plan price: {{price}}",
+    "oneMonthFree": "1 month free",
+    "yearlyAutoHint": "(auto: 11 × monthly price — 1 month free)"
   },
   "adminAuthority": {
     "title": "Authorities",
@@ -355,7 +362,10 @@
       "userInviteResent": "resent an invitation",
       "profileUpdated": "updated their profile",
       "profilePasswordChanged": "changed their password"
-    }
+    },
+    "billingCycle": "Billing cycle",
+    "cycleMonthly": "Monthly",
+    "cycleYearly": "Yearly"
   },
   "propertiesPage": {
     "typeHotel": "Hotel",
@@ -1040,7 +1050,11 @@
     "unlimitedUsers": "Unlimited users",
     "nUsers": "{{count}} users",
     "createAccount": "Create my account",
-    "alreadyHaveAccount": "Already have an account?"
+    "alreadyHaveAccount": "Already have an account?",
+    "perYear": "year",
+    "billingMonthly": "Monthly",
+    "billingYearly": "Yearly",
+    "oneMonthFree": "1 month free"
   },
   "authority2fa": {
     "loadError": "Could not load 2FA configuration. Please try again.",

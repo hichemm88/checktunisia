@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { extractErrors } from '@/lib/api';
 import { formatTND, formatTNDAmount } from '@/lib/money';
+import { BillingCycle, cycleEndDate, effectiveYearlyPrice, priceForCycle } from '@/lib/billing';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
@@ -51,7 +52,8 @@ const CreatePlanForm = ({ onDone }: { onDone: () => void }) => {
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Input label={t('adminSubscriptions.monthlyPrice')} type="number" value={form.price_monthly} onChange={(e) => set('price_monthly', e.target.value)} />
-        <Input label={t('adminSubscriptions.yearlyPrice')} type="number" value={form.price_yearly} onChange={(e) => set('price_yearly', e.target.value)} />
+        <Input label={t('adminSubscriptions.yearlyPrice')} type="number" value={form.price_yearly} onChange={(e) => set('price_yearly', e.target.value)}
+          placeholder={form.price_monthly ? (parseFloat(form.price_monthly) * 11).toFixed(3) : ''} />
       </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
       <div className="flex gap-2">
@@ -112,7 +114,8 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
         <div className="flex flex-col gap-2">
           <div className="grid grid-cols-2 gap-2">
             <Input label={t('adminSubscriptions.monthlyPriceShort')} type="number" value={form.price_monthly} onChange={(e) => setForm((f) => ({ ...f, price_monthly: e.target.value }))} />
-            <Input label={t('adminSubscriptions.yearlyPriceShort')} type="number" value={String(form.price_yearly)} onChange={(e) => setForm((f) => ({ ...f, price_yearly: e.target.value }))} />
+            <Input label={t('adminSubscriptions.yearlyPriceShort')} type="number" value={String(form.price_yearly)} onChange={(e) => setForm((f) => ({ ...f, price_yearly: e.target.value }))}
+              placeholder={(parseFloat(String(form.price_monthly) || '0') * 11).toFixed(3)} />
           </div>
           <Input label={t('adminSubscriptions.maxRooms')} type="number" value={String(form.max_rooms)} onChange={(e) => setForm((f) => ({ ...f, max_rooms: e.target.value }))} />
           <label className="flex items-center gap-2 text-sm">
@@ -124,9 +127,10 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
           </div>
         </div>
       ) : (
-        <div className="flex gap-4 text-sm text-gray-600">
+        <div className="flex gap-4 text-sm text-gray-600 flex-wrap items-baseline">
           <span className="font-mono">{t('adminSubscriptions.priceMonth', { price: formatTNDAmount(plan.price_monthly) })}</span>
-          {plan.price_yearly && <span className="font-mono">{t('adminSubscriptions.priceYear', { price: formatTNDAmount(plan.price_yearly) })}</span>}
+          <span className="font-mono">{t('adminSubscriptions.priceYear', { price: formatTNDAmount(effectiveYearlyPrice(plan)) })}</span>
+          {!plan.price_yearly && <span className="text-xs text-gray-400">{t('adminSubscriptions.yearlyAutoHint')}</span>}
         </div>
       )}
 
@@ -189,7 +193,9 @@ const AbonnementsActifsTab = () => {
   });
   const { data: plans } = useQuery({ queryKey: ['admin-plans'], queryFn: adminPlansApi.list });
 
-  const [newSub, setNewSub] = useState({ plan_id: '', billing_cycle: 'monthly', started_at: new Date().toISOString().slice(0, 10), expires_at: '', custom_price: '' });
+  const today = new Date().toISOString().slice(0, 10);
+  const [newSub, setNewSub] = useState({ plan_id: '', billing_cycle: 'monthly' as BillingCycle, started_at: today, expires_at: cycleEndDate(today, 'monthly'), custom_price: '' });
+  const selectedPlan = plans?.find((p) => String(p.id) === newSub.plan_id);
   const createSubMut = useAdminMutation({
     mutationFn: () => adminSubscriptionsApi.createForHost(selectedHost!.id, {
       ...newSub, plan_id: parseInt(newSub.plan_id), custom_price: newSub.custom_price === '' ? null : parseFloat(newSub.custom_price),
@@ -239,11 +245,24 @@ const AbonnementsActifsTab = () => {
             <div className="card p-4 flex flex-col gap-2">
               <Select label={t('adminSubscriptions.plan')} value={newSub.plan_id} onChange={(e) => setNewSub((f) => ({ ...f, plan_id: e.target.value }))}
                 options={[{ value: '', label: t('adminUsers.choose') }, ...(plans ?? []).map((p) => ({ value: String(p.id), label: p.name }))]} />
+              <Select label={t('adminSubscriptions.billingCycle')} value={newSub.billing_cycle}
+                onChange={(e) => setNewSub((f) => ({ ...f, billing_cycle: e.target.value as BillingCycle, expires_at: cycleEndDate(f.started_at, e.target.value as BillingCycle) }))}
+                options={[
+                  { value: 'monthly', label: t('adminSubscriptions.cycleMonthly') },
+                  { value: 'yearly', label: t('adminSubscriptions.cycleYearly') },
+                ]} />
               <div className="grid grid-cols-2 gap-2">
-                <Input label={t('adminSubscriptions.start')} type="date" value={newSub.started_at} onChange={(e) => setNewSub((f) => ({ ...f, started_at: e.target.value }))} />
+                <Input label={t('adminSubscriptions.start')} type="date" value={newSub.started_at}
+                  onChange={(e) => setNewSub((f) => ({ ...f, started_at: e.target.value, expires_at: cycleEndDate(e.target.value, f.billing_cycle) }))} />
                 <Input label={t('profile.expiration')} type="date" value={newSub.expires_at} onChange={(e) => setNewSub((f) => ({ ...f, expires_at: e.target.value }))} />
               </div>
               <Input label={t('adminSubscriptions.customPriceOptional')} type="number" value={newSub.custom_price} onChange={(e) => setNewSub((f) => ({ ...f, custom_price: e.target.value }))} />
+              {selectedPlan && newSub.custom_price === '' && (
+                <p className="text-xs text-gray-400">
+                  {t('adminSubscriptions.planPriceHint', { price: formatTND(priceForCycle(selectedPlan, newSub.billing_cycle)) })}
+                  {newSub.billing_cycle === 'yearly' && <span className="text-green-600 font-semibold"> · {t('adminSubscriptions.oneMonthFree')}</span>}
+                </p>
+              )}
               <Button size="sm" loading={createSubMut.isPending} disabled={!newSub.plan_id || !newSub.expires_at} onClick={() => createSubMut.mutate()}>{t('adminHotels.create')}</Button>
             </div>
           )}
@@ -255,6 +274,11 @@ const AbonnementsActifsTab = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="font-medium">{s.plan?.name ?? t('adminSubscriptions.planHash', { id: s.plan_id })}</span>
+                    {s.billing_cycle === 'yearly' && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full ms-2 align-middle" style={{ background: 'rgba(83,70,168,0.08)', color: '#5346A8' }}>
+                        {t('adminSubscriptions.yearlyBadge')}
+                      </span>
+                    )}
                     <span className="text-xs text-gray-400 ms-2">{t('adminSubscriptions.until', { date: fmtDate(s.expires_at, locale) })}</span>
                     {s.custom_price && <span className="font-mono text-xs text-gray-400 ms-2">· {formatTND(s.custom_price)}</span>}
                   </div>

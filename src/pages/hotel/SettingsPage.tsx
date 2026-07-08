@@ -499,6 +499,14 @@ const AbonnementTab = () => {
               <span className="text-sm text-gray-500">{t('common.status')}</span>
               <Badge variant={SUB_BADGE_VARIANT[sub.status] ?? 'suspended'}>{t(`settingsPage.subscriptionStatus.${sub.status}`, sub.status)}</Badge>
             </div>
+            {sub.billing_cycle && (
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-sm text-gray-500">{t('settingsPage.billingCycle')}</span>
+                <span className="text-sm font-medium text-gray-900">
+                  {t(sub.billing_cycle === 'yearly' ? 'settingsPage.cycleYearly' : 'settingsPage.cycleMonthly')}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between py-1.5 border-b border-gray-50">
               <span className="text-sm text-gray-500">{t('settingsPage.expiresOn')}</span>
               <span className="text-sm font-medium text-gray-900">

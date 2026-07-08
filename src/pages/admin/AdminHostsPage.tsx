@@ -13,6 +13,7 @@ import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { formatTND, formatTNDAmount } from '@/lib/money';
+import { BillingCycle, cycleEndDate, priceForCycle } from '@/lib/billing';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { Pagination } from '@/components/ui/Pagination';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
@@ -85,7 +86,9 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-detail', host.id] }); setEditing(false); },
   });
 
-  const [newSub, setNewSub] = useState({ plan_id: '', billing_cycle: 'monthly', started_at: new Date().toISOString().slice(0, 10), expires_at: '', custom_price: '' });
+  const today = new Date().toISOString().slice(0, 10);
+  const [newSub, setNewSub] = useState({ plan_id: '', billing_cycle: 'monthly' as BillingCycle, started_at: today, expires_at: cycleEndDate(today, 'monthly'), custom_price: '' });
+  const newSubPlan = plans?.find((p) => String(p.id) === newSub.plan_id);
   const createMut = useAdminMutation({
     mutationFn: () => adminSubscriptionsApi.createForHost(host.id, {
       ...newSub,
@@ -109,11 +112,24 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
           <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: 'var(--qayed-papier)' }}>
             <Select label={t('adminSubscriptions.plan')} value={newSub.plan_id} onChange={(e) => setNewSub((f) => ({ ...f, plan_id: e.target.value }))}
               options={[{ value: '', label: t('adminUsers.choose') }, ...(plans ?? []).map((p) => ({ value: String(p.id), label: p.name }))]} />
+            <Select label={t('adminSubscriptions.billingCycle')} value={newSub.billing_cycle}
+              onChange={(e) => setNewSub((f) => ({ ...f, billing_cycle: e.target.value as BillingCycle, expires_at: cycleEndDate(f.started_at, e.target.value as BillingCycle) }))}
+              options={[
+                { value: 'monthly', label: t('adminSubscriptions.cycleMonthly') },
+                { value: 'yearly', label: t('adminSubscriptions.cycleYearly') },
+              ]} />
             <div className="grid grid-cols-2 gap-2">
-              <Input label={t('adminSubscriptions.start')} type="date" value={newSub.started_at} onChange={(e) => setNewSub((f) => ({ ...f, started_at: e.target.value }))} />
+              <Input label={t('adminSubscriptions.start')} type="date" value={newSub.started_at}
+                onChange={(e) => setNewSub((f) => ({ ...f, started_at: e.target.value, expires_at: cycleEndDate(e.target.value, f.billing_cycle) }))} />
               <Input label={t('profile.expiration')} type="date" value={newSub.expires_at} onChange={(e) => setNewSub((f) => ({ ...f, expires_at: e.target.value }))} />
             </div>
             <Input label={t('adminSubscriptions.customPriceOptional')} type="number" value={newSub.custom_price} onChange={(e) => setNewSub((f) => ({ ...f, custom_price: e.target.value }))} />
+            {newSubPlan && newSub.custom_price === '' && (
+              <p className="text-xs text-gray-400">
+                {t('adminSubscriptions.planPriceHint', { price: formatTND(priceForCycle(newSubPlan, newSub.billing_cycle)) })}
+                {newSub.billing_cycle === 'yearly' && <span className="text-green-600 font-semibold"> · {t('adminSubscriptions.oneMonthFree')}</span>}
+              </p>
+            )}
             <div className="flex gap-2">
               <Button size="sm" loading={createMut.isPending} disabled={!newSub.plan_id || !newSub.expires_at} onClick={() => createMut.mutate()}>{t('adminHotels.create')}</Button>
               <Button size="sm" variant="ghost" onClick={() => setCreating(false)}>{t('common.cancel')}</Button>
@@ -132,7 +148,14 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
       </div>
       {!editing ? (
         <div className="rounded-xl p-3 text-sm" style={{ background: 'var(--qayed-papier)' }}>
-          <p className="font-semibold">{sub.plan?.name}</p>
+          <p className="font-semibold">
+            {sub.plan?.name}
+            {sub.billing_cycle === 'yearly' && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full ms-2 align-middle" style={{ background: 'rgba(83,70,168,0.08)', color: '#5346A8' }}>
+                {t('adminSubscriptions.yearlyBadge')}
+              </span>
+            )}
+          </p>
           <p className="text-xs text-gray-400">{t('adminHotels.expiresOn', { date: fmtDate(sub.expires_at, locale) })}</p>
           {sub.custom_price && <p className="font-mono text-xs text-gray-400">{t('adminHosts.negotiatedPrice', { price: formatTNDAmount(sub.custom_price) })}</p>}
         </div>
