@@ -1,9 +1,35 @@
 import { api } from '@/lib/api';
 
+/** Trilingual text — fr is the required source language, en/ar fall back to fr at render. */
+export interface I18nText {
+  fr: string;
+  en?: string | null;
+  ar?: string | null;
+}
+
+export interface PlanBullet {
+  included: boolean;
+  text: I18nText;
+}
+
+/** Public display content of a plan (pricing cards) — separate from functional `features`. */
+export interface PlanMarketing {
+  tier?: I18nText;
+  display_name?: I18nText;
+  tagline?: I18nText;
+  price_note?: I18nText;
+  price_note_yearly?: I18nText;
+  badge?: I18nText | null;
+  featured?: boolean;
+  cta_label?: I18nText;
+  bullets?: PlanBullet[];
+}
+
 export interface AdminPlan {
   id: number;
   name: string;
   slug: string;
+  scope: 'hotel' | 'organization';
   min_rooms: number;
   max_rooms: number | null;
   price_monthly: string;
@@ -12,6 +38,7 @@ export interface AdminPlan {
   effective_price_yearly: string;
   currency: string;
   features: Record<string, number>;
+  marketing: PlanMarketing | null;
   is_active: boolean;
   sort_order: number;
 }

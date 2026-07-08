@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Package, CreditCard, Plus, X, Pencil, Check, Trash2, Search } from 'lucide-react';
+import { Package, CreditCard, Plus, X, Pencil, Check, Trash2, Search, Globe } from 'lucide-react';
 import { adminPlansApi, adminSubscriptionsApi, AdminPlan } from '@/api/admin/subscriptions';
+import { PlanMarketingEditor } from '@/components/admin/PlanMarketingEditor';
 import { adminHostsApi } from '@/api/admin/hosts';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -68,6 +69,7 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
+  const [editingMarketing, setEditingMarketing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [form, setForm] = useState({
     price_monthly: plan.price_monthly, price_yearly: plan.price_yearly ?? '',
@@ -101,8 +103,9 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
         </div>
         <div className="flex items-center gap-2">
           <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${plan.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{plan.is_active ? t('adminDashboard.active') : t('adminSubscriptions.inactive')}</span>
-          {!editing && (
+          {!editing && !editingMarketing && (
             <>
+              <button onClick={() => setEditingMarketing(true)} title={t('adminSubscriptions.publicContent')} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500"><Globe className="h-3.5 w-3.5" /></button>
               <button onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500"><Pencil className="h-3.5 w-3.5" /></button>
               <button onClick={() => setConfirmDelete((s) => !s)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
             </>
@@ -133,6 +136,8 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
           {!plan.price_yearly && <span className="text-xs text-gray-400">{t('adminSubscriptions.yearlyAutoHint')}</span>}
         </div>
       )}
+
+      {editingMarketing && <PlanMarketingEditor plan={plan} onDone={() => setEditingMarketing(false)} />}
 
       {confirmDelete && (
         <div className="flex gap-2 p-2 rounded-lg bg-red-50">

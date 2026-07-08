@@ -1,14 +1,17 @@
 import { useEffect, useRef } from 'react';
+import { PricingSection } from '@/components/landing/PricingSection';
 
 /**
  * Marketing landing page — ported from the standalone qayed-site-v3.html
  * mockup. Kept as near-verbatim static markup (rendered via
  * dangerouslySetInnerHTML) rather than decomposed into components: the
  * content has no data binding and no reuse elsewhere, so a mechanical
- * componentization would only add risk without benefit. Interactivity
- * (nav shadow, burger menu, fade-ins, pricing/flow tab switchers) is
- * reimplemented in the effect below, mirroring the original vanilla
- * <script> block 1:1.
+ * componentization would only add risk without benefit. Exception: the
+ * pricing section is a real React component (PricingSection) fed by
+ * GET /public/plans — single source of truth with the admin Packs editor.
+ * Interactivity (nav shadow, burger menu, fade-ins, pricing/flow tab
+ * switchers) is reimplemented in the effect below, mirroring the original
+ * vanilla <script> block 1:1.
  *
  * The stylesheet is injected via a JSX <style> element (not a `.css`
  * import) so it unmounts with the component — the original file relies on
@@ -371,7 +374,7 @@ const LANDING_CSS = `
 @media(prefers-reduced-motion:reduce){.qayed-landing *,.qayed-landing *::before,.qayed-landing *::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 `;
 
-const LANDING_BODY = `
+const LANDING_BODY_TOP = `
 <nav id="navbar">
   <div class="nav-inner">
     <a href="#" class="nav-logo">
@@ -900,79 +903,9 @@ const LANDING_BODY = `
     </div>
   </div>
 </section>
+`;
 
-<section class="section section-alt" id="tarifs">
-  <div class="wrap">
-    <div class="eyebrow fade-in" style="justify-content:center">Abonnement</div>
-    <h2 class="section-h2 fade-in" style="text-align:center">Simple et transparent.</h2>
-    <p class="section-lead fade-in" style="text-align:center;margin:0 auto 32px;max-width:480px">Sans engagement. Sans frais cachés. Changez de plan à tout moment.</p>
-    <div class="pricing-toggle fade-in">
-      <button type="button" class="pt-btn active" data-cycle="monthly">Mensuel</button>
-      <button type="button" class="pt-btn" data-cycle="yearly">Annuel <span class="pt-badge">1 mois offert</span></button>
-    </div>
-    <div class="pricing-grid fade-in">
-      <div class="pricing-card">
-        <p class="pricing-tier">Starter</p>
-        <p class="pricing-name">Essentiel</p>
-        <p class="pricing-tagline">Pour démarrer — petits hébergements avec un volume modéré d'arrivées.</p>
-        <div class="pricing-sep"></div>
-        <div class="price-row"><span class="price-num" data-monthly="59" data-yearly="649">59</span><span class="price-cur">TND</span><span class="price-was" data-yearly-was="708 TND" hidden></span></div>
-        <div class="price-per" data-monthly-label="par établissement / mois" data-yearly-label="par établissement / an · 12 mois au prix de 11">par établissement / mois</div>
-        <ul class="feat-list">
-          <li>1 établissement</li>
-          <li>100 check-ins / mois</li>
-          <li>Scan MRZ passeport & CIN</li>
-          <li>Fiche de police imprimable</li>
-          <li>2 comptes utilisateurs</li>
-          <li>Historique 12 mois</li>
-          <li class="off">Multi-établissements</li>
-          <li class="off">Export CSV nuitées</li>
-        </ul>
-        <a href="/register" class="btn btn-ghost btn-full">Essayer 7 jours gratuit</a>
-      </div>
-      <div class="pricing-card featured">
-        <div class="pricing-pill">Le plus choisi</div>
-        <p class="pricing-tier">Pro</p>
-        <p class="pricing-name">Professionnel</p>
-        <p class="pricing-tagline">Pour les hôtels et maisons d'hôtes avec un flux régulier d'arrivées.</p>
-        <div class="pricing-sep"></div>
-        <div class="price-row"><span class="price-num" data-monthly="119" data-yearly="1309">119</span><span class="price-cur">TND</span><span class="price-was" data-yearly-was="1428 TND" hidden></span></div>
-        <div class="price-per" data-monthly-label="par établissement / mois" data-yearly-label="par établissement / an · 12 mois au prix de 11">par établissement / mois</div>
-        <ul class="feat-list">
-          <li>1 établissement</li>
-          <li>Check-ins illimités</li>
-          <li>Scan MRZ passeport & CIN</li>
-          <li>Fiche de police imprimable</li>
-          <li>5 comptes utilisateurs</li>
-          <li>Historique illimité</li>
-          <li>Export CSV nuitées</li>
-          <li class="off">Multi-établissements</li>
-        </ul>
-        <a href="/register" class="btn btn-primary btn-full">Essayer 7 jours gratuit</a>
-      </div>
-      <div class="pricing-card">
-        <p class="pricing-tier">Groupe</p>
-        <p class="pricing-name">Multi-sites</p>
-        <p class="pricing-tagline">Pour les groupes qui gèrent plusieurs établissements depuis un seul compte.</p>
-        <div class="pricing-sep"></div>
-        <div class="price-row"><span class="price-num" data-monthly="199" data-yearly="2189">199</span><span class="price-cur">TND</span><span class="price-was" data-yearly-was="2388 TND" hidden></span></div>
-        <div class="price-per" data-monthly-label="par société / mois · tous établissements inclus" data-yearly-label="par société / an · tous établissements · 12 mois au prix de 11">par société / mois · tous établissements inclus</div>
-        <ul class="feat-list">
-          <li>Établissements illimités</li>
-          <li>Check-ins illimités</li>
-          <li>Comptes utilisateurs illimités</li>
-          <li>Tableau de bord multi-sites</li>
-          <li>Journal d'activité consolidé</li>
-          <li>Export CSV multi-établissements</li>
-          <li>Support prioritaire</li>
-        </ul>
-        <a href="/register" class="btn btn-ghost btn-full">Essayer 7 jours gratuit</a>
-      </div>
-    </div>
-    <p style="text-align:center;margin-top:20px;font-size:13px;color:var(--fiche)">Aucune carte bancaire requise pour démarrer l'essai · Résiliable à tout moment</p>
-  </div>
-</section>
-
+const LANDING_BODY_BOTTOM = `
 <section class="section">
   <div class="wrap">
     <div class="eyebrow fade-in">Témoignages</div>
@@ -1112,25 +1045,8 @@ export const LandingPage = () => {
     };
     flowSteps.forEach((el) => el.addEventListener('click', () => onFlowStepClick(el)));
 
-    // Bascule tarifs Mensuel / Annuel (1 mois offert — annuel = 11 × mensuel)
-    const cycleBtns = root.querySelectorAll<HTMLElement>('[data-cycle]');
-    const applyCycle = (cycle: string) => {
-      cycleBtns.forEach((b) => b.classList.toggle('active', b.dataset.cycle === cycle));
-      root.querySelectorAll<HTMLElement>('.price-num').forEach((el) => {
-        const v = cycle === 'yearly' ? el.dataset.yearly : el.dataset.monthly;
-        if (v) el.textContent = v;
-      });
-      root.querySelectorAll<HTMLElement>('.price-per').forEach((el) => {
-        const v = cycle === 'yearly' ? el.dataset.yearlyLabel : el.dataset.monthlyLabel;
-        if (v) el.textContent = v;
-      });
-      root.querySelectorAll<HTMLElement>('.price-was').forEach((el) => {
-        el.hidden = cycle !== 'yearly';
-        if (cycle === 'yearly' && el.dataset.yearlyWas) el.textContent = el.dataset.yearlyWas;
-      });
-    };
-    const onCycleClick = (el: HTMLElement) => applyCycle(el.dataset.cycle ?? 'monthly');
-    cycleBtns.forEach((el) => el.addEventListener('click', () => onCycleClick(el)));
+    // NOTE : la bascule Mensuel/Annuel vit dans PricingSection (état React) —
+    // le DOM des cartes tarifs appartient à React, pas à ce script vanilla.
 
     return () => {
       document.title = prevTitle;
@@ -1144,7 +1060,9 @@ export const LandingPage = () => {
   return (
     <div className="qayed-landing" ref={rootRef}>
       <style>{LANDING_CSS}</style>
-      <div dangerouslySetInnerHTML={{ __html: LANDING_BODY }} />
+      <div dangerouslySetInnerHTML={{ __html: LANDING_BODY_TOP }} />
+      <PricingSection />
+      <div dangerouslySetInnerHTML={{ __html: LANDING_BODY_BOTTOM }} />
     </div>
   );
 };

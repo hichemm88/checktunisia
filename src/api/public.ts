@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { PlanMarketing } from '@/api/admin/subscriptions';
 
 const BASE = import.meta.env.VITE_API_URL ?? 'https://checktunisia-backend-production.up.railway.app/api/v1';
 
@@ -28,13 +29,15 @@ export interface SubscriptionPlan {
   id: number;
   name: string;
   slug: string;
+  scope: 'hotel' | 'organization';
   min_rooms: number;
   max_rooms: number | null;
   price_monthly: string;
   price_yearly: string | null;
   /** price_yearly if set, else 11 × monthly (one month free) — computed by the backend. */
-  effective_price_yearly?: string;
+  effective_price_yearly: string;
   features: { max_users: number; ocr_scans_per_month: number };
+  marketing: PlanMarketing | null;
 }
 
 export const registerOrganization = (payload: RegisterPayload) =>
