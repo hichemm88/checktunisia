@@ -8,6 +8,8 @@ export interface AdminPlan {
   max_rooms: number | null;
   price_monthly: string;
   price_yearly: string | null;
+  /** price_yearly if set, else 11 × monthly (one month free) — computed by the backend. */
+  effective_price_yearly: string;
   currency: string;
   features: Record<string, number>;
   is_active: boolean;

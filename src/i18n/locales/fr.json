@@ -49,7 +49,14 @@
     "customPrice": "Prix personnalisé",
     "planHash": "Pack #{{id}}",
     "until": "jusqu'au {{date}}",
-    "convertToPaid": "Convertir en payant"
+    "convertToPaid": "Convertir en payant",
+    "billingCycle": "Cycle de facturation",
+    "cycleMonthly": "Mensuel",
+    "cycleYearly": "Annuel (1 mois offert)",
+    "yearlyBadge": "Annuel",
+    "planPriceHint": "Prix du plan : {{price}}",
+    "oneMonthFree": "1 mois offert",
+    "yearlyAutoHint": "(auto : 11 × prix mensuel — 1 mois offert)"
   },
   "adminAuthority": {
     "title": "Autorités",
@@ -355,7 +362,10 @@
       "userInviteResent": "a renvoyé une invitation",
       "profileUpdated": "a modifié son profil",
       "profilePasswordChanged": "a changé son mot de passe"
-    }
+    },
+    "billingCycle": "Cycle de facturation",
+    "cycleMonthly": "Mensuel",
+    "cycleYearly": "Annuel"
   },
   "propertiesPage": {
     "typeHotel": "Hôtel",
@@ -1040,7 +1050,11 @@
     "unlimitedUsers": "Utilisateurs illimités",
     "nUsers": "{{count}} utilisateurs",
     "createAccount": "Créer mon compte",
-    "alreadyHaveAccount": "Déjà un compte ?"
+    "alreadyHaveAccount": "Déjà un compte ?",
+    "perYear": "an",
+    "billingMonthly": "Mensuel",
+    "billingYearly": "Annuel",
+    "oneMonthFree": "1 mois offert"
   },
   "authority2fa": {
     "loadError": "Impossible de charger la configuration 2FA. Réessayez.",

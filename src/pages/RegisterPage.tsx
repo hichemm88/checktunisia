@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/Input';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { fetchPlans, registerOrganization, RegisterPayload } from '@/api/public';
+import { effectiveYearlyPrice } from '@/lib/billing';
+import { formatTNDAmount } from '@/lib/money';
 
 type FormData = RegisterPayload & { password_confirmation: string };
 
@@ -20,6 +22,7 @@ const INIT: FormData = {
   first_name: '', last_name: '', email: '', phone: '',
   password: '', password_confirmation: '',
   plan_slug: '',
+  billing_cycle: 'monthly',
 };
 
 export const RegisterPage = () => {
@@ -249,6 +252,29 @@ export const RegisterPage = () => {
             <p className="text-sm text-gray-500 -mt-2">
               <Trans t={t} i18nKey="register.planHint" components={{ strong: <strong /> }} />
             </p>
+
+            {/* Cycle de facturation */}
+            <div className="flex items-center gap-2 rounded-xl p-1 w-fit mx-auto" style={{ background: '#F6F5F1' }}>
+              {(['monthly', 'yearly'] as const).map((cycle) => (
+                <button
+                  key={cycle}
+                  type="button"
+                  onClick={() => set('billing_cycle', cycle)}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                  style={form.billing_cycle === cycle
+                    ? { background: '#fff', color: '#5346A8', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
+                    : { color: '#9ca3af' }}
+                >
+                  {t(cycle === 'monthly' ? 'register.billingMonthly' : 'register.billingYearly')}
+                  {cycle === 'yearly' && (
+                    <span className="ms-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(22,163,74,0.1)', color: '#16a34a' }}>
+                      {t('register.oneMonthFree')}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
             {plans.map((p) => (
               <button
                 key={p.slug}
@@ -269,9 +295,20 @@ export const RegisterPage = () => {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-gray-900">{p.name}</span>
-                    <span className="text-lg font-extrabold" style={{ color: '#5346A8' }}>
-                      {p.price_monthly} TND<span className="text-xs font-normal text-gray-400">/{t('register.perMonth')}</span>
-                    </span>
+                    {form.billing_cycle === 'yearly' ? (
+                      <span className="text-end">
+                        <span className="block text-lg font-extrabold" style={{ color: '#5346A8' }}>
+                          {formatTNDAmount(effectiveYearlyPrice(p))} TND<span className="text-xs font-normal text-gray-400">/{t('register.perYear')}</span>
+                        </span>
+                        <span className="block text-[11px] text-gray-400 line-through">
+                          {formatTNDAmount(Number(p.price_monthly) * 12)} TND
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-lg font-extrabold" style={{ color: '#5346A8' }}>
+                        {p.price_monthly} TND<span className="text-xs font-normal text-gray-400">/{t('register.perMonth')}</span>
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-gray-400 mt-0.5">
                     {p.max_rooms ? t('register.upToUnits', { count: p.max_rooms }) : t('register.plusUnits', { count: p.min_rooms })}
