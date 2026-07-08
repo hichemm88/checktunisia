@@ -12,7 +12,7 @@ import { ListSkeleton } from '@/components/admin/ListSkeleton';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatTND } from '@/lib/money';
 
-const C = { navy: '#5346A8' };
+const C = { navy: 'var(--qayed-cachet)' };
 
 const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
   <label className="flex items-center gap-3 cursor-pointer select-none">
@@ -165,7 +165,7 @@ const HistoriqueTab = () => {
             </div>
             {p.provider === 'virement' && p.status === 'pending' && (
               rejectingId === p.id ? (
-                <div className="flex items-end gap-2 rounded-lg p-2" style={{ background: '#F6F5F1' }}>
+                <div className="flex items-end gap-2 rounded-lg p-2" style={{ background: 'var(--qayed-papier)' }}>
                   <Input label={t('adminPayments.rejectReason')} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} />
                   <Button size="sm" variant="ghost" loading={rejectMut.isPending} disabled={!rejectReason} onClick={() => rejectMut.mutate(p.id)}>{t('common.confirm')}</Button>
                   <Button size="sm" variant="ghost" onClick={() => { setRejectingId(null); setRejectReason(''); }}>{t('common.cancel')}</Button>
@@ -195,7 +195,7 @@ export const AdminPaymentsPage = () => {
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
       <h1 className="qayed-display text-xl text-gray-900">{t('adminPayments.title')}</h1>
-      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#DDD9CF' }}>
+      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: 'var(--qayed-ligne)' }}>
         <button onClick={() => setTab('config')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'config' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
           <Wallet className="h-4 w-4" /> {t('adminPayments.paymentMethods')}
         </button>

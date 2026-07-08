@@ -38,7 +38,37 @@ const ACTION_KEYS: Record<string, string> = {
   'subscription.expired': 'adminActivity.action.subscriptionExpired',
   'invoice.updated': 'adminActivity.action.invoiceUpdated',
   'check_in.created': 'adminActivity.action.checkinCreated',
+  'check_in.updated': 'adminActivity.action.checkinUpdated',
+  'check_in.completed': 'adminActivity.action.checkinCompleted',
+  'check_in.checked_out': 'adminActivity.action.checkinCheckedOut',
+  'check_in.cancelled': 'adminActivity.action.checkinCancelled',
   'check_in.deleted': 'adminActivity.action.checkinDeleted',
+  'guest.added': 'adminActivity.action.guestAdded',
+  'guest.updated': 'adminActivity.action.guestUpdated',
+  'guest.removed': 'adminActivity.action.guestRemoved',
+  'room.created': 'adminActivity.action.roomCreated',
+  'room.updated': 'adminActivity.action.roomUpdated',
+  'room.deleted': 'adminActivity.action.roomDeleted',
+  'scan.uploaded': 'adminActivity.action.scanUploaded',
+  'organization.registered': 'adminActivity.action.organizationRegistered',
+  'authority.hotel_viewed': 'adminActivity.action.authorityHotelViewed',
+  'payment.initiated': 'adminActivity.action.paymentInitiated',
+  'payment.completed': 'adminActivity.action.paymentCompleted',
+  'payment.virement_declared': 'adminActivity.action.virementDeclared',
+  'payment.virement_validated': 'adminActivity.action.virementValidated',
+  'payment.virement_rejected': 'adminActivity.action.virementRejected',
+  'profile.updated': 'adminActivity.action.profileUpdated',
+  'profile.password_changed': 'adminActivity.action.profilePasswordChanged',
+  'auth.2fa_enabled': 'adminActivity.action.twoFaEnabled',
+  'auth.2fa_disabled': 'adminActivity.action.twoFaDisabled',
+  'auth.2fa_verified': 'adminActivity.action.twoFaVerified',
+  'auth.2fa_failed': 'adminActivity.action.twoFaFailed',
+  'watchlist.entry_added': 'adminActivity.action.watchlistEntryAdded',
+  'watchlist.entry_updated': 'adminActivity.action.watchlistEntryUpdated',
+  'watchlist.entry_removed': 'adminActivity.action.watchlistEntryRemoved',
+  'watchlist.import': 'adminActivity.action.watchlistImport',
+  'watchlist.hits_viewed': 'adminActivity.action.watchlistHitsViewed',
+  'watchlist.hit_acknowledged': 'adminActivity.action.watchlistHitAcknowledged',
 };
 
 export const AdminActivityPage = () => {
@@ -67,7 +97,7 @@ export const AdminActivityPage = () => {
         {isLoading && <ListSkeleton rows={3} />}
         {data?.data.map((entry) => (
           <div key={entry.id} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold mt-0.5" style={{ background: '#EEEBFA', color: '#5346A8' }}>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold mt-0.5" style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}>
               {entry.actor?.first_name?.[0] ?? '?'}
             </div>
             <div className="min-w-0 flex-1">

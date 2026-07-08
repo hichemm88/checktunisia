@@ -18,9 +18,9 @@ import { ListSkeleton } from '@/components/admin/ListSkeleton';
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 
 const STATUS: Record<string, { labelKey: string; color: string; icon: typeof CheckCircle2 }> = {
-  active:    { labelKey: 'adminHotels.statusActive',    color: '#1F9D6B', icon: CheckCircle2 },
+  active:    { labelKey: 'adminHotels.statusActive',    color: 'var(--qayed-conforme)', icon: CheckCircle2 },
   suspended: { labelKey: 'adminHotels.statusSuspended', color: '#ef4444', icon: XCircle },
-  pending:   { labelKey: 'adminHotels.statusPending',   color: '#E3A008', icon: Clock },
+  pending:   { labelKey: 'adminHotels.statusPending',   color: 'var(--qayed-vigilance)', icon: Clock },
   closed:    { labelKey: 'adminHotels.statusClosed',    color: '#9ca3af', icon: XCircle },
 };
 
@@ -184,11 +184,11 @@ export const AdminHotelsPage = () => {
               return (
                 <button key={h.id} onClick={() => setSelected(h)}
                   className="card p-4 text-start hover:shadow-md transition-all"
-                  style={{ outline: selected?.id === h.id ? '2px solid #5346A8' : 'none' }}>
+                  style={{ outline: selected?.id === h.id ? '2px solid var(--qayed-cachet)' : 'none' }}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0" style={{ background: '#5346A818' }}>
-                        <Building2 className="h-5 w-5" style={{ color: '#5346A8' }} />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0" style={{ background: 'var(--qayed-cachet)18' }}>
+                        <Building2 className="h-5 w-5" style={{ color: 'var(--qayed-cachet)' }} />
                       </div>
                       <div className="min-w-0">
                         <p className="font-semibold text-gray-900 truncate">{h.name}</p>
@@ -264,7 +264,7 @@ export const AdminHotelsPage = () => {
               <div>
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('settingsPage.subscription')}</p>
                 {selected.subscription ? (
-                  <div className="rounded-xl p-3 text-sm" style={{ background: '#F6F5F1' }}>
+                  <div className="rounded-xl p-3 text-sm" style={{ background: 'var(--qayed-papier)' }}>
                     <p className="font-semibold">{selected.subscription.plan}</p>
                     <p className="text-xs text-gray-400">{t('adminHotels.expiresOn', { date: fmtDate(selected.subscription.expires_at, locale) })}</p>
                     <span className={`text-xs font-medium ${selected.subscription.status === 'active' ? 'text-green-600' : 'text-red-500'}`}>

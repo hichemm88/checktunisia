@@ -89,8 +89,8 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
     <div className="flex flex-col gap-3 p-4 rounded-xl border border-gray-100 bg-white">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: '#5346A818' }}>
-            <Package className="h-4 w-4" style={{ color: '#5346A8' }} />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: 'var(--qayed-cachet)18' }}>
+            <Package className="h-4 w-4" style={{ color: 'var(--qayed-cachet)' }} />
           </div>
           <div>
             <p className="font-bold text-gray-900">{plan.name}</p>
@@ -259,7 +259,7 @@ const AbonnementsActifsTab = () => {
                     {s.custom_price && <span className="font-mono text-xs text-gray-400 ms-2">· {formatTND(s.custom_price)}</span>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs font-semibold ${s.status === 'active' ? 'text-green-600' : s.status === 'trial' ? 'text-[#5346A8]' : 'text-gray-400'}`}>
+                    <span className={`text-xs font-semibold ${s.status === 'active' ? 'text-green-600' : s.status === 'trial' ? 'text-[var(--qayed-cachet)]' : 'text-gray-400'}`}>
                       {t(`settingsPage.subscriptionStatus.${s.status}`, s.status)}
                     </span>
                     {(s.status === 'active' || s.status === 'trial') && (
@@ -277,7 +277,7 @@ const AbonnementsActifsTab = () => {
                   </div>
                 </div>
                 {editingExpiry && (s.status === 'active' || s.status === 'trial') && (
-                  <div className="flex items-end gap-2 p-2 rounded-lg" style={{ background: '#F6F5F1' }}>
+                  <div className="flex items-end gap-2 p-2 rounded-lg" style={{ background: 'var(--qayed-papier)' }}>
                     <Input label={t('profile.expiration')} type="date" value={expiryForm.expires_at} onChange={(e) => setExpiryForm((f) => ({ ...f, expires_at: e.target.value }))} />
                     <Input label={t('adminSubscriptions.customPrice')} type="number" value={String(expiryForm.custom_price)} onChange={(e) => setExpiryForm((f) => ({ ...f, custom_price: e.target.value }))} />
                     <Button size="sm" loading={updateSubMut.isPending} onClick={() => updateSubMut.mutate({ id: s.id, data: { expires_at: expiryForm.expires_at, custom_price: expiryForm.custom_price === '' ? null : parseFloat(String(expiryForm.custom_price)) } })} className="gap-1"><Check className="h-3.5 w-3.5" /></Button>
@@ -310,7 +310,7 @@ export const AdminSubscriptionsPage = () => {
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
       <h1 className="qayed-display text-xl text-gray-900">{t('settingsPage.subscription')}</h1>
-      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: '#DDD9CF' }}>
+      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: 'var(--qayed-ligne)' }}>
         <button onClick={() => setTab('packs')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'packs' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>
           <Package className="h-4 w-4" /> {t('adminSubscriptions.plans')}
         </button>

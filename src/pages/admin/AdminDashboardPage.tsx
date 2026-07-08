@@ -49,25 +49,25 @@ export const AdminDashboardPage = () => {
       {stats && (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Stat icon={Building2}    label={t('adminDashboard.properties')} value={stats.hotels.total}     color="#5346A8" />
-            <Stat icon={CheckCircle2} label={t('adminDashboard.active')}     value={stats.hotels.active}    color="#1F9D6B" />
+            <Stat icon={Building2}    label={t('adminDashboard.properties')} value={stats.hotels.total}     color="var(--qayed-cachet)" />
+            <Stat icon={CheckCircle2} label={t('adminDashboard.active')}     value={stats.hotels.active}    color="var(--qayed-conforme)" />
             <Stat icon={XCircle}      label={t('adminDashboard.suspended')}  value={stats.hotels.suspended} color="#ef4444" />
-            <Stat icon={Clock}        label={t('adminDashboard.pending')}    value={stats.hotels.pending}   color="#E3A008" />
+            <Stat icon={Clock}        label={t('adminDashboard.pending')}    value={stats.hotels.pending}   color="var(--qayed-vigilance)" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Stat icon={TrendingUp} label={t('adminDashboard.checkinsToday')}     value={stats.check_ins.today}      color="#8B7FE0" />
-            <Stat icon={Users}      label={t('adminDashboard.checkinsThisMonth')} value={stats.check_ins.this_month} color="#8B7FE0" />
+            <Stat icon={TrendingUp} label={t('adminDashboard.checkinsToday')}     value={stats.check_ins.today}      color="var(--qayed-cachet-sombre)" />
+            <Stat icon={Users}      label={t('adminDashboard.checkinsThisMonth')} value={stats.check_ins.this_month} color="var(--qayed-cachet-sombre)" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Stat icon={Hourglass}    label={t('adminDashboard.trialsInProgress')}    value={stats.trials.in_progress}    color="#5346A8" />
-            <Stat icon={TrendingDown} label={t('adminDashboard.trialConversionRate')} value={stats.trials.conversion_rate} suffix="%" color="#1F9D6B" />
+            <Stat icon={Hourglass}    label={t('adminDashboard.trialsInProgress')}    value={stats.trials.in_progress}    color="var(--qayed-cachet)" />
+            <Stat icon={TrendingDown} label={t('adminDashboard.trialConversionRate')} value={stats.trials.conversion_rate} suffix="%" color="var(--qayed-conforme)" />
           </div>
 
           <div>
             <p className="text-sm font-bold text-gray-700 mb-3">{t('adminDashboard.toWatch')}</p>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-              <AlertCard icon={CreditCard} title={t('adminDashboard.expiringSubscriptions')} color="#E3A008" empty={!stats.alerts.expiring_subscriptions.length}>
+              <AlertCard icon={CreditCard} title={t('adminDashboard.expiringSubscriptions')} color="var(--qayed-vigilance)" empty={!stats.alerts.expiring_subscriptions.length}>
                 {stats.alerts.expiring_subscriptions.map((s) => (
                   <div key={s.id} className="flex items-center justify-between text-sm">
                     <span className="truncate font-medium text-gray-800">{s.name}</span>
@@ -75,7 +75,7 @@ export const AdminDashboardPage = () => {
                   </div>
                 ))}
               </AlertCard>
-              <AlertCard icon={Hourglass} title={t('adminDashboard.trialsExpiringSoon')} color="#5346A8" empty={!stats.trials.expiring_soon.length}>
+              <AlertCard icon={Hourglass} title={t('adminDashboard.trialsExpiringSoon')} color="var(--qayed-cachet)" empty={!stats.trials.expiring_soon.length}>
                 {stats.trials.expiring_soon.map((s) => (
                   <div key={s.id} className="flex items-center justify-between text-sm">
                     <span className="truncate font-medium text-gray-800">{s.name}</span>
