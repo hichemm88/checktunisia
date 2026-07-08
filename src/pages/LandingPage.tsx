@@ -252,6 +252,12 @@ const LANDING_CSS = `
 .qayed-landing .price-num{font-family:var(--font-d);font-variation-settings:'wdth' 118;font-weight:900;font-size:44px;letter-spacing:-.02em;line-height:1}
 .qayed-landing .price-cur{font-size:18px;color:var(--fiche)}
 .qayed-landing .price-per{font-size:13px;color:var(--fiche);margin-bottom:24px}
+.qayed-landing .pricing-toggle{display:flex;justify-content:center;gap:4px;margin:0 auto 40px;background:var(--blanc);border:1px solid var(--ligne);border-radius:100px;padding:5px;width:fit-content}
+.qayed-landing .pt-btn{border:0;background:transparent;font-family:var(--font-b);font-size:14px;font-weight:600;color:var(--fiche);padding:9px 20px;border-radius:100px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .2s,color .2s}
+.qayed-landing .pt-btn.active{background:var(--cachet);color:#fff}
+.qayed-landing .pt-badge{font-size:11px;font-weight:700;background:var(--conforme-fond);color:var(--conforme-txt);padding:3px 8px;border-radius:100px;white-space:nowrap}
+.qayed-landing .pt-btn.active .pt-badge{background:rgba(255,255,255,.18);color:#fff}
+.qayed-landing .price-was{font-size:14px;color:var(--fiche);text-decoration:line-through;margin-inline-start:6px}
 .qayed-landing .feat-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
 .qayed-landing .feat-list li{display:flex;align-items:flex-start;gap:9px;font-size:14px;color:var(--texte-sec)}
 .qayed-landing .feat-list li::before{content:'✓';color:var(--conforme);font-weight:700;flex-shrink:0}
@@ -899,15 +905,19 @@ const LANDING_BODY = `
   <div class="wrap">
     <div class="eyebrow fade-in" style="justify-content:center">Abonnement</div>
     <h2 class="section-h2 fade-in" style="text-align:center">Simple et transparent.</h2>
-    <p class="section-lead fade-in" style="text-align:center;margin:0 auto 48px;max-width:480px">Sans engagement. Sans frais cachés. Changez de plan à tout moment.</p>
+    <p class="section-lead fade-in" style="text-align:center;margin:0 auto 32px;max-width:480px">Sans engagement. Sans frais cachés. Changez de plan à tout moment.</p>
+    <div class="pricing-toggle fade-in">
+      <button type="button" class="pt-btn active" data-cycle="monthly">Mensuel</button>
+      <button type="button" class="pt-btn" data-cycle="yearly">Annuel <span class="pt-badge">1 mois offert</span></button>
+    </div>
     <div class="pricing-grid fade-in">
       <div class="pricing-card">
         <p class="pricing-tier">Starter</p>
         <p class="pricing-name">Essentiel</p>
         <p class="pricing-tagline">Pour démarrer — petits hébergements avec un volume modéré d'arrivées.</p>
         <div class="pricing-sep"></div>
-        <div class="price-row"><span class="price-num">59</span><span class="price-cur">TND</span></div>
-        <div class="price-per">par établissement / mois</div>
+        <div class="price-row"><span class="price-num" data-monthly="59" data-yearly="649">59</span><span class="price-cur">TND</span><span class="price-was" data-yearly-was="708 TND" hidden></span></div>
+        <div class="price-per" data-monthly-label="par établissement / mois" data-yearly-label="par établissement / an · 12 mois au prix de 11">par établissement / mois</div>
         <ul class="feat-list">
           <li>1 établissement</li>
           <li>100 check-ins / mois</li>
@@ -926,8 +936,8 @@ const LANDING_BODY = `
         <p class="pricing-name">Professionnel</p>
         <p class="pricing-tagline">Pour les hôtels et maisons d'hôtes avec un flux régulier d'arrivées.</p>
         <div class="pricing-sep"></div>
-        <div class="price-row"><span class="price-num">119</span><span class="price-cur">TND</span></div>
-        <div class="price-per">par établissement / mois</div>
+        <div class="price-row"><span class="price-num" data-monthly="119" data-yearly="1309">119</span><span class="price-cur">TND</span><span class="price-was" data-yearly-was="1428 TND" hidden></span></div>
+        <div class="price-per" data-monthly-label="par établissement / mois" data-yearly-label="par établissement / an · 12 mois au prix de 11">par établissement / mois</div>
         <ul class="feat-list">
           <li>1 établissement</li>
           <li>Check-ins illimités</li>
@@ -945,8 +955,8 @@ const LANDING_BODY = `
         <p class="pricing-name">Multi-sites</p>
         <p class="pricing-tagline">Pour les groupes qui gèrent plusieurs établissements depuis un seul compte.</p>
         <div class="pricing-sep"></div>
-        <div class="price-row"><span class="price-num">199</span><span class="price-cur">TND</span></div>
-        <div class="price-per">par société / mois · tous établissements inclus</div>
+        <div class="price-row"><span class="price-num" data-monthly="199" data-yearly="2189">199</span><span class="price-cur">TND</span><span class="price-was" data-yearly-was="2388 TND" hidden></span></div>
+        <div class="price-per" data-monthly-label="par société / mois · tous établissements inclus" data-yearly-label="par société / an · tous établissements · 12 mois au prix de 11">par société / mois · tous établissements inclus</div>
         <ul class="feat-list">
           <li>Établissements illimités</li>
           <li>Check-ins illimités</li>
@@ -1101,6 +1111,26 @@ export const LandingPage = () => {
       root.querySelector(`#screen-${n}`)?.classList.add('active');
     };
     flowSteps.forEach((el) => el.addEventListener('click', () => onFlowStepClick(el)));
+
+    // Bascule tarifs Mensuel / Annuel (1 mois offert — annuel = 11 × mensuel)
+    const cycleBtns = root.querySelectorAll<HTMLElement>('[data-cycle]');
+    const applyCycle = (cycle: string) => {
+      cycleBtns.forEach((b) => b.classList.toggle('active', b.dataset.cycle === cycle));
+      root.querySelectorAll<HTMLElement>('.price-num').forEach((el) => {
+        const v = cycle === 'yearly' ? el.dataset.yearly : el.dataset.monthly;
+        if (v) el.textContent = v;
+      });
+      root.querySelectorAll<HTMLElement>('.price-per').forEach((el) => {
+        const v = cycle === 'yearly' ? el.dataset.yearlyLabel : el.dataset.monthlyLabel;
+        if (v) el.textContent = v;
+      });
+      root.querySelectorAll<HTMLElement>('.price-was').forEach((el) => {
+        el.hidden = cycle !== 'yearly';
+        if (cycle === 'yearly' && el.dataset.yearlyWas) el.textContent = el.dataset.yearlyWas;
+      });
+    };
+    const onCycleClick = (el: HTMLElement) => applyCycle(el.dataset.cycle ?? 'monthly');
+    cycleBtns.forEach((el) => el.addEventListener('click', () => onCycleClick(el)));
 
     return () => {
       document.title = prevTitle;
