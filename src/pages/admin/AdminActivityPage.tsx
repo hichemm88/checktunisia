@@ -38,6 +38,7 @@ const ACTION_KEYS: Record<string, string> = {
   'subscription.trial_expired': 'adminActivity.action.trialExpired',
   'subscription.expired': 'adminActivity.action.subscriptionExpired',
   'invoice.updated': 'adminActivity.action.invoiceUpdated',
+  'invoice.deleted': 'adminActivity.action.invoiceDeleted',
   'check_in.created': 'adminActivity.action.checkinCreated',
   'check_in.updated': 'adminActivity.action.checkinUpdated',
   'check_in.completed': 'adminActivity.action.checkinCompleted',

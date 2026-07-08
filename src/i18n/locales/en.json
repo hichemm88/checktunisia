@@ -166,8 +166,10 @@
     "virementRejected": "Transfer rejected."
   },
   "adminShared": {
-    "invoiceMarkedPaid": "Invoice marked as paid",
-    "markPaid": "Mark paid"
+    "invoiceStatusUpdated": "Invoice status updated",
+    "invoiceDeleted": "Invoice deleted",
+    "deleteInvoice": "Delete invoice",
+    "changeStatus": "Change status"
   },
   "adminFacturation": {
     "title": "Invoicing",
@@ -214,6 +216,7 @@
       "trialExpired": "free trial ended (automatic)",
       "subscriptionExpired": "subscription expired (automatic)",
       "invoiceUpdated": "updated an invoice",
+      "invoiceDeleted": "deleted an invoice",
       "checkinCreated": "created a check-in",
       "checkinUpdated": "updated a check-in",
       "checkinCompleted": "completed a check-in",

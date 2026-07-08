@@ -166,8 +166,10 @@
     "virementRejected": "تم رفض التحويل."
   },
   "adminShared": {
-    "invoiceMarkedPaid": "تم وضع علامة على الفاتورة كمدفوعة",
-    "markPaid": "وضع علامة مدفوعة"
+    "invoiceStatusUpdated": "تم تحديث حالة الفاتورة",
+    "invoiceDeleted": "تم حذف الفاتورة",
+    "deleteInvoice": "حذف الفاتورة",
+    "changeStatus": "تغيير الحالة"
   },
   "adminFacturation": {
     "title": "الفوترة",
@@ -214,6 +216,7 @@
       "trialExpired": "انتهت الفترة التجريبية (تلقائي)",
       "subscriptionExpired": "انتهى الاشتراك (تلقائي)",
       "invoiceUpdated": "عدّل فاتورة",
+      "invoiceDeleted": "حذف فاتورة",
       "checkinCreated": "أنشأ تسجيل نزيل",
       "checkinUpdated": "عدّل تسجيل نزيل",
       "checkinCompleted": "أتمّ تسجيل نزيل",
