@@ -58,7 +58,7 @@ function mrzDateToISO(yymmdd: string | null | undefined, isBirth: boolean): stri
 
 // ─── Preprocessing image ────────────────────────────────────────────────────────
 
-const MAX_CANVAS_W = 2000; // px — limiter la taille du buffer sur mobile
+const MAX_CANVAS_W = 1300; // px — la MRZ reste lisible et l'OCR est bien plus rapide
 
 /** Seuil Otsu — s'adapte à l'éclairage réel sans valeur fixe arbitraire */
 function otsuThreshold(histogram: number[], total: number): number {
@@ -80,8 +80,21 @@ function otsuThreshold(histogram: number[], total: number): number {
   return threshold;
 }
 
-/** Charge un File en HTMLImageElement (une seule fois, réutilisé pour toutes les rotations). */
-function loadImage(file: File): Promise<HTMLImageElement> {
+/**
+ * Charge un File en image bitmap, EN APPLIQUANT l'orientation EXIF.
+ *
+ * Crucial : les photos de téléphone (iPhone surtout) stockent souvent les pixels
+ * en paysage + un tag EXIF « pivoter ». `createImageBitmap(..., {imageOrientation:
+ * 'from-image'})` applique ce tag → l'image « à l'endroit » l'est vraiment côté
+ * pixels, donc la rotation 0° la lit du premier coup (rapide). Sans ça, une photo
+ * droite paraissait pivotée et enchaînait 10+ passes OCR inutiles.
+ * Repli sur HTMLImageElement si l'API n'est pas dispo (rotations brute-force alors).
+ */
+async function loadImage(file: File): Promise<HTMLImageElement> {
+  // Chargement via <img> : les navigateurs modernes (Chrome 81+, Safari 13.4+)
+  // APPLIQUENT l'orientation EXIF par défaut au rendu ET au drawImage. Une photo
+  // « droite » a donc des pixels droits → lue dès la rotation 0 (1 passe, rapide).
+  // (createImageBitmap, lui, n'applique PAS l'EXIF → cassait ce cas.)
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
@@ -99,7 +112,7 @@ function loadImage(file: File): Promise<HTMLImageElement> {
  * En essayant les 4 rotations, on couvre : document droit (0), à l'envers (180)
  * et paysage/portrait pivoté (90/270) — sans aucune dépendance externe.
  */
-function renderRotatedCrop(img: HTMLImageElement, rotationDeg: number, cropFromBottom: number): string {
+function renderRotatedCrop(img: ImageBitmap | HTMLImageElement, rotationDeg: number, cropFromBottom: number): string {
   const swap = rotationDeg === 90 || rotationDeg === 270;
   const srcW = img.width, srcH = img.height;
   const rotW = swap ? srcH : srcW;
@@ -402,6 +415,47 @@ const ENG_LANG_PATH  = langDataPath('eng');
 const OCRB_LANG_PATH = '/tessdata';
 const OCRB_LANG      = 'ocrb_int';
 
+/**
+ * Worker OCR mis en cache au niveau module.
+ *
+ * Le chargement du modèle (~1,4 Mo) + du core WASM prend 3-5 s : le refaire à
+ * chaque scan rendait l'opération très lente. On le crée donc UNE fois et on le
+ * réutilise (jamais terminé). En cas d'échec de chargement, le cache est vidé
+ * pour permettre une nouvelle tentative au scan suivant.
+ */
+let cachedWorker: Promise<TesseractWorker> | null = null;
+
+function getWorker(report: (pct: number) => void): Promise<TesseractWorker> {
+  if (cachedWorker) return cachedWorker;
+
+  cachedWorker = (async () => {
+    const logger = (m: { status: string; progress: number }) => {
+      if (m.status === 'loading tesseract core')            report(5  + m.progress * 15);
+      else if (m.status === 'loading language traineddata') report(20 + m.progress * 20);
+      else if (m.status === 'initializing api')             report(40 + m.progress * 8);
+    };
+    try {
+      const w = await createWorker(OCRB_LANG, 3, {
+        workerPath: WORKER_PATH, corePath: CORE_PATH, langPath: OCRB_LANG_PATH,
+        workerBlobURL: false, gzip: false, logger,
+      });
+      console.log('[MRZ] Modèle OCRB chargé (mis en cache)');
+      return w;
+    } catch (e) {
+      console.warn('[MRZ] Modèle OCRB indisponible, fallback eng:', e);
+      const w = await createWorker('eng', 1, {
+        workerPath: WORKER_PATH, corePath: CORE_PATH, langPath: ENG_LANG_PATH,
+        workerBlobURL: false, logger,
+      });
+      console.log('[MRZ] Modèle eng chargé (fallback, mis en cache)');
+      return w;
+    }
+  })();
+
+  cachedWorker.catch(() => { cachedWorker = null; });
+  return cachedWorker;
+}
+
 export async function scanMrz(
   file: File,
   onProgress?: (pct: number) => void,
@@ -410,67 +464,31 @@ export async function scanMrz(
 
   report(5);
 
-  // ── Création du worker (opération lourde — une seule fois pour toutes les crops) ──
-  let worker: TesseractWorker;
+  // Worker chargé une seule fois puis réutilisé (voir getWorker).
+  const worker = await getWorker(report);
 
-  try {
-    worker = await createWorker(OCRB_LANG, 3, {
-      workerPath: WORKER_PATH,
-      corePath:   CORE_PATH,
-      langPath:   OCRB_LANG_PATH,
-      workerBlobURL: false,
-      gzip: false, // ocrb_int.traineddata est non compressé
-      logger: (m: { status: string; progress: number }) => {
-        if (m.status === 'loading tesseract core')        report(5  + m.progress * 15);
-        else if (m.status === 'loading language traineddata') report(20 + m.progress * 25);
-        else if (m.status === 'initializing api')         report(45 + m.progress * 10);
-        else if (m.status === 'recognizing text')         report(60 + m.progress * 20);
-      },
-    });
-    console.log('[MRZ] Modèle OCRB chargé');
-  } catch (e) {
-    // Fallback : modèle eng standard si OCRB indisponible (réseau coupé, CDN…)
-    console.warn('[MRZ] Modèle OCRB indisponible, fallback eng:', e);
-    worker = await createWorker('eng', 1, {
-      workerPath: WORKER_PATH,
-      corePath:   CORE_PATH,
-      langPath:   ENG_LANG_PATH,
-      workerBlobURL: false,
-      logger: (m: { status: string; progress: number }) => {
-        if (m.status === 'loading language traineddata') report(20 + m.progress * 30);
-        else if (m.status === 'recognizing text')        report(60 + m.progress * 20);
-      },
-    });
-    console.log('[MRZ] Modèle eng chargé (fallback)');
-  }
+  report(50);
 
-  report(55);
-
+  const img = await loadImage(file);
+  // Ordre : droit d'abord (cas courant, EXIF déjà appliqué par <img>), puis à
+  // l'envers, puis pivoté. Les 4 orientations couvrent bas/haut/gauche/droite.
+  const order = [0, 180, 90, 270];
   let lastError: Error | null = null;
 
-  try {
-    // ── 1) Pipeline éprouvé, à TOUTES les orientations (0/90/180/270) ──────────
-    // On fait tourner l'image entière puis on lit la bande du bas avec l'OCR
-    // éprouvé. Ordre : document droit d'abord (cas courant), puis à l'envers,
-    // puis pivoté. Couvre MRZ en bas / haut / gauche / droite sans OpenCV.
-    const img = await loadImage(file);
-    const orientations = [0, 180, 90, 270];      // droit → 180° → 90° → 270°
-    const fractions    = [0.25, 0.40, 0.60];     // bande du bas : serrée → large
-
-    let step = 0;
-    const totalSteps = orientations.length * fractions.length;
-
-    for (const deg of orientations) {
+  // Une passe = crop bas de l'image pivotée de `deg`, puis OCR éprouvé.
+  const tryOrientations = async (orients: number[], base: number, span: number): Promise<MrzData | null> => {
+    const fractions = [0.28, 0.48]; // bande du bas : serrée puis large
+    let k = 0;
+    const total = orients.length * fractions.length;
+    for (const deg of orients) {
       for (const fraction of fractions) {
-        report(56 + Math.round((step++ / totalSteps) * 34)); // 56 → 90
+        report(base + Math.round((k++ / total) * span));
         try {
           const image = renderRotatedCrop(img, deg, fraction);
           const text  = await runOcr(worker, image, '6');
           const data  = parseOcrText(text);
-
           if (data) {
             console.log(`[MRZ] Succès rotation=${deg}° crop=${fraction}`);
-            report(100);
             return data;
           }
           lastError = new Error('Lignes MRZ non détectées dans cette zone');
@@ -480,36 +498,41 @@ export async function scanMrz(
         }
       }
     }
+    return null;
+  };
 
-    // ── 2) SECOURS OpenCV : seulement si les rotations ont toutes raté ─────────
-    // Détecte la bande MRZ où qu'elle soit (haut/bas/côté), corrige rotation
-    // (0/90/180/270) + perspective, binarise. Validation STRICTE : on n'accepte
-    // que si nom + numéro + date de naissance sont présents — sinon on préfère
-    // l'échec (→ saisie manuelle) à une lecture partielle/erronée.
+  {
+    // 1) Cas courant : document droit → lu en 1-2 passes.
+    let data = await tryOrientations([order[0]], 52, 16);       // 52 → 68
+    // 2) Document à l'envers / pivoté.
+    if (!data) data = await tryOrientations(order.slice(1), 68, 22); // 68 → 90
+    if (data) { report(100); return data; }
+
+    // 3) SECOURS OpenCV — uniquement si toutes les rotations ont raté. Validation
+    //    STRICTE (nom + numéro + date de naissance) pour ne jamais renvoyer une
+    //    lecture douteuse à la place d'un échec propre (→ saisie manuelle).
     try {
       const candidates = await detectMrzCandidates(file, 6);
       for (let i = 0; i < candidates.length; i++) {
         report(91 + i);
         try {
           const text = await runOcr(worker, candidates[i], '6');
-          const data = parseOcrText(text);
-          if (data && data.last_name && data.document_number && data.date_of_birth) {
+          const d = parseOcrText(text);
+          if (d && d.last_name && d.document_number && d.date_of_birth) {
             console.log('[MRZ] Succès via secours OpenCV, candidat', i);
             report(100);
-            return data;
+            return d;
           }
         } catch (err) {
           lastError = err instanceof Error ? err : new Error(String(err));
-          console.warn('[MRZ] candidat OpenCV', i, 'échoué:', lastError.message);
         }
       }
     } catch (err) {
       console.warn('[MRZ] Secours OpenCV indisponible:', err);
     }
-  } finally {
-    // Libérer le worker dans tous les cas (succès ou échec)
-    await worker.terminate();
   }
+  // NE PAS terminer le worker : il est mis en cache et réutilisé d'un scan à
+  // l'autre (c'était le principal coût). L'<img> est libéré par le GC.
 
   // Toutes tentatives échouées
   const baseMsg = lastError?.message ?? 'Zone MRZ non détectée';
