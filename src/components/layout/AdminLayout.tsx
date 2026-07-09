@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, Building2, Home, Users, Landmark,
   CreditCard, Wallet, Mail, Activity, LogOut, Search, X, FileText, Menu,
+  Globe, ListTree,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
@@ -24,6 +25,8 @@ const useNavItems = () => {
     { to: '/admin/facturation',   icon: FileText,        label: t('adminLayout.nav.facturation') },
     { to: '/admin/payments',      icon: Wallet,          label: t('adminLayout.nav.payments') },
     { to: '/admin/emails',        icon: Mail,            label: t('adminLayout.nav.emails') },
+    { to: '/admin/pages',         icon: Globe,           label: t('adminLayout.nav.pages') },
+    { to: '/admin/menus',         icon: ListTree,        label: t('adminLayout.nav.menus') },
     { to: '/admin/activity',      icon: Activity,        label: t('adminLayout.nav.activity') },
   ];
 };

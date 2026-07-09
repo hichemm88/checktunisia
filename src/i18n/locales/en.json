@@ -270,7 +270,19 @@
       "watchlistEntryRemoved": "removed a watchlist entry",
       "watchlistImport": "imported a watchlist",
       "watchlistHitsViewed": "viewed watchlist alerts",
-      "watchlistHitAcknowledged": "acknowledged a watchlist alert"
+      "watchlistHitAcknowledged": "acknowledged a watchlist alert",
+      "planCreated": "created a plan",
+      "planUpdated": "updated a plan",
+      "planDeleted": "deleted a plan",
+      "pageCreated": "created a site page",
+      "pageUpdated": "updated a site page",
+      "pagePublished": "published a site page",
+      "pageDeleted": "deleted a site page",
+      "menuItemCreated": "added a menu entry",
+      "menuItemUpdated": "updated a menu entry",
+      "menuItemDeleted": "deleted a menu entry",
+      "mediaUploaded": "uploaded a media file",
+      "mediaDeleted": "deleted a media file"
     }
   },
   "adminDashboard": {
@@ -1097,7 +1109,9 @@
       "facturation": "Billing",
       "payments": "Payments",
       "emails": "Emails",
-      "activity": "Activity log"
+      "activity": "Activity log",
+      "pages": "Site pages",
+      "menus": "Menus"
     },
     "searchPlaceholder": "Search a host, property, user…",
     "searchResultHost": "Host",
@@ -1125,5 +1139,41 @@
       "watchlist": "Watchlist",
       "activity": "Activity"
     }
+  },
+  "adminPages": {
+    "title": "Site pages",
+    "hint": "Homepage and public page content, editable in blocks (drag and drop) in FR/EN/AR.",
+    "slugLabel": "Slug (page URL)",
+    "pageCreated": "Page created — open it to build its content.",
+    "pageDeleted": "Page deleted.",
+    "confirmDelete": "Permanently delete this page?",
+    "published": "Published",
+    "draft": "Draft",
+    "view": "View page",
+    "noContent": "No content",
+    "empty": "No pages yet.",
+    "unsaved": "Unsaved changes",
+    "savedToast": "Page saved.",
+    "publishedToast": "Page published.",
+    "publish": "Publish",
+    "unpublish": "Unpublish",
+    "copyFromFr": "Copy from FR",
+    "copyFromFrHint": "Copies the French structure into this language for translation.",
+    "metaTitle": "SEO title",
+    "metaDescription": "SEO description"
+  },
+  "adminMenus": {
+    "title": "Site menus",
+    "hint": "Public navbar and footer links — internal pages or external URLs, in 3 languages.",
+    "label": "Label",
+    "location": "Location",
+    "navbar": "Navbar",
+    "footer": "Footer",
+    "target": "Target",
+    "internalPage": "Internal page",
+    "externalUrl": "External URL",
+    "saved": "Menu saved.",
+    "deleted": "Entry deleted.",
+    "empty": "No entries."
   }
 }

@@ -270,7 +270,19 @@
       "watchlistEntryRemoved": "a retiré une entrée de la liste de vigilance",
       "watchlistImport": "a importé une liste de vigilance",
       "watchlistHitsViewed": "a consulté les alertes de vigilance",
-      "watchlistHitAcknowledged": "a traité une alerte de vigilance"
+      "watchlistHitAcknowledged": "a traité une alerte de vigilance",
+      "planCreated": "a créé un pack",
+      "planUpdated": "a modifié un pack",
+      "planDeleted": "a supprimé un pack",
+      "pageCreated": "a créé une page du site",
+      "pageUpdated": "a modifié une page du site",
+      "pagePublished": "a publié une page du site",
+      "pageDeleted": "a supprimé une page du site",
+      "menuItemCreated": "a ajouté une entrée de menu",
+      "menuItemUpdated": "a modifié une entrée de menu",
+      "menuItemDeleted": "a supprimé une entrée de menu",
+      "mediaUploaded": "a téléversé un média",
+      "mediaDeleted": "a supprimé un média"
     }
   },
   "adminDashboard": {
@@ -1097,7 +1109,9 @@
       "facturation": "Facturation",
       "payments": "Paiements",
       "emails": "Emails",
-      "activity": "Journal d'activité"
+      "activity": "Journal d'activité",
+      "pages": "Pages du site",
+      "menus": "Menus"
     },
     "searchPlaceholder": "Rechercher un hébergeur, établissement, utilisateur…",
     "searchResultHost": "Hébergeur",
@@ -1125,5 +1139,41 @@
       "watchlist": "Surveillance",
       "activity": "Activité"
     }
+  },
+  "adminPages": {
+    "title": "Pages du site",
+    "hint": "Contenu de la homepage et des pages publiques, éditable par blocs (glisser-déposer) en FR/EN/AR.",
+    "slugLabel": "Slug (URL de la page)",
+    "pageCreated": "Page créée — ouvrez-la pour construire son contenu.",
+    "pageDeleted": "Page supprimée.",
+    "confirmDelete": "Supprimer définitivement cette page ?",
+    "published": "Publiée",
+    "draft": "Brouillon",
+    "view": "Voir la page",
+    "noContent": "Aucun contenu",
+    "empty": "Aucune page pour le moment.",
+    "unsaved": "Modifications non enregistrées",
+    "savedToast": "Page enregistrée.",
+    "publishedToast": "Page publiée.",
+    "publish": "Publier",
+    "unpublish": "Dépublier",
+    "copyFromFr": "Copier du FR",
+    "copyFromFrHint": "Copie la structure française dans cette langue pour la traduire.",
+    "metaTitle": "Titre SEO",
+    "metaDescription": "Description SEO"
+  },
+  "adminMenus": {
+    "title": "Menus du site",
+    "hint": "Liens de la barre de navigation et du pied de page publics — pages internes ou URLs externes, en 3 langues.",
+    "label": "Libellé",
+    "location": "Emplacement",
+    "navbar": "Barre de navigation",
+    "footer": "Pied de page",
+    "target": "Cible",
+    "internalPage": "Page interne",
+    "externalUrl": "URL externe",
+    "saved": "Menu enregistré.",
+    "deleted": "Entrée supprimée.",
+    "empty": "Aucune entrée."
   }
 }
