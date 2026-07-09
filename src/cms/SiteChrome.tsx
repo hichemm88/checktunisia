@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { fetchCmsMenus, CmsMenuItem } from '@/api/cms';
 import { pickI18n } from '@/lib/i18nContent';
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { SITE_CSS } from './siteCss';
 
 /**
@@ -16,8 +17,19 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
   const lang = i18n.resolvedLanguage ?? 'fr';
   const rootRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const { data: menus } = useQuery({ queryKey: ['cms-menus'], queryFn: fetchCmsMenus, staleTime: 5 * 60 * 1000 });
+
+  // Changer de langue sur le site public : change la langue i18n ET synchronise
+  // l'URL quand elle est localisée (/fr/xxx → /en/xxx) — sur « / » (langue
+  // active), le contenu suit tout seul, pas de navigation nécessaire.
+  const changeLanguage = (code: string) => {
+    i18n.changeLanguage(code);
+    const m = location.pathname.match(/^\/(fr|en|ar)(\/.*)?$/);
+    if (m) navigate(`/${code}${m[2] ?? ''}`, { replace: true });
+  };
 
   useEffect(() => {
     const root = rootRef.current;
@@ -76,6 +88,7 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
           </Link>
           <ul className="nav-links">
             {(menus?.navbar ?? []).map((item) => <li key={item.id}><NavLink item={item} /></li>)}
+            <li><LanguageSwitcher onSelect={changeLanguage} /></li>
             <li><Link to="/login" className="nav-login">Se connecter</Link></li>
             <li><Link to="/register" className="nav-cta">Essayer gratuitement</Link></li>
           </ul>
@@ -86,6 +99,9 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
         <div className={`mobile-menu${menuOpen ? ' open' : ''}`}>
           {(menus?.navbar ?? []).map((item) => <NavLink key={item.id} item={item} onClick={() => setMenuOpen(false)} />)}
           <div className="mobile-menu-actions">
+            <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 4 }}>
+              <LanguageSwitcher onSelect={(code) => { changeLanguage(code); setMenuOpen(false); }} />
+            </div>
             <Link to="/login" className="btn btn-ghost btn-full" onClick={() => setMenuOpen(false)}>Se connecter</Link>
             <Link to="/register" className="btn btn-primary btn-full" onClick={() => setMenuOpen(false)}>Essayer gratuitement</Link>
           </div>

@@ -11,9 +11,12 @@ const LANGUAGES = [
 interface LanguageSwitcherProps {
   onDark?: boolean;
   className?: string;
+  /** Remplace le comportement par défaut (i18n.changeLanguage) — utilisé par
+      le site public pour aussi synchroniser l'URL (/fr ↔ /en ↔ /ar). */
+  onSelect?: (code: string) => void;
 }
 
-export const LanguageSwitcher = ({ onDark = false, className = '' }: LanguageSwitcherProps) => {
+export const LanguageSwitcher = ({ onDark = false, className = '', onSelect }: LanguageSwitcherProps) => {
   const { i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -46,7 +49,7 @@ export const LanguageSwitcher = ({ onDark = false, className = '' }: LanguageSwi
             <button
               key={l.code}
               type="button"
-              onClick={() => { i18n.changeLanguage(l.code); setOpen(false); }}
+              onClick={() => { onSelect ? onSelect(l.code) : i18n.changeLanguage(l.code); setOpen(false); }}
               className={`flex w-full items-center justify-between px-3 py-2 text-start text-sm hover:bg-qayed-papier ${
                 l.code === current.code ? 'font-bold text-qayed-cachet' : 'text-gray-700'
               }`}
