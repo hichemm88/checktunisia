@@ -2,10 +2,55 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { Globe, ChevronDown } from 'lucide-react';
 import { fetchCmsMenus, CmsMenuItem } from '@/api/cms';
 import { pickI18n } from '@/lib/i18nContent';
-import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { SITE_CSS } from './siteCss';
+
+const SITE_LANGS = [
+  { code: 'fr', name: 'Français', label: 'FR' },
+  { code: 'en', name: 'English', label: 'EN' },
+  { code: 'ar', name: 'العربية', label: 'AR' },
+];
+
+/** Sélecteur de langue dans le langage visuel de la navbar publique
+    (pilule cachet + dropdown carte papier) — pas le composant des portails. */
+const SiteLanguageSwitcher = ({ current, onSelect }: { current: string; onSelect: (code: string) => void }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onClick);
+    return () => document.removeEventListener('mousedown', onClick);
+  }, []);
+
+  const active = SITE_LANGS.find((l) => l.code === current) ?? SITE_LANGS[0];
+
+  return (
+    <div className="lang-switch" ref={ref}>
+      <button type="button" className="lang-btn" onClick={() => setOpen((o) => !o)} aria-label="Choisir la langue">
+        <Globe size={14} strokeWidth={2.2} />
+        {active.label}
+        <ChevronDown size={12} strokeWidth={2.5} style={{ opacity: 0.6, transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'none' }} />
+      </button>
+      {open && (
+        <div className="lang-menu">
+          {SITE_LANGS.map((l) => (
+            <button key={l.code} type="button"
+              className={`lang-opt${l.code === active.code ? ' active' : ''}`}
+              onClick={() => { onSelect(l.code); setOpen(false); }}>
+              <span>{l.name}</span>
+              <span className="lang-code">{l.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 /**
  * Habillage des pages CMS publiques : navbar + footer pilotés par
@@ -88,7 +133,7 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
           </Link>
           <ul className="nav-links">
             {(menus?.navbar ?? []).map((item) => <li key={item.id}><NavLink item={item} /></li>)}
-            <li><LanguageSwitcher onSelect={changeLanguage} /></li>
+            <li><SiteLanguageSwitcher current={lang} onSelect={changeLanguage} /></li>
             <li><Link to="/login" className="nav-login">Se connecter</Link></li>
             <li><Link to="/register" className="nav-cta">Essayer gratuitement</Link></li>
           </ul>
@@ -99,9 +144,7 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
         <div className={`mobile-menu${menuOpen ? ' open' : ''}`}>
           {(menus?.navbar ?? []).map((item) => <NavLink key={item.id} item={item} onClick={() => setMenuOpen(false)} />)}
           <div className="mobile-menu-actions">
-            <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 4 }}>
-              <LanguageSwitcher onSelect={(code) => { changeLanguage(code); setMenuOpen(false); }} />
-            </div>
+            <SiteLanguageSwitcher current={lang} onSelect={(code) => { changeLanguage(code); setMenuOpen(false); }} />
             <Link to="/login" className="btn btn-ghost btn-full" onClick={() => setMenuOpen(false)}>Se connecter</Link>
             <Link to="/register" className="btn btn-primary btn-full" onClick={() => setMenuOpen(false)}>Essayer gratuitement</Link>
           </div>
