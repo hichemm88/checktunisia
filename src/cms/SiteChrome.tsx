@@ -24,6 +24,7 @@ const FOOTER_T = {
   legal: { fr: 'Légal', en: 'Legal', ar: 'قانوني' },
   mentions: { fr: 'Mentions légales', en: 'Legal notice', ar: 'إشعار قانوني' },
   cgv: { fr: 'Conditions générales de vente', en: 'Terms of sale', ar: 'الشروط العامة للبيع' },
+  privacy: { fr: 'Politique de confidentialité', en: 'Privacy policy', ar: 'سياسة الخصوصية' },
   securePay: { fr: 'Paiement sécurisé', en: 'Secure payment', ar: 'دفع آمن' },
 };
 
@@ -189,6 +190,7 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
               <ul>
                 <li><Link to={`/${lang}/mentions-legales`}>{FOOTER_T.mentions[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.mentions.fr}</Link></li>
                 <li><Link to={`/${lang}/cgv`}>{FOOTER_T.cgv[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.cgv.fr}</Link></li>
+                <li><Link to={`/${lang}/politique-confidentialite`}>{FOOTER_T.privacy[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.privacy.fr}</Link></li>
                 <li><a href="mailto:contact@qayed.tn">Contact</a></li>
               </ul>
             </div>
