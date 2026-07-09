@@ -441,21 +441,53 @@ export async function scanMrz(
   let lastError: Error | null = null;
 
   try {
-    // ── Pipeline OpenCV (v4) : détection auto de la zone MRZ + orientation ──────
-    // Détecte la bande MRZ où qu'elle soit (haut/bas/gauche/droite), corrige la
-    // rotation (0/90/180/270) et la perspective, puis binarise. Chaque bande
-    // candidate normalisée est déjà droite et orientée → OCR direct.
+    // ── 1) Pipeline éprouvé EN PREMIER : crop bas (rapide, ne charge pas OpenCV) ──
+    // Comportement identique à la version d'avant OpenCV → aucune régression sur
+    // les photos normales (document droit, MRZ en bas). OpenCV n'est tenté qu'en
+    // dernier recours ci-dessous, pour les cas que ce pipeline ne sait pas lire.
+    const crops: Array<{ fraction: number; psm: '6' | '11' }> = [
+      { fraction: 0.12, psm: '6'  }, // Photo avec beaucoup de marge autour du document
+      { fraction: 0.22, psm: '6'  }, // Photo page entière — MRZ dans la bande du bas
+      { fraction: 0.42, psm: '11' }, // Photo rapprochée du bas du passeport
+      { fraction: 0.60, psm: '11' }, // Très rapprochée / passeport hors cadre
+    ];
+
+    for (let i = 0; i < crops.length; i++) {
+      const { fraction, psm } = crops[i];
+      report(58 + i * 6);
+
+      try {
+        const image = await cropAndBinarise(file, fraction);
+        const text  = await runOcr(worker, image, psm);
+        const data  = parseOcrText(text);
+
+        if (data) {
+          console.log(`[MRZ] Succès via crop bas fraction=${fraction}`);
+          report(100);
+          return data;
+        }
+        lastError = new Error('Lignes MRZ non détectées dans cette zone');
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.warn(`[MRZ] crop=${fraction} échoué:`, lastError.message);
+      }
+    }
+
+    // ── 2) SECOURS OpenCV : seulement si le crop bas a tout raté ──────────────
+    // Détecte la bande MRZ où qu'elle soit (haut/bas/côté), corrige rotation
+    // (0/90/180/270) + perspective, binarise. Validation STRICTE : on n'accepte
+    // que si nom + numéro + date de naissance sont présents — sinon on préfère
+    // l'échec (→ saisie manuelle) à une lecture partielle/erronée.
     try {
       const candidates = await detectMrzCandidates(file, 6);
       for (let i = 0; i < candidates.length; i++) {
-        report(58 + i * 4);
+        report(84 + i * 2);
         try {
           const text = await runOcr(worker, candidates[i], '6');
           const data = parseOcrText(text);
-          if (data) {
-            console.log('[MRZ] Succès via détection OpenCV, candidat', i);
+          if (data && data.last_name && data.document_number && data.date_of_birth) {
+            console.log('[MRZ] Succès via secours OpenCV, candidat', i);
             report(100);
-            await worker.terminate();
             return data;
           }
         } catch (err) {
@@ -464,42 +496,7 @@ export async function scanMrz(
         }
       }
     } catch (err) {
-      console.warn('[MRZ] Pipeline OpenCV indisponible:', err);
-    }
-  } catch { /* unreachable — inner blocks catch */ }
-
-  // ── 4 tentatives de crop bas : serré → large (fallback éprouvé) ─────────────
-  // Avec un worker partagé, les tentatives suivantes ne coûtent que le temps OCR (3-5s).
-  const crops: Array<{ fraction: number; psm: '6' | '11' }> = [
-    { fraction: 0.12, psm: '6'  }, // Photo avec beaucoup de marge autour du document
-    { fraction: 0.22, psm: '6'  }, // Photo page entière — MRZ dans la bande du bas
-    { fraction: 0.42, psm: '11' }, // Photo rapprochée du bas du passeport
-    { fraction: 0.60, psm: '11' }, // Très rapprochée / passeport hors cadre
-  ];
-
-  try {
-    for (let i = 0; i < crops.length; i++) {
-      const { fraction, psm } = crops[i];
-      report(70 + i * 7);
-
-      try {
-        const image = await cropAndBinarise(file, fraction);
-        const text  = await runOcr(worker, image, psm);
-        const data  = parseOcrText(text);
-
-        if (!data) {
-          lastError = new Error('Lignes MRZ non détectées dans cette zone');
-          continue;
-        }
-
-        console.log(`[MRZ] Succès via crop bas fraction=${fraction}`);
-        report(100);
-        return data;
-
-      } catch (err) {
-        lastError = err instanceof Error ? err : new Error(String(err));
-        console.warn(`[MRZ] crop=${fraction} échoué:`, lastError.message);
-      }
+      console.warn('[MRZ] Secours OpenCV indisponible:', err);
     }
   } finally {
     // Libérer le worker dans tous les cas (succès ou échec)
