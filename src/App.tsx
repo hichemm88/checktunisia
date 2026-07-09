@@ -1,4 +1,3 @@
-import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore, Role } from '@/stores/authStore';
@@ -44,11 +43,12 @@ import { AdminEmailsPage } from '@/pages/admin/AdminEmailsPage';
 import { AdminActivityPage } from '@/pages/admin/AdminActivityPage';
 import { AdminPagesPage } from '@/pages/admin/AdminPagesPage';
 import { AdminMenusPage } from '@/pages/admin/AdminMenusPage';
+// Import STATIQUE volontaire (pas de lazy) : le chargement différé de ce
+// chunk échouait en production chez l'admin (« Unable to preload CSS for
+// /AdminPageEditorPage-*.css ») — l'éditeur est intégré au bundle principal,
+// plus aucun fichier à récupérer au clic, l'erreur ne peut plus se produire.
+import AdminPageEditorPage from '@/pages/admin/AdminPageEditorPage';
 import { ProfilePage } from '@/pages/profile/ProfilePage';
-
-// Éditeur Puck : lazy — son bundle (drag-and-drop) ne doit jamais être servi
-// aux visiteurs du site public ni aux autres portails.
-const AdminPageEditorPage = lazy(() => import('@/pages/admin/AdminPageEditorPage'));
 
 // ─── Guards ─────────────────────────────────────────────────────────────────
 const RequireAuth = () => {
@@ -175,11 +175,7 @@ export const App = () => (
           <Route path="/admin/settings"      element={<Navigate to="/admin/payments" replace />} />
         </Route>
         {/* Éditeur Puck — plein écran, hors AdminLayout */}
-        <Route path="/admin/pages/:id/edit" element={
-          <Suspense fallback={<div className="p-8 text-sm text-gray-400">…</div>}>
-            <AdminPageEditorPage />
-          </Suspense>
-        } />
+        <Route path="/admin/pages/:id/edit" element={<AdminPageEditorPage />} />
       </Route>
     </Route>
 
