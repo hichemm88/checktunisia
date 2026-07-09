@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/Card';
 import { authorityApi } from '@/api/authority';
 import { AuthorityDashboardMinistry, AuthorityDashboardPolice } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
+import { FEATURES } from '@/config/features';
 
 // ─── Shared KPI tile ─────────────────────────────────────────────────────────
 const KpiTile = ({
@@ -95,13 +96,15 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
         <KpiTile icon={ArrowDownToLine} label={t('authorityDashboard.checkinsToday')} value={data.check_ins_today}  color="#137453" />
         <KpiTile icon={ArrowUpFromLine} label={t('authorityDashboard.checkoutsToday')} value={data.check_outs_today} color="#8B7FE0" />
         <KpiTile icon={Building2}      label={t('authorityDashboard.activeHotels')} value={data.active_hotels}   color="#5346A8" />
-        <KpiTile
-          icon={AlertTriangle}
-          label={t('authorityDashboard.docsExpiring30d')}
-          value={data.expiring_docs_30d}
-          color={data.expiring_docs_30d > 0 ? '#5346A8' : '#6B7280'}
-          sub={data.expiring_docs_30d > 0 ? t('authorityDashboard.seeAlerts') : undefined}
-        />
+        {FEATURES.expiredDocAlerts && (
+          <KpiTile
+            icon={AlertTriangle}
+            label={t('authorityDashboard.docsExpiring30d')}
+            value={data.expiring_docs_30d}
+            color={data.expiring_docs_30d > 0 ? '#5346A8' : '#6B7280'}
+            sub={data.expiring_docs_30d > 0 ? t('authorityDashboard.seeAlerts') : undefined}
+          />
+        )}
       </div>
 
       {/* Charts row */}
@@ -207,7 +210,7 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
       </div>
 
       {/* Alert card for expiring docs */}
-      {data.expiring_docs_30d > 0 && (
+      {FEATURES.expiredDocAlerts && data.expiring_docs_30d > 0 && (
         <button
           onClick={() => navigate('/authority/alerts')}
           className="flex items-center gap-4 rounded-2xl p-5 text-start transition-shadow hover:shadow-md w-full"

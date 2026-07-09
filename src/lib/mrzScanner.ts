@@ -24,6 +24,7 @@
 
 import { createWorker } from 'tesseract.js';
 import { parse as mrzParse } from 'mrz';
+import { detectMrzCandidates } from './mrzZoneDetect';
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -337,6 +338,26 @@ async function runOcr(
   return text;
 }
 
+// ─── Parsing d'un texte OCR → MrzData ──────────────────────────────────────────
+
+/**
+ * Tente d'extraire une fiche MrzData depuis un texte OCR brut.
+ * Retourne null si aucune ligne MRZ exploitable (nom de famille au minimum).
+ * Partagé par les deux pipelines (OpenCV et crop bas classique).
+ */
+function parseOcrText(text: string): MrzData | null {
+  const extracted = extractMrzLines(text);
+  if (!extracted) return null;
+
+  const result   = mrzParse(extracted.lines, { autocorrect: true });
+  const td3Line2 = extracted.format === 'TD3' ? extracted.lines[1] : null;
+  const data     = toMrzData(result, td3Line2);
+
+  // Validation minimale : au moins le nom de famille (un check digit faux ne
+  // doit pas bloquer la saisie si les champs clés sont corrects).
+  return data.last_name ? data : null;
+}
+
 // ─── API publique ───────────────────────────────────────────────────────────────
 
 /**
@@ -383,7 +404,6 @@ export async function scanMrz(
 
   // ── Création du worker (opération lourde — une seule fois pour toutes les crops) ──
   let worker: TesseractWorker;
-  let usingOcrb = true;
 
   try {
     worker = await createWorker(OCRB_LANG, 3, {
@@ -403,7 +423,6 @@ export async function scanMrz(
   } catch (e) {
     // Fallback : modèle eng standard si OCRB indisponible (réseau coupé, CDN…)
     console.warn('[MRZ] Modèle OCRB indisponible, fallback eng:', e);
-    usingOcrb = false;
     worker = await createWorker('eng', 1, {
       workerPath: WORKER_PATH,
       corePath:   CORE_PATH,
@@ -419,7 +438,37 @@ export async function scanMrz(
 
   report(55);
 
-  // ── 4 tentatives de crop : serré → large ────────────────────────────────────
+  let lastError: Error | null = null;
+
+  try {
+    // ── Pipeline OpenCV (v4) : détection auto de la zone MRZ + orientation ──────
+    // Détecte la bande MRZ où qu'elle soit (haut/bas/gauche/droite), corrige la
+    // rotation (0/90/180/270) et la perspective, puis binarise. Chaque bande
+    // candidate normalisée est déjà droite et orientée → OCR direct.
+    try {
+      const candidates = await detectMrzCandidates(file, 6);
+      for (let i = 0; i < candidates.length; i++) {
+        report(58 + i * 4);
+        try {
+          const text = await runOcr(worker, candidates[i], '6');
+          const data = parseOcrText(text);
+          if (data) {
+            console.log('[MRZ] Succès via détection OpenCV, candidat', i);
+            report(100);
+            await worker.terminate();
+            return data;
+          }
+        } catch (err) {
+          lastError = err instanceof Error ? err : new Error(String(err));
+          console.warn('[MRZ] candidat OpenCV', i, 'échoué:', lastError.message);
+        }
+      }
+    } catch (err) {
+      console.warn('[MRZ] Pipeline OpenCV indisponible:', err);
+    }
+  } catch { /* unreachable — inner blocks catch */ }
+
+  // ── 4 tentatives de crop bas : serré → large (fallback éprouvé) ─────────────
   // Avec un worker partagé, les tentatives suivantes ne coûtent que le temps OCR (3-5s).
   const crops: Array<{ fraction: number; psm: '6' | '11' }> = [
     { fraction: 0.12, psm: '6'  }, // Photo avec beaucoup de marge autour du document
@@ -428,47 +477,22 @@ export async function scanMrz(
     { fraction: 0.60, psm: '11' }, // Très rapprochée / passeport hors cadre
   ];
 
-  let lastError: Error | null = null;
-
   try {
     for (let i = 0; i < crops.length; i++) {
       const { fraction, psm } = crops[i];
-      report(55 + i * 12);
+      report(70 + i * 7);
 
       try {
-        const image    = await cropAndBinarise(file, fraction);
-        const text     = await runOcr(worker, image, psm);
-        const extracted = extractMrzLines(text);
+        const image = await cropAndBinarise(file, fraction);
+        const text  = await runOcr(worker, image, psm);
+        const data  = parseOcrText(text);
 
-        if (!extracted) {
+        if (!data) {
           lastError = new Error('Lignes MRZ non détectées dans cette zone');
           continue;
         }
 
-        console.log(`[MRZ] Format ${extracted.format} — lignes:`, extracted.lines);
-
-        // Parsing + autocorrect (O→0, I→1 dans les champs strictement numériques)
-        const result = mrzParse(extracted.lines, { autocorrect: true });
-        console.log('[MRZ] Parsing valid:', result.valid, '— champs:', result.fields);
-
-        const td3Line2 = extracted.format === 'TD3' ? extracted.lines[1] : null;
-        const data = toMrzData(result, td3Line2);
-        if (!result.fields.birthDate || !result.fields.expirationDate) {
-          console.warn(
-            '[MRZ] Date(s) rejetée(s) par le package mrz, secours appliqué —',
-            'birthDate brut:', result.fields.birthDate, '→', data.date_of_birth,
-            '| expirationDate brut:', result.fields.expirationDate, '→', data.expiry_date,
-          );
-        }
-
-        // On n'exige PAS result.valid === true : un mauvais check digit ne doit pas
-        // bloquer la saisie si les champs importants (nom, DOB, numéro) sont corrects.
-        // Validation minimale : au moins le nom de famille
-        if (!data.last_name) {
-          lastError = new Error('Nom de famille non extrait du MRZ');
-          continue;
-        }
-
+        console.log(`[MRZ] Succès via crop bas fraction=${fraction}`);
         report(100);
         return data;
 

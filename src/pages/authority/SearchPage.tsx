@@ -15,6 +15,8 @@ import { authorityApi, SearchParams } from '@/api/authority';
 import { AuthorityGuest, ApiList } from '@/types';
 import { extractErrors } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
+import { MrzScanButton } from '@/components/MrzScanButton';
+import { MrzData } from '@/lib/mrzScanner';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 const fmtDate = (d: string | null | undefined, locale: string) =>
@@ -136,6 +138,35 @@ export const SearchPage = () => {
     searchMutation.mutate(targetPage);
   };
 
+  // ── Scan MRZ → recherche automatique du voyageur ────────────────────────────
+  // On privilégie le numéro de document (identifiant fort) ; à défaut on retombe
+  // sur nom/date de naissance. Un match unique ouvre directement la fiche.
+  const scanSearchMutation = useMutation({
+    mutationFn: (mrz: MrzData) => {
+      const scanned: SearchParams = {
+        ...(isPolice && zone ? { hotel_governorate: zone } : {}),
+      };
+      if (mrz.document_number) scanned.document_number = mrz.document_number;
+      else {
+        if (mrz.last_name)        scanned.last_name = mrz.last_name;
+        if (mrz.first_name)       scanned.first_name = mrz.first_name;
+        if (mrz.date_of_birth)    scanned.date_of_birth = mrz.date_of_birth;
+        if (mrz.nationality_code) scanned.nationality_code = mrz.nationality_code;
+      }
+      // Reflect the scan in the visible form fields.
+      setParams((p) => ({ ...p, ...scanned }));
+      return authorityApi.search({ ...scanned, page: 1, per_page: 20 });
+    },
+    onSuccess: (data) => {
+      setResults(data);
+      setPage(1);
+      setError('');
+      // Exactly one match → jump straight to the profile (with lodging + history).
+      if (data.data.length === 1) navigate(`/authority/guests/${data.data[0].guest_id}`);
+    },
+    onError: (err) => setError(extractErrors(err)),
+  });
+
   const hasParams = Object.values(params).some((v) => v);
 
   return (
@@ -155,6 +186,20 @@ export const SearchPage = () => {
             </p>
           </div>
         )}
+
+        {/* Scan MRZ — contrôle rapide sans saisie */}
+        <Card>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-gray-900">{t('authoritySearch.scanMrzTitle')}</p>
+              <p className="text-xs text-gray-500">{t('authoritySearch.scanMrzHint')}</p>
+            </div>
+            <MrzScanButton onResult={(mrz) => scanSearchMutation.mutate(mrz)} />
+          </div>
+          {scanSearchMutation.isPending && (
+            <p className="mt-2 text-xs text-gray-400">{t('authoritySearch.scanSearching')}</p>
+          )}
+        </Card>
 
         {/* Search form */}
         <Card>

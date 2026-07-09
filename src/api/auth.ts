@@ -72,6 +72,12 @@ export const authApi = {
       .post<{ data: { message: string } }>('/profile/password', data)
       .then((r) => r.data.data),
 
+  // Request a password-reset link by email (always succeeds — no enumeration).
+  forgotPassword: (email: string) =>
+    api
+      .post<{ data: { message: string } }>('/auth/password/forgot', { email })
+      .then((r) => r.data.data),
+
   // Set/reset password via an emailed token (account invite or "forgot password")
   resetPassword: (data: { email: string; token: string; password: string; password_confirmation: string }) =>
     api
