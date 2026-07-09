@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore, Role } from '@/stores/authStore';
+import { FEATURES } from '@/config/features';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import { IdleWarningModal } from '@/components/IdleWarningModal';
 import { api } from '@/lib/api';
@@ -8,6 +9,7 @@ import { api } from '@/lib/api';
 // Pages
 import { LoginPage } from '@/pages/auth/LoginPage';
 import { SetPasswordPage } from '@/pages/auth/SetPasswordPage';
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
 import { TwoFactorVerifyPage } from '@/pages/auth/TwoFactorVerifyPage';
 import { TwoFactorSetupPage } from '@/pages/authority/TwoFactorSetupPage';
 import { CmsPage } from '@/pages/CmsPage';
@@ -113,6 +115,7 @@ export const App = () => (
     <Route path="/"         element={<PublicRoute element={<CmsPage slugOverride="home" />} />} />
     <Route path="/register" element={<PublicRoute element={<RegisterPage />} />} />
     <Route path="/login"                element={<LoginPage />} />
+    <Route path="/forgot-password"      element={<ForgotPasswordPage />} />
     <Route path="/set-password"         element={<SetPasswordPage />} />
     <Route path="/auth/2fa/verify"      element={<TwoFactorVerifyPage />} />
     <Route path="/authority/2fa/setup"  element={<TwoFactorSetupPage />} />
@@ -152,7 +155,9 @@ export const App = () => (
         <Route path="/authority/guests/:id"   element={<GuestProfilePage />} />
         <Route path="/authority/hotels"       element={<HotelsPage />} />
         <Route path="/authority/hotels/:id"   element={<HotelDetailPage />} />
-        <Route path="/authority/alerts"       element={<AlertsPage />} />
+        {FEATURES.expiredDocAlerts && (
+          <Route path="/authority/alerts"     element={<AlertsPage />} />
+        )}
         <Route path="/authority/watchlist"    element={<WatchlistPage />} />
         <Route path="/authority/activity"     element={<ActivityPage />} />
       </Route>

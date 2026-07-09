@@ -40,6 +40,7 @@ export const HistoryDetailPage = () => {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [checkoutDate, setCheckoutDate] = useState(todayISO);
   const [addingSlot, setAddingSlot] = useState<number | null>(null);
+  const [addingExtra, setAddingExtra] = useState(false);
 
   const { data: ci, isLoading } = useQuery({
     queryKey: ['check-in', id],
@@ -266,6 +267,50 @@ export const HistoryDetailPage = () => {
                 </button>
               )
             ))}
+
+            {/* Extra traveler — beyond the declared adult/children count.
+                Covers late arrivals and families arriving in several waves. */}
+            {canEdit && (
+              addingExtra ? (
+                <GuestScanPanel
+                  checkIn={ci}
+                  isPrimary={false}
+                  label={t('checkinWizard.extraGuestLabel')}
+                  onSuccess={() => {
+                    // Keep the declared head-count in step with reality so the
+                    // fiche de police and slot logic stay consistent.
+                    checkInsApi.update(id!, { adults_count: adultsN + 1 })
+                      .catch(() => { /* count sync is best-effort; guest is already saved */ })
+                      .finally(() => {
+                        setAddingExtra(false);
+                        qc.invalidateQueries({ queryKey: ['check-in', id] });
+                      });
+                  }}
+                  onCancel={() => setAddingExtra(false)}
+                />
+              ) : (
+                <button
+                  onClick={() => setAddingExtra(true)}
+                  className="flex items-center gap-3 rounded-2xl p-3.5 text-start transition-all"
+                  style={{ border: '2px dashed #EEEBFA', background: '#F6F5F1' }}
+                >
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                    style={{ background: '#EEEBFA', color: '#5346A8' }}
+                  >
+                    <UserPlus className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: '#374151' }}>
+                      {t('checkinWizard.addExtraGuest')}
+                    </p>
+                    <p className="text-xs" style={{ color: '#9CA3AF' }}>
+                      {t('checkinWizard.extraGuestHint')}
+                    </p>
+                  </div>
+                </button>
+              )
+            )}
           </div>
 
           {/* Actions */}

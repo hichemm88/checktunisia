@@ -26,7 +26,7 @@ export const checkInsApi = {
     api.post<ApiItem<CheckIn>>('/hotel/check-ins', payload).then((r) => r.data.data),
 
   update: (id: string, payload: Partial<CreateCheckInPayload>) =>
-    api.put<ApiItem<CheckIn>>(`/hotel/check-ins/${id}`, payload).then((r) => r.data.data),
+    api.patch<ApiItem<CheckIn>>(`/hotel/check-ins/${id}`, payload).then((r) => r.data.data),
 
   complete: (id: string) =>
     api.post<ApiItem<CheckIn>>(`/hotel/check-ins/${id}/complete`).then((r) => r.data.data),

@@ -70,6 +70,36 @@ export const ROOM_TYPE_LABELS: Record<string, string> = {
 
 export interface MyProperty { id: string; name: string; status: string }
 
+export interface BulkRoomPayload {
+  start: number; end: number;
+  prefix?: string; suffix?: string; pad?: boolean;
+  floor?: number | null; building?: string | null;
+  type: string; capacity: number;
+}
+
+export interface BulkRoomResult {
+  created_count: number;
+  skipped_count: number;
+  created: string[];
+  skipped: string[];
+}
+
+/** Build the room numbers a bulk spec will produce — mirrors the backend generator
+ *  so the preview shown to the user matches exactly what gets created. */
+export const buildBulkRoomNumbers = (spec: {
+  start: number; end: number; prefix?: string; suffix?: string; pad?: boolean;
+}): string[] => {
+  const { start, end, prefix = '', suffix = '', pad = false } = spec;
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return [];
+  const width = pad ? String(end).length : 0;
+  const out: string[] = [];
+  for (let n = start; n <= end; n++) {
+    const core = width > 0 ? String(n).padStart(width, '0') : String(n);
+    out.push(`${prefix}${core}${suffix}`);
+  }
+  return Array.from(new Set(out));
+};
+
 export const organizationApi = {
   // ── Org ──────────────────────────────────────────────────────────────
   get:          () => api.get<{ data: OrgInfo }>('/hotel/organization').then((r) => r.data.data),
@@ -89,6 +119,8 @@ export const organizationApi = {
     api.get<{ data: PropertyRoom[] }>(`/hotel/organization/properties/${propertyId}/rooms`).then((r) => r.data.data),
   addRoom:           (propertyId: string, data: object) =>
     api.post<{ data: PropertyRoom }>(`/hotel/organization/properties/${propertyId}/rooms`, data).then((r) => r.data.data),
+  bulkAddRooms:      (propertyId: string, data: BulkRoomPayload) =>
+    api.post<{ data: BulkRoomResult }>(`/hotel/organization/properties/${propertyId}/rooms/bulk`, data).then((r) => r.data.data),
   updateRoom:        (propertyId: string, roomId: string, data: object) =>
     api.patch<{ data: PropertyRoom }>(`/hotel/organization/properties/${propertyId}/rooms/${roomId}`, data).then((r) => r.data.data),
   deleteRoom:        (propertyId: string, roomId: string) =>

@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { authApi } from '@/api/auth';
 import { useAuthStore } from '@/stores/authStore';
@@ -90,6 +90,14 @@ export const LoginPage = () => {
           <Button type="submit" fullWidth loading={loading} size="lg">
             {t('auth.loginButton')}
           </Button>
+
+          <Link
+            to="/forgot-password"
+            className="text-center text-sm font-medium hover:underline"
+            style={{ color: 'var(--qayed-cachet)' }}
+          >
+            {t('auth.forgotPassword')}
+          </Link>
         </form>
 
         <p className="mt-4 text-center text-xs text-gray-400">

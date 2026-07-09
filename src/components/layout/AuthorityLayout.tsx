@@ -9,6 +9,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
+import { FEATURES } from '@/config/features';
 
 interface AuthorityLayoutProps { children: ReactNode; title?: string }
 
@@ -138,7 +139,9 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
             <NavItem to="/authority/dashboard" icon={LayoutDashboard} label={t('authorityLayout.nav.dashboard')} end />
             <NavItem to="/authority/search"    icon={Search}          label={t('authorityLayout.nav.search')} />
             <NavItem to="/authority/hotels"    icon={Building2}       label={t('authorityLayout.nav.hotels')} />
-            <NavItem to="/authority/alerts"    icon={Bell}        label={t('authorityLayout.nav.alerts')} />
+            {FEATURES.expiredDocAlerts && (
+              <NavItem to="/authority/alerts"    icon={Bell}        label={t('authorityLayout.nav.alerts')} />
+            )}
             <NavItem to="/authority/watchlist" icon={ShieldAlert} label={t('authorityLayout.nav.watchlist')} />
             {/* Activity log: ministry only */}
             {isMinistry && (

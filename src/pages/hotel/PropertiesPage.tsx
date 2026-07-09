@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Building2, MapPin, CheckCircle2, Layers, ChevronDown, ChevronUp,
-  BedDouble, Pencil, Trash2, Save, X, Star,
+  BedDouble, Pencil, Trash2, Save, X, Star, Rows3,
 } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import {
   organizationApi,
+  buildBulkRoomNumbers,
   Property,
   PropertyRoom,
 } from '@/api/organization';
@@ -129,15 +130,146 @@ const RoomForm = ({
   );
 };
 
+// ── Bulk room form (range creation) ────────────────────────────────────────────
+
+const BULK_INIT = {
+  start: '', end: '', prefix: '', suffix: '', pad: false,
+  floor: '', building: '', type: 'standard', capacity: 2,
+};
+
+const BulkRoomForm = ({
+  existingNumbers, onSave, onCancel, saving,
+}: {
+  existingNumbers: string[];
+  onSave: (d: typeof BULK_INIT) => void;
+  onCancel: () => void;
+  saving: boolean;
+}) => {
+  const { t } = useTranslation();
+  const [form, setForm] = useState(BULK_INIT);
+  const set = (k: string, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
+
+  const start = parseInt(form.start, 10);
+  const end   = parseInt(form.end, 10);
+
+  const { numbers, duplicates, invalidRange, tooMany } = useMemo(() => {
+    if (!Number.isFinite(start) || !Number.isFinite(end)) {
+      return { numbers: [] as string[], duplicates: [] as string[], invalidRange: false, tooMany: false };
+    }
+    if (end < start) return { numbers: [], duplicates: [], invalidRange: true, tooMany: false };
+    if (end - start + 1 > 500) return { numbers: [], duplicates: [], invalidRange: false, tooMany: true };
+    const nums = buildBulkRoomNumbers({
+      start, end, prefix: form.prefix, suffix: form.suffix, pad: form.pad,
+    });
+    const existingSet = new Set(existingNumbers);
+    const dups = nums.filter((n) => existingSet.has(n));
+    return { numbers: nums, duplicates: dups, invalidRange: false, tooMany: false };
+  }, [start, end, form.prefix, form.suffix, form.pad, existingNumbers]);
+
+  const toCreate = numbers.length - duplicates.length;
+  const canSubmit = numbers.length > 0 && toCreate > 0 && !saving;
+
+  const previewSample = numbers.slice(0, 60);
+
+  return (
+    <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-3">
+      <p className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
+        <Rows3 className="h-3.5 w-3.5" /> {t('propertiesPage.bulkTitle')}
+      </p>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Input label={t('propertiesPage.bulkStart')} type="number" inputMode="numeric" value={form.start}
+          onChange={(e) => set('start', e.target.value)} placeholder="100" />
+        <Input label={t('propertiesPage.bulkEnd')} type="number" inputMode="numeric" value={form.end}
+          onChange={(e) => set('end', e.target.value)} placeholder="145" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Input label={t('propertiesPage.bulkPrefix')} value={form.prefix}
+          onChange={(e) => set('prefix', e.target.value)} placeholder="A-" maxLength={10} />
+        <Input label={t('propertiesPage.bulkSuffix')} value={form.suffix}
+          onChange={(e) => set('suffix', e.target.value)} placeholder="" maxLength={10} />
+      </div>
+
+      <label className="flex items-center gap-2 text-xs font-medium text-gray-600 select-none">
+        <input type="checkbox" checked={form.pad} onChange={(e) => set('pad', e.target.checked)} />
+        {t('propertiesPage.bulkZeroPad')}
+      </label>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Input label={t('onboarding.floor')} type="number" value={form.floor}
+          onChange={(e) => set('floor', e.target.value)} placeholder="1" />
+        <Input label={t('propertiesPage.bulkBuilding')} value={form.building}
+          onChange={(e) => set('building', e.target.value)} placeholder="" maxLength={50} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('onboarding.typeRequired')}</label>
+          <select className="input w-full" value={form.type} onChange={(e) => set('type', e.target.value)}>
+            {ROOM_TYPES.map((rt) => <option key={rt.value} value={rt.value}>{t(rt.labelKey)}</option>)}
+          </select>
+        </div>
+        <Input label={t('onboarding.capacity')} type="number" min={1} max={20} value={form.capacity}
+          onChange={(e) => set('capacity', Math.max(1, parseInt(e.target.value) || 1))} />
+      </div>
+
+      {/* ── Live preview ── */}
+      {invalidRange && <p className="text-xs text-red-500">{t('propertiesPage.bulkInvalidRange')}</p>}
+      {tooMany && <p className="text-xs text-red-500">{t('propertiesPage.bulkTooMany')}</p>}
+
+      {numbers.length > 0 && (
+        <div className="rounded-lg border border-gray-200 bg-white p-3 flex flex-col gap-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold text-gray-700">
+              {t('propertiesPage.bulkWillCreate', { count: toCreate })}
+            </span>
+            {duplicates.length > 0 && (
+              <span className="text-orange-500 font-medium">
+                {t('propertiesPage.bulkWillSkip', { count: duplicates.length })}
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {previewSample.map((n) => {
+              const dup = duplicates.includes(n);
+              return (
+                <span key={n}
+                  className={`text-[11px] font-mono px-1.5 py-0.5 rounded ${dup ? 'bg-orange-50 text-orange-400 line-through' : 'bg-violet-50 text-violet-600'}`}>
+                  {n}
+                </span>
+              );
+            })}
+            {numbers.length > previewSample.length && (
+              <span className="text-[11px] text-gray-400 px-1.5 py-0.5">
+                +{numbers.length - previewSample.length}…
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Button size="sm" loading={saving} disabled={!canSubmit} onClick={() => onSave(form)} className="gap-1.5">
+          <Save className="h-3.5 w-3.5" /> {t('propertiesPage.bulkCreateCta', { count: toCreate })}
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onCancel}>{t('common.cancel')}</Button>
+      </div>
+    </div>
+  );
+};
+
 // ── Rooms panel (per property) ────────────────────────────────────────────────
 
 const RoomsPanel = ({ property }: { property: Property }) => {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [showAdd, setShowAdd]     = useState(false);
+  const [showBulk, setShowBulk]   = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [bulkMsg, setBulkMsg] = useState('');
 
   const qKey = ['property-rooms', property.id];
 
@@ -180,6 +312,27 @@ const RoomsPanel = ({ property }: { property: Property }) => {
     onError: (e: any) => setError(e?.response?.data?.message ?? t('common.error')),
   });
 
+  const bulkMut = useMutation({
+    mutationFn: (d: typeof BULK_INIT) => organizationApi.bulkAddRooms(property.id, {
+      start:    parseInt(d.start, 10),
+      end:      parseInt(d.end, 10),
+      prefix:   d.prefix || undefined,
+      suffix:   d.suffix || undefined,
+      pad:      d.pad,
+      floor:    d.floor !== '' ? parseInt(d.floor, 10) : null,
+      building: d.building || null,
+      type:     d.type,
+      capacity: d.capacity,
+    }),
+    onSuccess: (res) => {
+      inv();
+      setShowBulk(false);
+      setError('');
+      setBulkMsg(t('propertiesPage.bulkResult', { created: res.created_count, skipped: res.skipped_count }));
+    },
+    onError: (e: any) => setError(e?.response?.data?.errors?.[0]?.message ?? e?.response?.data?.message ?? t('common.error')),
+  });
+
   const statusInfo = (s: string) => ROOM_STATUSES.find((r) => r.value === s) ?? ROOM_STATUSES[0];
 
   // Group by floor
@@ -203,14 +356,34 @@ const RoomsPanel = ({ property }: { property: Property }) => {
           <BedDouble className="h-3.5 w-3.5" />
           {t('propertiesPage.unitsRooms')} {rooms.length > 0 && <span className="font-normal">({rooms.length})</span>}
         </p>
-        <button
-          onClick={() => { setShowAdd((s) => !s); setEditingId(null); setError(''); }}
-          className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity"
-          style={{ color: '#5346A8' }}
-        >
-          <Plus className="h-3.5 w-3.5" /> {t('onboarding.addUnit')}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => { setShowBulk((s) => !s); setShowAdd(false); setEditingId(null); setError(''); setBulkMsg(''); }}
+            className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity"
+            style={{ color: '#5346A8' }}
+          >
+            <Rows3 className="h-3.5 w-3.5" /> {t('propertiesPage.bulkAdd')}
+          </button>
+          <button
+            onClick={() => { setShowAdd((s) => !s); setShowBulk(false); setEditingId(null); setError(''); setBulkMsg(''); }}
+            className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity"
+            style={{ color: '#5346A8' }}
+          >
+            <Plus className="h-3.5 w-3.5" /> {t('onboarding.addUnit')}
+          </button>
+        </div>
       </div>
+
+      {showBulk && (
+        <div className="mb-3">
+          <BulkRoomForm
+            existingNumbers={rooms.map((r) => r.number)}
+            onSave={(d) => bulkMut.mutate(d)}
+            onCancel={() => { setShowBulk(false); setError(''); }}
+            saving={bulkMut.isPending}
+          />
+        </div>
+      )}
 
       {showAdd && (
         <div className="mb-3">
@@ -223,6 +396,7 @@ const RoomsPanel = ({ property }: { property: Property }) => {
         </div>
       )}
 
+      {bulkMsg && <p className="text-xs text-green-600 mb-2">{bulkMsg}</p>}
       {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
 
       {isLoading && (
