@@ -80,61 +80,69 @@ function otsuThreshold(histogram: number[], total: number): number {
   return threshold;
 }
 
-/**
- * Recadre le bas de l'image (zone MRZ) et binarise avec Otsu.
- * Retourne un data URL PNG prêt pour tesseract.
- */
-async function cropAndBinarise(file: File, cropFromBottom: number): Promise<string> {
+/** Charge un File en HTMLImageElement (une seule fois, réutilisé pour toutes les rotations). */
+function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
-
-    img.onload = () => {
-      try {
-        const cropTop = Math.floor(img.height * (1 - cropFromBottom));
-        const cropH   = img.height - cropTop;
-
-        const scale = Math.min(2.5, MAX_CANVAS_W / img.width);
-        const w = Math.round(img.width  * scale);
-        const h = Math.round(cropH      * scale);
-
-        const canvas = document.createElement('canvas');
-        canvas.width  = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d')!;
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, 0, cropTop, img.width, cropH, 0, 0, w, h);
-
-        const imgData = ctx.getImageData(0, 0, w, h);
-        const d = imgData.data;
-
-        // Histogramme luminance → seuil Otsu
-        const hist = new Array<number>(256).fill(0);
-        for (let i = 0; i < d.length; i += 4) {
-          hist[Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) & 255]++;
-        }
-        const thresh = otsuThreshold(hist, w * h);
-        console.log(`[MRZ] Otsu=${thresh}  crop=${cropFromBottom}  canvas=${w}×${h}`);
-
-        // Binarisation
-        for (let i = 0; i < d.length; i += 4) {
-          const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-          const v = lum < thresh ? 0 : 255;
-          d[i] = d[i + 1] = d[i + 2] = v;
-          d[i + 3] = 255;
-        }
-        ctx.putImageData(imgData, 0, 0);
-        URL.revokeObjectURL(url);
-        resolve(canvas.toDataURL('image/png'));
-      } catch (err) {
-        URL.revokeObjectURL(url);
-        reject(err);
-      }
-    };
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image non lisible')); };
     img.src = url;
   });
+}
+
+/**
+ * Fait pivoter l'image entière de `rotationDeg` (0/90/180/270), recadre la bande
+ * du bas (là où atterrit la MRZ une fois le document droit) et binarise (Otsu).
+ * Retourne un data URL PNG prêt pour tesseract.
+ *
+ * En essayant les 4 rotations, on couvre : document droit (0), à l'envers (180)
+ * et paysage/portrait pivoté (90/270) — sans aucune dépendance externe.
+ */
+function renderRotatedCrop(img: HTMLImageElement, rotationDeg: number, cropFromBottom: number): string {
+  const swap = rotationDeg === 90 || rotationDeg === 270;
+  const srcW = img.width, srcH = img.height;
+  const rotW = swap ? srcH : srcW;
+  const rotH = swap ? srcW : srcH;
+
+  // 1) Image entière pivotée sur un canvas hors-écran
+  const rot = document.createElement('canvas');
+  rot.width = rotW; rot.height = rotH;
+  const rctx = rot.getContext('2d')!;
+  rctx.translate(rotW / 2, rotH / 2);
+  rctx.rotate((rotationDeg * Math.PI) / 180);
+  rctx.drawImage(img, -srcW / 2, -srcH / 2);
+
+  // 2) Recadrage de la bande du bas + mise à l'échelle (plafond largeur)
+  const cropTop = Math.floor(rotH * (1 - cropFromBottom));
+  const cropH   = rotH - cropTop;
+  const scale = Math.min(2.5, MAX_CANVAS_W / rotW);
+  const w = Math.round(rotW * scale);
+  const h = Math.round(cropH * scale);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d')!;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(rot, 0, cropTop, rotW, cropH, 0, 0, w, h);
+
+  // 3) Binarisation Otsu
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const d = imgData.data;
+  const hist = new Array<number>(256).fill(0);
+  for (let i = 0; i < d.length; i += 4) {
+    hist[Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) & 255]++;
+  }
+  const thresh = otsuThreshold(hist, w * h);
+  for (let i = 0; i < d.length; i += 4) {
+    const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    const v = lum < thresh ? 0 : 255;
+    d[i] = d[i + 1] = d[i + 2] = v;
+    d[i + 3] = 255;
+  }
+  ctx.putImageData(imgData, 0, 0);
+  return canvas.toDataURL('image/png');
 }
 
 // ─── Extraction des lignes MRZ ──────────────────────────────────────────────────
@@ -441,39 +449,39 @@ export async function scanMrz(
   let lastError: Error | null = null;
 
   try {
-    // ── 1) Pipeline éprouvé EN PREMIER : crop bas (rapide, ne charge pas OpenCV) ──
-    // Comportement identique à la version d'avant OpenCV → aucune régression sur
-    // les photos normales (document droit, MRZ en bas). OpenCV n'est tenté qu'en
-    // dernier recours ci-dessous, pour les cas que ce pipeline ne sait pas lire.
-    const crops: Array<{ fraction: number; psm: '6' | '11' }> = [
-      { fraction: 0.12, psm: '6'  }, // Photo avec beaucoup de marge autour du document
-      { fraction: 0.22, psm: '6'  }, // Photo page entière — MRZ dans la bande du bas
-      { fraction: 0.42, psm: '11' }, // Photo rapprochée du bas du passeport
-      { fraction: 0.60, psm: '11' }, // Très rapprochée / passeport hors cadre
-    ];
+    // ── 1) Pipeline éprouvé, à TOUTES les orientations (0/90/180/270) ──────────
+    // On fait tourner l'image entière puis on lit la bande du bas avec l'OCR
+    // éprouvé. Ordre : document droit d'abord (cas courant), puis à l'envers,
+    // puis pivoté. Couvre MRZ en bas / haut / gauche / droite sans OpenCV.
+    const img = await loadImage(file);
+    const orientations = [0, 180, 90, 270];      // droit → 180° → 90° → 270°
+    const fractions    = [0.25, 0.40, 0.60];     // bande du bas : serrée → large
 
-    for (let i = 0; i < crops.length; i++) {
-      const { fraction, psm } = crops[i];
-      report(58 + i * 6);
+    let step = 0;
+    const totalSteps = orientations.length * fractions.length;
 
-      try {
-        const image = await cropAndBinarise(file, fraction);
-        const text  = await runOcr(worker, image, psm);
-        const data  = parseOcrText(text);
+    for (const deg of orientations) {
+      for (const fraction of fractions) {
+        report(56 + Math.round((step++ / totalSteps) * 34)); // 56 → 90
+        try {
+          const image = renderRotatedCrop(img, deg, fraction);
+          const text  = await runOcr(worker, image, '6');
+          const data  = parseOcrText(text);
 
-        if (data) {
-          console.log(`[MRZ] Succès via crop bas fraction=${fraction}`);
-          report(100);
-          return data;
+          if (data) {
+            console.log(`[MRZ] Succès rotation=${deg}° crop=${fraction}`);
+            report(100);
+            return data;
+          }
+          lastError = new Error('Lignes MRZ non détectées dans cette zone');
+        } catch (err) {
+          lastError = err instanceof Error ? err : new Error(String(err));
+          console.warn(`[MRZ] rotation=${deg}° crop=${fraction} échoué:`, lastError.message);
         }
-        lastError = new Error('Lignes MRZ non détectées dans cette zone');
-      } catch (err) {
-        lastError = err instanceof Error ? err : new Error(String(err));
-        console.warn(`[MRZ] crop=${fraction} échoué:`, lastError.message);
       }
     }
 
-    // ── 2) SECOURS OpenCV : seulement si le crop bas a tout raté ──────────────
+    // ── 2) SECOURS OpenCV : seulement si les rotations ont toutes raté ─────────
     // Détecte la bande MRZ où qu'elle soit (haut/bas/côté), corrige rotation
     // (0/90/180/270) + perspective, binarise. Validation STRICTE : on n'accepte
     // que si nom + numéro + date de naissance sont présents — sinon on préfère
@@ -481,7 +489,7 @@ export async function scanMrz(
     try {
       const candidates = await detectMrzCandidates(file, 6);
       for (let i = 0; i < candidates.length; i++) {
-        report(84 + i * 2);
+        report(91 + i);
         try {
           const text = await runOcr(worker, candidates[i], '6');
           const data = parseOcrText(text);
