@@ -13,6 +13,20 @@ const SITE_LANGS = [
   { code: 'ar', name: 'العربية', label: 'AR' },
 ];
 
+/** Libellés fixes du footer (hors contenu CMS) — trilingues. */
+const FOOTER_T = {
+  desc: {
+    fr: 'Plateforme de fiche de police digitale pour les hébergements en Tunisie — simple, rapide, conforme.',
+    en: 'Digital police form platform for accommodations in Tunisia — simple, fast, compliant.',
+    ar: 'منصة بطاقة الشرطة الرقمية لمؤسسات الإقامة في تونس — بسيطة وسريعة ومطابقة.',
+  },
+  product: { fr: 'Produit', en: 'Product', ar: 'المنتج' },
+  legal: { fr: 'Légal', en: 'Legal', ar: 'قانوني' },
+  mentions: { fr: 'Mentions légales', en: 'Legal notice', ar: 'إشعار قانوني' },
+  cgv: { fr: 'Conditions générales de vente', en: 'Terms of sale', ar: 'الشروط العامة للبيع' },
+  securePay: { fr: 'Paiement sécurisé', en: 'Secure payment', ar: 'دفع آمن' },
+};
+
 /** Sélecteur de langue dans le langage visuel de la navbar publique
     (pilule cachet + dropdown carte papier) — pas le composant des portails. */
 const SiteLanguageSwitcher = ({ current, onSelect }: { current: string; onSelect: (code: string) => void }) => {
@@ -156,18 +170,48 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
       <footer>
         <div className="footer-inner">
           <div className="footer-top">
-            <div className="footer-brand">
-              <div className="nav-stamp"><span>قيد</span></div>
-              <span className="nav-wordmark" style={{ color: 'var(--papier)' }}>QAYED</span>
+            <div>
+              <div className="footer-logo-row">
+                <div className="footer-stamp"><span>قيد</span></div>
+                <span className="footer-wm">QAYED</span>
+              </div>
+              <p className="footer-tagline">منصة تسجيل النزلاء الرقمية للفنادق التونسية</p>
+              <p className="footer-desc">{FOOTER_T.desc[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.desc.fr}</p>
             </div>
-            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-              {(menus?.footer ?? []).map((item) => (
-                <span key={item.id} style={{ fontSize: 14 }}><NavLink item={item} /></span>
-              ))}
+            <div className="footer-col">
+              <h4>{FOOTER_T.product[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.product.fr}</h4>
+              <ul>
+                {(menus?.footer ?? []).map((item) => <li key={item.id}><NavLink item={item} /></li>)}
+              </ul>
+            </div>
+            <div className="footer-col">
+              <h4>{FOOTER_T.legal[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.legal.fr}</h4>
+              <ul>
+                <li><Link to={`/${lang}/mentions-legales`}>{FOOTER_T.mentions[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.mentions.fr}</Link></li>
+                <li><Link to={`/${lang}/cgv`}>{FOOTER_T.cgv[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.cgv.fr}</Link></li>
+                <li><a href="mailto:contact@qayed.tn">Contact</a></li>
+              </ul>
             </div>
           </div>
           <div className="footer-bottom">
-            <span>© {new Date().getFullYear()} Qayed — Kasbahost Sarl</span>
+            <span className="footer-legal">© {new Date().getFullYear()} QAYED · UW AGENCY SUARL · TUNIS, TUNISIE</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <span className="footer-legal" style={{ marginInlineEnd: 6 }}>{FOOTER_T.securePay[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.securePay.fr}</span>
+              <svg width="42" height="26" viewBox="0 0 42 26" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.45 }}>
+                <rect width="42" height="26" rx="4" fill="#1A1F71" />
+                <text x="21" y="17" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="10" fontWeight="700" fill="#FFFFFF" letterSpacing="1">VISA</text>
+              </svg>
+              <svg width="42" height="26" viewBox="0 0 42 26" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.45 }}>
+                <rect width="42" height="26" rx="4" fill="#252525" />
+                <circle cx="16" cy="13" r="8" fill="#EB001B" />
+                <circle cx="26" cy="13" r="8" fill="#F79E1B" />
+                <path d="M21 7.2a8 8 0 0 1 0 11.6A8 8 0 0 1 21 7.2z" fill="#FF5F00" />
+              </svg>
+              <svg width="42" height="26" viewBox="0 0 42 26" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.45 }}>
+                <rect width="42" height="26" rx="4" fill="#2D6DB5" />
+                <text x="21" y="17" textAnchor="middle" fontFamily="Arial,sans-serif" fontSize="9" fontWeight="700" fill="#FFFFFF">CB</text>
+              </svg>
+            </div>
           </div>
         </div>
       </footer>

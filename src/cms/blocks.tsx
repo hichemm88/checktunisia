@@ -417,6 +417,37 @@ export const MockupBlock = (p: MockupProps) => (
   </section>
 );
 
+// ── Prose (pages légales / contenu long) ───────────────────────────────────────
+
+export interface ProseProps {
+  title?: string;
+  text: string;
+  background: 'default' | 'alt';
+}
+
+export const ProseBlock = (p: ProseProps) => (
+  <section className={sectionClass(p.background)} style={{ paddingTop: 18, paddingBottom: 18 }}>
+    <div className="wrap" style={{ maxWidth: 760 }}>
+      {p.title && (
+        <h3 style={{ fontFamily: 'var(--font-d)', fontVariationSettings: "'wdth' 112", fontWeight: 800, fontSize: 20, color: 'var(--encre)', marginBottom: 10 }}>
+          {p.title}
+        </h3>
+      )}
+      {p.text.split(/\n{2,}/).map((para, i) => (
+        para.startsWith('- ')
+          ? (
+            <ul key={i} style={{ margin: '0 0 12px', paddingInlineStart: 22, display: 'flex', flexDirection: 'column', gap: 4, listStyle: 'disc' }}>
+              {para.split('\n').map((line, j) => (
+                <li key={j} style={{ fontSize: 15, color: 'var(--texte-sec)', lineHeight: 1.7 }}>{line.replace(/^- /, '')}</li>
+              ))}
+            </ul>
+          )
+          : <p key={i} style={{ fontSize: 15, color: 'var(--texte-sec)', lineHeight: 1.7, marginBottom: 12 }}>{para}</p>
+      ))}
+    </div>
+  </section>
+);
+
 // ── Espaceur ────────────────────────────────────────────────────────────────────
 
 export const SpacerBlock = ({ height }: { height: number }) => <div style={{ height: height || 40 }} />;

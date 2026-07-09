@@ -15,6 +15,7 @@ import {
   FaqBlock, FaqProps,
   CtaBandBlock, CtaBandProps,
   MockupBlock, MockupProps,
+  ProseBlock, ProseProps,
   SpacerBlock,
 } from './blocks';
 import { MOCKUP_CHOICES } from './mockups';
@@ -43,6 +44,7 @@ type Props = {
   Faq: FaqProps;
   CtaBand: CtaBandProps;
   Mockup: MockupProps;
+  Prose: ProseProps;
   Spacer: { height: number };
 };
 
@@ -305,6 +307,16 @@ export const puckConfig: Config<Props> = {
       },
       defaultProps: { mockup: 'fiche-police', background: 'default' },
       render: MockupBlock,
+    },
+    Prose: {
+      label: 'Prose (texte légal / article)',
+      fields: {
+        title: { type: 'text', label: 'Titre (optionnel)' },
+        text: { type: 'textarea', label: 'Texte — ligne vide = nouveau paragraphe, lignes commençant par « - » = liste' },
+        background: { ...backgroundField, label: 'Fond' },
+      },
+      defaultProps: { title: '', text: '', background: 'default' },
+      render: ProseBlock,
     },
     Spacer: {
       label: 'Espaceur',
