@@ -1,6 +1,11 @@
-import { Redirect, Tabs } from 'expo-router';
+import { useEffect, useRef } from 'react';
+import { Redirect, Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '@/stores/authStore';
+import { hasPushPermission, registerPushToken } from '@/lib/push';
+import { PUSH_PROMPT_SEEN_KEY } from '../notifications-permission';
+import { toMobileRole } from '@/types';
 import { colors, fontSize, fontWeight } from '@/theme/theme';
 import { fr } from '@/i18n/fr';
 
@@ -15,6 +20,25 @@ function tabIcon(name: IoniconName) {
 /** 5-tab bottom navigation, identical to the web (§5.0). Auth-gated. */
 export default function TabsLayout() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const role = useAuthStore((s) => s.user?.role);
+  const router = useRouter();
+  const didBootstrap = useRef(false);
+
+  // Managers: show the permission explainer once (§6.4), then keep the token fresh.
+  useEffect(() => {
+    if (!isAuthenticated || !role || didBootstrap.current) return;
+    if (toMobileRole(role) !== 'manager') return;
+    didBootstrap.current = true;
+    (async () => {
+      const seen = await AsyncStorage.getItem(PUSH_PROMPT_SEEN_KEY);
+      if (!seen) {
+        router.push('/notifications-permission');
+      } else if (await hasPushPermission()) {
+        await registerPushToken();
+      }
+    })();
+  }, [isAuthenticated, role, router]);
+
   if (!isAuthenticated) return <Redirect href="/login" />;
 
   return (

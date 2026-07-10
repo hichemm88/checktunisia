@@ -52,7 +52,7 @@ mobile/
 | 0 | Audit API + fondations (thème, auth, login) | ✅ |
 | 1 | Auth + navigation 5 onglets + Mes biens (établissement actif) | ✅ |
 | 2 | Dashboard, **Check-in + scan MRZ natif (checksums ICAO 9303)**, Historique, file offline | ✅ (test terrain à faire) |
-| 3 | Notifications push (backend + app) | ⛔ à faire |
+| 3 | Notifications push (backend + app) | ✅ (build réelle + worker queue à faire) |
 | 4 | Polish + soumission stores | ⛔ à faire |
 
 > **Scan MRZ** : nécessite une *development build* (`eas build --profile development` ou

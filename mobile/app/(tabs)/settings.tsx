@@ -4,6 +4,7 @@ import { AppHeader } from '@/components/AppHeader';
 import { Avatar } from '@/components/Avatar';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
+import { unregisterPushToken } from '@/lib/push';
 import { colors, spacing, fontSize, fontWeight, radius, shadow } from '@/theme/theme';
 import { fr } from '@/i18n/fr';
 import { toMobileRole } from '@/types';
@@ -20,6 +21,7 @@ export default function SettingsScreen() {
     : '';
 
   async function handleLogout() {
+    await unregisterPushToken();
     await authApi.logout();
     await logout();
   }

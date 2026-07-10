@@ -34,6 +34,12 @@
         {
           "cameraPermissionText": "Qayed utilise la caméra pour scanner la bande MRZ des passeports."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#5346A8"
+        }
       ]
     ],
     "experiments": {

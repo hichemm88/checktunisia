@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import NetInfo from '@react-native-community/netinfo';
 import { useAuthStore } from '@/stores/authStore';
 import { useQueueStore } from '@/stores/queueStore';
+import { configureNotifications, addNotificationListeners } from '@/lib/push';
 import { colors } from '@/theme/theme';
 
 const queryClient = new QueryClient({
@@ -38,6 +39,15 @@ export default function RootLayout() {
     return unsubscribe;
   }, [processQueue]);
 
+  // Notifications: foreground/tap behaviour + keep the centre fresh on receipt (§6.4).
+  useEffect(() => {
+    void configureNotifications();
+    const remove = addNotificationListeners(() => {
+      void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    });
+    return remove;
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
@@ -50,6 +60,8 @@ export default function RootLayout() {
             <Stack.Screen name="fiche/[id]" options={{ presentation: 'card' }} />
             <Stack.Screen name="scan-mrz" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
             <Stack.Screen name="checkin-manual" options={{ presentation: 'card' }} />
+            <Stack.Screen name="notifications" options={{ presentation: 'card' }} />
+            <Stack.Screen name="notifications-permission" options={{ presentation: 'modal' }} />
           </Stack>
         ) : (
           <View style={styles.splash}>

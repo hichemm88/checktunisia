@@ -40,6 +40,17 @@ export default function CheckInWizard() {
   const [children, setChildren] = useState(0);
   const [guests, setGuests] = useState<AddGuestPayload[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [dateError, setDateError] = useState('');
+
+  // Departure must be strictly after arrival (blocking).
+  function goToDocuments() {
+    if (checkOutDate <= checkInDate) {
+      setDateError(fr.checkin.dateOrderError);
+      return;
+    }
+    setDateError('');
+    setStep(1);
+  }
 
   const { data: roomsData } = useQuery({
     queryKey: ['rooms', activePropertyId],
@@ -159,7 +170,9 @@ export default function CheckInWizard() {
               <Counter label={fr.checkin.children} value={children} min={0} onChange={setChildren} />
             </View>
 
-            <Pressable style={styles.primaryBtn} onPress={() => setStep(1)}>
+            {dateError ? <Text style={styles.dateError}>{dateError}</Text> : null}
+
+            <Pressable style={styles.primaryBtn} onPress={goToDocuments}>
               <Text style={styles.primaryText}>{fr.checkin.next}</Text>
             </Pressable>
           </>
@@ -362,6 +375,7 @@ const styles = StyleSheet.create({
   guestMeta: { fontSize: fontSize.xs, color: colors.fiche, marginTop: 1 },
   removeText: { color: colors.danger, fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
   hint: { color: colors.fiche, fontSize: fontSize.xs, marginTop: spacing.xs },
+  dateError: { color: colors.danger, fontSize: fontSize.sm, marginTop: spacing.xs },
   reviewNote: {
     flexDirection: 'row',
     gap: spacing.sm,
