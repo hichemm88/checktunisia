@@ -60,9 +60,14 @@ export async function registerPushToken(): Promise<string | null> {
     (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined)?.eas?.projectId ??
     Constants.easConfig?.projectId;
 
-  const { data: token } = await Notifications.getExpoPushTokenAsync(
-    projectId ? { projectId } : undefined,
-  );
+  // Obtaining an Expo push token can fail (e.g. Expo Go without a projectId) — never throw.
+  let token: string;
+  try {
+    const result = await Notifications.getExpoPushTokenAsync(projectId ? { projectId } : undefined);
+    token = result.data;
+  } catch {
+    return null;
+  }
 
   try {
     await notificationsApi.registerDevice(token, Platform.OS === 'ios' ? 'ios' : 'android');
