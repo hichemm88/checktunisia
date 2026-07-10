@@ -43,12 +43,16 @@ peut pas bloquer ni faire échouer un check-in (§6.3, critère 3/6).
 ### Vérifié
 - `php -l` sur les 11 fichiers créés/modifiés → aucun erreur de syntaxe (PHP 8.4).
 
-### Reste à faire (backend)
-- **`fiche_pending` (> 30 min non validée)** : nécessite une commande Artisan planifiée
-  (scheduler) qui balaie les brouillons anciens. Le type est déjà géré par le modèle et
-  l'app ; la commande + l'entrée `schedule()` sont un ajout court, non inclus dans cette passe.
-- Exécuter `php artisan migrate` sur l'environnement cible, et s'assurer qu'un **worker de
-  queue** tourne (`php artisan queue:work`) pour l'envoi des push.
+### `fiche_pending` — fait
+- Commande `checkins:notify-pending` (`app/Console/Commands/NotifyPendingCheckIns.php`),
+  planifiée **toutes les 10 min** (`routes/console.php`, `withoutOverlapping`). Alerte les
+  managers d'un brouillon avec voyageurs saisis mais non validé depuis > 30 min ; notifié une
+  seule fois (une ligne `fiche_pending` existante inhibe le ré-envoi).
+
+### Reste à faire (backend, ops)
+- Exécuter `php artisan migrate` sur l'environnement cible, s'assurer qu'un **worker de queue**
+  tourne (`php artisan queue:work`) pour l'envoi des push, et que le **scheduler** est actif
+  (`php artisan schedule:work` / cron) pour `checkins:notify-pending`.
 
 ## App mobile (`checktunisia/mobile`)
 

@@ -53,8 +53,12 @@ mobile/
 | 1 | Auth + navigation 5 onglets + Mes biens (établissement actif) | ✅ |
 | 2 | Dashboard, **Check-in + scan MRZ natif (checksums ICAO 9303)**, Historique, file offline | ✅ (test terrain à faire) |
 | 3 | Notifications push (backend + app) | ✅ (build réelle + worker queue à faire) |
-| 4 | Polish + soumission stores | ⛔ à faire |
+| 4 | Assets, EAS, fiches stores | ✅ code/config ; comptes + soumission = actions humaines |
 
 > **Scan MRZ** : nécessite une *development build* (`eas build --profile development` ou
 > `expo run:android`), pas Expo Go. Le noyau de validation MRZ (`src/lib/mrz.ts`) est vérifié
 > contre l'échantillon ICAO. `npm run typecheck` passe sans erreur.
+>
+> **Phase 4** : voir `PHASE-4-REPORT.md` et `STORE-LISTING.md`. Les assets sont des
+> **placeholders** de marque (à remplacer par le logo قيد final). Builds via `eas.json`
+> (profils development / preview / production).
