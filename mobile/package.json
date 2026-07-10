@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -43,12 +44,15 @@
     "@babel/plugin-transform-shorthand-properties": "^7.24.0",
     "@babel/plugin-transform-template-literals": "^7.24.0",
     "@types/react": "~19.1.0",
+    "patch-package": "^8.0.1",
     "typescript": "~5.9.2"
   },
   "expo": {
     "doctor": {
       "reactNativeDirectoryCheck": {
-        "exclude": ["react-native-vision-camera-text-recognition"]
+        "exclude": [
+          "react-native-vision-camera-text-recognition"
+        ]
       }
     }
   },
