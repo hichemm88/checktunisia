@@ -8,55 +8,111 @@ import { LoadingView, ErrorView, EmptyView } from '@/components/StateView';
 import { extractError } from '@/lib/api';
 import { colors, spacing, fontSize, fontWeight, radius, shadow } from '@/theme/theme';
 import { fr, plural } from '@/i18n/fr';
-import { getPropertyTypeName, type Property } from '@/types';
+import { getPropertyTypeName, toMobileRole, type Property } from '@/types';
 
 export default function PropertiesScreen() {
   const activePropertyId = useAuthStore((s) => s.activePropertyId);
   const setActiveProperty = useAuthStore((s) => s.setActiveProperty);
+  const role = useAuthStore((s) => s.user?.role);
+  const isManager = role ? toMobileRole(role) === 'manager' : false;
 
-  const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
-    queryKey: ['organization'],
-    queryFn: organizationApi.get,
-  });
+  // Managers get the full organisation (GET /hotel/organization — admin-only).
+  // Receptionists get only their assigned properties (GET /hotel/my-properties — both roles),
+  // so they can still switch the active establishment without a 403.
+  const orgQuery = useQuery({ queryKey: ['organization'], queryFn: organizationApi.get, enabled: isManager });
+  const myQuery = useQuery({ queryKey: ['my-properties'], queryFn: organizationApi.myProperties, enabled: !isManager });
+  const query = isManager ? orgQuery : myQuery;
 
   return (
     <View style={styles.screen}>
       <AppHeader title={fr.properties.myProperties} />
-      {isLoading ? (
+      {query.isLoading ? (
         <LoadingView />
-      ) : isError ? (
-        <ErrorView message={extractError(error)} onRetry={refetch} />
-      ) : !data ? null : (
+      ) : query.isError ? (
+        <ErrorView message={extractError(query.error)} onRetry={query.refetch} />
+      ) : (
         <ScrollView
           contentContainerStyle={styles.body}
           refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.cachet} />
+            <RefreshControl refreshing={query.isRefetching} onRefresh={query.refetch} tintColor={colors.cachet} />
           }
         >
-          {/* Company card */}
-          <View style={styles.orgCard}>
-            <Text style={styles.orgName}>{data.name || fr.properties.myOrganization}</Text>
-            <Text style={styles.orgMeta}>
-              {plural(fr.properties, 'propertiesCount', data.properties.length)} ·{' '}
-              {plural(fr.properties, 'unitsTotalCount', data.total_rooms)}
-            </Text>
-          </View>
+          {isManager && orgQuery.data ? (
+            <>
+              <View style={styles.orgCard}>
+                <Text style={styles.orgName}>{orgQuery.data.name || fr.properties.myOrganization}</Text>
+                <Text style={styles.orgMeta}>
+                  {plural(fr.properties, 'propertiesCount', orgQuery.data.properties.length)} ·{' '}
+                  {plural(fr.properties, 'unitsTotalCount', orgQuery.data.total_rooms)}
+                </Text>
+              </View>
+              <Text style={styles.hint}>{fr.properties.selectActiveProperty}</Text>
+              {orgQuery.data.properties.length === 0 ? (
+                <EmptyView title={fr.properties.noPropertyRegistered} />
+              ) : (
+                orgQuery.data.properties.map((p) => (
+                  <PropertyCard
+                    key={p.id}
+                    property={p}
+                    isActive={activePropertyId === p.id}
+                    onSelect={() => setActiveProperty(p.id, p.name)}
+                  />
+                ))
+              )}
+            </>
+          ) : null}
 
-          <Text style={styles.hint}>{fr.properties.selectActiveProperty}</Text>
-
-          {data.properties.length === 0 ? (
-            <EmptyView title={fr.properties.noPropertyRegistered} />
-          ) : (
-            data.properties.map((p) => (
-              <PropertyCard
-                key={p.id}
-                property={p}
-                isActive={activePropertyId === p.id}
-                onSelect={() => setActiveProperty(p.id, p.name)}
-              />
-            ))
-          )}
+          {!isManager && myQuery.data ? (
+            <>
+              <Text style={styles.hint}>{fr.properties.selectActiveProperty}</Text>
+              {myQuery.data.length === 0 ? (
+                <EmptyView title={fr.properties.noPropertyAssigned} />
+              ) : (
+                myQuery.data.map((p) => (
+                  <SimplePropertyCard
+                    key={p.id}
+                    name={p.name}
+                    isActive={activePropertyId === p.id}
+                    onSelect={() => setActiveProperty(p.id, p.name)}
+                  />
+                ))
+              )}
+            </>
+          ) : null}
         </ScrollView>
+      )}
+    </View>
+  );
+}
+
+function SimplePropertyCard({
+  name,
+  isActive,
+  onSelect,
+}: {
+  name: string;
+  isActive: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <View style={[styles.card, isActive && styles.cardActive]}>
+      <View style={styles.cardHeader}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardName}>{name}</Text>
+        </View>
+        {isActive ? (
+          <View style={styles.activeBadge}>
+            <Ionicons name="checkmark-circle" size={14} color={colors.conformeTexte} />
+            <Text style={styles.activeBadgeText}>{fr.properties.activeBadge}</Text>
+          </View>
+        ) : null}
+      </View>
+      {isActive ? (
+        <Text style={styles.selectedNote}>{fr.properties.propertySelected}</Text>
+      ) : (
+        <Pressable style={styles.selectBtn} onPress={onSelect} accessibilityRole="button">
+          <Text style={styles.selectBtnText}>{fr.properties.setAsActive}</Text>
+        </Pressable>
       )}
     </View>
   );

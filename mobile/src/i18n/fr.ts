@@ -63,7 +63,7 @@ export const fr = {
     children: 'Enfants',
     next: 'Suivant →',
     back: '← Retour',
-    scanPassport: 'Scanner le passeport (MRZ)',
+    scanPassport: 'Scanner / importer le passeport',
     manualCin: 'Saisie manuelle (CIN tunisienne)',
     documentRequiredHint: 'Document requis — Appuyer pour scanner',
     addExtraGuest: 'Ajouter un voyageur supplémentaire',
@@ -82,18 +82,19 @@ export const fr = {
     noProperty: "Aucun établissement actif — sélectionnez un bien dans « Mes biens ».",
   },
   scan: {
-    title: 'Scanner la MRZ',
-    instruction: 'Alignez la bande de 2 lignes au bas du passeport dans le cadre.',
-    permissionTitle: 'Accès caméra requis',
-    permissionBody:
-      'Autorisez la caméra pour scanner la bande MRZ des passeports.',
-    grant: 'Autoriser la caméra',
-    torch: 'Torche',
+    title: 'Scanner le passeport',
+    photoInstruction:
+      'Prenez une photo nette de la page du passeport (bande de 2 lignes bien visible), ou importez-en une depuis la galerie.',
+    takePhoto: 'Prendre une photo',
+    importPhoto: 'Importer une photo',
+    reading: 'Lecture du passeport…',
     manualEntry: 'Saisie manuelle',
-    success: 'MRZ validée ✓',
-    unavailable:
-      "Le scan natif nécessite une build de développement (indisponible dans Expo Go). Utilisez la saisie manuelle.",
-    checksumFail: 'Contrôle MRZ échoué — rapprochez et stabilisez le document.',
+    permissionBody:
+      "Autorisez l'accès à la caméra / aux photos pour scanner le passeport.",
+    notReadable:
+      'Bande MRZ non détectée. Réessayez avec une photo plus nette et bien cadrée, ou utilisez la saisie manuelle.',
+    ocrUnavailable:
+      'Lecture indisponible sur cet appareil. Utilisez la saisie manuelle.',
   },
   manual: {
     title: 'Saisie du voyageur',
@@ -160,6 +161,7 @@ export const fr = {
     unitsTotalCount_one: '{{count}} unité au total',
     unitsTotalCount_other: '{{count}} unités au total',
     noPropertyRegistered: 'Aucun bien enregistré',
+    noPropertyAssigned: 'Aucun bien ne vous est encore assigné.',
     propertySelected: 'Établissement sélectionné',
   },
   status: {

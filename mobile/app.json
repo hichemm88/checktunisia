@@ -23,7 +23,6 @@
     },
     "android": {
       "package": "tn.qayed.mobile",
-      "permissions": ["android.permission.CAMERA"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#10222E"
@@ -36,9 +35,10 @@
       "expo-router",
       "expo-secure-store",
       [
-        "react-native-vision-camera",
+        "expo-image-picker",
         {
-          "cameraPermissionText": "Qayed utilise la caméra pour scanner la bande MRZ des passeports."
+          "photosPermission": "Qayed accède à vos photos pour importer une photo de passeport.",
+          "cameraPermission": "Qayed utilise la caméra pour photographier le passeport lors de l'enregistrement."
         }
       ],
       [

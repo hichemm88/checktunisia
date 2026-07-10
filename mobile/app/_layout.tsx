@@ -58,7 +58,7 @@ export default function RootLayout() {
             <Stack.Screen name="login" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="fiche/[id]" options={{ presentation: 'card' }} />
-            <Stack.Screen name="scan-mrz" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="scan-mrz" options={{ presentation: 'card' }} />
             <Stack.Screen name="checkin-manual" options={{ presentation: 'card' }} />
             <Stack.Screen name="notifications" options={{ presentation: 'card' }} />
             <Stack.Screen name="notifications-permission" options={{ presentation: 'modal' }} />
