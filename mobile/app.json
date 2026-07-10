@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Qayed",
+    "slug": "qayed-mobile",
+    "scheme": "qayed",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#10222E"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "tn.qayed.mobile"
+    },
+    "android": {
+      "package": "tn.qayed.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#10222E"
+      }
+    },
+    "plugins": ["expo-router", "expo-secure-store"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "apiUrl": "https://checktunisia-backend-production.up.railway.app/api/v1"
+    }
+  }
+}
