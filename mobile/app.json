@@ -52,8 +52,12 @@
     "experiments": {
       "typedRoutes": true
     },
+    "owner": "hichou88",
     "extra": {
-      "apiUrl": "https://checktunisia-backend-production.up.railway.app/api/v1"
+      "apiUrl": "https://checktunisia-backend-production.up.railway.app/api/v1",
+      "eas": {
+        "projectId": "41db4a28-deae-4786-842f-081047dfa3fd"
+      }
     }
   }
 }
