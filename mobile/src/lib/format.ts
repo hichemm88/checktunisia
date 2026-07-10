@@ -30,10 +30,5 @@ export function timeOfDay(iso?: string | null): string {
   return `${String(d.getHours()).padStart(2, '0')}h${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-/** ISO country code (e.g. "TN", "FR") → flag emoji. Falls back to a globe. */
-export function flagEmoji(code?: string | null): string {
-  if (!code || code.length !== 2) return '🌐';
-  const A = 0x1f1e6;
-  const up = code.toUpperCase();
-  return String.fromCodePoint(A + (up.charCodeAt(0) - 65), A + (up.charCodeAt(1) - 65));
-}
+/** ISO country code (alpha-2 or alpha-3) → flag emoji. Falls back to a globe. */
+export { getFlag as flagEmoji } from './countries';

@@ -50,7 +50,11 @@ mobile/
 | Phase | Périmètre | Statut |
 |---|---|---|
 | 0 | Audit API + fondations (thème, auth, login) | ✅ |
-| 1 | Auth + navigation 5 onglets + Mes biens (établissement actif) | ✅ base posée |
-| 2 | Dashboard, **Check-in + scan MRZ natif**, Historique, offline | 🚧 Dashboard/Historique câblés ; MRZ à venir |
+| 1 | Auth + navigation 5 onglets + Mes biens (établissement actif) | ✅ |
+| 2 | Dashboard, **Check-in + scan MRZ natif (checksums ICAO 9303)**, Historique, file offline | ✅ (test terrain à faire) |
 | 3 | Notifications push (backend + app) | ⛔ à faire |
 | 4 | Polish + soumission stores | ⛔ à faire |
+
+> **Scan MRZ** : nécessite une *development build* (`eas build --profile development` ou
+> `expo run:android`), pas Expo Go. Le noyau de validation MRZ (`src/lib/mrz.ts`) est vérifié
+> contre l'échantillon ICAO. `npm run typecheck` passe sans erreur.

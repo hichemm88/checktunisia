@@ -4,7 +4,9 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import NetInfo from '@react-native-community/netinfo';
 import { useAuthStore } from '@/stores/authStore';
+import { useQueueStore } from '@/stores/queueStore';
 import { colors } from '@/theme/theme';
 
 const queryClient = new QueryClient({
@@ -20,10 +22,21 @@ const queryClient = new QueryClient({
 export default function RootLayout() {
   const hydrate = useAuthStore((s) => s.hydrate);
   const hydrated = useAuthStore((s) => s.hydrated);
+  const hydrateQueue = useQueueStore((s) => s.hydrate);
+  const processQueue = useQueueStore((s) => s.processAll);
 
   useEffect(() => {
     void hydrate();
-  }, [hydrate]);
+    void hydrateQueue();
+  }, [hydrate, hydrateQueue]);
+
+  // Flush the offline check-in queue whenever connectivity is (re)gained (§8).
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      if (state.isConnected) void processQueue();
+    });
+    return unsubscribe;
+  }, [processQueue]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -35,6 +48,8 @@ export default function RootLayout() {
             <Stack.Screen name="login" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="fiche/[id]" options={{ presentation: 'card' }} />
+            <Stack.Screen name="scan-mrz" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="checkin-manual" options={{ presentation: 'card' }} />
           </Stack>
         ) : (
           <View style={styles.splash}>
