@@ -42,12 +42,18 @@ async function ocrRegion(uri: string, crop: Crop | null): Promise<string> {
   return recognizeText(out.uri);
 }
 
-/** How many key fields were extracted — ranks best-effort candidates across regions. */
+/** How many key fields were extracted — tie-breaker when confidence is equal. */
 function fieldScore(r?: MrzResult): number {
   if (!r) return -1;
   return [r.document_number, r.date_of_birth, r.expiry_date, r.last_name, r.nationality_code].filter(
     Boolean,
   ).length;
+}
+
+/** Rank a read: checksum confidence first (a valid read beats garbage), then field count. */
+function rank(v?: MrzValidation | null): number {
+  if (!v?.result) return -1;
+  return (v.confidence ?? 0) * 100 + fieldScore(v.result);
 }
 
 /** OCR focused regions (MRZ zone first) + the full image; return the best MRZ read. */
@@ -66,7 +72,7 @@ async function readMrz(uri: string, w?: number, h?: number): Promise<MrzValidati
     try {
       const res = parseMrzFromText(await ocrRegion(uri, crop));
       if (res.ok && res.result) return res; // fully valid → done
-      if (res.result && fieldScore(res.result) > fieldScore(best?.result)) best = res;
+      if (res.result && rank(res) > rank(best)) best = res;
     } catch {
       // skip this region
     }

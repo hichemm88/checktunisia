@@ -26,6 +26,8 @@ export interface MrzResult {
 export interface MrzValidation {
   /** True when the `mrz` package considered the whole document valid (all checks pass). */
   ok: boolean;
+  /** Number of key check digits that passed (0–3) — ranks reads across image regions. */
+  confidence?: number;
   result?: MrzResult;
   error?: string;
 }
@@ -142,8 +144,19 @@ function toMrzResult(result: any, td3Line2: string | null): MrzResult {
   else if (/^[IAC]/.test(code)) document_type = 'national_id';
   else if (code.startsWith('V')) document_type = 'visa';
 
-  const cleanName = (s: string | null | undefined): string =>
-    s ? s.replace(/<+/g, ' ').replace(/\s+/g, ' ').trim() : '';
+  // ML Kit reads the MRZ '<' filler as a trailing 'K'/'C'. Strip the clearly-filler cases
+  // (a space-separated trailing letter, or a run of 2+) without touching real names. A lone
+  // attached trailing 'K' is deliberately kept (ambiguous with names like TAREK / MALEK).
+  const cleanName = (s: string | null | undefined): string => {
+    if (!s) return '';
+    return s
+      .replace(/<+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\s+[KC]$/, '') // 'FERIEL K' -> 'FERIEL'
+      .replace(/[KC]{2,}$/, '') // 'NAMEKK'  -> 'NAME'
+      .trim();
+  };
 
   const birthRaw = f.birthDate ?? (td3Line2 ? fallbackTd3Date(td3Line2, 13) : null);
   const expiryRaw = f.expirationDate ?? (td3Line2 ? fallbackTd3Date(td3Line2, 21) : null);
@@ -186,8 +199,16 @@ export function parseMrzFromText(text: string): MrzValidation {
     return { ok: false, error: 'Bande MRZ non détectée.' };
   }
 
+  // Confidence = how many key check digits the `mrz` package validated. Used to rank reads
+  // from different image regions so a clean read beats a garbled one.
+  const keyFields = ['documentNumber', 'birthDate', 'expirationDate'];
+  const details =
+    (result as { details?: Array<{ field: string; valid: boolean }> }).details ?? [];
+  const confidence = details.filter((d) => keyFields.includes(d.field) && d.valid).length;
+
   return {
     ok: Boolean(result.valid),
+    confidence,
     result: { ...data, mrz_line1: extracted.lines[0], mrz_line2: extracted.lines[1] },
   };
 }
