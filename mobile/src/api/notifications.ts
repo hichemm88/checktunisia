@@ -6,7 +6,8 @@ export type NotificationType =
   | 'check_out'
   | 'fiche_updated'
   | 'fiche_cancelled'
-  | 'fiche_pending';
+  | 'fiche_pending'
+  | 'manager_message';
 
 /** One notification as rendered by the notification centre (server is source of truth). */
 export interface AppNotification {
@@ -47,4 +48,13 @@ export const notificationsApi = {
     api.post<ApiItem<{ read_at: string }>>(`/notifications/${id}/read`).then((r) => r.data.data),
 
   markAllRead: () => api.post<ApiItem<{ updated: number }>>('/notifications/read-all').then((r) => r.data.data),
+
+  /** Manager → receptionists broadcast for a property (default: all the manager's properties). */
+  broadcast: (message: string, propertyId?: string | null) =>
+    api
+      .post<ApiItem<{ sent: number }>>('/notifications/broadcast', {
+        message,
+        property_id: propertyId ?? undefined,
+      })
+      .then((r) => r.data.data),
 };

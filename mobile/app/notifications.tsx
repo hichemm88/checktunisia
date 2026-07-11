@@ -5,6 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { notificationsApi, type AppNotification, type NotificationType } from '@/api/notifications';
+import { useAuthStore } from '@/stores/authStore';
+import { toMobileRole } from '@/types';
 import { LoadingView, ErrorView, EmptyView } from '@/components/StateView';
 import { extractError } from '@/lib/api';
 import { shortDate, timeOfDay } from '@/lib/format';
@@ -17,6 +19,7 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   fiche_updated: { icon: 'create', color: colors.vigilance, label: fr.notifications.typeUpdated },
   fiche_cancelled: { icon: 'close-circle', color: colors.danger, label: fr.notifications.typeCancelled },
   fiche_pending: { icon: 'alert-circle', color: colors.vigilance, label: fr.notifications.typePending },
+  manager_message: { icon: 'chatbubble-ellipses', color: colors.cachet, label: fr.notifications.typeMessage },
 };
 
 const FILTERS: { key: 'all' | NotificationType; label: string }[] = [
@@ -29,6 +32,8 @@ const FILTERS: { key: 'all' | NotificationType; label: string }[] = [
 export default function NotificationCenterScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const role = useAuthStore((s) => s.user?.role);
+  const isManager = role ? toMobileRole(role) === 'manager' : false;
   const [filter, setFilter] = useState<'all' | NotificationType>('all');
 
   const { data, isLoading, isError, error, refetch } = useQuery({
@@ -70,9 +75,20 @@ export default function NotificationCenterScreen() {
           <Ionicons name="chevron-back" size={26} color={colors.encre} />
         </Pressable>
         <Text style={styles.topTitle}>{fr.notifications.title}</Text>
-        <Pressable onPress={() => markAll.mutate()} hitSlop={10} disabled={markAll.isPending}>
-          <Ionicons name="checkmark-done" size={22} color={colors.cachet} />
-        </Pressable>
+        <View style={styles.topActions}>
+          {isManager ? (
+            <Pressable
+              onPress={() => router.push('/notify-team')}
+              hitSlop={10}
+              accessibilityLabel={fr.notifications.composeTitle}
+            >
+              <Ionicons name="paper-plane-outline" size={22} color={colors.cachet} />
+            </Pressable>
+          ) : null}
+          <Pressable onPress={() => markAll.mutate()} hitSlop={10} disabled={markAll.isPending}>
+            <Ionicons name="checkmark-done" size={22} color={colors.cachet} />
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.filters}>
@@ -137,6 +153,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   topTitle: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.encre },
+  topActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   filters: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
   chip: {
     paddingHorizontal: spacing.md,

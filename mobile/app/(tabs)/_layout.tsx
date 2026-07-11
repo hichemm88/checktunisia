@@ -5,7 +5,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '@/stores/authStore';
 import { hasPushPermission, registerPushToken } from '@/lib/push';
 import { PUSH_PROMPT_SEEN_KEY } from '../notifications-permission';
-import { toMobileRole } from '@/types';
 import { colors, fontSize, fontWeight } from '@/theme/theme';
 import { fr } from '@/i18n/fr';
 
@@ -24,10 +23,10 @@ export default function TabsLayout() {
   const router = useRouter();
   const didBootstrap = useRef(false);
 
-  // Managers: show the permission explainer once (§6.4), then keep the token fresh.
+  // Both roles receive notifications (managers: activity; receptionists: manager messages).
+  // Show the permission explainer once (§6.4), then keep the token fresh.
   useEffect(() => {
     if (!isAuthenticated || !role || didBootstrap.current) return;
-    if (toMobileRole(role) !== 'manager') return;
     didBootstrap.current = true;
     (async () => {
       const seen = await AsyncStorage.getItem(PUSH_PROMPT_SEEN_KEY);

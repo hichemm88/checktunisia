@@ -7,7 +7,6 @@ import { colors, spacing, fontSize, fontWeight, shadow } from '@/theme/theme';
 import { useAuthStore } from '@/stores/authStore';
 import { notificationsApi } from '@/api/notifications';
 import { unregisterPushToken } from '@/lib/push';
-import { toMobileRole } from '@/types';
 import { QayedSeal } from './QayedSeal';
 
 /**
@@ -22,7 +21,8 @@ export function AppHeader({ title }: { title: string }) {
   const role = useAuthStore((s) => s.user?.role);
   const logout = useAuthStore((s) => s.logout);
   const establishment = activeName || hotelName || 'Qayed';
-  const isManager = role ? toMobileRole(role) === 'manager' : false;
+  // Both roles receive notifications now (managers: activity; receptionists: manager messages).
+  const showBell = Boolean(role);
 
   async function handleLogout() {
     await unregisterPushToken();
@@ -32,7 +32,7 @@ export function AppHeader({ title }: { title: string }) {
   const { data: unread = 0 } = useQuery({
     queryKey: ['notifications', 'unread'],
     queryFn: notificationsApi.unreadCount,
-    enabled: isManager,
+    enabled: showBell,
     refetchInterval: 60_000,
   });
 
@@ -51,7 +51,7 @@ export function AppHeader({ title }: { title: string }) {
         <View style={styles.langChip}>
           <Text style={styles.langText}>FR</Text>
         </View>
-        {isManager ? (
+        {showBell ? (
           <Pressable
             onPress={() => router.push('/notifications')}
             hitSlop={10}
