@@ -51,13 +51,21 @@ function mrzDateToISO(yymmdd: string | null | undefined, isBirth: boolean): stri
 // covers O↔0 / I↔1 in numeric fields, so B/G/S/Z residue in a date can still null a field.
 const OCR_DIGIT_FIX: Record<string, string> = { O: '0', I: '1', B: '8', G: '6', S: '5', Z: '2' };
 
-function fallbackTd3Date(line2: string, start: number): string | null {
-  const raw = line2.slice(start, start + 6);
-  const digits = raw
+function fixDigits(s: string): string {
+  return s
     .split('')
     .map((c) => (/[0-9]/.test(c) ? c : OCR_DIGIT_FIX[c] ?? c))
     .join('');
+}
+
+function fallbackTd3Date(line2: string, start: number): string | null {
+  const digits = fixDigits(line2.slice(start, start + 6));
   return /^\d{6}$/.test(digits) ? digits : null;
+}
+
+/** A TD3 data row (line 2) has 6-digit date windows at [13-19] and [21-27] (digit-fixed). */
+function isTd3DataLine(l: string): boolean {
+  return /^\d{6}$/.test(fixDigits(l.slice(13, 19))) && /^\d{6}$/.test(fixDigits(l.slice(21, 27)));
 }
 
 type Extracted = { lines: string[]; format: 'TD3' | 'TD1' | 'TD2' };
@@ -75,19 +83,23 @@ function extractMrzLines(rawText: string): Extracted | null {
       .replace(/[ \t]{2,}/g, '<<')
       .replace(/[ \t]/g, '')
       .replace(/[^A-Z0-9<]/g, '');
-    if (clean.length >= 28) candidates.push(clean);
+    if (clean.length >= 20) candidates.push(clean);
   }
 
-  // TD3 — 2 lines of 44
+  // TD3 — 2 lines of 44. The data row (line 2) is the anchor: ML Kit often drops the trailing
+  // filler run of an empty personal-number field, so line 2 can arrive much shorter than 44 —
+  // we pad it back. Line 1 (names) is best-effort: preferred if it starts with P/I/V/A, else
+  // any other candidate, else synthesised so the `mrz` package still gets a valid-length pair.
   {
     const td3 = candidates
-      .filter((l) => l.length >= 38 && l.length <= 52)
+      .filter((l) => l.length >= 20 && l.length <= 52)
       .map((l) => (l.length >= 44 ? l.slice(0, 44) : l.padEnd(44, '<')));
-    const l1 = td3.filter((l) => /^[PIVA]/.test(l));
-    const l2 = td3.filter((l) => /^\d{6}$/.test(l.slice(13, 19)) && /^\d{6}$/.test(l.slice(21, 27)));
-    if (l1.length >= 1 && l2.length >= 1) {
-      const line2 = l2[0];
-      const line1 = l1.find((l) => l !== line2) ?? l1[0];
+    const line2 = td3.find(isTd3DataLine);
+    if (line2) {
+      const line1 =
+        td3.find((l) => /^[PIVA]/.test(l) && l !== line2 && !isTd3DataLine(l)) ??
+        td3.find((l) => l !== line2 && !isTd3DataLine(l)) ??
+        `P<${line2.slice(10, 13)}`.padEnd(44, '<'); // synthesise from the nationality field
       return { lines: [line1, line2], format: 'TD3' };
     }
   }
@@ -114,15 +126,13 @@ function extractMrzLines(rawText: string): Extracted | null {
   // Fallback — the two rows concatenated into one ~88-char string.
   {
     const all = rawText.toUpperCase().replace(/[«»‹›|]/g, '<').replace(/\s+/g, '').replace(/[^A-Z0-9<]/g, '');
-    if (all.length >= 80 && all.length <= 96) {
+    if (all.length >= 72 && all.length <= 96) {
       const mid = Math.floor(all.length / 2);
-      for (const cut of [44, mid, 43, 45]) {
-        if (cut < 30 || cut > all.length - 30) continue;
+      for (const cut of [44, mid, 43, 45, 42, 46]) {
+        if (cut < 28 || cut > all.length - 20) continue;
         const h1 = all.slice(0, cut).padEnd(44, '<');
         const h2 = all.slice(cut, cut + 44).padEnd(44, '<');
-        if (/^[PIVA]/.test(h1) && /^\d{6}$/.test(h2.slice(13, 19)) && /^\d{6}$/.test(h2.slice(21, 27))) {
-          return { lines: [h1, h2], format: 'TD3' };
-        }
+        if (isTd3DataLine(h2)) return { lines: [h1, h2], format: 'TD3' };
       }
     }
   }
