@@ -35,6 +35,8 @@ export interface MrzValidation {
     expiryDate: boolean;
     composite: boolean;
   };
+  /** Number of core check digits that passed (0–4) — ranks best-effort candidates. */
+  score?: number;
   error?: string;
 }
 
@@ -78,13 +80,18 @@ function mrzDateToIso(yymmdd: string, kind: 'birth' | 'expiry'): string {
   return `${century + yy}-${mm}-${dd}`;
 }
 
-/** Normalise raw OCR lines: uppercase, strip non-MRZ chars, keep only 44-char lines. */
+/**
+ * Normalise raw OCR lines into MRZ-candidate strings. Real ML Kit output is noisy:
+ * the filler '<' is often read as guillemets/pipes, and runs of fillers come back as spaces.
+ * We recover those, strip everything else, and keep lines long enough to be an MRZ row.
+ */
 export function normalizeMrzLines(raw: string): string[] {
   return raw
     .toUpperCase()
+    .replace(/[«»‹›|]/g, '<') // common '<' misreads
     .split(/\r?\n/)
-    .map((l) => l.replace(/[^A-Z0-9<]/g, ''))
-    .filter((l) => l.length >= 40);
+    .map((l) => l.replace(/\s+/g, '<').replace(/[^A-Z0-9<]/g, ''))
+    .filter((l) => l.length >= 20);
 }
 
 /**
@@ -93,16 +100,12 @@ export function normalizeMrzLines(raw: string): string[] {
  * required check digit passes.
  */
 export function parseTD3(rawLine1: string, rawLine2: string): MrzValidation {
-  const fail = (error: string): MrzValidation => ({
-    ok: false,
-    checks: { documentNumber: false, dateOfBirth: false, expiryDate: false, composite: false },
-    error,
-  });
-
   const l1 = rawLine1.toUpperCase().replace(/[^A-Z0-9<]/g, '').padEnd(44, '<').slice(0, 44);
   const l2 = rawLine2.toUpperCase().replace(/[^A-Z0-9<]/g, '').padEnd(44, '<').slice(0, 44);
 
-  if (l1[0] !== 'P') return fail('Ce n\'est pas un passeport (MRZ TD3 attendue).');
+  // A TD3 passport line 1 starts with 'P'. We don't hard-fail if it doesn't (OCR noise) —
+  // we still extract a best-effort result for the human to validate, but mark it not-ok.
+  const isPassport = l1[0] === 'P';
 
   // ── Line 1: issuing state + name ──
   const issuing = cleanField(l1.slice(2, 5)).replace(/\s/g, '');
@@ -136,7 +139,19 @@ export function parseTD3(rawLine1: string, rawLine2: string): MrzValidation {
   void personal;
   void personalChk;
 
-  const ok = checks.documentNumber && checks.dateOfBirth && checks.expiryDate && checks.composite;
+  const ok =
+    isPassport &&
+    checks.documentNumber &&
+    checks.dateOfBirth &&
+    checks.expiryDate &&
+    checks.composite;
+
+  /** How many core check digits passed — used to rank best-effort candidates. */
+  const score =
+    (checks.documentNumber ? 1 : 0) +
+    (checks.dateOfBirth ? 1 : 0) +
+    (checks.expiryDate ? 1 : 0) +
+    (checks.composite ? 1 : 0);
 
   const sex: MrzResult['sex'] = sexChar === 'M' ? 'M' : sexChar === 'F' ? 'F' : 'X';
 
@@ -158,25 +173,56 @@ export function parseTD3(rawLine1: string, rawLine2: string): MrzValidation {
     ok,
     result,
     checks,
+    score,
     error: ok ? undefined : 'Échec de validation MRZ — rapprochez le document et réessayez.',
   };
 }
 
-/** Try to recover a TD3 MRZ from a blob of OCR text (unknown line order/noise). */
+/**
+ * Recover a TD3 MRZ from a blob of OCR text (unknown line order / OCR noise).
+ * Tries several line pairings and returns the BEST candidate (most check digits passing),
+ * even if not all checks pass — the human validates on the next screen (§7). Only returns
+ * "not found" when no plausible MRZ pair exists at all.
+ */
 export function parseMrzFromText(text: string): MrzValidation {
   const lines = normalizeMrzLines(text);
-  // Find two consecutive ~44-char lines where the first starts with 'P'.
-  for (let i = 0; i < lines.length - 1; i++) {
-    if (lines[i][0] === 'P') {
-      const res = parseTD3(lines[i], lines[i + 1]);
-      if (res.ok) return res;
+  const candidates: MrzValidation[] = [];
+
+  // Gate on the DATA row (line 2 — where all the check digits and key fields live). The name
+  // row (line 1) can be short/garbled if OCR drops its filler run; names are corrected by the
+  // human anyway, so we still extract as long as a plausible data row is present.
+  const consider = (a: string, b: string) => {
+    if (b.length < 38 || a.length < 5) return;
+    const res = parseTD3(a, b);
+    if (res.result) candidates.push(res);
+  };
+
+  // 1) Any adjacent pair (covers the normal two-line MRZ, in order).
+  for (let i = 0; i < lines.length - 1; i++) consider(lines[i], lines[i + 1]);
+
+  // 2) A single merged ~88-char line split in half (ML Kit sometimes joins the two rows).
+  for (const l of lines) {
+    if (l.length >= 80) consider(l.slice(0, 44), l.slice(44, 88));
+  }
+
+  // 3) The two longest lines, both orders (MRZ rows may arrive out of order).
+  const longest = [...lines].sort((a, b) => b.length - a.length).slice(0, 3);
+  for (let i = 0; i < longest.length; i++) {
+    for (let j = 0; j < longest.length; j++) {
+      if (i !== j) consider(longest[i], longest[j]);
     }
   }
-  // Fallback: try the last two long lines as-is.
-  if (lines.length >= 2) return parseTD3(lines[lines.length - 2], lines[lines.length - 1]);
-  return {
-    ok: false,
-    checks: { documentNumber: false, dateOfBirth: false, expiryDate: false, composite: false },
-    error: 'Bande MRZ introuvable.',
-  };
+
+  if (candidates.length === 0) {
+    return {
+      ok: false,
+      checks: { documentNumber: false, dateOfBirth: false, expiryDate: false, composite: false },
+      error: 'Bande MRZ introuvable.',
+    };
+  }
+
+  // Prefer a fully-valid read; otherwise the highest-scoring best-effort candidate.
+  candidates.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  const best = candidates.find((c) => c.ok) ?? candidates[0];
+  return best;
 }

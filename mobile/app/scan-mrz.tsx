@@ -38,8 +38,14 @@ export default function ScanMrzScreen() {
     try {
       const text = await recognizeText(uri);
       const res = parseMrzFromText(text);
-      if (res.ok && res.result) {
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // Accept a best-effort read (fields extracted) even if not every checksum passed —
+      // the mandatory validation screen lets the receptionist correct it (§7).
+      if (res.result) {
+        void Haptics.notificationAsync(
+          res.ok
+            ? Haptics.NotificationFeedbackType.Success
+            : Haptics.NotificationFeedbackType.Warning,
+        );
         const r = res.result;
         setGuest({
           first_name: r.first_name,
