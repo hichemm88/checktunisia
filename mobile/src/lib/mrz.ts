@@ -1,228 +1,193 @@
 /**
- * MRZ (Machine Readable Zone) parsing + check-digit validation — ICAO 9303, TD3.
+ * MRZ reading — ported from the web app's src/lib/mrzScanner.ts so behaviour matches
+ * qayed.tn. Uses the same `mrz` npm package (with autocorrect) for robust parsing, the same
+ * structural line detection (TD3 / TD1 / TD2), and the same OCR digit-fix fallback for dates.
  *
- * TD3 = passports: 2 lines of 44 characters. The check digits (7-3-1 weighting) are the
- * strongest filter against OCR errors (§7 of the cadrage) — a result is only accepted when
- * ALL required check digits pass. Pure TypeScript, no native deps → unit-testable.
- *
- * Verified against the canonical ICAO sample (UTO / ERIKSSON ANNA MARIA).
+ * The OCR text comes from ML Kit on the phone (the web uses Tesseract + an OCR-B model), but
+ * the parsing/validation is identical. A best-effort result is returned for the human to
+ * validate on the next screen (§7).
  */
+import { parse as mrzParse } from 'mrz';
 
 export interface MrzResult {
   first_name: string;
   last_name: string;
-  /** ISO date YYYY-MM-DD (with century inference). */
-  date_of_birth: string;
+  date_of_birth: string; // ISO YYYY-MM-DD, or '' if unreadable
   sex: 'M' | 'F' | 'X';
-  /** ISO 3166 alpha-3 as printed in the MRZ (e.g. "TUN", "FRA"). */
-  nationality_code: string;
-  document_type: 'passport';
+  nationality_code: string; // ISO 3166 alpha-3
+  document_type: string; // 'passport' | 'national_id' | 'visa' | 'travel_document'
   document_number: string;
   issuing_country_code: string;
-  /** ISO date YYYY-MM-DD. */
-  expiry_date: string;
-  mrz_line1: string;
-  mrz_line2: string;
+  expiry_date: string; // ISO YYYY-MM-DD, or ''
+  mrz_line1?: string;
+  mrz_line2?: string;
 }
 
 export interface MrzValidation {
+  /** True when the `mrz` package considered the whole document valid (all checks pass). */
   ok: boolean;
   result?: MrzResult;
-  /** Per-field checksum outcomes — useful to highlight a suspect field to the user. */
-  checks: {
-    documentNumber: boolean;
-    dateOfBirth: boolean;
-    expiryDate: boolean;
-    composite: boolean;
-  };
-  /** Number of core check digits that passed (0–4) — ranks best-effort candidates. */
-  score?: number;
   error?: string;
 }
 
-/** Character → numeric value for the check-digit sum. Returns -1 for invalid chars. */
-function charValue(c: string): number {
-  if (c >= '0' && c <= '9') return c.charCodeAt(0) - 48;
-  if (c >= 'A' && c <= 'Z') return c.charCodeAt(0) - 55; // 'A' → 10
-  if (c === '<') return 0;
-  return -1;
-}
-
-/** ICAO 9303 check digit over a string, weights cycling 7-3-1. -1 on invalid input. */
-export function checkDigit(input: string): number {
-  const weights = [7, 3, 1];
-  let sum = 0;
-  for (let i = 0; i < input.length; i++) {
-    const v = charValue(input[i]);
-    if (v < 0) return -1;
-    sum += v * weights[i % 3];
-  }
-  return sum % 10;
-}
-
-/** "<"-padded field → trimmed string; internal "<" become spaces. */
-function cleanField(raw: string): string {
-  return raw.replace(/<+$/g, '').replace(/</g, ' ').trim();
-}
-
-/** YYMMDD → YYYY-MM-DD. Century inferred: years > (currentYY + 20) → 19xx, else 20xx. */
-function mrzDateToIso(yymmdd: string, kind: 'birth' | 'expiry'): string {
+function mrzDateToISO(yymmdd: string | null | undefined, isBirth: boolean): string {
+  if (!yymmdd || !/^\d{6}$/.test(yymmdd)) return '';
   const yy = parseInt(yymmdd.slice(0, 2), 10);
   const mm = yymmdd.slice(2, 4);
   const dd = yymmdd.slice(4, 6);
   let century: number;
-  if (kind === 'expiry') {
-    century = 2000; // passports don't expire in the 1900s
-  } else {
+  if (isBirth) {
     const nowYY = new Date().getFullYear() % 100;
-    century = yy > nowYY + 1 ? 1900 : 2000; // birthdays are in the past
+    century = yy > nowYY + 1 ? 1900 : 2000;
+  } else {
+    century = 2000; // expiry is always in the future / 2000s
   }
   return `${century + yy}-${mm}-${dd}`;
 }
 
-/**
- * Normalise raw OCR lines into MRZ-candidate strings. Real ML Kit output is noisy:
- * the filler '<' is often read as guillemets/pipes, and runs of fillers come back as spaces.
- * We recover those, strip everything else, and keep lines long enough to be an MRZ row.
- */
-export function normalizeMrzLines(raw: string): string[] {
-  return raw
-    .toUpperCase()
-    .replace(/[«»‹›|]/g, '<') // common '<' misreads
-    .split(/\r?\n/)
-    .map((l) => l.replace(/\s+/g, '<').replace(/[^A-Z0-9<]/g, ''))
-    .filter((l) => l.length >= 20);
+// Letter→digit fixes for date windows (same set the web uses). The `mrz` autocorrect only
+// covers O↔0 / I↔1 in numeric fields, so B/G/S/Z residue in a date can still null a field.
+const OCR_DIGIT_FIX: Record<string, string> = { O: '0', I: '1', B: '8', G: '6', S: '5', Z: '2' };
+
+function fallbackTd3Date(line2: string, start: number): string | null {
+  const raw = line2.slice(start, start + 6);
+  const digits = raw
+    .split('')
+    .map((c) => (/[0-9]/.test(c) ? c : OCR_DIGIT_FIX[c] ?? c))
+    .join('');
+  return /^\d{6}$/.test(digits) ? digits : null;
 }
 
-/**
- * Parse & validate a TD3 MRZ. Accepts the two raw lines (any surrounding OCR noise is
- * tolerated as long as two ~44-char lines can be recovered). Returns ok=false unless every
- * required check digit passes.
- */
-export function parseTD3(rawLine1: string, rawLine2: string): MrzValidation {
-  const l1 = rawLine1.toUpperCase().replace(/[^A-Z0-9<]/g, '').padEnd(44, '<').slice(0, 44);
-  const l2 = rawLine2.toUpperCase().replace(/[^A-Z0-9<]/g, '').padEnd(44, '<').slice(0, 44);
-
-  // A TD3 passport line 1 starts with 'P'. We don't hard-fail if it doesn't (OCR noise) —
-  // we still extract a best-effort result for the human to validate, but mark it not-ok.
-  const isPassport = l1[0] === 'P';
-
-  // ── Line 1: issuing state + name ──
-  const issuing = cleanField(l1.slice(2, 5)).replace(/\s/g, '');
-  const nameField = l1.slice(5, 44);
-  const [surnameRaw, givenRaw = ''] = nameField.split('<<');
-  const last_name = cleanField(surnameRaw);
-  const first_name = cleanField(givenRaw);
-
-  // ── Line 2: document data + check digits ──
-  const documentNumber = l2.slice(0, 9);
-  const docChk = l2[9];
-  const nationality = cleanField(l2.slice(10, 13)).replace(/\s/g, '');
-  const dob = l2.slice(13, 19);
-  const dobChk = l2[19];
-  const sexChar = l2[20];
-  const expiry = l2.slice(21, 27);
-  const expChk = l2[27];
-  const personal = l2.slice(28, 42);
-  const personalChk = l2[42];
-  const compositeChk = l2[43];
-
-  const compositeInput = l2.slice(0, 10) + l2.slice(13, 20) + l2.slice(21, 43);
-
-  const checks = {
-    documentNumber: checkDigit(documentNumber) === Number(docChk),
-    dateOfBirth: checkDigit(dob) === Number(dobChk),
-    expiryDate: checkDigit(expiry) === Number(expChk),
-    composite: checkDigit(compositeInput) === Number(compositeChk),
-  };
-  // Personal-number check digit is optional in the composite; validated implicitly there.
-  void personal;
-  void personalChk;
-
-  const ok =
-    isPassport &&
-    checks.documentNumber &&
-    checks.dateOfBirth &&
-    checks.expiryDate &&
-    checks.composite;
-
-  /** How many core check digits passed — used to rank best-effort candidates. */
-  const score =
-    (checks.documentNumber ? 1 : 0) +
-    (checks.dateOfBirth ? 1 : 0) +
-    (checks.expiryDate ? 1 : 0) +
-    (checks.composite ? 1 : 0);
-
-  const sex: MrzResult['sex'] = sexChar === 'M' ? 'M' : sexChar === 'F' ? 'F' : 'X';
-
-  const result: MrzResult = {
-    first_name,
-    last_name,
-    date_of_birth: mrzDateToIso(dob, 'birth'),
-    sex,
-    nationality_code: nationality,
-    document_type: 'passport',
-    document_number: cleanField(documentNumber).replace(/\s/g, ''),
-    issuing_country_code: issuing,
-    expiry_date: mrzDateToIso(expiry, 'expiry'),
-    mrz_line1: l1,
-    mrz_line2: l2,
-  };
-
-  return {
-    ok,
-    result,
-    checks,
-    score,
-    error: ok ? undefined : 'Échec de validation MRZ — rapprochez le document et réessayez.',
-  };
-}
+type Extracted = { lines: string[]; format: 'TD3' | 'TD1' | 'TD2' };
 
 /**
- * Recover a TD3 MRZ from a blob of OCR text (unknown line order / OCR noise).
- * Tries several line pairings and returns the BEST candidate (most check digits passing),
- * even if not all checks pass — the human validates on the next screen (§7). Only returns
- * "not found" when no plausible MRZ pair exists at all.
+ * Extract candidate MRZ lines from raw OCR text (ported from the web extractMrzLines).
+ * Structural constraints (6-digit date windows on line 2) make false positives near-impossible.
  */
-export function parseMrzFromText(text: string): MrzValidation {
-  const lines = normalizeMrzLines(text);
-  const candidates: MrzValidation[] = [];
-
-  // Gate on the DATA row (line 2 — where all the check digits and key fields live). The name
-  // row (line 1) can be short/garbled if OCR drops its filler run; names are corrected by the
-  // human anyway, so we still extract as long as a plausible data row is present.
-  const consider = (a: string, b: string) => {
-    if (b.length < 38 || a.length < 5) return;
-    const res = parseTD3(a, b);
-    if (res.result) candidates.push(res);
-  };
-
-  // 1) Any adjacent pair (covers the normal two-line MRZ, in order).
-  for (let i = 0; i < lines.length - 1; i++) consider(lines[i], lines[i + 1]);
-
-  // 2) A single merged ~88-char line split in half (ML Kit sometimes joins the two rows).
-  for (const l of lines) {
-    if (l.length >= 80) consider(l.slice(0, 44), l.slice(44, 88));
+function extractMrzLines(rawText: string): Extracted | null {
+  const candidates: string[] = [];
+  for (const raw of rawText.split('\n')) {
+    const clean = raw
+      .toUpperCase()
+      .replace(/[«»‹›|]/g, '<')
+      .replace(/[ \t]{2,}/g, '<<')
+      .replace(/[ \t]/g, '')
+      .replace(/[^A-Z0-9<]/g, '');
+    if (clean.length >= 28) candidates.push(clean);
   }
 
-  // 3) The two longest lines, both orders (MRZ rows may arrive out of order).
-  const longest = [...lines].sort((a, b) => b.length - a.length).slice(0, 3);
-  for (let i = 0; i < longest.length; i++) {
-    for (let j = 0; j < longest.length; j++) {
-      if (i !== j) consider(longest[i], longest[j]);
+  // TD3 — 2 lines of 44
+  {
+    const td3 = candidates
+      .filter((l) => l.length >= 38 && l.length <= 52)
+      .map((l) => (l.length >= 44 ? l.slice(0, 44) : l.padEnd(44, '<')));
+    const l1 = td3.filter((l) => /^[PIVA]/.test(l));
+    const l2 = td3.filter((l) => /^\d{6}$/.test(l.slice(13, 19)) && /^\d{6}$/.test(l.slice(21, 27)));
+    if (l1.length >= 1 && l2.length >= 1) {
+      const line2 = l2[0];
+      const line1 = l1.find((l) => l !== line2) ?? l1[0];
+      return { lines: [line1, line2], format: 'TD3' };
     }
   }
 
-  if (candidates.length === 0) {
-    return {
-      ok: false,
-      checks: { documentNumber: false, dateOfBirth: false, expiryDate: false, composite: false },
-      error: 'Bande MRZ introuvable.',
-    };
+  // TD1 — 3 lines of 30
+  {
+    const td1 = candidates
+      .filter((l) => l.length >= 26 && l.length <= 36)
+      .map((l) => (l.length >= 30 ? l.slice(0, 30) : l.padEnd(30, '<')));
+    const td1L2 = td1.filter((l) => /^\d{6}/.test(l) && /^\d{6}$/.test(l.slice(8, 14)));
+    if (td1L2.length >= 1 && td1.length >= 3) return { lines: td1.slice(0, 3), format: 'TD1' };
   }
 
-  // Prefer a fully-valid read; otherwise the highest-scoring best-effort candidate.
-  candidates.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-  const best = candidates.find((c) => c.ok) ?? candidates[0];
-  return best;
+  // TD2 — 2 lines of 36
+  {
+    const td2 = candidates
+      .filter((l) => l.length >= 32 && l.length <= 42)
+      .map((l) => (l.length >= 36 ? l.slice(0, 36) : l.padEnd(36, '<')));
+    const td2L1 = td2.filter((l) => /^[PIV]/.test(l));
+    const td2L2 = td2.filter((l) => /^\d{6}$/.test(l.slice(13, 19)));
+    if (td2L1.length >= 1 && td2L2.length >= 1) return { lines: [td2L1[0], td2L2[0]], format: 'TD2' };
+  }
+
+  // Fallback — the two rows concatenated into one ~88-char string.
+  {
+    const all = rawText.toUpperCase().replace(/[«»‹›|]/g, '<').replace(/\s+/g, '').replace(/[^A-Z0-9<]/g, '');
+    if (all.length >= 80 && all.length <= 96) {
+      const mid = Math.floor(all.length / 2);
+      for (const cut of [44, mid, 43, 45]) {
+        if (cut < 30 || cut > all.length - 30) continue;
+        const h1 = all.slice(0, cut).padEnd(44, '<');
+        const h2 = all.slice(cut, cut + 44).padEnd(44, '<');
+        if (/^[PIVA]/.test(h1) && /^\d{6}$/.test(h2.slice(13, 19)) && /^\d{6}$/.test(h2.slice(21, 27))) {
+          return { lines: [h1, h2], format: 'TD3' };
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function toMrzResult(result: any, td3Line2: string | null): MrzResult {
+  const f = result.fields ?? {};
+
+  let sex: MrzResult['sex'] = 'X';
+  if (f.sex === 'male') sex = 'M';
+  else if (f.sex === 'female') sex = 'F';
+
+  const code = String(f.documentCode ?? '').toUpperCase();
+  let document_type = 'travel_document';
+  if (code.startsWith('P')) document_type = 'passport';
+  else if (/^[IAC]/.test(code)) document_type = 'national_id';
+  else if (code.startsWith('V')) document_type = 'visa';
+
+  const cleanName = (s: string | null | undefined): string =>
+    s ? s.replace(/<+/g, ' ').replace(/\s+/g, ' ').trim() : '';
+
+  const birthRaw = f.birthDate ?? (td3Line2 ? fallbackTd3Date(td3Line2, 13) : null);
+  const expiryRaw = f.expirationDate ?? (td3Line2 ? fallbackTd3Date(td3Line2, 21) : null);
+
+  return {
+    first_name: cleanName(f.firstName),
+    last_name: cleanName(f.lastName),
+    date_of_birth: mrzDateToISO(birthRaw, true),
+    sex,
+    nationality_code: f.nationality || f.issuingState || '',
+    document_type,
+    document_number: f.documentNumber || '',
+    issuing_country_code: f.issuingState || '',
+    expiry_date: mrzDateToISO(expiryRaw, false),
+  };
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+/**
+ * Parse a blob of OCR text into a best-effort MRZ result (ported from web parseOcrText).
+ * Returns ok=true only when the `mrz` package validates the whole document; otherwise a
+ * best-effort result is still returned for human validation.
+ */
+export function parseMrzFromText(text: string): MrzValidation {
+  const extracted = extractMrzLines(text);
+  if (!extracted) return { ok: false, error: 'Bande MRZ introuvable.' };
+
+  let result: ReturnType<typeof mrzParse>;
+  try {
+    result = mrzParse(extracted.lines, { autocorrect: true });
+  } catch {
+    return { ok: false, error: 'Bande MRZ illisible.' };
+  }
+
+  const td3Line2 = extracted.format === 'TD3' ? extracted.lines[1] : null;
+  const data = toMrzResult(result, td3Line2);
+
+  // Need at least a document number or a name to be worth showing.
+  if (!data.document_number && !data.last_name && !data.first_name) {
+    return { ok: false, error: 'Bande MRZ non détectée.' };
+  }
+
+  return {
+    ok: Boolean(result.valid),
+    result: { ...data, mrz_line1: extracted.lines[0], mrz_line2: extracted.lines[1] },
+  };
 }
