@@ -4,17 +4,19 @@ import { useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import * as Haptics from 'expo-haptics';
-import { parseMrzFromText } from '@/lib/mrz';
+import { parseMrzFromText, type MrzResult, type MrzValidation } from '@/lib/mrz';
 import { usePendingGuestStore } from '@/stores/pendingGuestStore';
 import { colors, spacing, fontSize, fontWeight, radius } from '@/theme/theme';
 import { fr } from '@/i18n/fr';
 
 /**
- * Passport MRZ capture (§7) — photo-based, like the web. Take a photo OR import one from the
- * gallery, then run on-device OCR (ML Kit) on the still image and validate the ICAO 9303
- * checksums. No live camera frame processor (that native stack crashed on device), and the
- * image is used in-memory only — nothing is uploaded or persisted.
+ * Passport MRZ capture (§7) — photo-based, like the web. Take a photo OR import one, then
+ * read the MRZ with on-device OCR + the same `mrz` parser as the web. To boost accuracy we
+ * pre-process the image (like the web crops to the MRZ zone): OCR several focused regions —
+ * the bottom band (where the MRZ sits) and the full image — and keep the best result.
+ * The image is used in memory only — nothing is uploaded or persisted.
  */
 
 /** Lazy on-device OCR — required only when used so Expo Go (no native module) doesn't crash. */
@@ -26,18 +28,63 @@ async function recognizeText(uri: string): Promise<string> {
   return (result?.text as string) ?? '';
 }
 
+type Crop = { originX: number; originY: number; width: number; height: number };
+
+/** Crop (optional) + upscale a region, then OCR it. */
+async function ocrRegion(uri: string, crop: Crop | null): Promise<string> {
+  const actions: ImageManipulator.Action[] = [];
+  if (crop) actions.push({ crop });
+  actions.push({ resize: { width: 1500 } }); // upscale the narrow MRZ band → sharper OCR
+  const out = await ImageManipulator.manipulateAsync(uri, actions, {
+    compress: 0.9,
+    format: ImageManipulator.SaveFormat.JPEG,
+  });
+  return recognizeText(out.uri);
+}
+
+/** How many key fields were extracted — ranks best-effort candidates across regions. */
+function fieldScore(r?: MrzResult): number {
+  if (!r) return -1;
+  return [r.document_number, r.date_of_birth, r.expiry_date, r.last_name, r.nationality_code].filter(
+    Boolean,
+  ).length;
+}
+
+/** OCR focused regions (MRZ zone first) + the full image; return the best MRZ read. */
+async function readMrz(uri: string, w?: number, h?: number): Promise<MrzValidation> {
+  const regions: (Crop | null)[] = [];
+  if (w && h) {
+    const y62 = Math.floor(h * 0.62);
+    const y50 = Math.floor(h * 0.5);
+    regions.push({ originX: 0, originY: y62, width: w, height: h - y62 }); // bottom third
+    regions.push({ originX: 0, originY: y50, width: w, height: h - y50 }); // bottom half
+  }
+  regions.push(null); // full image
+
+  let best: MrzValidation | null = null;
+  for (const crop of regions) {
+    try {
+      const res = parseMrzFromText(await ocrRegion(uri, crop));
+      if (res.ok && res.result) return res; // fully valid → done
+      if (res.result && fieldScore(res.result) > fieldScore(best?.result)) best = res;
+    } catch {
+      // skip this region
+    }
+  }
+  return best ?? { ok: false, error: fr.scan.notReadable };
+}
+
 export default function ScanMrzScreen() {
   const router = useRouter();
   const setGuest = usePendingGuestStore((s) => s.setGuest);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  async function handleImage(uri: string) {
+  async function handleAsset(asset: ImagePicker.ImagePickerAsset) {
     setBusy(true);
     setError('');
     try {
-      const text = await recognizeText(uri);
-      const res = parseMrzFromText(text);
+      const res = await readMrz(asset.uri, asset.width, asset.height);
       // Accept a best-effort read (fields extracted) even if not every checksum passed —
       // the mandatory validation screen lets the receptionist correct it (§7).
       if (res.result) {
@@ -58,7 +105,6 @@ export default function ScanMrzScreen() {
           issuing_country_code: r.issuing_country_code,
           expiry_date: r.expiry_date,
         });
-        // §7 — mandatory human validation screen after every scan.
         router.replace('/checkin-manual');
       } else {
         setError(fr.scan.notReadable);
@@ -77,7 +123,7 @@ export default function ScanMrzScreen() {
       return;
     }
     const res = await ImagePicker.launchCameraAsync({ quality: 1, allowsEditing: false });
-    if (!res.canceled && res.assets[0]?.uri) await handleImage(res.assets[0].uri);
+    if (!res.canceled && res.assets[0]) await handleAsset(res.assets[0]);
   }
 
   async function importPhoto() {
@@ -87,7 +133,7 @@ export default function ScanMrzScreen() {
       return;
     }
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', quality: 1 });
-    if (!res.canceled && res.assets[0]?.uri) await handleImage(res.assets[0].uri);
+    if (!res.canceled && res.assets[0]) await handleAsset(res.assets[0]);
   }
 
   return (
