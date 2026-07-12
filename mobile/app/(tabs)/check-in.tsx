@@ -1,20 +1,19 @@
 import { useCallback, useState } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import { AppHeader } from '@/components/AppHeader';
 import { Stepper } from '@/components/Stepper';
 import { Counter } from '@/components/Counter';
 import { PendingBanner } from '@/components/PendingBanner';
-import { roomsApi } from '@/api/rooms';
 import { checkInsApi, type AddGuestPayload, type CreateCheckInPayload } from '@/api/checkIns';
 import { extractError } from '@/lib/api';
 import { flagEmoji, shortDate } from '@/lib/format';
 import { useAuthStore } from '@/stores/authStore';
 import { useQueueStore } from '@/stores/queueStore';
 import { usePendingGuestStore } from '@/stores/pendingGuestStore';
+import { useRoomPickStore } from '@/stores/roomPickStore';
 import { colors, spacing, fontSize, fontWeight, radius, shadow } from '@/theme/theme';
 import { fr, interp } from '@/i18n/fr';
 
@@ -33,6 +32,11 @@ export default function CheckInWizard() {
 
   const [step, setStep] = useState(0);
   const [roomId, setRoomId] = useState<string | undefined>(undefined);
+  const [roomNumber, setRoomNumber] = useState<string | undefined>(undefined);
+  // The room step must be a conscious choice — a room OR "sans chambre" tapped in the
+  // selector. Until then the wizard can't advance (§1).
+  const [roomChosen, setRoomChosen] = useState(false);
+  const [roomError, setRoomError] = useState('');
   const [bookingRef, setBookingRef] = useState('');
   const [checkInDate, setCheckInDate] = useState(isoDate(0));
   const [checkOutDate, setCheckOutDate] = useState(isoDate(1));
@@ -49,26 +53,45 @@ export default function CheckInWizard() {
       return;
     }
     setDateError('');
+    if (!roomChosen) {
+      setRoomError(fr.checkin.roomRequired);
+      return;
+    }
+    setRoomError('');
     setStep(1);
   }
 
-  const { data: roomsData } = useQuery({
-    queryKey: ['rooms', activePropertyId],
-    queryFn: () => roomsApi.list(),
-  });
-  const rooms = roomsData?.data ?? [];
+  // Availability depends on the entered dates, so validate them before opening the selector.
+  function openRoomSelect() {
+    if (checkOutDate <= checkInDate) {
+      setDateError(fr.checkin.dateOrderError);
+      return;
+    }
+    setDateError('');
+    router.push({ pathname: '/room-select', params: { arrival: checkInDate, departure: checkOutDate } });
+  }
 
-  // Pick up a traveller handed back from the scan / manual screens.
+  // Pick up a traveller and/or a room choice handed back from the pushed screens.
   useFocusEffect(
     useCallback(() => {
       const g = usePendingGuestStore.getState().consume();
       if (g) setGuests((prev) => [...prev, g]);
+      const pick = useRoomPickStore.getState().consume();
+      if (pick) {
+        setRoomId(pick.roomId);
+        setRoomNumber(pick.roomNumber);
+        setRoomChosen(true);
+        setRoomError('');
+      }
     }, []),
   );
 
   function reset() {
     setStep(0);
     setRoomId(undefined);
+    setRoomNumber(undefined);
+    setRoomChosen(false);
+    setRoomError('');
     setBookingRef('');
     setCheckInDate(isoDate(0));
     setCheckOutDate(isoDate(1));
@@ -129,19 +152,24 @@ export default function CheckInWizard() {
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {step === 0 ? (
           <>
-            {/* Room picker */}
+            {/* Room selector — opens a full-screen picker with live availability (§1) */}
             <Text style={styles.label}>{fr.checkin.roomLabel}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.roomRow}>
-              <RoomChip label={fr.checkin.noRoomAssigned} active={!roomId} onPress={() => setRoomId(undefined)} />
-              {rooms.map((r) => (
-                <RoomChip
-                  key={r.id}
-                  label={`Ch. ${r.number}`}
-                  active={roomId === r.id}
-                  onPress={() => setRoomId(r.id)}
-                />
-              ))}
-            </ScrollView>
+            <Pressable style={styles.roomField} onPress={openRoomSelect}>
+              <Ionicons
+                name={roomChosen && !roomId ? 'remove-circle-outline' : 'bed-outline'}
+                size={20}
+                color={roomChosen ? colors.cachet : colors.fiche}
+              />
+              <Text style={[styles.roomFieldText, !roomChosen && styles.roomFieldPlaceholder]}>
+                {!roomChosen
+                  ? fr.checkin.roomFieldPlaceholder
+                  : roomId
+                    ? `Ch. ${roomNumber}`
+                    : fr.checkin.noRoomAssigned}
+              </Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.fiche} />
+            </Pressable>
+            {roomError ? <Text style={styles.dateError}>{roomError}</Text> : null}
 
             <Text style={styles.label}>{fr.checkin.bookingRefLabel}</Text>
             <TextInput
@@ -231,7 +259,7 @@ export default function CheckInWizard() {
         {step === 2 ? (
           <>
             <View style={styles.card}>
-              <Review label={fr.checkin.roomLabel} value={roomId ? (rooms.find((r) => r.id === roomId)?.number ?? '—') : fr.checkin.noRoomAssigned} />
+              <Review label={fr.checkin.roomLabel} value={roomId ? `Ch. ${roomNumber}` : fr.checkin.noRoomAssigned} />
               <Review label={fr.checkin.arrivalLabel} value={shortDate(checkInDate)} />
               <Review label={fr.checkin.expectedDepartureLabel} value={shortDate(checkOutDate)} />
               {bookingRef ? <Review label={fr.checkin.bookingRefLabel} value={bookingRef} /> : null}
@@ -276,14 +304,6 @@ export default function CheckInWizard() {
   );
 }
 
-function RoomChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-  return (
-    <Pressable style={[styles.roomChip, active && styles.roomChipOn]} onPress={onPress}>
-      <Text style={[styles.roomChipText, active && styles.roomChipTextOn]}>{label}</Text>
-    </Pressable>
-  );
-}
-
 function Review({ label, value }: { label: string; value: string }) {
   return (
     <View style={styles.reviewLine}>
@@ -308,18 +328,19 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: colors.encre,
   },
-  roomRow: { gap: spacing.sm, paddingVertical: spacing.xs },
-  roomChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
+  roomField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    height: 52,
     borderWidth: 1,
     borderColor: colors.ligne,
+    borderRadius: radius.input,
+    paddingHorizontal: spacing.md,
     backgroundColor: colors.surface,
   },
-  roomChipOn: { backgroundColor: colors.cachet, borderColor: colors.cachet },
-  roomChipText: { fontSize: fontSize.sm, color: colors.fiche, fontWeight: fontWeight.semibold },
-  roomChipTextOn: { color: colors.blanc },
+  roomFieldText: { flex: 1, fontSize: fontSize.md, color: colors.encre, fontWeight: fontWeight.semibold },
+  roomFieldPlaceholder: { color: colors.fiche, fontWeight: fontWeight.regular },
   dateRow: { flexDirection: 'row', gap: spacing.md },
   dateCol: { flex: 1 },
   card: { backgroundColor: colors.surface, borderRadius: radius.card, padding: spacing.lg, gap: spacing.md, ...shadow.card },

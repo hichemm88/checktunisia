@@ -26,6 +26,7 @@ export default function DashboardScreen() {
   const router = useRouter();
   const firstName = useAuthStore((s) => s.user?.first_name ?? '');
   const activePropertyId = useAuthStore((s) => s.activePropertyId);
+  const activePropertyName = useAuthStore((s) => s.activePropertyName ?? '');
 
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
     queryKey: ['dashboard', activePropertyId],
@@ -43,6 +44,7 @@ export default function DashboardScreen() {
         <DashboardBody
           data={data}
           firstName={firstName}
+          propertyName={activePropertyName}
           onNewCheckin={() => router.push('/check-in')}
           onSeeAll={() => router.push('/history')}
           onOpenFiche={(id) => router.push(`/fiche/${id}`)}
@@ -57,6 +59,7 @@ export default function DashboardScreen() {
 function DashboardBody({
   data,
   firstName,
+  propertyName,
   onNewCheckin,
   onSeeAll,
   onOpenFiche,
@@ -65,13 +68,14 @@ function DashboardBody({
 }: {
   data: DashboardData;
   firstName: string;
+  propertyName: string;
   onNewCheckin: () => void;
   onSeeAll: () => void;
   onOpenFiche: (id: string) => void;
   refreshing: boolean;
   onRefresh: () => void;
 }) {
-  const { today, month, weekly_trend, recent_check_ins } = data;
+  const { today, month, occupancy_7d, recent_check_ins } = data;
   const present = today.currently_present;
 
   const tiles = useMemo(
@@ -85,8 +89,6 @@ function DashboardBody({
     ],
     [today, month, present],
   );
-
-  const maxTrend = Math.max(...weekly_trend.map((d) => d.count), 1);
 
   return (
     <ScrollView
@@ -126,32 +128,38 @@ function DashboardBody({
         ))}
       </View>
 
-      {/* Weekly trend */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>{fr.dashboard.weeklyTrend}</Text>
-        <View style={styles.chart}>
-          {weekly_trend.map((d, i) => {
-            const isToday = i === weekly_trend.length - 1;
-            const h = Math.max((d.count / maxTrend) * 72, 3);
-            return (
-              <View key={d.date} style={styles.chartCol}>
-                {d.count > 0 ? (
-                  <Text style={[styles.chartCount, isToday && styles.todayText]}>{d.count}</Text>
-                ) : (
-                  <Text style={styles.chartCount}> </Text>
-                )}
-                <View
-                  style={[
-                    styles.bar,
-                    { height: h, backgroundColor: isToday ? colors.cachet : colors.cachetDilue },
-                  ]}
-                />
-                <Text style={[styles.chartLabel, isToday && styles.todayText]}>{d.label}</Text>
-              </View>
-            );
-          })}
+      {/* Occupation — 7 jours (§2) */}
+      {occupancy_7d && occupancy_7d.length > 0 ? (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{fr.dashboard.occupancy7d}</Text>
+          {propertyName || data.room_count != null ? (
+            <Text style={styles.chartSub}>
+              {interp(fr.dashboard.occupancySub, {
+                name: propertyName || '—',
+                count: data.room_count ?? 0,
+              })}
+            </Text>
+          ) : null}
+          <View style={styles.chart}>
+            {occupancy_7d.map((d) => {
+              const h = Math.max((d.rate / 100) * 72, 3);
+              const barColor = d.is_today ? colors.cachet : colors.cachetDilue;
+              return (
+                <View key={d.date} style={styles.chartCol}>
+                  <Text style={[styles.chartCount, d.is_today && styles.todayText]}>{d.rate}%</Text>
+                  {d.is_future ? (
+                    // Projection — dashed outline instead of a solid fill.
+                    <View style={[styles.bar, styles.barFuture, { height: h }]} />
+                  ) : (
+                    <View style={[styles.bar, { height: h, backgroundColor: barColor }]} />
+                  )}
+                  <Text style={[styles.chartLabel, d.is_today && styles.todayText]}>{d.label}</Text>
+                </View>
+              );
+            })}
+          </View>
         </View>
-      </View>
+      ) : null}
 
       {/* Récents */}
       <View style={styles.card}>
@@ -235,10 +243,17 @@ const styles = StyleSheet.create({
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   seeAll: { color: colors.cachet, fontWeight: fontWeight.semibold, fontSize: fontSize.sm },
 
+  chartSub: { fontSize: fontSize.xs, color: colors.fiche, marginTop: -spacing.xs },
   chart: { flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm, height: 104 },
   chartCol: { flex: 1, alignItems: 'center', gap: 4 },
   chartCount: { fontSize: 10, color: colors.fiche, fontWeight: fontWeight.semibold },
   bar: { width: '70%', borderTopLeftRadius: 6, borderTopRightRadius: 6 },
+  barFuture: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: colors.cachet,
+    borderStyle: 'dashed',
+  },
   chartLabel: { fontSize: 9, color: colors.fiche },
   todayText: { color: colors.cachet, fontWeight: fontWeight.bold },
 

@@ -88,7 +88,10 @@ export interface DashboardData {
     occupancy_rate: number;
   };
   month: { check_ins_total: number };
+  room_count?: number;
   weekly_trend: Array<{ date: string; label: string; count: number }>;
+  /** 7-day occupancy window (j-4 → j+2). today's rate == today.occupancy_rate by construction. */
+  occupancy_7d?: Array<{ date: string; label: string; rate: number; is_today: boolean; is_future: boolean }>;
   subscription: { status: string; expires_at?: string; days_remaining?: number; plan?: string };
   recent_check_ins: Array<{
     id: string;

@@ -60,6 +60,7 @@ export default function RootLayout() {
             <Stack.Screen name="fiche/[id]" options={{ presentation: 'card' }} />
             <Stack.Screen name="scan-mrz" options={{ presentation: 'card' }} />
             <Stack.Screen name="checkin-manual" options={{ presentation: 'card' }} />
+            <Stack.Screen name="room-select" options={{ presentation: 'card' }} />
             <Stack.Screen name="notifications" options={{ presentation: 'card' }} />
             <Stack.Screen name="notify-team" options={{ presentation: 'card' }} />
             <Stack.Screen name="notifications-permission" options={{ presentation: 'modal' }} />
