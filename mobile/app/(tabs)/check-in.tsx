@@ -8,12 +8,14 @@ import { Stepper } from '@/components/Stepper';
 import { Counter } from '@/components/Counter';
 import { PendingBanner } from '@/components/PendingBanner';
 import { checkInsApi, type AddGuestPayload, type CreateCheckInPayload } from '@/api/checkIns';
+import { detectOta } from '@/lib/ota';
 import { extractError } from '@/lib/api';
 import { flagEmoji, shortDate } from '@/lib/format';
 import { useAuthStore } from '@/stores/authStore';
 import { useQueueStore } from '@/stores/queueStore';
 import { usePendingGuestStore } from '@/stores/pendingGuestStore';
 import { useRoomPickStore } from '@/stores/roomPickStore';
+import { useDraftSeedStore } from '@/stores/draftSeedStore';
 import { colors, spacing, fontSize, fontWeight, radius, shadow } from '@/theme/theme';
 import { fr, interp } from '@/i18n/fr';
 
@@ -45,6 +47,9 @@ export default function CheckInWizard() {
   const [guests, setGuests] = useState<AddGuestPayload[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [dateError, setDateError] = useState('');
+  // When set, the wizard completes this existing draft (from a dashboard arrival) instead of
+  // creating a new check-in (§4).
+  const [completingDraftId, setCompletingDraftId] = useState<string | undefined>(undefined);
 
   // Departure must be strictly after arrival (blocking).
   function goToDocuments() {
@@ -71,7 +76,7 @@ export default function CheckInWizard() {
     router.push({ pathname: '/room-select', params: { arrival: checkInDate, departure: checkOutDate } });
   }
 
-  // Pick up a traveller and/or a room choice handed back from the pushed screens.
+  // Pick up a traveller, a room choice, and/or a draft-arrival seed handed to the wizard.
   useFocusEffect(
     useCallback(() => {
       const g = usePendingGuestStore.getState().consume();
@@ -83,6 +88,19 @@ export default function CheckInWizard() {
         setRoomChosen(true);
         setRoomError('');
       }
+      const seed = useDraftSeedStore.getState().consume();
+      if (seed) {
+        setCompletingDraftId(seed.draftId);
+        setRoomId(seed.roomId);
+        setRoomNumber(seed.roomNumber);
+        setRoomChosen(true);
+        setBookingRef(seed.bookingRef ?? '');
+        setCheckInDate(seed.checkInDate);
+        setCheckOutDate(seed.checkOutDate);
+        setAdults(seed.adults);
+        setChildren(seed.children);
+        setStep(0);
+      }
     }, []),
   );
 
@@ -92,6 +110,7 @@ export default function CheckInWizard() {
     setRoomNumber(undefined);
     setRoomChosen(false);
     setRoomError('');
+    setCompletingDraftId(undefined);
     setBookingRef('');
     setCheckInDate(isoDate(0));
     setCheckOutDate(isoDate(1));
@@ -108,6 +127,7 @@ export default function CheckInWizard() {
     const create: CreateCheckInPayload = {
       room_id: roomId,
       booking_reference: bookingRef.trim() || undefined,
+      booking_source: detectOta(bookingRef)?.code,
       check_in_date: checkInDate,
       expected_check_out_date: checkOutDate,
       adults_count: adults,
@@ -117,16 +137,24 @@ export default function CheckInWizard() {
 
     setSubmitting(true);
     try {
-      const created = await checkInsApi.create(create);
-      for (const g of guestsPayload) await checkInsApi.addGuest(created.id, g);
-      await checkInsApi.complete(created.id);
+      if (completingDraftId) {
+        // Continue an existing draft arrival (§4): update its details, add travellers, complete.
+        await checkInsApi.update(completingDraftId, create);
+        for (const g of guestsPayload) await checkInsApi.addGuest(completingDraftId, g);
+        await checkInsApi.complete(completingDraftId);
+      } else {
+        const created = await checkInsApi.create(create);
+        for (const g of guestsPayload) await checkInsApi.addGuest(created.id, g);
+        await checkInsApi.complete(created.id);
+      }
       Alert.alert('Qayed', fr.checkin.completedSuccess);
       reset();
       router.push('/history');
     } catch (err) {
-      // No server response → treat as offline and queue the whole unit (§8).
+      // No server response → treat as offline and queue the whole unit (§8). Draft completion
+      // isn't queued (it targets an existing server record) — surface the error instead.
       const isNetwork = axios.isAxiosError(err) && !err.response;
-      if (isNetwork) {
+      if (isNetwork && !completingDraftId) {
         await enqueue({ propertyId: activePropertyId, create, guests: guestsPayload });
         Alert.alert('Qayed', fr.checkin.queuedOffline);
         reset();
@@ -140,6 +168,7 @@ export default function CheckInWizard() {
   }
 
   const canFinalize = guests.length > 0 && !submitting;
+  const ota = detectOta(bookingRef);
 
   return (
     <View style={styles.screen}>
@@ -180,6 +209,12 @@ export default function CheckInWizard() {
               placeholderTextColor={colors.fiche}
               autoCapitalize="characters"
             />
+            {ota ? (
+              <View style={styles.otaBadge}>
+                <Ionicons name="pricetag-outline" size={13} color={colors.cachet} />
+                <Text style={styles.otaBadgeText}>{ota.label}</Text>
+              </View>
+            ) : null}
 
             <View style={styles.dateRow}>
               <View style={styles.dateCol}>
@@ -341,6 +376,17 @@ const styles = StyleSheet.create({
   },
   roomFieldText: { flex: 1, fontSize: fontSize.md, color: colors.encre, fontWeight: fontWeight.semibold },
   roomFieldPlaceholder: { color: colors.fiche, fontWeight: fontWeight.regular },
+  otaBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.cachetDilue,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+  },
+  otaBadgeText: { fontSize: fontSize.xs, fontWeight: fontWeight.bold, color: colors.cachet },
   dateRow: { flexDirection: 'row', gap: spacing.md },
   dateCol: { flex: 1 },
   card: { backgroundColor: colors.surface, borderRadius: radius.card, padding: spacing.lg, gap: spacing.md, ...shadow.card },

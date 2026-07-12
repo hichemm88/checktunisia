@@ -94,6 +94,27 @@ export interface DashboardData {
   weekly_trend: Array<{ date: string; label: string; count: number }>;
   /** 7-day occupancy window (j-4 → j+2). today's rate == today.occupancy_rate by construction. */
   occupancy_7d?: Array<{ date: string; label: string; rate: number; is_today: boolean; is_future: boolean }>;
+  /** Today's pending arrivals (drafts) — actionable rows (§4). */
+  arrivals_today?: Array<{
+    id: string;
+    reference: string;
+    guest_name?: string | null;
+    booking_reference?: string | null;
+    room?: string | null;
+    room_id?: string | null;
+    check_in_date: string;
+    expected_check_out_date: string;
+    adults_count: number;
+    children_count: number;
+  }>;
+  /** Today's departures (active stays leaving today) — actionable rows (§4). */
+  departures_today_list?: Array<{ id: string; reference: string; guest_name?: string | null; room?: string | null }>;
+  /** Currently-present stays — for the tappable occupancy ring (§4). */
+  present_guests?: Array<{ id: string; guest_name?: string | null; room?: string | null }>;
+  /** Activity on the user's OTHER establishments today (§4). */
+  other_properties?: { arrivals: number; departures: number };
+  /** Per-property recap for the multi-establishment switcher (§5). */
+  properties_summary?: Array<{ id: string; name: string; occupancy_rate: number; present: number; is_active: boolean }>;
   subscription: { status: string; expires_at?: string; days_remaining?: number; plan?: string };
   recent_check_ins: Array<{
     id: string;

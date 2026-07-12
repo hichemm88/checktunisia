@@ -7,7 +7,8 @@ export type NotificationType =
   | 'fiche_updated'
   | 'fiche_cancelled'
   | 'fiche_pending'
-  | 'manager_message';
+  | 'manager_message'
+  | 'departure_due';
 
 /** One notification as rendered by the notification centre (server is source of truth). */
 export interface AppNotification {

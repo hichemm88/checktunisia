@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { View, Text, TextInput, Pressable, FlatList, StyleSheet, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { checkInsApi } from '@/api/checkIns';
@@ -50,7 +50,13 @@ export default function HistoryScreen() {
   const activePropertyId = useAuthStore((s) => s.activePropertyId);
   const isAdmin = useAuthStore((s) => s.user?.role === 'hotel_admin');
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<Filter>('all');
+  // Optional initial filter (e.g. the dashboard occupancy ring opens history on "active").
+  const params = useLocalSearchParams<{ filter?: string }>();
+  const initialFilter: Filter =
+    params.filter === 'active' || params.filter === 'draft' || params.filter === 'completed'
+      ? params.filter
+      : 'all';
+  const [filter, setFilter] = useState<Filter>(initialFilter);
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['check-ins', activePropertyId],

@@ -21,6 +21,7 @@ const TYPE_META: Record<NotificationType, { icon: keyof typeof Ionicons.glyphMap
   fiche_cancelled: { icon: 'close-circle', color: colors.danger, label: fr.notifications.typeCancelled },
   fiche_pending: { icon: 'alert-circle', color: colors.vigilance, label: fr.notifications.typePending },
   manager_message: { icon: 'chatbubble-ellipses', color: colors.cachet, label: fr.notifications.typeMessage },
+  departure_due: { icon: 'exit', color: colors.vigilance, label: fr.notifications.typeDeparture },
 };
 
 const FILTERS: { key: 'all' | NotificationType; label: string }[] = [
