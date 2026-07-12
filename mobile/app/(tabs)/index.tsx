@@ -170,7 +170,7 @@ function DashboardBody({
               {greeting()}, {firstName}
             </Text>
             <Text style={styles.bannerCounts}>
-              {arrivals.length} {fr.dashboard.arrivals} · {departures.length} {fr.dashboard.departures}
+              {today.arrivals_expected} {fr.dashboard.arrivals} · {today.departures_today} {fr.dashboard.departures}
             </Text>
           </View>
           <Pressable style={styles.ring} onPress={onOpenPresent} accessibilityRole="button">
