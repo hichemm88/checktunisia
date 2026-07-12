@@ -15,8 +15,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { usePendingGuestStore } from '@/stores/pendingGuestStore';
 import type { AddGuestPayload } from '@/api/checkIns';
 import { getFlag } from '@/lib/countries';
+import { shortDate } from '@/lib/format';
 import { colors, spacing, fontSize, fontWeight, radius } from '@/theme/theme';
-import { fr } from '@/i18n/fr';
+import { fr, interp } from '@/i18n/fr';
 
 type DocType = 'passport' | 'cin';
 const SEXES: AddGuestPayload['sex'][] = ['M', 'F', 'X'];
@@ -42,6 +43,14 @@ export default function CheckInManualScreen() {
   const [docNumber, setDocNumber] = useState(seed?.document_number ?? '');
   const [expiry, setExpiry] = useState(seed?.expiry_date ?? '');
   const [error, setError] = useState('');
+
+  // Document expiry warning (§3): expired → amber banner; within 30 days → discreet hint.
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const soonStr = new Date(Date.now() + 30 * 86400_000).toISOString().slice(0, 10);
+  const expiryValid = /^\d{4}-\d{2}-\d{2}$/.test(expiry.trim());
+  const docExpired = docType === 'passport' && expiryValid && expiry.trim() < todayStr;
+  const docExpiringSoon =
+    docType === 'passport' && expiryValid && !docExpired && expiry.trim() < soonStr;
 
   function handleSave() {
     setError('');
@@ -144,7 +153,18 @@ export default function CheckInManualScreen() {
                 <Text style={styles.natFlag}>{getFlag(nationality)}</Text>
               </View>
               <Field label="Expiration (AAAA-MM-JJ)" value={expiry} onChange={setExpiry} placeholder="AAAA-MM-JJ" />
+              {docExpiringSoon ? <Text style={styles.soonHint}>{fr.manual.docExpiringSoon}</Text> : null}
             </>
+          ) : null}
+
+          {/* Document expiré — bandeau ambre, la validation reste possible (§3) */}
+          {docExpired ? (
+            <View style={styles.expiredBanner}>
+              <Ionicons name="warning-outline" size={18} color={colors.vigilanceTexte} />
+              <Text style={styles.expiredText}>
+                {interp(fr.manual.docExpired, { date: shortDate(expiry.trim()) })}
+              </Text>
+            </View>
           ) : null}
 
           {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -251,6 +271,16 @@ const styles = StyleSheet.create({
   },
   natFlag: { fontSize: 32 },
   error: { color: colors.danger, fontSize: fontSize.sm },
+  soonHint: { color: colors.vigilanceTexte, fontSize: fontSize.xs, marginTop: -spacing.xs },
+  expiredBanner: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'center',
+    backgroundColor: colors.vigilanceFond,
+    borderRadius: radius.input,
+    padding: spacing.md,
+  },
+  expiredText: { flex: 1, color: colors.vigilanceTexte, fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
   saveBtn: {
     backgroundColor: colors.cachet,
     borderRadius: radius.btn,

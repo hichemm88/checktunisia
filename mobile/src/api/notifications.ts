@@ -49,12 +49,28 @@ export const notificationsApi = {
 
   markAllRead: () => api.post<ApiItem<{ updated: number }>>('/notifications/read-all').then((r) => r.data.data),
 
-  /** Manager → receptionists broadcast for a property (default: all the manager's properties). */
-  broadcast: (message: string, propertyId?: string | null) =>
+  /** Manager's receptionists across their properties, for the broadcast recipient picker (§9). */
+  recipients: () =>
+    api.get<ApiList<Recipient>>('/notifications/recipients').then((r) => r.data.data),
+
+  /**
+   * Manager → receptionists broadcast. `recipientIds` narrows the audience; omit (or empty)
+   * to send to all receptionists — preserving the one-tap default behaviour.
+   */
+  broadcast: (message: string, propertyId?: string | null, recipientIds?: string[]) =>
     api
       .post<ApiItem<{ sent: number }>>('/notifications/broadcast', {
         message,
         property_id: propertyId ?? undefined,
+        recipient_ids: recipientIds && recipientIds.length > 0 ? recipientIds : undefined,
       })
       .then((r) => r.data.data),
 };
+
+/** A receptionist the manager can target, with every property they're assigned to. */
+export interface Recipient {
+  id: string;
+  first_name: string;
+  last_name: string;
+  properties: { id: string; name: string }[];
+}

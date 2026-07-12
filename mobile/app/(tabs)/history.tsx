@@ -186,6 +186,12 @@ function FicheRow({
         <Text style={styles.rowDates} numberOfLines={1}>
           {shortDate(item.check_in_date)} → {shortDate(item.expected_check_out_date)}
         </Text>
+        {item.document_expired ? (
+          <View style={styles.docExpiredRow}>
+            <Ionicons name="warning-outline" size={12} color="#8A6206" />
+            <Text style={styles.docExpiredText}>{fr.history.documentExpired}</Text>
+          </View>
+        ) : null}
       </View>
       <View style={styles.rowRight}>
         {checkoutDue ? (
@@ -242,6 +248,8 @@ const styles = StyleSheet.create({
   rowName: { fontSize: fontSize.base, fontWeight: fontWeight.semibold, color: colors.encre },
   rowMeta: { fontSize: fontSize.sm, color: colors.fiche, marginTop: 1 },
   rowDates: { fontSize: fontSize.xs, color: colors.fiche, marginTop: 1 },
+  docExpiredRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 },
+  docExpiredText: { fontSize: 11, fontWeight: fontWeight.semibold, color: '#8A6206' },
   rowRight: { alignItems: 'flex-end', gap: spacing.sm },
   dueBadge: {
     flexDirection: 'row',

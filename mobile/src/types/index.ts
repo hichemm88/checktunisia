@@ -71,6 +71,8 @@ export interface CheckIn {
   actual_check_out_date?: string;
   adults_count: number;
   children_count: number;
+  /** True when a traveller's document was expired on arrival (§3). Derived server-side. */
+  document_expired?: boolean;
   guests?: Guest[];
   guests_count?: number;
   primary_guest?: { first_name: string; last_name: string; nationality_code: string };

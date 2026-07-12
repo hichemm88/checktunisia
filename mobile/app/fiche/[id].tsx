@@ -98,6 +98,13 @@ export default function FicheDetailScreen() {
             <StatusBadge status={fiche.status} />
           </View>
 
+          {fiche.document_expired ? (
+            <View style={styles.expiredBanner}>
+              <Ionicons name="warning-outline" size={18} color={colors.vigilanceTexte} />
+              <Text style={styles.expiredBannerText}>{fr.history.documentExpired}</Text>
+            </View>
+          ) : null}
+
           {/* Séjour */}
           <View style={styles.card}>
             <InfoLine label="Chambre" value={fiche.room?.number ? `Ch. ${fiche.room.number}` : fr.history.noUnit} />
@@ -201,6 +208,15 @@ const styles = StyleSheet.create({
   topTitle: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.encre },
   body: { padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing['3xl'] },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  expiredBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.vigilanceFond,
+    borderRadius: radius.input,
+    padding: spacing.md,
+  },
+  expiredBannerText: { color: colors.vigilanceTexte, fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
   reference: { fontSize: fontSize.lg, fontWeight: fontWeight.black, color: colors.encre },
   card: { backgroundColor: colors.surface, borderRadius: radius.card, padding: spacing.lg, gap: spacing.md, ...shadow.card },
   cardTitle: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.encre, marginBottom: spacing.xs },
