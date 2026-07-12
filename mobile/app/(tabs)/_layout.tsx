@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Redirect, Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '@/stores/authStore';
 import { hasPushPermission, registerPushToken } from '@/lib/push';
@@ -21,6 +22,7 @@ export default function TabsLayout() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const role = useAuthStore((s) => s.user?.role);
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const didBootstrap = useRef(false);
 
   // Both roles receive notifications (managers: activity; receptionists: manager messages).
@@ -46,7 +48,15 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.cachet,
         tabBarInactiveTintColor: colors.fiche,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.ligne, height: 64, paddingBottom: 8, paddingTop: 6 },
+        // Add the device's bottom inset so the bar sits ABOVE the Android system
+        // nav bar (3-button or gesture) instead of being hidden behind it.
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.ligne,
+          height: 64 + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
+          paddingTop: 6,
+        },
         tabBarLabelStyle: { fontSize: fontSize.xs, fontWeight: fontWeight.semibold },
       }}
     >
