@@ -3,8 +3,8 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router } from 'expo-router';
 import { notificationsApi } from '@/api/notifications';
+import { openCheckInFromNotification } from '@/lib/notificationNav';
 
 /**
  * Push notifications (§6). The manager receives a push for every receptionist action on their
@@ -91,11 +91,14 @@ export async function unregisterPushToken(): Promise<void> {
   await AsyncStorage.removeItem(PUSH_TOKEN_KEY);
 }
 
-/** Route a tapped notification to the relevant fiche, or the notification centre (§6.1). */
+/** Route a tapped notification to the relevant fiche, or the notification centre (§6.1).
+ *  Switches the active establishment first when the stay lives under another property (§0). */
 function handleDeepLink(data: Record<string, unknown> | undefined): void {
-  const checkInId = data?.check_in_id as string | undefined;
-  if (checkInId) router.push(`/fiche/${checkInId}`);
-  else router.push('/notifications');
+  void openCheckInFromNotification({
+    checkInId: (data?.check_in_id as string | undefined) ?? null,
+    propertyId: (data?.property_id as string | undefined) ?? null,
+    propertyName: (data?.property_name as string | undefined) ?? null,
+  });
 }
 
 /** Wire foreground + tap listeners. Returns a cleanup function. */

@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 import { checkInsApi } from '@/api/checkIns';
 import { useAuthStore } from '@/stores/authStore';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -19,15 +20,23 @@ export default function FicheDetailScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const isAdmin = useAuthStore((s) => s.user?.role === 'hotel_admin');
+  // Scope the cache by active property: opening a notification can switch establishment,
+  // and the same id must refetch under the new X-Property-Id rather than serve a stale 404.
+  const activePropertyId = useAuthStore((s) => s.activePropertyId);
 
   const { data: fiche, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['check-in', id],
+    queryKey: ['check-in', activePropertyId, id],
     queryFn: () => checkInsApi.get(id),
     enabled: Boolean(id),
+    // A 404 means the stay no longer exists in this scope — retrying can't fix that.
+    retry: (count, err) =>
+      axios.isAxiosError(err) && err.response?.status === 404 ? false : count < 2,
   });
 
+  const isGone = axios.isAxiosError(error) && error.response?.status === 404;
+
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ['check-in', id] });
+    void queryClient.invalidateQueries({ queryKey: ['check-in'] });
     void queryClient.invalidateQueries({ queryKey: ['check-ins'] });
     void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
   };
@@ -72,6 +81,14 @@ export default function FicheDetailScreen() {
 
       {isLoading ? (
         <LoadingView />
+      ) : isGone ? (
+        <View style={styles.gone}>
+          <Ionicons name="file-tray-outline" size={44} color={colors.fiche} />
+          <Text style={styles.goneText}>{fr.notifications.resourceGone}</Text>
+          <Pressable style={styles.goneBtn} onPress={() => router.replace('/notifications')}>
+            <Text style={styles.goneBtnText}>{fr.notifications.backToCenter}</Text>
+          </Pressable>
+        </View>
       ) : isError || !fiche ? (
         <ErrorView message={extractError(error)} onRetry={refetch} />
       ) : (
@@ -214,4 +231,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
   },
   deleteBtnText: { color: colors.danger, fontWeight: fontWeight.bold, fontSize: fontSize.md },
+  gone: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing['2xl'] },
+  goneText: { fontSize: fontSize.md, color: colors.encre, fontWeight: fontWeight.semibold, textAlign: 'center' },
+  goneBtn: {
+    marginTop: spacing.sm,
+    backgroundColor: colors.cachet,
+    borderRadius: radius.btn,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+  },
+  goneBtnText: { color: colors.blanc, fontWeight: fontWeight.bold, fontSize: fontSize.base },
 });

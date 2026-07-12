@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { notificationsApi, type AppNotification, type NotificationType } from '@/api/notifications';
+import { openCheckInFromNotification } from '@/lib/notificationNav';
 import { useAuthStore } from '@/stores/authStore';
 import { toMobileRole } from '@/types';
 import { LoadingView, ErrorView, EmptyView } from '@/components/StateView';
@@ -64,7 +65,13 @@ export default function NotificationCenterScreen() {
 
   function openItem(n: AppNotification) {
     if (!n.read_at) markRead.mutate(n.id);
-    if (n.check_in_id) router.push(`/fiche/${n.check_in_id}`);
+    if (!n.check_in_id) return;
+    // Switch establishment if the stay lives under another property, then open it (§0).
+    void openCheckInFromNotification({
+      checkInId: n.check_in_id,
+      propertyId: n.property_id,
+      propertyName: n.property_name,
+    });
   }
 
   return (
