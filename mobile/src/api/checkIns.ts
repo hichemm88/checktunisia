@@ -75,4 +75,7 @@ export const checkInsApi = {
 
   removeGuest: (checkInId: string, guestId: string) =>
     api.delete(`/hotel/check-ins/${checkInId}/guests/${guestId}`),
+
+  // Admin-only — any status, soft-deleted (recoverable) server-side. Same contract as the web.
+  deleteCheckIn: (id: string) => api.delete(`/hotel/check-ins/${id}`),
 };

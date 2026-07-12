@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { checkInsApi } from '@/api/checkIns';
+import { useAuthStore } from '@/stores/authStore';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Avatar } from '@/components/Avatar';
 import { LoadingView, ErrorView } from '@/components/StateView';
@@ -17,6 +18,7 @@ export default function FicheDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const isAdmin = useAuthStore((s) => s.user?.role === 'hotel_admin');
 
   const { data: fiche, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['check-in', id],
@@ -41,6 +43,21 @@ export default function FicheDetailScreen() {
     onSuccess: invalidate,
     onError: (e) => Alert.alert(fr.common.error, extractError(e)),
   });
+
+  const remove = useMutation({
+    mutationFn: () => checkInsApi.deleteCheckIn(id),
+    onSuccess: () => {
+      invalidate();
+      router.back();
+    },
+    onError: (e) => Alert.alert(fr.common.error, extractError(e)),
+  });
+
+  const confirmDelete = () =>
+    Alert.alert(fr.history.deleteTitle, fr.history.deleteConfirm, [
+      { text: fr.common.cancel, style: 'cancel' },
+      { text: fr.history.delete, style: 'destructive', onPress: () => remove.mutate() },
+    ]);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -111,6 +128,16 @@ export default function FicheDetailScreen() {
               <Text style={styles.primaryBtnText}>Check-out</Text>
             </Pressable>
           ) : null}
+
+          {/* Suppression — réservée aux gérants (soft delete côté serveur, comme le web). */}
+          {isAdmin ? (
+            <Pressable style={styles.deleteBtn} onPress={confirmDelete} disabled={remove.isPending}>
+              <Ionicons name="trash-outline" size={18} color={colors.danger} />
+              <Text style={styles.deleteBtnText}>
+                {fiche.status === 'draft' ? fr.history.deleteDraft : fr.history.delete}
+              </Text>
+            </Pressable>
+          ) : null}
         </ScrollView>
       )}
     </SafeAreaView>
@@ -176,4 +203,15 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
   },
   primaryBtnText: { color: colors.blanc, fontWeight: fontWeight.bold, fontSize: fontSize.md },
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    borderRadius: radius.btn,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    paddingVertical: spacing.lg,
+  },
+  deleteBtnText: { color: colors.danger, fontWeight: fontWeight.bold, fontSize: fontSize.md },
 });

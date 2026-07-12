@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { usePendingGuestStore } from '@/stores/pendingGuestStore';
 import type { AddGuestPayload } from '@/api/checkIns';
-import { COMMON_NATIONALITIES } from '@/lib/countries';
+import { getFlag } from '@/lib/countries';
 import { colors, spacing, fontSize, fontWeight, radius } from '@/theme/theme';
 import { fr } from '@/i18n/fr';
 
@@ -128,17 +128,20 @@ export default function CheckInManualScreen() {
 
           {docType === 'passport' ? (
             <>
+              {/* Nationalité — saisie libre en code ISO alpha-3 (ex. TUN, FRA), comme la version web. */}
               <Text style={styles.label}>{fr.manual.nationality}</Text>
-              <View style={styles.natWrap}>
-                {COMMON_NATIONALITIES.map((n) => (
-                  <Pressable
-                    key={n.code}
-                    style={[styles.natChip, nationality === n.code && styles.natChipOn]}
-                    onPress={() => setNationality(n.code)}
-                  >
-                    <Text style={[styles.natText, nationality === n.code && styles.natTextOn]}>{n.label}</Text>
-                  </Pressable>
-                ))}
+              <View style={styles.natInputRow}>
+                <TextInput
+                  style={styles.natInput}
+                  value={nationality}
+                  onChangeText={(v) => setNationality(v.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3))}
+                  placeholder="TUN"
+                  placeholderTextColor={colors.fiche}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  maxLength={3}
+                />
+                <Text style={styles.natFlag}>{getFlag(nationality)}</Text>
               </View>
               <Field label="Expiration (AAAA-MM-JJ)" value={expiry} onChange={setExpiry} placeholder="AAAA-MM-JJ" />
             </>
@@ -233,18 +236,20 @@ const styles = StyleSheet.create({
   segBtnOn: { backgroundColor: colors.cachet, borderColor: colors.cachet },
   segText: { color: colors.encre, fontWeight: fontWeight.semibold },
   segTextOn: { color: colors.blanc },
-  natWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  natChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
+  natInputRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  natInput: {
+    flex: 1,
+    height: 48,
     borderWidth: 1,
     borderColor: colors.ligne,
+    borderRadius: radius.input,
+    paddingHorizontal: spacing.md,
     backgroundColor: colors.surface,
+    fontSize: fontSize.md,
+    color: colors.encre,
+    letterSpacing: 2,
   },
-  natChipOn: { backgroundColor: colors.cachetDilue, borderColor: colors.cachet },
-  natText: { fontSize: fontSize.sm, color: colors.fiche },
-  natTextOn: { color: colors.cachet, fontWeight: fontWeight.bold },
+  natFlag: { fontSize: 32 },
   error: { color: colors.danger, fontSize: fontSize.sm },
   saveBtn: {
     backgroundColor: colors.cachet,
