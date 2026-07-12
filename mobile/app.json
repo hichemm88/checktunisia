@@ -23,6 +23,7 @@
     },
     "android": {
       "package": "tn.qayed.mobile",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#F6F5F1"

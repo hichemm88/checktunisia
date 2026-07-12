@@ -17,3 +17,9 @@ android/
 
 # Generated
 expo-env.d.ts
+
+# Secrets — service-account keys must NEVER be committed (uploaded to EAS instead).
+# NB: google-services.json is intentionally NOT ignored — it ships inside the APK.
+*firebase-adminsdk*.json
+google-play-service-account.json
+*service-account*.json

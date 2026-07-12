@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "636439389071",
+    "project_id": "uniweb-306620",
+    "storage_bucket": "uniweb-306620.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:636439389071:android:bc524a0c07fefae88e21fa",
+        "android_client_info": {
+          "package_name": "tn.qayed.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjGxPeGvSbKjzdBffM1q7nehWAKyIYDHM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
