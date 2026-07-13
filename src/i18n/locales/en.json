@@ -1031,7 +1031,8 @@
     "groundFloor": "Ground floor",
     "noFloor": "No floor",
     "capacityN": "{{count}} guests",
-    "noRoomConfigured": "No room configured for this property"
+    "noRoomConfigured": "No room configured for this property",
+    "otaDetected": "{{platform}} booking detected"
   },
   "hotelHistory": {
     "title": "History",

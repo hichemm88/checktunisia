@@ -1031,7 +1031,8 @@
     "groundFloor": "Rez-de-chaussée",
     "noFloor": "Sans étage",
     "capacityN": "{{count}} pers.",
-    "noRoomConfigured": "Aucune chambre configurée pour cet établissement"
+    "noRoomConfigured": "Aucune chambre configurée pour cet établissement",
+    "otaDetected": "Réservation {{platform}} détectée"
   },
   "hotelHistory": {
     "title": "Historique",
