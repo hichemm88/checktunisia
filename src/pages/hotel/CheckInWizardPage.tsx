@@ -16,6 +16,7 @@ import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { GuestScanPanel } from '@/components/hotel/GuestScanPanel';
 import { RoomSelector, RoomChoice } from '@/components/hotel/RoomSelector';
+import { detectOta } from '@/lib/otaDetect';
 import { CheckIn } from '@/types';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-TN');
@@ -106,12 +107,25 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
         value={roomChoice}
         onChange={setRoomChoice}
       />
-      <Input
-        label={t('checkinWizard.bookingRefLabel')}
-        placeholder={t('checkinWizard.bookingRefPlaceholder')}
-        value={form.booking_reference ?? ''}
-        onChange={(e) => set('booking_reference', e.target.value)}
-      />
+      <div className="flex flex-col gap-1.5">
+        <Input
+          label={t('checkinWizard.bookingRefLabel')}
+          placeholder={t('checkinWizard.bookingRefPlaceholder')}
+          value={form.booking_reference ?? ''}
+          onChange={(e) => set('booking_reference', e.target.value)}
+        />
+        {(() => {
+          const ota = detectOta(form.booking_reference ?? '');
+          return ota ? (
+            <span
+              className="self-start rounded-full px-2.5 py-1 text-[11px] font-bold"
+              style={{ background: '#EEEBFA', color: '#5346A8' }}
+            >
+              {t('checkinWizard.otaDetected', { platform: ota.label })}
+            </span>
+          ) : null;
+        })()}
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <Stepper label={t('checkinWizard.adults')} value={form.adults_count ?? 1} min={1} max={20} onChange={(v) => set('adults_count', v)} />
         <Stepper label={t('checkinWizard.children')} value={form.children_count ?? 0} min={0} max={20} onChange={(v) => set('children_count', v)} />

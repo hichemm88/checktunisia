@@ -1015,7 +1015,8 @@
     "groundFloor": "الطابق الأرضي",
     "noFloor": "بدون طابق",
     "capacityN": "{{count}} أشخاص",
-    "noRoomConfigured": "لا توجد غرف مهيأة لهذه المؤسسة"
+    "noRoomConfigured": "لا توجد غرف مهيأة لهذه المؤسسة",
+    "otaDetected": "تم اكتشاف حجز {{platform}}"
   },
   "hotelHistory": {
     "title": "السجل",
