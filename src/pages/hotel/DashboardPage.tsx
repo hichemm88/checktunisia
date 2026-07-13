@@ -2,10 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  UserCheck, Users, DoorOpen, Calendar, ChevronRight,
-  TrendingUp, FileWarning, Percent, AlertCircle, Plus, ShieldAlert,
+  UserCheck, Users, DoorOpen, ChevronRight, LogIn, LogOut,
+  TrendingUp, FileWarning, Percent, AlertCircle, Plus, ShieldAlert, Building2,
 } from 'lucide-react';
 import { dashboardApi } from '@/api/dashboard';
+import { organizationApi } from '@/api/organization';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { statusBadge } from '@/components/ui/Badge';
@@ -102,6 +103,73 @@ const StatTile = ({
   </Card>
 );
 
+// ── Arrivées / Départs du jour — listes actionnables ────────────────────────
+const MovementRow = ({
+  name, sub, onClick,
+}: { name: string; sub: string; onClick: () => void }) => (
+  <button
+    onClick={onClick}
+    className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-start hover:bg-warm-100 transition-colors"
+    style={{ border: '1px solid #F3F4F6' }}
+  >
+    <div className="min-w-0 flex-1">
+      <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
+      <p className="text-xs text-gray-400 truncate">{sub}</p>
+    </div>
+    <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+  </button>
+);
+
+const ArrivalsDeparturesCard = ({ d }: { d: DashboardData }) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const arrivals   = d.arrivals_today ?? [];
+  const departures = d.departures_today_list ?? [];
+
+  const Column = ({
+    icon: Icon, title, count, children,
+  }: { icon: React.ElementType; title: string; count: number; children: React.ReactNode }) => (
+    <div className="flex flex-col gap-2 flex-1 min-w-0">
+      <div className="flex items-center gap-2">
+        <Icon className="h-4 w-4" style={{ color: '#5346A8' }} />
+        <p className="text-sm font-bold text-gray-900">{title}</p>
+        <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#EEEBFA', color: '#5346A8' }}>{count}</span>
+      </div>
+      {children}
+    </div>
+  );
+
+  return (
+    <Card>
+      <div className="flex flex-col md:flex-row gap-5">
+        <Column icon={LogIn} title={t('hotelDashboard.arrivalsToday')} count={arrivals.length}>
+          {arrivals.map((a) => (
+            <MovementRow
+              key={a.id}
+              name={a.guest_name || a.reference}
+              sub={`${a.room ?? t('hotelDashboard.noRoom')}${a.booking_reference ? ` · ${a.booking_reference}` : ''} · ${t('hotelDashboard.personsCount', { count: a.adults_count + a.children_count })}`}
+              onClick={() => navigate(`/hotel/check-ins/new?resume=${a.id}`)}
+            />
+          ))}
+          {!arrivals.length && <p className="text-sm text-gray-400 py-3 text-center">{t('hotelDashboard.noArrivalToday')}</p>}
+        </Column>
+        <div className="hidden md:block w-px self-stretch" style={{ background: '#F3F4F6' }} />
+        <Column icon={LogOut} title={t('hotelDashboard.departuresToday')} count={departures.length}>
+          {departures.map((dep) => (
+            <MovementRow
+              key={dep.id}
+              name={dep.guest_name || dep.reference}
+              sub={`${dep.room ?? t('hotelDashboard.noRoom')} · ${dep.reference}`}
+              onClick={() => navigate(`/hotel/history/${dep.id}`)}
+            />
+          ))}
+          {!departures.length && <p className="text-sm text-gray-400 py-3 text-center">{t('hotelDashboard.noDepartureToday')}</p>}
+        </Column>
+      </div>
+    </Card>
+  );
+};
+
 // ── Dashboard ────────────────────────────────────────────────────────────────
 const EMPTY_DASH: DashboardData = {
   today: { arrivals_expected: 0, arrivals_done: 0, currently_present: 0, departures_today: 0, occupancy_rate: 0 },
@@ -115,12 +183,14 @@ const EMPTY_DASH: DashboardData = {
 export const DashboardPage = () => {
   const { t, i18n } = useTranslation();
   const navigate    = useNavigate();
-  const { user, activePropertyId, activePropertyName } = useAuthStore();
+  const { user, activePropertyId, activePropertyName, setActiveProperty } = useAuthStore();
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard', activePropertyId],
     queryFn: dashboardApi.get,
     refetchInterval: 60_000,
   });
+  // Bascule rapide multi-établissements — jamais conditionnée au rôle (règle transverse n°1).
+  const { data: myProperties } = useQuery({ queryKey: ['my-properties'], queryFn: organizationApi.myProperties });
 
   const d   = data ?? EMPTY_DASH;
   const sub = d.subscription;
@@ -245,17 +315,41 @@ export const DashboardPage = () => {
             </div>
           )}
 
+          {/* Bascule rapide d'établissement (visible dès 2 propriétés, quel que soit le rôle) */}
+          {(myProperties?.length ?? 0) > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {myProperties!.map((p) => {
+                const isActive = activePropertyId ? activePropertyId === p.id : myProperties![0].id === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setActiveProperty(p.id, p.name)}
+                    className="flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-bold transition-all"
+                    style={isActive
+                      ? { background: '#5346A8', color: '#fff' }
+                      : { background: '#fff', color: '#6B7280', border: '1px solid #E5E7EB' }}
+                  >
+                    <Building2 className="h-3 w-3" /> {p.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Arrivées / Départs du jour — listes actionnables */}
+          {isLoading
+            ? <div className="h-40 animate-pulse rounded-card bg-gray-100" />
+            : <ArrivalsDeparturesCard d={d} />}
+
           {/* Stats grid */}
           {isLoading ? (
             <div className="grid grid-cols-2 gap-3">
-              {[1,2,3,4,5,6].map(i => <div key={i} className="h-24 animate-pulse rounded-card bg-gray-100" />)}
+              {[1,2,3,4].map(i => <div key={i} className="h-24 animate-pulse rounded-card bg-gray-100" />)}
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              <StatTile icon={UserCheck}  label={t('hotelDashboard.statArrivalsExpected')}  value={d.today.arrivals_expected} accent="#5346A8" />
               <StatTile icon={Users}      label={t('hotelDashboard.statCheckinsDone')}   value={d.today.arrivals_done}     accent="#1F9D6B" />
               <StatTile icon={DoorOpen}   label={t('hotelDashboard.statPresent')}          value={d.today.currently_present} accent="#443896" />
-              <StatTile icon={Calendar}   label={t('hotelDashboard.statDeparturesToday')}      value={d.today.departures_today}  accent="#5346A8" />
               <StatTile icon={Percent}    label={t('hotelDashboard.statOccupancyRate')} value={`${d.today.occupancy_rate}%`} accent={d.today.occupancy_rate >= 80 ? '#1F9D6B' : '#5346A8'} />
               <StatTile icon={TrendingUp} label={t('hotelDashboard.statCheckinsMonth')} value={d.month.check_ins_total}   accent="#8B7FE0" />
             </div>

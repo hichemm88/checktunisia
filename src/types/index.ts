@@ -101,6 +101,14 @@ export interface DashboardData {
   weekly_trend: Array<{ date: string; label: string; count: number }>;
   /** Fenêtre glissante j−4 → j+2 ; is_future = projection (barres pointillées). */
   occupancy_7d?: Array<{ date: string; label: string; rate: number; is_today: boolean; is_future: boolean }>;
+  /** Arrivées du jour (fiches brouillon) — cliquables pour reprendre le check-in. */
+  arrivals_today?: Array<{
+    id: string; reference: string; guest_name?: string | null; booking_reference?: string | null;
+    room?: string | null; room_id?: string | null;
+    check_in_date: string; expected_check_out_date: string; adults_count: number; children_count: number;
+  }>;
+  /** Départs du jour (séjours actifs) — cliquables vers la fiche avec bouton check-out. */
+  departures_today_list?: Array<{ id: string; reference: string; guest_name?: string | null; room?: string | null }>;
   expiry_alerts: Array<{
     guest_name: string; document_number: string; expiry_date: string;
     days_until_expiry: number; check_in_id: string; reference: string;

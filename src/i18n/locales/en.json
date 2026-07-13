@@ -1087,7 +1087,12 @@
     "noRecentCheckin": "No recent check-in",
     "startCheckin": "Start a check-in",
     "occupancy7d": "Occupancy — 7 days",
-    "occupancy7dSubtitle": "{{property}} · {{count}} rooms · d+1, d+2 = projection"
+    "occupancy7dSubtitle": "{{property}} · {{count}} rooms · d+1, d+2 = projection",
+    "arrivalsToday": "Today's arrivals",
+    "departuresToday": "Today's departures",
+    "noArrivalToday": "No arrival today",
+    "noDepartureToday": "No departure today",
+    "personsCount": "{{count}} guests"
   },
   "register": {
     "step0Label": "Account type",

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -315,6 +315,19 @@ export const CheckInWizardPage = () => {
   const navigate  = useNavigate();
   const [step, setStep]       = useState(0);
   const [checkIn, setCheckIn] = useState<CheckIn | null>(null);
+
+  // ?resume={id} — reprise d'une fiche brouillon depuis la liste d'arrivées du dashboard :
+  // on saute l'étape réservation (déjà créée) et on ouvre directement les documents.
+  const [params] = useSearchParams();
+  const resumeId = params.get('resume');
+  const { data: resumed } = useQuery({
+    queryKey: ['check-in-resume', resumeId],
+    queryFn: () => checkInsApi.get(resumeId!),
+    enabled: !!resumeId && !checkIn,
+  });
+  useEffect(() => {
+    if (resumed && !checkIn) { setCheckIn(resumed); setStep(1); }
+  }, [resumed, checkIn]);
 
   const STEPS = [
     { label: t('checkinWizard.stepBooking') },
