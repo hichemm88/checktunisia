@@ -85,6 +85,10 @@ export const GuestScanPanel = ({
 
   const fileRef       = useRef<HTMLInputElement>(null); // caméra (MRZ)
   const uploadRef     = useRef<HTMLInputElement>(null); // galerie / fichier (MRZ)
+  // MODULE PROVISOIRE — relais WhatsApp : promesse du téléversement d'image en
+  // cours (résout vers le scan_id). L'ajout du voyageur l'attend pour toujours
+  // relier l'image, même si l'utilisateur clique avant la fin de l'upload.
+  const pendingScanUpload = useRef<Promise<string | undefined> | null>(null);
   const [scanState, setScanState] = useState<'idle' | 'scanning' | 'done' | 'error'>('idle');
   const [scanKind, setScanKind] = useState<'mrz' | 'cin'>('mrz');
   const [ocrProgress, setOcrProgress] = useState(0);
@@ -129,10 +133,10 @@ export const GuestScanPanel = ({
       // mémorise son scan_id pour le relier à CE voyageur (envoyé avec addGuest),
       // afin que chaque fiche parte avec la bonne photo (multi-voyageurs).
       // Best-effort, non bloquant ; l'image est purgée après 24 h côté backend.
-      if (waEnabled) {
-        scansApi.upload(checkIn.id, file)
-          .then((scan) => setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })))
-          .catch(() => { /* photo best-effort */ });
+      if (waEnabled !== false) {
+        pendingScanUpload.current = scansApi.upload(checkIn.id, file)
+          .then((scan) => { setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })); return scan.scan_id; })
+          .catch(() => undefined);
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t('guestScan.scanFailed');
@@ -198,11 +202,11 @@ export const GuestScanPanel = ({
       // celle affichée en vignette) et mémorise son scan_id pour la relier à CE
       // voyageur, afin que sa fiche parte avec sa photo. Best-effort, non
       // bloquant ; l'image est purgée après 24 h côté backend.
-      if (waEnabled) {
+      if (waEnabled !== false) {
         const cinFile = new File([prepared], 'cin.jpg', { type: prepared.type || 'image/jpeg' });
-        scansApi.upload(checkIn.id, cinFile, 'front')
-          .then((scan) => setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })))
-          .catch(() => { /* photo best-effort */ });
+        pendingScanUpload.current = scansApi.upload(checkIn.id, cinFile, 'front')
+          .then((scan) => { setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })); return scan.scan_id; })
+          .catch(() => undefined);
       }
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code;
@@ -233,7 +237,17 @@ export const GuestScanPanel = ({
   };
 
   const addGuestMutation = useMutation({
-    mutationFn: () => checkInsApi.addGuest(checkIn.id, guestForm as AddGuestPayload),
+    mutationFn: async () => {
+      // MODULE PROVISOIRE — relais WhatsApp : attendre la fin du téléversement de
+      // l'image (asynchrone) pour toujours envoyer le scan_id. Sinon, en cas de
+      // clic rapide (import de plusieurs passeports), l'image n'est pas reliée au
+      // voyageur → pas de photo, surtout en multi-voyageurs.
+      let scan_id = guestForm.scan_id;
+      if (!scan_id && pendingScanUpload.current) {
+        scan_id = await pendingScanUpload.current;
+      }
+      return checkInsApi.addGuest(checkIn.id, { ...guestForm, scan_id } as AddGuestPayload);
+    },
     onSuccess,
     onError: (err) => toast(extractErrors(err), 'error'),
   });
@@ -265,6 +279,7 @@ export const GuestScanPanel = ({
   const reset = () => {
     setScanState('idle'); setExtractedOk(false);
     setGuestForm({ is_primary: isPrimary });
+    pendingScanUpload.current = null;
     setScanKind('mrz');
     setCinScan(null); setConf(null); setUsedExisting(false); setCinError(null);
     if (cinImageUrl) { URL.revokeObjectURL(cinImageUrl); setCinImageUrl(null); }
