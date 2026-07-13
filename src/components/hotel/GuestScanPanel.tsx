@@ -1,13 +1,14 @@
 import { useState, useRef, ChangeEvent } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Camera, CheckCircle, Loader2, ScanLine, Upload, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { checkInsApi, AddGuestPayload } from '@/api/checkIns';
+import { scansApi } from '@/api/scans';
 import { useToast } from '@/components/ui/Toast';
-import { extractErrors } from '@/lib/api';
+import { api, extractErrors } from '@/lib/api';
 import { scanMrz } from '@/lib/mrzScanner';
 import { CheckIn } from '@/types';
 
@@ -25,6 +26,16 @@ export const GuestScanPanel = ({
     { value: 'X', label: t('common.other')  },
   ];
   const { toast } = useToast();
+
+  // MODULE PROVISOIRE — relais WhatsApp : l'image du document n'est stockée que
+  // si le relais est actif (sinon aucune raison de conserver une pièce d'identité).
+  const { data: waEnabled } = useQuery({
+    queryKey: ['whatsapp-enabled'],
+    queryFn: () => api.get('/health/whatsapp').then((r) => !!r.data?.data?.enabled).catch(() => false),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
   const fileRef       = useRef<HTMLInputElement>(null); // caméra
   const uploadRef     = useRef<HTMLInputElement>(null); // galerie / fichier
   const [scanState, setScanState] = useState<'idle' | 'scanning' | 'done' | 'error'>('idle');
@@ -53,6 +64,13 @@ export const GuestScanPanel = ({
       });
       setExtractedOk(true);
       setScanState('done');
+
+      // MODULE PROVISOIRE — relais WhatsApp : téléverse l'image du document pour
+      // pouvoir la joindre à la fiche de police. Best-effort, non bloquant ;
+      // l'image est purgée automatiquement après 24 h côté backend.
+      if (waEnabled) {
+        scansApi.upload(checkIn.id, file).catch(() => { /* photo best-effort */ });
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t('guestScan.scanFailed');
       toast(msg, 'error');
