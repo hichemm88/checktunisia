@@ -285,6 +285,51 @@
       "mediaDeleted": "حذف ملف وسائط"
     }
   },
+  "adminWhatsapp": {
+    "title": "ناقل واتساب",
+    "provisional": "وحدة مؤقتة",
+    "subtitle": "إرسال تلقائي لبطاقات الشرطة عبر واتساب إلى مستلم وحيد. حل انتقالي في انتظار المصادقة الرسمية.",
+    "enabled": "مُفعّل",
+    "disabled": "مُعطّل",
+    "disabledHint": "الوحدة معطّلة (WHATSAPP_POLICE_ENABLED=false أو لم يُضبط المستلم). لا يتم أي إرسال.",
+    "pausedTag": "متوقف مؤقتاً",
+    "pause": "إيقاف مؤقت",
+    "resume": "استئناف",
+    "sendTest": "رسالة اختبار",
+    "resend": "إعادة الإرسال",
+    "lastReady": "آخر اتصال",
+    "allProperties": "كل المنشآت",
+    "allStatuses": "كل الحالات",
+    "dateFrom": "من",
+    "dateTo": "إلى",
+    "empty": "لا توجد رسائل.",
+    "testLabel": "[TEST] بطاقة تجريبية",
+    "attempts": "{{n}} محاولة",
+    "session": {
+      "ready": "الجلسة متصلة",
+      "initializing": "جارٍ التهيئة…",
+      "disconnected": "الجلسة منقطعة",
+      "authFailure": "فشل المصادقة"
+    },
+    "status": {
+      "pending": "قيد الانتظار",
+      "sent": "أُرسل",
+      "failed": "فشل",
+      "cancelled": "أُلغي"
+    },
+    "queue": {
+      "pending": "قيد الانتظار",
+      "sent": "مُرسَلة",
+      "failed": "فاشلة",
+      "cancelled": "ملغاة"
+    },
+    "toast": {
+      "paused": "تم إيقاف الإرسال مؤقتاً.",
+      "resumed": "تم استئناف الإرسال.",
+      "testSent": "تمت جدولة رسالة الاختبار.",
+      "resent": "تمت إعادة جدولة الإرسال."
+    }
+  },
   "adminDashboard": {
     "title": "لوحة التحكم",
     "properties": "المؤسسات",
@@ -1149,7 +1194,8 @@
       "emails": "البريد الإلكتروني",
       "activity": "سجل النشاط",
       "pages": "صفحات الموقع",
-      "menus": "القوائم"
+      "menus": "القوائم",
+      "whatsapp": "واتساب"
     },
     "searchPlaceholder": "البحث عن مضيف، مؤسسة، مستخدم…",
     "searchResultHost": "مضيف",
