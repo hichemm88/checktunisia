@@ -193,6 +193,17 @@ export const GuestScanPanel = ({
       setUsedExisting(false);
       setExtractedOk(true);
       setScanState('done');
+
+      // MODULE PROVISOIRE — relais WhatsApp : téléverse l'image de la CIN (recto,
+      // celle affichée en vignette) et mémorise son scan_id pour la relier à CE
+      // voyageur, afin que sa fiche parte avec sa photo. Best-effort, non
+      // bloquant ; l'image est purgée après 24 h côté backend.
+      if (waEnabled) {
+        const cinFile = new File([prepared], 'cin.jpg', { type: prepared.type || 'image/jpeg' });
+        scansApi.upload(checkIn.id, cinFile, 'front')
+          .then((scan) => setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })))
+          .catch(() => { /* photo best-effort */ });
+      }
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code;
       const msg =
