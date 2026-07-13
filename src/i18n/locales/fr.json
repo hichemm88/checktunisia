@@ -285,6 +285,51 @@
       "mediaDeleted": "a supprimé un média"
     }
   },
+  "adminWhatsapp": {
+    "title": "Relais WhatsApp",
+    "provisional": "Module provisoire",
+    "subtitle": "Envoi automatique des fiches de police par WhatsApp à un destinataire unique. Solution transitoire en attendant l'homologation officielle.",
+    "enabled": "Activé",
+    "disabled": "Désactivé",
+    "disabledHint": "Le module est désactivé (WHATSAPP_POLICE_ENABLED=false ou destinataire non configuré). Aucun envoi n'est effectué.",
+    "pausedTag": "En pause",
+    "pause": "Mettre en pause",
+    "resume": "Reprendre",
+    "sendTest": "Message test",
+    "resend": "Renvoyer",
+    "lastReady": "Dernière connexion",
+    "allProperties": "Toutes les propriétés",
+    "allStatuses": "Tous les statuts",
+    "dateFrom": "Du",
+    "dateTo": "Au",
+    "empty": "Aucun envoi.",
+    "testLabel": "[TEST] Fiche factice",
+    "attempts": "{{n}} tentative(s)",
+    "session": {
+      "ready": "Session connectée",
+      "initializing": "Initialisation…",
+      "disconnected": "Session déconnectée",
+      "authFailure": "Échec d'authentification"
+    },
+    "status": {
+      "pending": "En attente",
+      "sent": "Envoyé",
+      "failed": "Échoué",
+      "cancelled": "Annulé"
+    },
+    "queue": {
+      "pending": "En attente",
+      "sent": "Envoyés",
+      "failed": "Échoués",
+      "cancelled": "Annulés"
+    },
+    "toast": {
+      "paused": "Envois mis en pause.",
+      "resumed": "Envois repris.",
+      "testSent": "Message test enfilé.",
+      "resent": "Envoi remis en file."
+    }
+  },
   "adminDashboard": {
     "title": "Tableau de bord",
     "properties": "Établissements",
@@ -1171,7 +1216,8 @@
       "emails": "Emails",
       "activity": "Journal d'activité",
       "pages": "Pages du site",
-      "menus": "Menus"
+      "menus": "Menus",
+      "whatsapp": "WhatsApp"
     },
     "searchPlaceholder": "Rechercher un hébergeur, établissement, utilisateur…",
     "searchResultHost": "Hébergeur",

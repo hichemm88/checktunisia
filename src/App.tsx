@@ -43,6 +43,7 @@ import { AdminFacturationPage } from '@/pages/admin/AdminFacturationPage';
 import { AdminPaymentsPage } from '@/pages/admin/AdminPaymentsPage';
 import { AdminEmailsPage } from '@/pages/admin/AdminEmailsPage';
 import { AdminActivityPage } from '@/pages/admin/AdminActivityPage';
+import { AdminWhatsappPage } from '@/pages/admin/AdminWhatsappPage';
 import { AdminPagesPage } from '@/pages/admin/AdminPagesPage';
 import { AdminMenusPage } from '@/pages/admin/AdminMenusPage';
 // Import STATIQUE volontaire (pas de lazy) : le chargement différé de ce
@@ -175,6 +176,8 @@ export const App = () => (
           <Route path="/admin/payments"      element={<AdminPaymentsPage />} />
           <Route path="/admin/emails"        element={<AdminEmailsPage />} />
           <Route path="/admin/activity"      element={<AdminActivityPage />} />
+          {/* MODULE PROVISOIRE — relais WhatsApp (à retirer après homologation MI) */}
+          <Route path="/admin/whatsapp"      element={<AdminWhatsappPage />} />
           <Route path="/admin/pages"         element={<AdminPagesPage />} />
           <Route path="/admin/menus"         element={<AdminMenusPage />} />
           <Route path="/admin/settings"      element={<Navigate to="/admin/payments" replace />} />

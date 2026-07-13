@@ -285,6 +285,51 @@
       "mediaDeleted": "deleted a media file"
     }
   },
+  "adminWhatsapp": {
+    "title": "WhatsApp relay",
+    "provisional": "Provisional module",
+    "subtitle": "Automatic delivery of police forms via WhatsApp to a single recipient. Transitional solution pending official approval.",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "disabledHint": "The module is disabled (WHATSAPP_POLICE_ENABLED=false or no recipient configured). No messages are sent.",
+    "pausedTag": "Paused",
+    "pause": "Pause",
+    "resume": "Resume",
+    "sendTest": "Test message",
+    "resend": "Resend",
+    "lastReady": "Last connected",
+    "allProperties": "All properties",
+    "allStatuses": "All statuses",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "empty": "No messages.",
+    "testLabel": "[TEST] Dummy form",
+    "attempts": "{{n}} attempt(s)",
+    "session": {
+      "ready": "Session connected",
+      "initializing": "Initializing…",
+      "disconnected": "Session disconnected",
+      "authFailure": "Authentication failure"
+    },
+    "status": {
+      "pending": "Pending",
+      "sent": "Sent",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "queue": {
+      "pending": "Pending",
+      "sent": "Sent",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    },
+    "toast": {
+      "paused": "Sending paused.",
+      "resumed": "Sending resumed.",
+      "testSent": "Test message queued.",
+      "resent": "Message re-queued."
+    }
+  },
   "adminDashboard": {
     "title": "Dashboard",
     "properties": "Properties",
@@ -1171,7 +1216,8 @@
       "emails": "Emails",
       "activity": "Activity log",
       "pages": "Site pages",
-      "menus": "Menus"
+      "menus": "Menus",
+      "whatsapp": "WhatsApp"
     },
     "searchPlaceholder": "Search a host, property, user…",
     "searchResultHost": "Host",
