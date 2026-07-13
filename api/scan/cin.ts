@@ -19,7 +19,7 @@
 import type { IncomingMessage, ServerResponse } from 'http';
 import Busboy from 'busboy';
 import Anthropic from '@anthropic-ai/sdk';
-import { CIN_SYSTEM_PROMPT, CIN_USER_PROMPT, parseCinResponse, CinParseError } from '../_lib/cinExtraction';
+import { CIN_SYSTEM_PROMPT, CIN_USER_PROMPT, parseCinResponse, CinParseError } from '../_lib/cinExtraction.js';
 
 // @vercel/node ne bufferise pas les corps multipart → on lit le flux nous-mêmes.
 export const config = { api: { bodyParser: false } };

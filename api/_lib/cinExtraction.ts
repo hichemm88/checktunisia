@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod';
-import { parseTunisianBirthDate } from './tunisianMonths';
+import { parseTunisianBirthDate } from './tunisianMonths.js';
 
 // ─── Prompt système (à intégrer tel quel — cf. §4 du document d'implémentation) ──
 
