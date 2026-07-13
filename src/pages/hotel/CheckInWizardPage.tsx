@@ -10,13 +10,12 @@ import { HotelLayout } from '@/components/layout/HotelLayout';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
 import { checkInsApi, CreateCheckInPayload } from '@/api/checkIns';
-import { roomsApi } from '@/api/rooms';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { GuestScanPanel } from '@/components/hotel/GuestScanPanel';
+import { RoomSelector, RoomChoice } from '@/components/hotel/RoomSelector';
 import { CheckIn } from '@/types';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-TN');
@@ -70,12 +69,8 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
     adults_count: 1,
     children_count: 0,
   });
-
-  const { data: rooms } = useQuery({ queryKey: ['rooms'], queryFn: () => roomsApi.list() });
-  const roomOptions = [
-    { value: '', label: t('checkinWizard.noRoomAssigned') },
-    ...(rooms?.data ?? []).map((r) => ({ value: r.id, label: t('checkinWizard.roomOption', { number: r.number, type: r.type }) })),
-  ];
+  // Explicit choice required: a room OR the conscious "no room" link — never a default.
+  const [roomChoice, setRoomChoice] = useState<RoomChoice | null>(null);
 
   const createMutation = useMutation({
     mutationFn: checkInsApi.create,
@@ -84,14 +79,32 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
   });
 
   const set = (k: string, v: string | number) => setForm((f) => ({ ...f, [k]: v }));
+  // Availability depends on the stay dates — changing them resets the room choice.
+  const setDate = (k: string, v: string) => { setForm((f) => ({ ...f, [k]: v })); setRoomChoice(null); };
 
   return (
     <div className="flex flex-col gap-4">
-      <Select
-        label={t('checkinWizard.roomLabel')}
-        options={roomOptions}
-        value={form.room_id ?? ''}
-        onChange={(e) => set('room_id', e.target.value)}
+      <div className="grid grid-cols-2 gap-3">
+        <Input
+          label={t('checkinWizard.arrivalLabel')}
+          type="date"
+          value={form.check_in_date ?? ''}
+          onChange={(e) => setDate('check_in_date', e.target.value)}
+          required
+        />
+        <Input
+          label={t('checkinWizard.expectedDepartureLabel')}
+          type="date"
+          value={form.expected_check_out_date ?? ''}
+          onChange={(e) => setDate('expected_check_out_date', e.target.value)}
+          required
+        />
+      </div>
+      <RoomSelector
+        from={form.check_in_date ?? ''}
+        to={form.expected_check_out_date ?? ''}
+        value={roomChoice}
+        onChange={setRoomChoice}
       />
       <Input
         label={t('checkinWizard.bookingRefLabel')}
@@ -100,33 +113,23 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
         onChange={(e) => set('booking_reference', e.target.value)}
       />
       <div className="grid grid-cols-2 gap-3">
-        <Input
-          label={t('checkinWizard.arrivalLabel')}
-          type="date"
-          value={form.check_in_date ?? ''}
-          onChange={(e) => set('check_in_date', e.target.value)}
-          required
-        />
-        <Input
-          label={t('checkinWizard.expectedDepartureLabel')}
-          type="date"
-          value={form.expected_check_out_date ?? ''}
-          onChange={(e) => set('expected_check_out_date', e.target.value)}
-          required
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
         <Stepper label={t('checkinWizard.adults')} value={form.adults_count ?? 1} min={1} max={20} onChange={(v) => set('adults_count', v)} />
         <Stepper label={t('checkinWizard.children')} value={form.children_count ?? 0} min={0} max={20} onChange={(v) => set('children_count', v)} />
       </div>
       <Button
         fullWidth size="lg"
         loading={createMutation.isPending}
-        onClick={() => createMutation.mutate(form as CreateCheckInPayload)}
-        disabled={!form.check_in_date || !form.expected_check_out_date}
+        onClick={() => createMutation.mutate({
+          ...form,
+          room_id: roomChoice?.kind === 'room' ? roomChoice.id : undefined,
+        } as CreateCheckInPayload)}
+        disabled={!form.check_in_date || !form.expected_check_out_date || !roomChoice}
       >
         {t('common.next')} <ArrowRight className="h-4 w-4" />
       </Button>
+      {!roomChoice && form.check_in_date && form.expected_check_out_date && (
+        <p className="text-xs text-gray-400 text-center -mt-2">{t('checkinWizard.roomChoiceRequired')}</p>
+      )}
     </div>
   );
 };
