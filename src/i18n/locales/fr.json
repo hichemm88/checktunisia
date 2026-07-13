@@ -328,7 +328,9 @@
       "resumed": "Envois repris.",
       "testSent": "Message test enfilé.",
       "resent": "Envoi remis en file."
-    }
+    },
+    "photoAttached": "Photo jointe",
+    "noPhoto": "Sans photo"
   },
   "adminDashboard": {
     "title": "Tableau de bord",
