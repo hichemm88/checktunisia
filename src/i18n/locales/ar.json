@@ -1070,7 +1070,9 @@
     "departuresToday": "مغادرات اليوم",
     "noArrivalToday": "لا وصول اليوم",
     "noDepartureToday": "لا مغادرة اليوم",
-    "personsCount": "{{count}} أشخاص"
+    "personsCount": "{{count}} أشخاص",
+    "propertiesRecap": "مؤسساتك",
+    "otherPropsToday": "المؤسسات الأخرى اليوم: {{arrivals}} وصول · {{departures}} مغادرة"
   },
   "register": {
     "step0Label": "نوع الحساب",

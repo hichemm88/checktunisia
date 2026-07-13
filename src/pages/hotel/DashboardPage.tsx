@@ -103,6 +103,76 @@ const StatTile = ({
   </Card>
 );
 
+// ── Tendance check-ins 7 jours — bloc analytique (Manager uniquement) ───────
+const WeeklyChart = ({ data }: { data: { label: string; count: number }[] }) => {
+  const max = Math.max(...data.map((d) => d.count), 1);
+  return (
+    <div className="flex items-end gap-1.5 h-20 w-full">
+      {data.map((d, i) => {
+        const pct = Math.max((d.count / max) * 100, 3);
+        const isToday = i === data.length - 1;
+        return (
+          <div key={d.label} className="flex flex-1 flex-col items-center gap-1">
+            {d.count > 0 && (
+              <span className="text-[10px] font-semibold leading-none" style={{ color: isToday ? '#5346A8' : '#9CA3AF' }}>
+                {d.count}
+              </span>
+            )}
+            <div className="w-full rounded-t-md transition-all" style={{ height: `${pct}%`, background: isToday ? '#5346A8' : '#EEEBFA' }} />
+            <span className="text-[9px] leading-none truncate" style={{ color: isToday ? '#5346A8' : '#9CA3AF', fontWeight: isToday ? 700 : 400 }}>
+              {d.label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// ── Récap par propriété — commun aux deux rôles (règle transverse n°1) ──────
+const PropertiesSummaryCard = ({
+  summary, others, onSwitch,
+}: {
+  summary: NonNullable<DashboardData['properties_summary']>;
+  others?: DashboardData['other_properties'];
+  onSwitch: (id: string, name: string) => void;
+}) => {
+  const { t } = useTranslation();
+  return (
+    <Card>
+      <p className="label mb-2">{t('hotelDashboard.propertiesRecap')}</p>
+      <div className="flex flex-col gap-1.5">
+        {summary.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => !p.is_active && onSwitch(p.id, p.name)}
+            className="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-start transition-all"
+            style={{
+              border: p.is_active ? '2px solid #5346A8' : '1px solid #F3F4F6',
+              background: p.is_active ? 'rgba(83,70,168,0.04)' : '#fff',
+              cursor: p.is_active ? 'default' : 'pointer',
+            }}
+          >
+            <span className="flex items-center gap-2 min-w-0">
+              <Building2 className="h-4 w-4 shrink-0" style={{ color: p.is_active ? '#5346A8' : '#9CA3AF' }} />
+              <span className="text-sm font-semibold text-gray-900 truncate">{p.name}</span>
+            </span>
+            <span className="flex items-center gap-3 shrink-0 text-xs">
+              <span className="font-bold tabular-nums" style={{ color: p.occupancy_rate >= 80 ? '#1F9D6B' : '#5346A8' }}>{p.occupancy_rate}%</span>
+              <span className="text-gray-400">{t('hotelDashboard.presentCount', { count: p.present })}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+      {others && (others.arrivals > 0 || others.departures > 0) && (
+        <p className="text-xs text-gray-400 mt-2">
+          {t('hotelDashboard.otherPropsToday', { arrivals: others.arrivals, departures: others.departures })}
+        </p>
+      )}
+    </Card>
+  );
+};
+
 // ── Arrivées / Départs du jour — listes actionnables ────────────────────────
 const MovementRow = ({
   name, sub, onClick,
@@ -202,6 +272,10 @@ export const DashboardPage = () => {
       || (sub.status === 'active' && (sub.days_remaining ?? 99) <= 7));
   const hasAlerts          = d.expiry_alerts.length > 0;
   const securityHitCount   = d.pending_watchlist_hits ?? 0;
+
+  // Contenu analytique réservé au Manager — absent du DOM pour la Réceptionniste.
+  // Les blocs opérationnels (multi-établissements, arrivées/départs, occupation 7j) ne sont JAMAIS gatés par rôle.
+  const isManager = user?.role === 'hotel_admin';
 
   const greeting = () => {
     const h = new Date().getHours();
@@ -336,6 +410,15 @@ export const DashboardPage = () => {
             </div>
           )}
 
+          {/* Récap par propriété — commun aux deux rôles */}
+          {(d.properties_summary?.length ?? 0) > 1 && (
+            <PropertiesSummaryCard
+              summary={d.properties_summary!}
+              others={d.other_properties}
+              onSwitch={setActiveProperty}
+            />
+          )}
+
           {/* Arrivées / Départs du jour — listes actionnables */}
           {isLoading
             ? <div className="h-40 animate-pulse rounded-card bg-gray-100" />
@@ -351,7 +434,9 @@ export const DashboardPage = () => {
               <StatTile icon={Users}      label={t('hotelDashboard.statCheckinsDone')}   value={d.today.arrivals_done}     accent="#1F9D6B" />
               <StatTile icon={DoorOpen}   label={t('hotelDashboard.statPresent')}          value={d.today.currently_present} accent="#443896" />
               <StatTile icon={Percent}    label={t('hotelDashboard.statOccupancyRate')} value={`${d.today.occupancy_rate}%`} accent={d.today.occupancy_rate >= 80 ? '#1F9D6B' : '#5346A8'} />
-              <StatTile icon={TrendingUp} label={t('hotelDashboard.statCheckinsMonth')} value={d.month.check_ins_total}   accent="#8B7FE0" />
+              {isManager && (
+                <StatTile icon={TrendingUp} label={t('hotelDashboard.statCheckinsMonth')} value={d.month.check_ins_total} accent="#8B7FE0" />
+              )}
             </div>
           )}
 
@@ -374,6 +459,23 @@ export const DashboardPage = () => {
               </p>
               <div className="pt-1">
                 <OccupancyChart data={d.occupancy_7d!} />
+              </div>
+            </Card>
+          )}
+
+          {/* Tendance check-ins — analytique, Manager uniquement */}
+          {isManager && d.weekly_trend.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-gray-400" />
+                    {t('hotelDashboard.weeklyTrend')}
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <div className="pt-1">
+                <WeeklyChart data={d.weekly_trend} />
               </div>
             </Card>
           )}

@@ -109,6 +109,10 @@ export interface DashboardData {
   }>;
   /** Départs du jour (séjours actifs) — cliquables vers la fiche avec bouton check-out. */
   departures_today_list?: Array<{ id: string; reference: string; guest_name?: string | null; room?: string | null }>;
+  /** Récap par propriété (tous les établissements du compte) — jamais gaté par rôle. */
+  properties_summary?: Array<{ id: string; name: string; occupancy_rate: number; present: number; is_active: boolean }>;
+  /** Arrivées/départs du jour agrégés sur les AUTRES établissements du compte. */
+  other_properties?: { arrivals: number; departures: number };
   expiry_alerts: Array<{
     guest_name: string; document_number: string; expiry_date: string;
     days_until_expiry: number; check_in_id: string; reference: string;
