@@ -1042,7 +1042,8 @@
     "noUnit": "Sans unité",
     "departure": "Départ",
     "tryOtherFilter": "Essayez un autre filtre ou une autre recherche",
-    "docExpired": "Document expiré"
+    "docExpired": "Document expiré",
+    "departureNotConfirmed": "Départ non confirmé"
   },
   "hotelDashboard": {
     "title": "Tableau de bord",
@@ -1095,7 +1096,8 @@
     "noDepartureToday": "Aucun départ aujourd'hui",
     "personsCount": "{{count}} pers.",
     "propertiesRecap": "Vos établissements",
-    "otherPropsToday": "Autres établissements aujourd'hui : {{arrivals}} arrivées · {{departures}} départs"
+    "otherPropsToday": "Autres établissements aujourd'hui : {{arrivals}} arrivées · {{departures}} départs",
+    "departureNotConfirmed": "Départ non confirmé"
   },
   "register": {
     "step0Label": "Type de compte",

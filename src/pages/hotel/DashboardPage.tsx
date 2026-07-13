@@ -175,8 +175,8 @@ const PropertiesSummaryCard = ({
 
 // ── Arrivées / Départs du jour — listes actionnables ────────────────────────
 const MovementRow = ({
-  name, sub, onClick,
-}: { name: string; sub: string; onClick: () => void }) => (
+  name, sub, badge, onClick,
+}: { name: string; sub: string; badge?: React.ReactNode; onClick: () => void }) => (
   <button
     onClick={onClick}
     className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-start hover:bg-warm-100 transition-colors"
@@ -186,6 +186,7 @@ const MovementRow = ({
       <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
       <p className="text-xs text-gray-400 truncate">{sub}</p>
     </div>
+    {badge}
     <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
   </button>
 );
@@ -230,6 +231,11 @@ const ArrivalsDeparturesCard = ({ d }: { d: DashboardData }) => {
               key={dep.id}
               name={dep.guest_name || dep.reference}
               sub={`${dep.room ?? t('hotelDashboard.noRoom')} · ${dep.reference}`}
+              badge={
+                <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#FBF0D7', color: '#8A6206' }}>
+                  {t('hotelDashboard.departureNotConfirmed')}
+                </span>
+              }
               onClick={() => navigate(`/hotel/history/${dep.id}`)}
             />
           ))}

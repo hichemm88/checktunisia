@@ -1026,7 +1026,8 @@
     "noUnit": "بدون وحدة",
     "departure": "مغادرة",
     "tryOtherFilter": "جرّب مرشّحًا أو بحثًا آخر",
-    "docExpired": "وثيقة منتهية الصلاحية"
+    "docExpired": "وثيقة منتهية الصلاحية",
+    "departureNotConfirmed": "مغادرة غير مؤكدة"
   },
   "hotelDashboard": {
     "title": "لوحة التحكم",
@@ -1073,7 +1074,8 @@
     "noDepartureToday": "لا مغادرة اليوم",
     "personsCount": "{{count}} أشخاص",
     "propertiesRecap": "مؤسساتك",
-    "otherPropsToday": "المؤسسات الأخرى اليوم: {{arrivals}} وصول · {{departures}} مغادرة"
+    "otherPropsToday": "المؤسسات الأخرى اليوم: {{arrivals}} وصول · {{departures}} مغادرة",
+    "departureNotConfirmed": "مغادرة غير مؤكدة"
   },
   "register": {
     "step0Label": "نوع الحساب",
