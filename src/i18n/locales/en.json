@@ -915,7 +915,9 @@
     "issuingCountry": "Issuing country",
     "expiry": "Expiry",
     "confirmGuest": "Confirm guest",
-    "rescan": "Rescan or correct"
+    "rescan": "Rescan or correct",
+    "docExpiredSince": "Document expired since {{date}}",
+    "docExpiresSoon": "Expires soon"
   },
   "auth": {
     "tagline": "Digital guest registration",
@@ -979,7 +981,8 @@
     "recordCheckout": "Record check-out",
     "printPoliceForm": "Print police form",
     "confirmCheckout": "Confirm check-out",
-    "actualDepartureDate": "Actual departure date"
+    "actualDepartureDate": "Actual departure date",
+    "expiredTag": "Expired"
   },
   "checkinWizard": {
     "title": "New check-in",
@@ -1037,7 +1040,8 @@
     "noGuest": "No guest",
     "noUnit": "No unit",
     "departure": "Departure",
-    "tryOtherFilter": "Try another filter or search"
+    "tryOtherFilter": "Try another filter or search",
+    "docExpired": "Expired document"
   },
   "hotelDashboard": {
     "title": "Dashboard",

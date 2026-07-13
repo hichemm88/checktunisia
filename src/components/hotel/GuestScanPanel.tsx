@@ -1,7 +1,7 @@
 import { useState, useRef, ChangeEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Camera, CheckCircle, Loader2, ScanLine, Upload, ArrowRight } from 'lucide-react';
+import { AlertTriangle, Camera, CheckCircle, Loader2, ScanLine, Upload, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -17,7 +17,7 @@ export const GuestScanPanel = ({
   checkIn: CheckIn; isPrimary: boolean; label: string;
   onSuccess: () => void; onCancel?: () => void;
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const SEX_OPTIONS = [
     { value: '',  label: t('common.sex')    },
     { value: 'M', label: t('common.male')   },
@@ -68,6 +68,14 @@ export const GuestScanPanel = ({
   });
 
   const setG = (k: string, v: string) => setGuestForm((f) => ({ ...f, [k]: v }));
+
+  // Expiry check — réalité terrain : on enregistre quand même, le bouton reste actif.
+  // Le séjour est flaggé document_expired côté backend (visible historique + fiche).
+  const today = new Date().toISOString().slice(0, 10);
+  const soonLimit = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
+  const docExpired      = !!guestForm.expiry_date && guestForm.expiry_date < today;
+  const docExpiresSoon  = !!guestForm.expiry_date && !docExpired && guestForm.expiry_date < soonLimit;
+
   const reset = () => {
     setScanState('idle'); setExtractedOk(false);
     setGuestForm({ is_primary: isPrimary });
@@ -180,9 +188,28 @@ export const GuestScanPanel = ({
             <Input label={t('guestScan.documentNumber')} value={guestForm.document_number ?? ''} onChange={(e) => setG('document_number', e.target.value)} />
             <div className="grid grid-cols-2 gap-3">
               <Input label={t('guestScan.issuingCountry')} placeholder="TUN" value={guestForm.issuing_country_code ?? ''} onChange={(e) => setG('issuing_country_code', e.target.value.toUpperCase())} maxLength={3} />
-              <Input label={t('guestScan.expiry')} type="date" value={guestForm.expiry_date ?? ''} onChange={(e) => setG('expiry_date', e.target.value)} />
+              <div className="flex flex-col gap-1">
+                <Input label={t('guestScan.expiry')} type="date" value={guestForm.expiry_date ?? ''} onChange={(e) => setG('expiry_date', e.target.value)} />
+                {docExpiresSoon && (
+                  <p className="text-[11px] font-medium" style={{ color: '#8A6206' }}>{t('guestScan.docExpiresSoon')}</p>
+                )}
+              </div>
             </div>
           </div>
+
+          {docExpired && (
+            <div className="flex items-start gap-2 rounded-xl px-3 py-2.5" style={{ background: '#FBF0D7', border: '1px solid #E3A008' }}>
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: '#8A6206' }} />
+              <p className="text-xs font-semibold" style={{ color: '#8A6206' }}>
+                {t('guestScan.docExpiredSince', {
+                  date: new Date(guestForm.expiry_date!).toLocaleDateString(
+                    i18n.language === 'ar' ? 'ar-TN' : i18n.language === 'en' ? 'en-GB' : 'fr-TN',
+                    { day: 'numeric', month: 'long', year: 'numeric' },
+                  ),
+                })}
+              </p>
+            </div>
+          )}
 
           <Button
             fullWidth size="lg"

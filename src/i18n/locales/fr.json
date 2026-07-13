@@ -915,7 +915,9 @@
     "issuingCountry": "Pays délivrance",
     "expiry": "Expiration",
     "confirmGuest": "Confirmer le voyageur",
-    "rescan": "Rescanner ou corriger"
+    "rescan": "Rescanner ou corriger",
+    "docExpiredSince": "Document expiré depuis le {{date}}",
+    "docExpiresSoon": "Expire bientôt"
   },
   "auth": {
     "tagline": "Enregistrement numérique des hôtes",
@@ -979,7 +981,8 @@
     "recordCheckout": "Enregistrer le check-out",
     "printPoliceForm": "Imprimer fiche de police",
     "confirmCheckout": "Confirmer le check-out",
-    "actualDepartureDate": "Date de départ réelle"
+    "actualDepartureDate": "Date de départ réelle",
+    "expiredTag": "Expiré"
   },
   "checkinWizard": {
     "title": "Nouveau check-in",
@@ -1037,7 +1040,8 @@
     "noGuest": "Sans voyageur",
     "noUnit": "Sans unité",
     "departure": "Départ",
-    "tryOtherFilter": "Essayez un autre filtre ou une autre recherche"
+    "tryOtherFilter": "Essayez un autre filtre ou une autre recherche",
+    "docExpired": "Document expiré"
   },
   "hotelDashboard": {
     "title": "Tableau de bord",
