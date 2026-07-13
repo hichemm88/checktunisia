@@ -93,8 +93,10 @@ export const NotificationBell = () => {
         <>
           {/* Backdrop — ferme au clic extérieur */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          {/* fixed par rapport au viewport (pas au bouton) : sur mobile la cloche est
+              près du bord droit et un panneau ancré `absolute end-0` déborde hors écran. */}
           <div
-            className="absolute end-0 top-11 z-50 w-[340px] max-w-[90vw] rounded-2xl bg-white shadow-lg overflow-hidden"
+            className="fixed end-3 top-[72px] z-50 w-[340px] max-w-[calc(100vw-24px)] rounded-2xl bg-white shadow-lg overflow-hidden"
             style={{ border: '1px solid #DDD9CF' }}
           >
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F3F4F6' }}>
@@ -110,7 +112,7 @@ export const NotificationBell = () => {
               )}
             </div>
 
-            <div className="max-h-[420px] overflow-y-auto">
+            <div className="overflow-y-auto" style={{ maxHeight: 'min(420px, calc(100vh - 160px))' }}>
               {isLoading && <div className="h-20 animate-pulse bg-gray-50 m-3 rounded-xl" />}
 
               {!isLoading && !data?.data.length && (
