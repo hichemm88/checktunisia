@@ -1092,7 +1092,9 @@
     "departuresToday": "Today's departures",
     "noArrivalToday": "No arrival today",
     "noDepartureToday": "No departure today",
-    "personsCount": "{{count}} guests"
+    "personsCount": "{{count}} guests",
+    "propertiesRecap": "Your properties",
+    "otherPropsToday": "Other properties today: {{arrivals}} arrivals · {{departures}} departures"
   },
   "register": {
     "step0Label": "Account type",
