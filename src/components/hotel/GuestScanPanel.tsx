@@ -2,7 +2,7 @@ import { useState, useRef, ChangeEvent, ReactNode } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  AlertTriangle, Camera, CheckCircle, Loader2, Upload, ArrowRight,
+  AlertTriangle, ScanLine, CheckCircle, Loader2, Upload, ArrowRight,
   CreditCard, UserCheck, RotateCw, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -328,49 +328,57 @@ export const GuestScanPanel = ({
 
       {/* ── Idle / Error ── */}
       {(scanState === 'idle' || scanState === 'error') && (
-        <div
-          className="flex flex-col items-center gap-5 rounded-2xl bg-white py-8 px-4"
-          style={{ border: '2px dashed #EEEBFA' }}
-        >
+        <div className="flex flex-col gap-2.5">
           {scanState === 'error' && (
-            <p className="text-sm text-red-600 font-medium text-center">
+            <div
+              className="rounded-xl px-3 py-2.5 text-center text-sm font-medium"
+              style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#B91C1C' }}
+            >
               {cinError ?? t('guestScan.scanFailedRetry')}
-            </p>
+            </div>
           )}
 
-          {/* Carte « Scanner la CIN » — flux principal réception tunisienne */}
+          {/* Carte 1 — CIN tunisienne (OCR Claude vision) */}
           <button
             onClick={() => { setCinError(null); setCapture('cin'); }}
-            className="flex w-full items-center gap-3 rounded-2xl p-4 text-start transition-all hover:shadow-card"
+            className="group flex w-full items-center gap-3.5 rounded-2xl p-4 text-start shadow-card transition-all active:scale-[0.99]"
             style={{ background: 'var(--qayed-cachet)', color: '#fff' }}
           >
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15">
               <CreditCard className="h-6 w-6" />
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold">
-                {t('cinScan.scanCin')} — <span className="qayed-arabic">{t('cinScan.scanCinAr')}</span>
-              </p>
-              <p className="text-xs text-white/80">{t('cinScan.scanCinSubtitle')}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold leading-tight">{t('cinScan.entryCinTitle')}</p>
+              <p className="mt-0.5 text-xs text-white/80">{t('cinScan.scanCinSubtitle')}</p>
             </div>
+            <ArrowRight className="h-5 w-5 shrink-0 opacity-70 transition-transform group-hover:translate-x-0.5" />
           </button>
 
-          <div className="flex items-center gap-3 w-full">
-            <span className="h-px flex-1" style={{ background: '#EEEBFA' }} />
-            <span className="text-[11px] uppercase tracking-widest text-gray-400">{t('guestScan.passport')}</span>
-            <span className="h-px flex-1" style={{ background: '#EEEBFA' }} />
-          </div>
+          {/* Carte 2 — Passeport / CIN étrangère avec MRZ (même importance) */}
+          <button
+            onClick={() => { setCinError(null); setCapture('mrz'); }}
+            className="group flex w-full items-center gap-3.5 rounded-2xl p-4 text-start shadow-card transition-all active:scale-[0.99]"
+            style={{ background: 'var(--qayed-encre)', color: '#fff' }}
+          >
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10">
+              <ScanLine className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold leading-tight">{t('cinScan.entryPassportTitle')}</p>
+              <p className="mt-0.5 text-xs text-white/70">{t('cinScan.entryPassportSubtitle')}</p>
+            </div>
+            <ArrowRight className="h-5 w-5 shrink-0 opacity-70 transition-transform group-hover:translate-x-0.5" />
+          </button>
 
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button variant="secondary" onClick={() => { setCinError(null); setCapture('mrz'); }}>
-              <Camera className="h-4 w-4" /> {t('guestScan.takePhoto')}
-            </Button>
-            <Button variant="secondary" onClick={() => uploadRef.current?.click()}>
-              <Upload className="h-4 w-4" /> {t('guestScan.importPhoto')}
-            </Button>
-            <Button variant="secondary" onClick={() => { setExtractedOk(false); setScanKind('mrz'); setScanState('done'); }}>
+          {/* Actions secondaires, discrètes */}
+          <div className="mt-1 flex items-center justify-center gap-4 text-xs font-medium text-gray-500">
+            <button onClick={() => uploadRef.current?.click()} className="flex items-center gap-1.5 hover:text-gray-700">
+              <Upload className="h-3.5 w-3.5" /> {t('guestScan.importPhoto')}
+            </button>
+            <span className="h-3 w-px bg-gray-300" />
+            <button onClick={() => { setExtractedOk(false); setScanKind('mrz'); setScanState('done'); }} className="hover:text-gray-700">
               {t('guestScan.manualEntry')}
-            </Button>
+            </button>
           </div>
         </div>
       )}
