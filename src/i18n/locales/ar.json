@@ -1059,7 +1059,9 @@
     "room": "غرفة {{room}}",
     "noRoom": "بدون غرفة",
     "noRecentCheckin": "لا يوجد تسجيل وصول حديث",
-    "startCheckin": "ابدأ تسجيل وصول"
+    "startCheckin": "ابدأ تسجيل وصول",
+    "occupancy7d": "الإشغال — 7 أيام",
+    "occupancy7dSubtitle": "{{property}} · {{count}} غرفة · اليومان القادمان = توقع"
   },
   "register": {
     "step0Label": "نوع الحساب",

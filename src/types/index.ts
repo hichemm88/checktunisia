@@ -95,7 +95,10 @@ export interface DashboardData {
     occupancy_rate: number;
   };
   month: { check_ins_total: number };
+  room_count?: number;
   weekly_trend: Array<{ date: string; label: string; count: number }>;
+  /** Fenêtre glissante j−4 → j+2 ; is_future = projection (barres pointillées). */
+  occupancy_7d?: Array<{ date: string; label: string; rate: number; is_today: boolean; is_future: boolean }>;
   expiry_alerts: Array<{
     guest_name: string; document_number: string; expiry_date: string;
     days_until_expiry: number; check_in_id: string; reference: string;

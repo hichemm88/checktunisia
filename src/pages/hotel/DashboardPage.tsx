@@ -51,37 +51,41 @@ const OccupancyRing = ({ pct, present, total }: { pct: number; present: number; 
   );
 };
 
-// ── Mini bar chart ───────────────────────────────────────────────────────────
-const WeeklyChart = ({ data }: { data: { label: string; count: number }[] }) => {
-  const max = Math.max(...data.map((d) => d.count), 1);
-  return (
-    <div className="flex items-end gap-1.5 h-20 w-full">
-      {data.map((d, i) => {
-        const pct = Math.max((d.count / max) * 100, 3);
-        const isToday = i === data.length - 1;
-        return (
-          <div key={d.label} className="flex flex-1 flex-col items-center gap-1">
-            {d.count > 0 && (
-              <span className="text-[10px] font-semibold leading-none" style={{ color: isToday ? '#5346A8' : '#9CA3AF' }}>
-                {d.count}
-              </span>
-            )}
-            <div
-              className="w-full rounded-t-md transition-all"
-              style={{
-                height: `${pct}%`,
-                background: isToday ? '#5346A8' : '#EEEBFA',
-              }}
-            />
-            <span className="text-[9px] leading-none truncate" style={{ color: isToday ? '#5346A8' : '#9CA3AF', fontWeight: isToday ? 700 : 400 }}>
-              {d.label}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
+// ── Occupation 7 jours (j−4 → j+2) — parité mobile ──────────────────────────
+// Passé : violet clair plein · aujourd'hui : violet cachet · futur : pointillés (projection).
+const OccupancyChart = ({ data }: { data: { label: string; rate: number; is_today: boolean; is_future: boolean }[] }) => (
+  <div className="flex items-end gap-1.5 h-28 w-full">
+    {data.map((d) => {
+      const pct = Math.max(Math.min(d.rate, 100), 2);
+      const color = d.is_today ? '#5346A8' : '#AFA9EC';
+      return (
+        <div key={d.label} className="flex flex-1 flex-col items-center gap-1 h-full justify-end">
+          <span
+            className="text-[10px] font-semibold leading-none tabular-nums"
+            style={{ color: d.is_today ? '#5346A8' : d.is_future ? '#C4BFF0' : '#9CA3AF' }}
+          >
+            {Math.round(d.rate)}%
+          </span>
+          <div
+            className="w-full rounded-t-md transition-all"
+            style={{
+              height: `${pct}%`,
+              ...(d.is_future
+                ? { border: '2px dashed #AFA9EC', background: 'transparent' }
+                : { background: color }),
+            }}
+          />
+          <span
+            className="text-[9px] leading-none truncate"
+            style={{ color: d.is_today ? '#5346A8' : '#9CA3AF', fontWeight: d.is_today ? 700 : 400, opacity: d.is_future ? 0.7 : 1 }}
+          >
+            {d.label}
+          </span>
+        </div>
+      );
+    })}
+  </div>
+);
 
 // ── Compact stat tile ────────────────────────────────────────────────────────
 const StatTile = ({
@@ -111,7 +115,7 @@ const EMPTY_DASH: DashboardData = {
 export const DashboardPage = () => {
   const { t, i18n } = useTranslation();
   const navigate    = useNavigate();
-  const { user, activePropertyId } = useAuthStore();
+  const { user, activePropertyId, activePropertyName } = useAuthStore();
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard', activePropertyId],
     queryFn: dashboardApi.get,
@@ -257,19 +261,25 @@ export const DashboardPage = () => {
             </div>
           )}
 
-          {/* Weekly trend */}
-          {d.weekly_trend.length > 0 && (
+          {/* Occupation 7 jours (j−4 → j+2) */}
+          {(d.occupancy_7d?.length ?? 0) > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle>
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-gray-400" />
-                    {t('hotelDashboard.weeklyTrend')}
+                    {t('hotelDashboard.occupancy7d')}
                   </div>
                 </CardTitle>
               </CardHeader>
+              <p className="text-xs text-gray-400 mb-1">
+                {t('hotelDashboard.occupancy7dSubtitle', {
+                  property: activePropertyName ?? user?.hotel?.name ?? '',
+                  count: d.room_count ?? user?.hotel?.room_count ?? 0,
+                })}
+              </p>
               <div className="pt-1">
-                <WeeklyChart data={d.weekly_trend} />
+                <OccupancyChart data={d.occupancy_7d!} />
               </div>
             </Card>
           )}

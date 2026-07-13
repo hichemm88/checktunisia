@@ -1081,7 +1081,9 @@
     "room": "Ch. {{room}}",
     "noRoom": "Sans chambre",
     "noRecentCheckin": "Aucun check-in récent",
-    "startCheckin": "Commencer un check-in"
+    "startCheckin": "Commencer un check-in",
+    "occupancy7d": "Occupation — 7 jours",
+    "occupancy7dSubtitle": "{{property}} · {{count}} chambres · j+1, j+2 = projection"
   },
   "register": {
     "step0Label": "Type de compte",
