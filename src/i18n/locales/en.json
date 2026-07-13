@@ -1232,5 +1232,10 @@
     "saved": "Menu saved.",
     "deleted": "Entry deleted.",
     "empty": "No entries."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "empty": "No notifications"
   }
 }
