@@ -13,6 +13,9 @@ export interface AddGuestPayload {
   // Document fields — sent flat by the form, nested before API call
   document_type?: string; document_number?: string; issuing_country_code?: string;
   issue_date?: string; expiry_date?: string;
+  // MODULE PROVISOIRE — relais WhatsApp : id du scan téléversé, à relier à ce
+  // voyageur pour joindre la bonne photo à sa fiche (support multi-voyageurs).
+  scan_id?: string;
 }
 
 export const checkInsApi = {

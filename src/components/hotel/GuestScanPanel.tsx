@@ -65,11 +65,14 @@ export const GuestScanPanel = ({
       setExtractedOk(true);
       setScanState('done');
 
-      // MODULE PROVISOIRE — relais WhatsApp : téléverse l'image du document pour
-      // pouvoir la joindre à la fiche de police. Best-effort, non bloquant ;
-      // l'image est purgée automatiquement après 24 h côté backend.
+      // MODULE PROVISOIRE — relais WhatsApp : téléverse l'image du document et
+      // mémorise son scan_id pour le relier à CE voyageur (envoyé avec addGuest),
+      // afin que chaque fiche parte avec la bonne photo (multi-voyageurs).
+      // Best-effort, non bloquant ; l'image est purgée après 24 h côté backend.
       if (waEnabled) {
-        scansApi.upload(checkIn.id, file).catch(() => { /* photo best-effort */ });
+        scansApi.upload(checkIn.id, file)
+          .then((scan) => setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })))
+          .catch(() => { /* photo best-effort */ });
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t('guestScan.scanFailed');
