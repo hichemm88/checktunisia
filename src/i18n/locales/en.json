@@ -1042,7 +1042,8 @@
     "noUnit": "No unit",
     "departure": "Departure",
     "tryOtherFilter": "Try another filter or search",
-    "docExpired": "Expired document"
+    "docExpired": "Expired document",
+    "departureNotConfirmed": "Departure not confirmed"
   },
   "hotelDashboard": {
     "title": "Dashboard",
@@ -1095,7 +1096,8 @@
     "noDepartureToday": "No departure today",
     "personsCount": "{{count}} guests",
     "propertiesRecap": "Your properties",
-    "otherPropsToday": "Other properties today: {{arrivals}} arrivals · {{departures}} departures"
+    "otherPropsToday": "Other properties today: {{arrivals}} arrivals · {{departures}} departures",
+    "departureNotConfirmed": "Departure not confirmed"
   },
   "register": {
     "step0Label": "Account type",

@@ -261,7 +261,7 @@ export const HistoryPage = () => {
                   <div className="flex items-center gap-2 shrink-0">
                     {checkoutDue ? (
                       <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: '#FBF0D7', color: '#8A6206' }}>
-                        <LogOut className="h-3 w-3" /> {t('hotelHistory.departure')}
+                        <LogOut className="h-3 w-3" /> {t('hotelHistory.departureNotConfirmed')}
                       </span>
                     ) : (
                       <span
