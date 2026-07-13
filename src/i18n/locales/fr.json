@@ -1232,5 +1232,10 @@
     "saved": "Menu enregistré.",
     "deleted": "Entrée supprimée.",
     "empty": "Aucune entrée."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Tout marquer lu",
+    "empty": "Aucune notification"
   }
 }

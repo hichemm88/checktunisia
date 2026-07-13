@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
+import { NotificationBell } from '@/components/hotel/NotificationBell';
 
 interface HotelLayoutProps { children: ReactNode; title?: string; backHref?: string }
 
@@ -59,8 +60,9 @@ export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
             </div>
           </div>
 
-          {/* Right: language + avatar + logout */}
+          {/* Right: notifications + language + avatar + logout */}
           <div className="flex items-center gap-1 shrink-0">
+            <NotificationBell />
             <LanguageSwitcher />
             <Link
               to="/profile"
