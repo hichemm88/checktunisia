@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+*.orig.*
+
+# Native
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+ios/
+android/
+
+# Metro
+.metro-health-check*
+
+# Env / secrets
+.env*.local
+google-services.json
+GoogleService-Info.plist
+
+# Misc
+.DS_Store
+*.log
+npm-debug.*

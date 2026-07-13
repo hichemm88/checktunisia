@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Qayed الداخلية",
+    "slug": "qayed-authority",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "qayedauth",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#10222E"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "tn.qayed.authority",
+      "infoPlist": {
+        "NSCameraUsageDescription": "L'appareil photo est utilisé pour lire la zone MRZ des documents de voyage lors d'un contrôle d'identité.",
+        "NSFaceIDUsageDescription": "Face ID protège l'accès à l'application et aux données de contrôle.",
+        "NSLocationWhenInUseUsageDescription": "La localisation est enregistrée avec chaque vérification et contrôle pour la traçabilité (journal d'audit)."
+      }
+    },
+    "android": {
+      "package": "tn.qayed.authority",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#10222E"
+      },
+      "permissions": [
+        "CAMERA",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-local-authentication",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "La localisation est enregistrée avec chaque vérification et contrôle pour la traçabilité (journal d'audit)."
+        }
+      ]
+    ],
+    "extra": {
+      "apiBaseUrl": "https://api.qayed.tn",
+      "demoMode": true
+    }
+  }
+}
