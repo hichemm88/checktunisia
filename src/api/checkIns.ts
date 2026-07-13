@@ -13,6 +13,12 @@ export interface AddGuestPayload {
   // Document fields — sent flat by the form, nested before API call
   document_type?: string; document_number?: string; issuing_country_code?: string;
   issue_date?: string; expiry_date?: string;
+  // Champs arabes (CIN tunisienne, préremplis par le scan). Envoyés à plat ; le
+  // backend les persiste s'il les connaît (migration Railway à prévoir), sinon
+  // les ignore — aucune régression pour la saisie manuelle.
+  last_name_ar?: string; first_name_ar?: string; filiation_ar?: string;
+  spouse_ar?: string; birth_place_ar?: string;
+  card_format?: 'legacy' | 'biometric';
   // MODULE PROVISOIRE — relais WhatsApp : id du scan téléversé, à relier à ce
   // voyageur pour joindre la bonne photo à sa fiche (support multi-voyageurs).
   scan_id?: string;
