@@ -17,15 +17,24 @@ import { Button } from '@/components/ui/Button';
  */
 
 const ID1_RATIO = 1.586; // largeur / hauteur d'une carte ID-1
+const TD3_RATIO = 1.42;  // page de données passeport (TD-3)
 
 export const CINCapture = ({
   onCapture,
   onClose,
+  variant = 'cin',
+  guideRatio,
 }: {
   onCapture: (blob: Blob) => void;
   onClose: () => void;
+  /** 'cin' = carte d'identité (défaut) · 'mrz' = passeport (bande MRZ). */
+  variant?: 'cin' | 'mrz';
+  /** Ratio largeur/hauteur du cadre guide. Défaut : ID-1 (cin) ou TD-3 (mrz). */
+  guideRatio?: number;
 }) => {
   const { t } = useTranslation();
+  const ratio = guideRatio ?? (variant === 'mrz' ? TD3_RATIO : ID1_RATIO);
+  const isMrz = variant === 'mrz';
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const nativeCamRef = useRef<HTMLInputElement>(null);
@@ -51,7 +60,13 @@ export const CINCapture = ({
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: 'environment' } },
+        // Résolution vidéo la plus haute possible : indispensable pour le MRZ
+        // (texte OCR-B minuscule) et bénéfique pour la CIN.
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 3840 },
+          height: { ideal: 2160 },
+        },
         audio: false,
       });
       streamRef.current = stream;
@@ -93,13 +108,13 @@ export const CINCapture = ({
     if (!video || !video.videoWidth) return;
     const vw = video.videoWidth;
     const vh = video.videoHeight;
-    // Rectangle centré au ratio ID-1, à ~92 % de la dimension limitante — miroir
-    // du cadre guide affiché à l'écran.
+    // Rectangle centré au ratio du guide, à ~92 % de la dimension limitante —
+    // miroir du cadre guide affiché à l'écran.
     let cropW = vw * 0.92;
-    let cropH = cropW / ID1_RATIO;
+    let cropH = cropW / ratio;
     if (cropH > vh * 0.92) {
       cropH = vh * 0.92;
-      cropW = cropH * ID1_RATIO;
+      cropW = cropH * ratio;
     }
     const sx = (vw - cropW) / 2;
     const sy = (vh - cropH) / 2;
@@ -177,7 +192,7 @@ export const CINCapture = ({
     <div className="fixed inset-0 z-50 flex flex-col bg-black/95" role="dialog" aria-modal="true">
       {/* Barre haut */}
       <div className="flex items-center justify-between px-4 py-3 text-white">
-        <span className="text-sm font-semibold">{t('cinScan.title')}</span>
+        <span className="text-sm font-semibold">{isMrz ? t('cinScan.titleMrz') : t('cinScan.title')}</span>
         <button onClick={close} aria-label={t('common.close')} className="rounded-full p-2 hover:bg-white/10">
           <X className="h-5 w-5" />
         </button>
@@ -197,15 +212,22 @@ export const CINCapture = ({
         {mode === 'camera' && (
           <>
             <video ref={videoRef} playsInline muted className="h-full w-full object-cover" />
-            {/* Cadre guide ID-1 */}
+            {/* Cadre guide (ID-1 pour la CIN, TD-3 + bande MRZ pour le passeport) */}
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div
-                className="w-[88%] max-w-[560px] rounded-2xl"
-                style={{ aspectRatio: String(ID1_RATIO), border: '3px solid #5346A8', boxShadow: '0 0 0 9999px rgba(0,0,0,0.45)' }}
-              />
+                className="relative flex w-[88%] max-w-[560px] items-end rounded-2xl"
+                style={{ aspectRatio: String(ratio), border: '3px solid #5346A8', boxShadow: '0 0 0 9999px rgba(0,0,0,0.45)' }}
+              >
+                {/* Bande MRZ : les 2 lignes OCR-B en bas de la page passeport */}
+                {isMrz && (
+                  <div className="m-2 flex h-[22%] w-[calc(100%-16px)] items-center justify-center rounded-md" style={{ border: '2px dashed #8B7FE0' }}>
+                    <span className="text-[10px] font-bold tracking-widest text-white/80">MRZ</span>
+                  </div>
+                )}
+              </div>
             </div>
             <p className="absolute top-3 left-0 right-0 text-center text-xs text-white/80">
-              {t('cinScan.cameraHint')}
+              {isMrz ? t('cinScan.mrzHint') : t('cinScan.cameraHint')}
             </p>
             {torchSupported && (
               <button
@@ -278,7 +300,7 @@ export const CINCapture = ({
           </button>
         )}
 
-        <p className="text-center text-[11px] text-white/50">{t('cinScan.privacyNote')}</p>
+        <p className="text-center text-[11px] text-white/50">{isMrz ? t('cinScan.mrzNote') : t('cinScan.privacyNote')}</p>
       </div>
 
       {/* Inputs cachés */}

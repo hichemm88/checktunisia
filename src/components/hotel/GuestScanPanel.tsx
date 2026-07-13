@@ -95,8 +95,8 @@ export const GuestScanPanel = ({
   const [extractedOk, setExtractedOk] = useState(false);
   const [guestForm, setGuestForm] = useState<Partial<AddGuestPayload>>({ is_primary: isPrimary });
 
-  // ── État spécifique au scan CIN ────────────────────────────────────────────
-  const [showCinCapture, setShowCinCapture] = useState(false);
+  // ── Capture caméra in-app (partagée CIN / MRZ) ─────────────────────────────
+  const [capture, setCapture] = useState<null | 'cin' | 'mrz'>(null);
   const [cinScan, setCinScan] = useState<CinScanResponse | null>(null);
   const [conf, setConf] = useState<{ cinNumber: CinConfidence; names: CinConfidence; birthDate: CinConfidence } | null>(null);
   const [cinImageUrl, setCinImageUrl] = useState<string | null>(null);
@@ -105,10 +105,8 @@ export const GuestScanPanel = ({
   const [zoomOpen, setZoomOpen] = useState(false);
   const [rotation, setRotation] = useState(0);
 
-  // ── MRZ (passeport) — inchangé ─────────────────────────────────────────────
-  const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // ── MRZ (passeport) — OCR client-side, alimenté par l'upload OU la caméra in-app
+  const runMrzScan = async (file: File) => {
     setScanKind('mrz');
     setScanState('scanning');
     setOcrProgress(0);
@@ -146,9 +144,21 @@ export const GuestScanPanel = ({
     }
   };
 
+  // Upload / galerie MRZ (input fichier) → même pipeline.
+  const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) runMrzScan(file);
+  };
+
+  // Capture caméra in-app MRZ → wrap le Blob en File pour le pipeline existant.
+  const handleMrzCapture = (blob: Blob) => {
+    setCapture(null);
+    runMrzScan(new File([blob], 'mrz.jpg', { type: 'image/jpeg' }));
+  };
+
   // ── Scan CIN (Claude vision, backend /api/scan/cin) ─────────────────────────
   const handleCinCapture = async (blob: Blob) => {
-    setShowCinCapture(false);
+    setCapture(null);
     setScanKind('cin');
     setCinError(null);
     setScanState('scanning');
@@ -292,9 +302,13 @@ export const GuestScanPanel = ({
       className="flex flex-col gap-4 rounded-2xl p-4"
       style={{ background: '#F6F5F1', border: '1.5px solid #DDD9CF' }}
     >
-      {/* Overlay caméra CIN */}
-      {showCinCapture && (
-        <CINCapture onCapture={handleCinCapture} onClose={() => setShowCinCapture(false)} />
+      {/* Overlay caméra in-app (CIN ou passeport MRZ) */}
+      {capture && (
+        <CINCapture
+          variant={capture}
+          onCapture={capture === 'mrz' ? handleMrzCapture : handleCinCapture}
+          onClose={() => setCapture(null)}
+        />
       )}
 
       {/* Header */}
@@ -326,7 +340,7 @@ export const GuestScanPanel = ({
 
           {/* Carte « Scanner la CIN » — flux principal réception tunisienne */}
           <button
-            onClick={() => { setCinError(null); setShowCinCapture(true); }}
+            onClick={() => { setCinError(null); setCapture('cin'); }}
             className="flex w-full items-center gap-3 rounded-2xl p-4 text-start transition-all hover:shadow-card"
             style={{ background: 'var(--qayed-cachet)', color: '#fff' }}
           >
@@ -348,7 +362,7 @@ export const GuestScanPanel = ({
           </div>
 
           <div className="flex flex-wrap justify-center gap-3">
-            <Button variant="secondary" onClick={() => fileRef.current?.click()}>
+            <Button variant="secondary" onClick={() => { setCinError(null); setCapture('mrz'); }}>
               <Camera className="h-4 w-4" /> {t('guestScan.takePhoto')}
             </Button>
             <Button variant="secondary" onClick={() => uploadRef.current?.click()}>
