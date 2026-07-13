@@ -1,7 +1,10 @@
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef, ChangeEvent, ReactNode } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Camera, CheckCircle, Loader2, ScanLine, Upload, ArrowRight } from 'lucide-react';
+import {
+  AlertTriangle, Camera, CheckCircle, Loader2, Upload, ArrowRight,
+  CreditCard, UserCheck, RotateCw, X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -10,7 +13,48 @@ import { scansApi } from '@/api/scans';
 import { useToast } from '@/components/ui/Toast';
 import { api, extractErrors } from '@/lib/api';
 import { scanMrz } from '@/lib/mrzScanner';
-import { CheckIn } from '@/types';
+import { CINCapture } from '@/components/hotel/CINCapture';
+import { prepareCinImage } from '@/lib/cinImagePrep';
+import { scanCin } from '@/api/scanCin';
+import { useAuthStore } from '@/stores/authStore';
+import { CheckIn, CinConfidence, CinScanResponse } from '@/types';
+
+// ─── Pastille de confiance (scan CIN uniquement) ──────────────────────────────
+const CONF_STYLE: Record<CinConfidence, { bg: string; fg: string; key: string }> = {
+  high:   { bg: '#E4F5EC', fg: '#137453', key: 'cinScan.confHigh' },
+  medium: { bg: '#FBF0D7', fg: '#8A6206', key: 'cinScan.confMedium' },
+  low:    { bg: '#FEE2E2', fg: '#B91C1C', key: 'cinScan.confLow' },
+};
+
+const ConfPill = ({ level }: { level: CinConfidence }) => {
+  const { t } = useTranslation();
+  const s = CONF_STYLE[level];
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: s.bg, color: s.fg }}>
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.fg }} />
+      {t(s.key)}
+    </span>
+  );
+};
+
+/** Champ avec label + pastille de confiance optionnelle (préremplissage CIN). */
+const Field = ({ label, level, children }: { label: string; level?: CinConfidence | null; children: ReactNode }) => (
+  <div className="flex flex-col gap-1.5">
+    <div className="flex items-center justify-between gap-2">
+      <span className="label mb-0">{label}</span>
+      {level && <ConfPill level={level} />}
+    </div>
+    {children}
+  </div>
+);
+
+// Déduit le sexe à partir de la filiation (بنت/بن) ou de la mention épouse (حرم).
+const inferSex = (filiationAr: string | null, spouseAr: string | null): 'M' | 'F' | '' => {
+  if (spouseAr) return 'F';
+  if (filiationAr?.includes('بنت')) return 'F';
+  if (filiationAr && /(^|\s)بن(\s|$)/.test(filiationAr)) return 'M';
+  return '';
+};
 
 export const GuestScanPanel = ({
   checkIn, isPrimary, label, onSuccess, onCancel,
@@ -26,6 +70,9 @@ export const GuestScanPanel = ({
     { value: 'X', label: t('common.other')  },
   ];
   const { toast } = useToast();
+  const activePropertyId = useAuthStore((s) => s.activePropertyId);
+  const hotelId = useAuthStore((s) => s.user?.hotel?.id);
+  const propertyId = activePropertyId || hotelId || '';
 
   // MODULE PROVISOIRE — relais WhatsApp : l'image du document n'est stockée que
   // si le relais est actif (sinon aucune raison de conserver une pièce d'identité).
@@ -36,16 +83,29 @@ export const GuestScanPanel = ({
     retry: false,
   });
 
-  const fileRef       = useRef<HTMLInputElement>(null); // caméra
-  const uploadRef     = useRef<HTMLInputElement>(null); // galerie / fichier
+  const fileRef       = useRef<HTMLInputElement>(null); // caméra (MRZ)
+  const uploadRef     = useRef<HTMLInputElement>(null); // galerie / fichier (MRZ)
   const [scanState, setScanState] = useState<'idle' | 'scanning' | 'done' | 'error'>('idle');
+  const [scanKind, setScanKind] = useState<'mrz' | 'cin'>('mrz');
   const [ocrProgress, setOcrProgress] = useState(0);
   const [extractedOk, setExtractedOk] = useState(false);
   const [guestForm, setGuestForm] = useState<Partial<AddGuestPayload>>({ is_primary: isPrimary });
 
+  // ── État spécifique au scan CIN ────────────────────────────────────────────
+  const [showCinCapture, setShowCinCapture] = useState(false);
+  const [cinScan, setCinScan] = useState<CinScanResponse | null>(null);
+  const [conf, setConf] = useState<{ cinNumber: CinConfidence; names: CinConfidence; birthDate: CinConfidence } | null>(null);
+  const [cinImageUrl, setCinImageUrl] = useState<string | null>(null);
+  const [cinError, setCinError] = useState<string | null>(null);
+  const [usedExisting, setUsedExisting] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [rotation, setRotation] = useState(0);
+
+  // ── MRZ (passeport) — inchangé ─────────────────────────────────────────────
   const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setScanKind('mrz');
     setScanState('scanning');
     setOcrProgress(0);
     try {
@@ -82,6 +142,85 @@ export const GuestScanPanel = ({
     }
   };
 
+  // ── Scan CIN (Claude vision, backend /api/scan/cin) ─────────────────────────
+  const handleCinCapture = async (blob: Blob) => {
+    setShowCinCapture(false);
+    setScanKind('cin');
+    setCinError(null);
+    setScanState('scanning');
+    try {
+      const prepared = await prepareCinImage(blob);
+      const res = await scanCin(prepared, propertyId);
+
+      // Vignette de vérification (objectURL révoqué au reset).
+      setCinImageUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return URL.createObjectURL(prepared);
+      });
+
+      if (res.side === 'unknown') {
+        setCinError(t('cinScan.notCin'));
+        setScanState('error');
+        return;
+      }
+      if (res.side === 'back') {
+        setCinError(t('cinScan.backSide'));
+        setScanState('error');
+        return;
+      }
+
+      const c = res.confidence;
+      // Règle : un champ `low` est vidé (→ requis, bloque la soumission).
+      setGuestForm({
+        document_type: 'national_id',
+        document_number: c.cinNumber === 'low' ? '' : res.cinNumber ?? '',
+        first_name: c.names === 'low' ? '' : res.firstNameLatin ?? '',
+        last_name: c.names === 'low' ? '' : res.lastNameLatin ?? '',
+        first_name_ar: res.firstNameAr ?? '',
+        last_name_ar: res.lastNameAr ?? '',
+        filiation_ar: res.filiationAr ?? '',
+        spouse_ar: res.spouseAr ?? '',
+        birth_place_ar: res.birthPlaceAr ?? '',
+        date_of_birth: c.birthDate === 'low' ? '' : res.birthDate ?? '',
+        sex: inferSex(res.filiationAr, res.spouseAr),
+        nationality_code: 'TUN',
+        issuing_country_code: 'TUN',
+        card_format: res.cardFormat,
+        is_primary: isPrimary,
+      });
+      setConf(c);
+      setCinScan(res);
+      setUsedExisting(false);
+      setExtractedOk(true);
+      setScanState('done');
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code;
+      const msg =
+        code === 'parse_error' ? t('cinScan.scanFailed')
+        : code === 'timeout' ? t('cinScan.timeoutHint')
+        : code === 'rate_limited' ? t('cinScan.scanFailed')
+        : t('cinScan.scanFailed');
+      setCinError(msg);
+      setScanState('error');
+    }
+  };
+
+  // « Utiliser cette fiche » — préremplit depuis la base, sans re-saisie (conf. high).
+  const applyExisting = () => {
+    const ex = cinScan?.existingClient;
+    if (!ex) return;
+    setGuestForm((f) => ({
+      ...f,
+      first_name: (ex.first_name as string) ?? f.first_name ?? '',
+      last_name: (ex.last_name as string) ?? f.last_name ?? '',
+      date_of_birth: (ex.date_of_birth as string) ?? f.date_of_birth ?? '',
+      nationality_code: (ex.nationality_code as string) ?? f.nationality_code ?? 'TUN',
+      document_number: (ex.document_number as string) ?? f.document_number ?? '',
+    }));
+    setConf(null); // valeurs issues de la base → plus de pastilles
+    setUsedExisting(true);
+  };
+
   const addGuestMutation = useMutation({
     mutationFn: () => checkInsApi.addGuest(checkIn.id, guestForm as AddGuestPayload),
     onSuccess,
@@ -91,15 +230,33 @@ export const GuestScanPanel = ({
   const setG = (k: string, v: string) => setGuestForm((f) => ({ ...f, [k]: v }));
 
   // Expiry check — réalité terrain : on enregistre quand même, le bouton reste actif.
-  // Le séjour est flaggé document_expired côté backend (visible historique + fiche).
   const today = new Date().toISOString().slice(0, 10);
   const soonLimit = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
   const docExpired      = !!guestForm.expiry_date && guestForm.expiry_date < today;
   const docExpiresSoon  = !!guestForm.expiry_date && !docExpired && guestForm.expiry_date < soonLimit;
 
+  // Un champ `low` non rempli bloque la soumission (en plus des champs requis).
+  const hasUnfilledLow = !!conf && (
+    (conf.cinNumber === 'low' && !guestForm.document_number) ||
+    (conf.names === 'low' && (!guestForm.first_name || !guestForm.last_name)) ||
+    (conf.birthDate === 'low' && !guestForm.date_of_birth)
+  );
+
+  const isCin = scanKind === 'cin' && !!cinScan;
+  // Focus auto sur le premier champ non-`high` (ordre : numéro, nom, prénom, date).
+  const focusKey =
+    !conf ? null
+    : conf.cinNumber !== 'high' ? 'document_number'
+    : conf.names !== 'high' ? 'last_name'
+    : conf.birthDate !== 'high' ? 'date_of_birth'
+    : null;
+
   const reset = () => {
     setScanState('idle'); setExtractedOk(false);
     setGuestForm({ is_primary: isPrimary });
+    setScanKind('mrz');
+    setCinScan(null); setConf(null); setUsedExisting(false); setCinError(null);
+    if (cinImageUrl) { URL.revokeObjectURL(cinImageUrl); setCinImageUrl(null); }
     if (fileRef.current)   fileRef.current.value = '';
     if (uploadRef.current) uploadRef.current.value = '';
   };
@@ -109,6 +266,11 @@ export const GuestScanPanel = ({
       className="flex flex-col gap-4 rounded-2xl p-4"
       style={{ background: '#F6F5F1', border: '1.5px solid #DDD9CF' }}
     >
+      {/* Overlay caméra CIN */}
+      {showCinCapture && (
+        <CINCapture onCapture={handleCinCapture} onClose={() => setShowCinCapture(false)} />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <p className="text-sm font-bold text-gray-800">{label}</p>
@@ -119,9 +281,9 @@ export const GuestScanPanel = ({
         )}
       </div>
 
-      {/* Caméra — capture directe */}
+      {/* Caméra MRZ — capture directe */}
       <input ref={fileRef}   type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
-      {/* Upload — galerie ou fichier existant */}
+      {/* Upload MRZ — galerie ou fichier existant */}
       <input ref={uploadRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
 
       {/* ── Idle / Error ── */}
@@ -131,25 +293,42 @@ export const GuestScanPanel = ({
           style={{ border: '2px dashed #EEEBFA' }}
         >
           {scanState === 'error' && (
-            <p className="text-sm text-red-600 font-medium text-center">{t('guestScan.scanFailedRetry')}</p>
+            <p className="text-sm text-red-600 font-medium text-center">
+              {cinError ?? t('guestScan.scanFailedRetry')}
+            </p>
           )}
-          <div
-            className="flex h-16 w-16 items-center justify-center rounded-2xl"
-            style={{ background: 'var(--qayed-cachet)' }}
+
+          {/* Carte « Scanner la CIN » — flux principal réception tunisienne */}
+          <button
+            onClick={() => { setCinError(null); setShowCinCapture(true); }}
+            className="flex w-full items-center gap-3 rounded-2xl p-4 text-start transition-all hover:shadow-card"
+            style={{ background: 'var(--qayed-cachet)', color: '#fff' }}
           >
-            <ScanLine className="h-8 w-8 text-white" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15">
+              <CreditCard className="h-6 w-6" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-bold">
+                {t('cinScan.scanCin')} — <span className="qayed-arabic">{t('cinScan.scanCinAr')}</span>
+              </p>
+              <p className="text-xs text-white/80">{t('cinScan.scanCinSubtitle')}</p>
+            </div>
+          </button>
+
+          <div className="flex items-center gap-3 w-full">
+            <span className="h-px flex-1" style={{ background: '#EEEBFA' }} />
+            <span className="text-[11px] uppercase tracking-widest text-gray-400">{t('guestScan.passport')}</span>
+            <span className="h-px flex-1" style={{ background: '#EEEBFA' }} />
           </div>
-          <p className="text-xs text-center text-gray-400">
-            {t('guestScan.photographHint')}
-          </p>
+
           <div className="flex flex-wrap justify-center gap-3">
-            <Button onClick={() => fileRef.current?.click()}>
+            <Button variant="secondary" onClick={() => fileRef.current?.click()}>
               <Camera className="h-4 w-4" /> {t('guestScan.takePhoto')}
             </Button>
             <Button variant="secondary" onClick={() => uploadRef.current?.click()}>
               <Upload className="h-4 w-4" /> {t('guestScan.importPhoto')}
             </Button>
-            <Button variant="secondary" onClick={() => { setExtractedOk(false); setScanState('done'); }}>
+            <Button variant="secondary" onClick={() => { setExtractedOk(false); setScanKind('mrz'); setScanState('done'); }}>
               {t('guestScan.manualEntry')}
             </Button>
           </div>
@@ -165,28 +344,66 @@ export const GuestScanPanel = ({
           >
             <Loader2 className="h-7 w-7 animate-spin" style={{ color: '#5346A8' }} />
           </div>
-          <p className="text-sm font-semibold text-gray-700">{t('guestScan.readingMrz')}</p>
-          <div className="w-full max-w-xs rounded-full bg-gray-100 h-2">
-            <div
-              className="h-2 rounded-full transition-all duration-300"
-              style={{ width: `${ocrProgress}%`, background: 'var(--qayed-cachet)' }}
-            />
-          </div>
-          <p className="text-xs text-gray-400">{ocrProgress}%</p>
+          {scanKind === 'cin' ? (
+            <>
+              <p className="text-sm font-semibold text-gray-700">{t('cinScan.reading')}</p>
+              <p className="text-xs qayed-arabic text-gray-400" dir="rtl">{t('cinScan.readingAr')}</p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-semibold text-gray-700">{t('guestScan.readingMrz')}</p>
+              <div className="w-full max-w-xs rounded-full bg-gray-100 h-2">
+                <div className="h-2 rounded-full transition-all duration-300" style={{ width: `${ocrProgress}%`, background: 'var(--qayed-cachet)' }} />
+              </div>
+              <p className="text-xs text-gray-400">{ocrProgress}%</p>
+            </>
+          )}
         </div>
       )}
 
       {/* ── Done — form ── */}
       {scanState === 'done' && (
         <>
+          {/* Vignette de la carte scannée (vérification visuelle) */}
+          {isCin && cinImageUrl && (
+            <button
+              type="button"
+              onClick={() => setZoomOpen(true)}
+              className="relative overflow-hidden rounded-xl border"
+              style={{ borderColor: '#DDD9CF' }}
+            >
+              <img src={cinImageUrl} alt={t('cinScan.cardImage')} className="max-h-40 w-full object-contain bg-white" />
+              <span className="absolute bottom-1 right-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white">{t('cinScan.zoom')}</span>
+            </button>
+          )}
+
+          {/* Bandeau « Client déjà enregistré » */}
+          {isCin && cinScan?.existingClient && !usedExisting && (
+            <div className="flex flex-col gap-2 rounded-xl px-3 py-3" style={{ background: '#E4F5EC', border: '1px solid #1F9D6B' }}>
+              <div className="flex items-center gap-2">
+                <UserCheck className="h-4 w-4 shrink-0" style={{ color: '#137453' }} />
+                <p className="text-xs font-bold" style={{ color: '#137453' }}>{t('cinScan.existingClientTitle')}</p>
+              </div>
+              <p className="text-xs text-gray-600">
+                {cinScan.existingClient.first_name} {cinScan.existingClient.last_name}
+                {cinScan.existingClient.date_of_birth ? ` · ${cinScan.existingClient.date_of_birth}` : ''}
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={applyExisting}>{t('cinScan.useExisting')}</Button>
+                <Button size="sm" variant="secondary" onClick={() => setUsedExisting(true)}>{t('cinScan.createNew')}</Button>
+              </div>
+            </div>
+          )}
+
           {extractedOk && (
             <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-emerald-50 border border-emerald-200">
               <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" />
               <p className="text-xs font-semibold text-emerald-800">
-                {t('guestScan.readSuccess')}
+                {isCin ? t('cinScan.verifyHint') : t('guestScan.readSuccess')}
               </p>
             </div>
           )}
+
           <div className="flex flex-col gap-3">
             <Select
               label={t('guestScan.documentType')}
@@ -197,26 +414,76 @@ export const GuestScanPanel = ({
               value={guestForm.document_type ?? 'passport'}
               onChange={(e) => setG('document_type', e.target.value)}
             />
+
             <div className="grid grid-cols-2 gap-3">
-              <Input label={t('guestScan.firstName')} value={guestForm.first_name ?? ''} onChange={(e) => setG('first_name', e.target.value)} required />
-              <Input label={t('guestScan.lastName')}    value={guestForm.last_name  ?? ''} onChange={(e) => setG('last_name',  e.target.value)} required />
+              <Field label={t('guestScan.firstName')} level={conf?.names}>
+                <Input value={guestForm.first_name ?? ''} onChange={(e) => setG('first_name', e.target.value)} autoFocus={focusKey === 'last_name'} required />
+              </Field>
+              <Field label={t('guestScan.lastName')} level={conf?.names}>
+                <Input value={guestForm.last_name ?? ''} onChange={(e) => setG('last_name', e.target.value)} required />
+              </Field>
             </div>
-            <Input label={t('guestScan.dateOfBirth')} type="date" value={guestForm.date_of_birth ?? ''} onChange={(e) => setG('date_of_birth', e.target.value)} required />
+
+            {/* Champs arabes (RTL, IBM Plex Sans Arabic) — scan CIN uniquement */}
+            {isCin && (
+              <div className="grid grid-cols-2 gap-3">
+                <Field label={t('cinScan.lastNameAr')} level={conf?.names}>
+                  <Input dir="rtl" className="qayed-arabic text-right" value={guestForm.last_name_ar ?? ''} onChange={(e) => setG('last_name_ar', e.target.value)} />
+                </Field>
+                <Field label={t('cinScan.firstNameAr')} level={conf?.names}>
+                  <Input dir="rtl" className="qayed-arabic text-right" value={guestForm.first_name_ar ?? ''} onChange={(e) => setG('first_name_ar', e.target.value)} />
+                </Field>
+                <div className="col-span-2">
+                  <Field label={t('cinScan.filiationAr')}>
+                    <Input dir="rtl" className="qayed-arabic text-right" value={guestForm.filiation_ar ?? ''} onChange={(e) => setG('filiation_ar', e.target.value)} />
+                  </Field>
+                </div>
+                {(guestForm.spouse_ar || cinScan?.spouseAr) && (
+                  <div className="col-span-2">
+                    <Field label={t('cinScan.spouseAr')}>
+                      <Input dir="rtl" className="qayed-arabic text-right" value={guestForm.spouse_ar ?? ''} onChange={(e) => setG('spouse_ar', e.target.value)} />
+                    </Field>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <Field label={t('guestScan.dateOfBirth')} level={conf?.birthDate}>
+              <Input type="date" value={guestForm.date_of_birth ?? ''} onChange={(e) => setG('date_of_birth', e.target.value)} autoFocus={focusKey === 'date_of_birth'} required />
+            </Field>
+
             <div className="grid grid-cols-2 gap-3">
               <Select label={t('common.sex')} options={SEX_OPTIONS} value={guestForm.sex ?? ''} onChange={(e) => setG('sex', e.target.value)} />
               <Input label={t('guestScan.nationality')} placeholder="TUN" value={guestForm.nationality_code ?? ''} onChange={(e) => setG('nationality_code', e.target.value.toUpperCase())} maxLength={3} />
             </div>
-            <Input label={t('guestScan.documentNumber')} value={guestForm.document_number ?? ''} onChange={(e) => setG('document_number', e.target.value)} />
-            <div className="grid grid-cols-2 gap-3">
-              <Input label={t('guestScan.issuingCountry')} placeholder="TUN" value={guestForm.issuing_country_code ?? ''} onChange={(e) => setG('issuing_country_code', e.target.value.toUpperCase())} maxLength={3} />
-              <div className="flex flex-col gap-1">
-                <Input label={t('guestScan.expiry')} type="date" value={guestForm.expiry_date ?? ''} onChange={(e) => setG('expiry_date', e.target.value)} />
-                {docExpiresSoon && (
-                  <p className="text-[11px] font-medium" style={{ color: '#8A6206' }}>{t('guestScan.docExpiresSoon')}</p>
-                )}
+
+            <Field label={isCin ? t('cinScan.cinNumber') : t('guestScan.documentNumber')} level={conf?.cinNumber}>
+              <Input value={guestForm.document_number ?? ''} onChange={(e) => setG('document_number', e.target.value)} autoFocus={focusKey === 'document_number'} />
+            </Field>
+
+            {isCin && guestForm.birth_place_ar !== undefined && (
+              <Field label={t('cinScan.birthPlaceAr')}>
+                <Input dir="rtl" className="qayed-arabic text-right" value={guestForm.birth_place_ar ?? ''} onChange={(e) => setG('birth_place_ar', e.target.value)} />
+              </Field>
+            )}
+
+            {/* Pays de délivrance + expiration : masqués pour la CIN (pas d'expiration) */}
+            {!isCin && (
+              <div className="grid grid-cols-2 gap-3">
+                <Input label={t('guestScan.issuingCountry')} placeholder="TUN" value={guestForm.issuing_country_code ?? ''} onChange={(e) => setG('issuing_country_code', e.target.value.toUpperCase())} maxLength={3} />
+                <div className="flex flex-col gap-1">
+                  <Input label={t('guestScan.expiry')} type="date" value={guestForm.expiry_date ?? ''} onChange={(e) => setG('expiry_date', e.target.value)} />
+                  {docExpiresSoon && (
+                    <p className="text-[11px] font-medium" style={{ color: '#8A6206' }}>{t('guestScan.docExpiresSoon')}</p>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
+
+          {hasUnfilledLow && (
+            <p className="text-[11px] font-medium text-red-600">{t('cinScan.lowFieldRequired')}</p>
+          )}
 
           {docExpired && (
             <div className="flex items-start gap-2 rounded-xl px-3 py-2.5" style={{ background: '#FBF0D7', border: '1px solid #E3A008' }}>
@@ -236,7 +503,7 @@ export const GuestScanPanel = ({
             fullWidth size="lg"
             loading={addGuestMutation.isPending}
             onClick={() => addGuestMutation.mutate()}
-            disabled={!guestForm.first_name || !guestForm.last_name || !guestForm.date_of_birth}
+            disabled={!guestForm.first_name || !guestForm.last_name || !guestForm.date_of_birth || hasUnfilledLow}
           >
             {t('guestScan.confirmGuest')} <ArrowRight className="h-4 w-4" />
           </Button>
@@ -245,6 +512,23 @@ export const GuestScanPanel = ({
             ↩ {t('guestScan.rescan')}
           </button>
         </>
+      )}
+
+      {/* Zoom vignette CIN */}
+      {zoomOpen && cinImageUrl && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black/90" onClick={() => setZoomOpen(false)}>
+          <div className="flex justify-end gap-2 p-4">
+            <button onClick={(e) => { e.stopPropagation(); setRotation((r) => (r + 90) % 360); }} className="rounded-full bg-white/15 p-3 text-white" aria-label={t('cinScan.rotate')}>
+              <RotateCw className="h-5 w-5" />
+            </button>
+            <button onClick={() => setZoomOpen(false)} className="rounded-full bg-white/15 p-3 text-white" aria-label={t('common.close')}>
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="flex flex-1 items-center justify-center p-4">
+            <img src={cinImageUrl} alt={t('cinScan.cardImage')} className="max-h-full max-w-full object-contain transition-transform" style={{ transform: `rotate(${rotation}deg)` }} />
+          </div>
+        </div>
       )}
     </div>
   );

@@ -90,6 +90,47 @@ export interface ScanStatus {
   confidence?: number; extracted?: OcrExtracted; error?: string; progress?: number;
 }
 
+// ─── Scan CIN (carte d'identité nationale tunisienne, OCR Claude vision) ───────
+export type CinConfidence = 'high' | 'medium' | 'low';
+
+/** Résultat d'extraction renvoyé par POST /api/scan/cin. */
+export interface CinScanResult {
+  side: 'front' | 'back' | 'unknown';
+  cardFormat: 'legacy' | 'biometric';
+  cinNumber: string | null;
+  lastNameAr: string | null;
+  firstNameAr: string | null;
+  filiationAr: string | null;
+  spouseAr: string | null;
+  lastNameLatin: string | null;
+  firstNameLatin: string | null;
+  birthDate: string | null; // YYYY-MM-DD
+  birthPlaceAr: string | null;
+  birthPlaceLatin: string | null;
+  nationality: 'TUN';
+  confidence: {
+    cinNumber: CinConfidence;
+    names: CinConfidence;
+    birthDate: CinConfidence;
+  };
+}
+
+/** Fiche client existante renvoyée par le lookup backend (best-effort, sinon null). */
+export interface CinExistingClient {
+  id?: string;
+  first_name?: string;
+  last_name?: string;
+  date_of_birth?: string;
+  nationality_code?: string;
+  document_number?: string;
+  [key: string]: unknown;
+}
+
+export interface CinScanResponse extends CinScanResult {
+  existingClient: CinExistingClient | null;
+  latencyMs: number;
+}
+
 export interface DashboardData {
   today: {
     arrivals_expected: number; arrivals_done: number;
