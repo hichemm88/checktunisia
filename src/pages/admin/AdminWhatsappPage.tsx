@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, Send, Pause, Play, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Send, Pause, Play, AlertTriangle, Image as ImageIcon, ImageOff } from 'lucide-react';
 import {
   adminWhatsappApi,
   WhatsappHealth,
@@ -149,9 +149,14 @@ const LogRow = ({ log }: { log: WhatsappLog }) => {
     <div className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
       <div className="mt-0.5"><Badge variant={STATUS_VARIANT[log.status]}>{t(`adminWhatsapp.status.${log.status}`)}</Badge></div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm text-gray-800">
+        <p className="flex items-center gap-2 text-sm text-gray-800">
           <span className="font-semibold">{log.is_test ? t('adminWhatsapp.testLabel') : (log.guest ?? '—')}</span>
-          {log.hotel && <span className="text-xs text-gray-400"> · {log.hotel}</span>}
+          {log.hotel && <span className="text-xs text-gray-400">· {log.hotel}</span>}
+          {!log.is_test && (
+            log.has_photo
+              ? <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-green-600" title={t('adminWhatsapp.photoAttached')}><ImageIcon className="h-3 w-3" />{t('adminWhatsapp.photoAttached')}</span>
+              : <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-amber-600" title={t('adminWhatsapp.noPhoto')}><ImageOff className="h-3 w-3" />{t('adminWhatsapp.noPhoto')}</span>
+          )}
         </p>
         <p className="text-xs text-gray-400">
           {new Date(log.queued_at).toLocaleString(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}

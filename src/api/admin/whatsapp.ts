@@ -31,6 +31,7 @@ export interface WhatsappLog {
   attempts: number;
   last_error: string | null;
   is_test: boolean;
+  has_photo: boolean;
   message_id_whatsapp: string | null;
   queued_at: string;
   sent_at: string | null;

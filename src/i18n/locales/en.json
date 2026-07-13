@@ -328,7 +328,9 @@
       "resumed": "Sending resumed.",
       "testSent": "Test message queued.",
       "resent": "Message re-queued."
-    }
+    },
+    "photoAttached": "Photo attached",
+    "noPhoto": "No photo"
   },
   "adminDashboard": {
     "title": "Dashboard",
