@@ -247,6 +247,11 @@ export const HistoryPage = () => {
                     <span className="text-sm font-semibold text-gray-900 truncate">{guestName}</span>
                     <span className="text-xs text-gray-500 truncate">
                       {ci.room ? ci.room.number : t('hotelHistory.noUnit')} · <span className="font-mono">{ci.reference}</span>
+                      {ci.document_expired && (
+                        <span className="ms-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold align-middle" style={{ background: '#FBF0D7', color: '#8A6206' }}>
+                          {t('hotelHistory.docExpired')}
+                        </span>
+                      )}
                     </span>
                     <span className="text-xs text-gray-400">
                       {fmtRange(ci.check_in_date, ci.expected_check_out_date, locale)}

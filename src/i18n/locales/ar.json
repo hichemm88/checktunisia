@@ -899,7 +899,9 @@
     "issuingCountry": "بلد الإصدار",
     "expiry": "تاريخ الانتهاء",
     "confirmGuest": "تأكيد النزيل",
-    "rescan": "إعادة المسح أو التصحيح"
+    "rescan": "إعادة المسح أو التصحيح",
+    "docExpiredSince": "الوثيقة منتهية الصلاحية منذ {{date}}",
+    "docExpiresSoon": "تنتهي قريبًا"
   },
   "auth": {
     "tagline": "التسجيل الرقمي للنزلاء",
@@ -963,7 +965,8 @@
     "recordCheckout": "تسجيل المغادرة",
     "printPoliceForm": "طباعة بطاقة الشرطة",
     "confirmCheckout": "تأكيد المغادرة",
-    "actualDepartureDate": "تاريخ المغادرة الفعلي"
+    "actualDepartureDate": "تاريخ المغادرة الفعلي",
+    "expiredTag": "منتهية"
   },
   "checkinWizard": {
     "title": "تسجيل وصول جديد",
@@ -1021,7 +1024,8 @@
     "noGuest": "بدون نزيل",
     "noUnit": "بدون وحدة",
     "departure": "مغادرة",
-    "tryOtherFilter": "جرّب مرشّحًا أو بحثًا آخر"
+    "tryOtherFilter": "جرّب مرشّحًا أو بحثًا آخر",
+    "docExpired": "وثيقة منتهية الصلاحية"
   },
   "hotelDashboard": {
     "title": "لوحة التحكم",

@@ -156,6 +156,14 @@ export const HistoryDetailPage = () => {
         {/* ── Content ── */}
         <div className="p-4 flex flex-col gap-4 -mt-3">
 
+          {/* Flag séjour : un document expirait déjà à l'arrivée (même flag backend que le mobile) */}
+          {ci.document_expired && (
+            <div className="flex items-center gap-2 rounded-xl px-3 py-2.5" style={{ background: '#FBF0D7', border: '1px solid #E3A008' }}>
+              <FileText className="h-4 w-4 shrink-0" style={{ color: '#8A6206' }} />
+              <p className="text-xs font-semibold" style={{ color: '#8A6206' }}>{t('hotelHistory.docExpired')}</p>
+            </div>
+          )}
+
           {/* Booking details */}
           <Card>
             <p className="label mb-3">{t('checkinWizard.bookingSummary')}</p>
@@ -218,6 +226,11 @@ export const HistoryDetailPage = () => {
                         <p className="text-xs text-gray-400">
                           {g.document.type} <span className="font-mono">{g.document.document_number}</span>
                           {g.document.expiry_date && ` · ${t('hotelHistoryDetail.expires')} ${fmtDate(g.document.expiry_date, locale)}`}
+                          {g.document.expiry_date && g.document.expiry_date < ci.check_in_date && (
+                            <span className="ms-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold" style={{ background: '#FBF0D7', color: '#8A6206' }}>
+                              {t('hotelHistoryDetail.expiredTag')}
+                            </span>
+                          )}
                         </p>
                       </div>
                     )}

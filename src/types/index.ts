@@ -60,6 +60,8 @@ export interface CheckIn {
   room?: Room | null; booking_reference?: string; booking_source?: string;
   check_in_date: string; expected_check_out_date: string; actual_check_out_date?: string;
   adults_count: number; children_count: number; notes?: string;
+  /** Calculé backend (même champ que le mobile) : un document voyageur expirait déjà à la date d'arrivée. */
+  document_expired?: boolean;
   guests?: Guest[]; guests_count?: number;
   primary_guest?: { first_name: string; last_name: string; nationality_code: string };
   created_by?: { id: string; first_name: string; last_name: string };
