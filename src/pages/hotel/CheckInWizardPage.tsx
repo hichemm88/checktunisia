@@ -23,6 +23,13 @@ const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 
 const fmtDate = (d: string | null | undefined, locale: string) =>
   d ? new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
 
+// Ajoute n jours à une date ISO (YYYY-MM-DD) et renvoie une date ISO.
+const addDays = (iso: string, n: number) => {
+  const d = new Date(`${iso}T00:00:00`);
+  d.setDate(d.getDate() + n);
+  return d.toISOString().split('T')[0];
+};
+
 // ─── +/- Stepper ────────────────────────────────────────────────────────────
 const Stepper = ({
   label, value, min = 0, max = 20, onChange,
@@ -64,11 +71,15 @@ const Stepper = ({
 const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [form, setForm] = useState<Partial<CreateCheckInPayload>>({
-    check_in_date: new Date().toISOString().split('T')[0],
-    expected_check_out_date: '',
-    adults_count: 1,
-    children_count: 0,
+  const [form, setForm] = useState<Partial<CreateCheckInPayload>>(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return {
+      check_in_date: today,
+      // Départ par défaut : le lendemain de l'arrivée (séjour d'une nuit).
+      expected_check_out_date: addDays(today, 1),
+      adults_count: 1,
+      children_count: 0,
+    };
   });
   // Explicit choice required: a room OR the conscious "no room" link — never a default.
   const [roomChoice, setRoomChoice] = useState<RoomChoice | null>(null);
@@ -81,7 +92,18 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
 
   const set = (k: string, v: string | number) => setForm((f) => ({ ...f, [k]: v }));
   // Availability depends on the stay dates — changing them resets the room choice.
-  const setDate = (k: string, v: string) => { setForm((f) => ({ ...f, [k]: v })); setRoomChoice(null); };
+  const setDate = (k: string, v: string) => {
+    setForm((f) => {
+      const next = { ...f, [k]: v };
+      // Départ toujours ≥ lendemain de l'arrivée : on le réajuste si l'arrivée
+      // change et rendrait la plage invalide (ou si le départ est vide).
+      if (k === 'check_in_date' && v && (!next.expected_check_out_date || next.expected_check_out_date <= v)) {
+        next.expected_check_out_date = addDays(v, 1);
+      }
+      return next;
+    });
+    setRoomChoice(null);
+  };
 
   return (
     <div className="flex flex-col gap-4">
