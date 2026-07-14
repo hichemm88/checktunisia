@@ -29,6 +29,14 @@ window.addEventListener('vite:preloadError', (event) => {
   window.location.reload();
 });
 
+// ── PWA : service worker minimal → app installable (Chrome/Android), où
+// l'autorisation caméra est demandée une seule fois. Non bloquant.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => { /* non bloquant */ });
+  });
+}
+
 // ── Error boundary — prevents blank page on React render crash ─────────────
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null };
