@@ -24,9 +24,11 @@ const fmtDate = (d: string | null | undefined, locale: string) =>
   d ? new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
 
 // Ajoute n jours à une date ISO (YYYY-MM-DD) et renvoie une date ISO.
+// Calcul entièrement en UTC : en local (Tunisie UTC+1) le passage par
+// toISOString() décalait la date d'un jour en arrière.
 const addDays = (iso: string, n: number) => {
-  const d = new Date(`${iso}T00:00:00`);
-  d.setDate(d.getDate() + n);
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().split('T')[0];
 };
 
