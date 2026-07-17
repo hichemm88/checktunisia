@@ -1276,6 +1276,20 @@
     "copyKey": "Copier la clé",
     "activateButton": "Activer l'authentification à deux facteurs"
   },
+  "planFeatures": {
+    "title": "Fonctionnalités réelles (appliquées par l'app)",
+    "maxProperties": "Établissements",
+    "maxUsers": "Utilisateurs",
+    "ocrScans": "Scans OCR / mois",
+    "whatsappRelay": "Relais WhatsApp police",
+    "on": "actif",
+    "off": "coupé",
+    "unlimitedHint": "Champ vide = illimité. Ces limites sont réellement appliquées côté serveur (web et mobile).",
+    "inheritHint": "Champ vide = valeur du pack. -1 = illimité. Ces overrides priment sur le pack pour ce client uniquement.",
+    "inherit": "hériter du pack",
+    "currentUsage": "utilisé : {{n}}",
+    "overriddenLegend": "* = surchargé pour ce client"
+  },
   "adminLayout": {
     "brand": "Admin",
     "nav": {

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { adminHostsApi, AdminHost, AdminHostDetail } from '@/api/admin/hosts';
 import { adminSubscriptionsApi, adminPlansApi } from '@/api/admin/subscriptions';
+import { PlanFeaturesEditor, featureValuesFrom, featureValuesToPayload } from '@/components/admin/PlanFeaturesEditor';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -75,12 +76,14 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
     expires_at: sub?.expires_at ? sub.expires_at.slice(0, 10) : '',
     custom_price: sub?.custom_price ?? '',
   });
+  const [overrides, setOverrides] = useState(() => featureValuesFrom(host.feature_overrides ?? null, true));
 
   const updateMut = useAdminMutation({
     mutationFn: () => adminSubscriptionsApi.updateForHost(host.id, sub!.id, {
       plan_id: form.plan_id ? parseInt(form.plan_id) : undefined,
       expires_at: form.expires_at || undefined,
       custom_price: form.custom_price === '' ? null : parseFloat(String(form.custom_price)),
+      feature_overrides: featureValuesToPayload(overrides, true),
     }),
     successMessage: t('adminHosts.subscriptionUpdated'),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-detail', host.id] }); setEditing(false); },
@@ -158,6 +161,30 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
           </p>
           <p className="text-xs text-gray-400">{t('adminHotels.expiresOn', { date: fmtDate(sub.expires_at, locale) })}</p>
           {sub.custom_price && <p className="font-mono text-xs text-gray-400">{t('adminHosts.negotiatedPrice', { price: formatTNDAmount(sub.custom_price) })}</p>}
+          {/* Fonctionnalités effectives (pack + overrides) et usage réel. */}
+          {host.entitlements && (
+            <div className="flex gap-1.5 flex-wrap mt-2">
+              {Object.entries(host.entitlements).map(([key, e]) => {
+                const overridden = key in (host.feature_overrides ?? {});
+                if ('enabled' in e && e.limit === undefined) {
+                  return (
+                    <span key={key} className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${e.enabled ? 'bg-[--qayed-conforme-fond] text-[--qayed-conforme-texte]' : 'bg-gray-100 text-gray-400'}`}>
+                      {e.label} : {e.enabled ? t('planFeatures.on') : t('planFeatures.off')}{overridden ? ' *' : ''}
+                    </span>
+                  );
+                }
+                const over = e.limit != null && (e.used ?? 0) >= e.limit;
+                return (
+                  <span key={key} className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${over ? 'bg-[--qayed-vigilance-fond] text-[--qayed-vigilance-texte]' : 'bg-white text-gray-600'}`}>
+                    {e.label} : <span className="font-mono">{e.used}/{e.limit == null ? '∞' : e.limit}</span>{overridden ? ' *' : ''}
+                  </span>
+                );
+              })}
+              {Object.keys(host.feature_overrides ?? {}).length > 0 && (
+                <span className="text-[11px] text-gray-400">{t('planFeatures.overriddenLegend')}</span>
+              )}
+            </div>
+          )}
         </div>
       ) : (
         <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: 'var(--qayed-papier)' }}>
@@ -165,6 +192,12 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
             options={(plans ?? []).map((p) => ({ value: String(p.id), label: p.name }))} />
           <Input label={t('profile.expiration')} type="date" value={form.expires_at} onChange={(e) => setForm((f) => ({ ...f, expires_at: e.target.value }))} />
           <Input label={t('adminSubscriptions.customPriceOptional')} type="number" value={String(form.custom_price)} onChange={(e) => setForm((f) => ({ ...f, custom_price: e.target.value }))} />
+          <PlanFeaturesEditor
+            value={overrides}
+            onChange={setOverrides}
+            asOverrides
+            usage={Object.fromEntries(Object.entries(host.entitlements ?? {}).filter(([, e]) => e.used !== undefined).map(([k, e]) => [k, e.used as number]))}
+          />
           <div className="flex gap-2">
             <Button size="sm" loading={updateMut.isPending} onClick={() => updateMut.mutate()} className="gap-1.5"><Check className="h-3.5 w-3.5" /> {t('common.save')}</Button>
             <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>{t('common.cancel')}</Button>
