@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { EmptyState } from '@/components/admin/EmptyState';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatTND } from '@/lib/money';
 
@@ -29,7 +30,7 @@ const ConfigTab = () => {
   const { toast } = useToast();
   const { data: settings, isLoading } = useQuery({ queryKey: ['admin-platform-settings'], queryFn: adminPaymentsApi.getSettings });
 
-  const [company, setCompany] = useState({ name: '', mf: '', rc: '', address: '' });
+  const [company, setCompany] = useState({ name: '', mf: '', rc: '', address: '', tax_rate: '', timbre_fiscal: '' });
   const [flouci, setFlouci] = useState({ enabled: false, app_token: '', app_secret: '' });
   const [virement, setVirement] = useState({ enabled: true, rib: '', iban: '', bank_name: '', beneficiary: '', details: '' });
   const [initialized, setInitialized] = useState(false);
@@ -38,6 +39,7 @@ const ConfigTab = () => {
     setCompany({
       name: settings.company_name ?? '', mf: settings.company_mf ?? '',
       rc: settings.company_rc ?? '', address: settings.company_address ?? '',
+      tax_rate: settings.tax_rate ?? '0', timbre_fiscal: settings.timbre_fiscal ?? '0',
     });
     setFlouci({ enabled: settings.flouci_enabled, app_token: '', app_secret: '' });
     setVirement({
@@ -50,6 +52,8 @@ const ConfigTab = () => {
   const saveMut = useMutation({
     mutationFn: () => adminPaymentsApi.updateSettings({
       company_name: company.name, company_mf: company.mf, company_rc: company.rc, company_address: company.address,
+      tax_rate: company.tax_rate === '' ? 0 : Number(company.tax_rate),
+      timbre_fiscal: company.timbre_fiscal === '' ? 0 : Number(company.timbre_fiscal),
       flouci_enabled: flouci.enabled,
       ...(flouci.app_token ? { flouci_app_token: flouci.app_token } : {}),
       ...(flouci.app_secret ? { flouci_app_secret: flouci.app_secret } : {}),
@@ -76,6 +80,10 @@ const ConfigTab = () => {
             <Input label={t('adminPayments.companyRc')} placeholder={t('adminPayments.toComplete')} value={company.rc} onChange={(e) => setCompany((f) => ({ ...f, rc: e.target.value }))} />
           </div>
           <Input label={t('adminPayments.companyAddress')} placeholder={t('adminPayments.toComplete')} value={company.address} onChange={(e) => setCompany((f) => ({ ...f, address: e.target.value }))} />
+          <div className="grid grid-cols-2 gap-2">
+            <Input label={t('adminPayments.taxRate')} type="number" min="0" max="100" step="0.01" value={company.tax_rate} onChange={(e) => setCompany((f) => ({ ...f, tax_rate: e.target.value }))} hint={t('adminPayments.taxRateHint')} />
+            <Input label={t('adminPayments.timbreFiscal')} type="number" min="0" step="0.001" value={company.timbre_fiscal} onChange={(e) => setCompany((f) => ({ ...f, timbre_fiscal: e.target.value }))} hint={t('adminPayments.timbreFiscalHint')} />
+          </div>
           <p className="text-xs text-gray-400">{t('adminPayments.companyHint')}</p>
         </div>
       </Card>
@@ -179,7 +187,7 @@ const HistoriqueTab = () => {
             )}
           </div>
         ))}
-        {!isLoading && !data?.data.length && <p className="text-sm text-gray-400 text-center py-6">{t('adminPayments.noPayment')}</p>}
+        {!isLoading && !data?.data.length && <EmptyState title={t('adminPayments.noPayment')} hint={t('adminPayments.noPaymentHint')} />}
       </Card>
       {data && (
         <Pagination meta={data.meta} currentCount={data.data.length} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => p + 1)} />

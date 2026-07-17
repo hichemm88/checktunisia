@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
 import { adminSubscriptionsApi } from '@/api/admin/subscriptions';
 import { adminHostsApi } from '@/api/admin/hosts';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
+import { EmptyState } from '@/components/admin/EmptyState';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatTND } from '@/lib/money';
@@ -20,6 +22,8 @@ const STATUS_OPTIONS = [
 
 export const AdminFacturationPage = () => {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+  const highlightId = searchParams.get('highlight');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [hostSearch, setHostSearch] = useState('');
@@ -75,13 +79,14 @@ export const AdminFacturationPage = () => {
         {isLoading && <ListSkeleton rows={4} height="h-10" />}
         {data?.data.map((inv) => (
           inv.organization ? (
-            <InvoiceRow
-              key={inv.id}
-              hostId={inv.organization.id}
-              invoice={inv}
-              subtitle={inv.organization.name}
-              invalidateKey={['admin-all-invoices']}
-            />
+            <div key={inv.id} className={inv.id === highlightId ? 'rounded-xl ring-2 ring-[--qayed-cachet] bg-warm-100' : ''}>
+              <InvoiceRow
+                hostId={inv.organization.id}
+                invoice={inv}
+                subtitle={inv.organization.name}
+                invalidateKey={['admin-all-invoices']}
+              />
+            </div>
           ) : (
             <div key={inv.id} className="flex items-center justify-between py-2.5 px-2 border-b border-gray-50 last:border-0 text-sm">
               <div className="min-w-0 flex-1">
@@ -93,7 +98,7 @@ export const AdminFacturationPage = () => {
             </div>
           )
         ))}
-        {!isLoading && !data?.data.length && <p className="text-sm text-gray-400 text-center py-6">{t('adminFacturation.noInvoice')}</p>}
+        {!isLoading && !data?.data.length && <EmptyState title={t('adminFacturation.noInvoice')} hint={t('adminFacturation.noInvoiceHint')} />}
       </div>
 
       {data && (

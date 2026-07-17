@@ -1,9 +1,13 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown, Wallet, Award, UserPlus } from 'lucide-react';
-import { adminDashboardApi } from '@/api/admin/dashboard';
+import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown, Wallet, Award, UserPlus, Landmark } from 'lucide-react';
+import { adminDashboardApi, AdminDashboardStats } from '@/api/admin/dashboard';
+import { adminPaymentsApi } from '@/api/admin/payments';
+import { adminWhatsappApi } from '@/api/admin/whatsapp';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { Button } from '@/components/ui/Button';
+import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { formatTND } from '@/lib/money';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
@@ -62,6 +66,77 @@ const AlertCard = ({ icon: Icon, title, color, children, empty }: { icon: typeof
   );
 };
 
+/**
+ * B3 — le relais WhatsApp est le service critique : son état doit être
+ * visible sans ouvrir le module. Pastille verte (prête) / ambre
+ * (initialisation ou en pause) / rouge (déconnectée), compteurs en
+ * attente/échecs, clic → module WhatsApp.
+ */
+const WhatsappStatusStrip = () => {
+  const { t } = useTranslation();
+  const { data: health } = useQuery({
+    queryKey: ['admin-whatsapp-health'],
+    queryFn: () => adminWhatsappApi.health(),
+    refetchInterval: 30000,
+  });
+  if (!health) return null;
+
+  const ok = health.session === 'ready' && !health.paused;
+  const down = health.session === 'disconnected' || health.session === 'auth_failure';
+  const dot = ok ? 'bg-green-500' : down ? 'bg-red-500' : 'bg-amber-400';
+  const label = health.paused
+    ? t('adminWhatsapp.pausedTag')
+    : t(`adminWhatsapp.session.${health.session === 'auth_failure' ? 'authFailure' : health.session}`);
+
+  return (
+    <Link
+      to="/admin/whatsapp"
+      className={`flex items-center gap-3 rounded-2xl border px-4 py-2.5 text-sm transition-colors hover:bg-warm-100 ${down ? 'border-red-200 bg-red-50' : 'border-gray-100 bg-white'}`}
+    >
+      <span className={`inline-block h-2.5 w-2.5 rounded-full ${dot}`} />
+      <span className="font-semibold text-gray-800">{t('adminDashboard.whatsappRelay')}</span>
+      <span className="text-gray-500">{label}</span>
+      <span className="ms-auto flex items-center gap-3 font-mono text-xs">
+        <span className="text-gray-500">{t('adminWhatsapp.queue.pending')} : {health.queue.pending}</span>
+        <span className={health.queue.failed > 0 ? 'font-bold text-red-600' : 'text-gray-500'}>
+          {t('adminWhatsapp.queue.failed')} : {health.queue.failed}
+        </span>
+      </span>
+    </Link>
+  );
+};
+
+const PendingVirementsCard = ({ items }: { items: AdminDashboardStats['alerts']['pending_virements'] }) => {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const validateM = useAdminMutation({
+    mutationFn: (id: string) => adminPaymentsApi.validateVirement(id),
+    successMessage: t('adminDashboard.virementValidated'),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-stats'] });
+      qc.invalidateQueries({ queryKey: ['admin-payments'] });
+    },
+  });
+
+  return (
+    <AlertCard icon={Landmark} title={t('adminDashboard.pendingVirements')} color="var(--qayed-cachet)" empty={!items.length}>
+      {items.map((p) => (
+        <div key={p.id} className="flex items-center justify-between gap-2 text-sm">
+          <div className="min-w-0">
+            <p className="truncate font-medium text-gray-800">{p.name}</p>
+            <p className="font-mono text-[11px] text-gray-400 truncate">
+              {p.invoice_number ?? '—'} · {formatTND(p.amount)}{p.reference ? ` · ${p.reference}` : ''}
+            </p>
+          </div>
+          <Button size="sm" variant="ghost" loading={validateM.isPending} onClick={() => validateM.mutate(p.id)}>
+            {t('adminDashboard.validateVirement')}
+          </Button>
+        </div>
+      ))}
+    </AlertCard>
+  );
+};
+
 export const AdminDashboardPage = () => {
   const { t, i18n } = useTranslation();
   const locale = dateLocaleFor(i18n.language);
@@ -70,6 +145,8 @@ export const AdminDashboardPage = () => {
   return (
     <div className="flex flex-col gap-6 max-w-6xl">
       <h1 className="qayed-display text-xl text-gray-900">{t('adminDashboard.title')}</h1>
+
+      <WhatsappStatusStrip />
 
       {isLoading && <ListSkeleton rows={4} height="h-20" />}
 
@@ -84,7 +161,7 @@ export const AdminDashboardPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Stat icon={TrendingUp} label={t('adminDashboard.checkinsToday')}     value={stats.check_ins.today}      color="var(--qayed-cachet-sombre)" />
             <Stat icon={Users}      label={t('adminDashboard.checkinsThisMonth')} value={stats.check_ins.this_month} color="var(--qayed-cachet-sombre)" />
-            <div className="card p-5">
+            <div className="card p-5 group relative">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">MRR</p>
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: 'var(--qayed-conforme)18' }}>
@@ -92,6 +169,20 @@ export const AdminDashboardPage = () => {
                 </div>
               </div>
               <p className="font-mono text-3xl font-extrabold text-gray-900">{formatTND(stats.mrr)}</p>
+              {(stats.mrr_breakdown?.length ?? 0) > 0 && (
+                <div className="pointer-events-none absolute top-full left-0 mt-1 hidden group-hover:block w-72 rounded-xl bg-gray-900 p-3 text-white shadow-xl z-20">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-2">{t('adminDashboard.mrrBreakdown')}</p>
+                  {stats.mrr_breakdown.map((b, i) => (
+                    <div key={i} className="flex items-center justify-between gap-2 text-xs py-0.5">
+                      <span className="truncate">
+                        {b.customer}
+                        <span className="text-gray-400"> — {b.plan}{b.billing_cycle === 'yearly' ? ` (${t('adminDashboard.yearlyDiv12')})` : ''}{b.negotiated ? ` (${t('adminDashboard.negotiatedPrice')})` : ''}</span>
+                      </span>
+                      <span className="font-mono shrink-0">{formatTND(b.monthly_value)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -105,6 +196,7 @@ export const AdminDashboardPage = () => {
           <div>
             <p className="text-sm font-bold text-gray-700 mb-3">{t('adminDashboard.toWatch')}</p>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <PendingVirementsCard items={stats.alerts.pending_virements ?? []} />
               <AlertCard icon={CreditCard} title={t('adminDashboard.expiringSubscriptions')} color="var(--qayed-vigilance)" empty={!stats.alerts.expiring_subscriptions.length}>
                 {stats.alerts.expiring_subscriptions.map((s) => (
                   <div key={s.id} className="flex items-center justify-between text-sm">

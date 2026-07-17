@@ -164,6 +164,10 @@
     "companyRc": "Registre de commerce (RC)",
     "companyAddress": "Adresse du siège",
     "companyHint": "Ces informations apparaissent sur les factures PDF et comme bénéficiaire du virement bancaire.",
+    "taxRate": "TVA (%)",
+    "taxRateHint": "Appliquée aux factures générées automatiquement. 0 = non assujetti.",
+    "timbreFiscal": "Timbre fiscal (TND)",
+    "timbreFiscalHint": "Ajouté à chaque facture générée automatiquement. 0 = désactivé.",
     "toComplete": "À compléter",
     "flouciTitle": "Flouci (paiement en ligne)",
     "enableFlouci": "Activer Flouci",
@@ -180,6 +184,7 @@
     "statusFailed": "Échoués",
     "statusExpired": "Expirés",
     "noPayment": "Aucun paiement",
+    "noPaymentHint": "Les paiements apparaîtront ici dès la validation d'un virement ou un paiement Flouci confirmé.",
     "ref": "réf.",
     "validate": "Valider",
     "reject": "Rejeter",
@@ -202,11 +207,16 @@
     "statusPaid": "Payée",
     "statusOverdue": "En retard",
     "statusVoid": "Annulée",
-    "noInvoice": "Aucune facture"
+    "noInvoice": "Aucune facture",
+    "noInvoiceHint": "Les factures sont générées automatiquement à l'échéance des abonnements, ou manuellement depuis la fiche d'un hébergeur."
   },
   "adminActivity": {
     "title": "Journal d'activité",
     "allActions": "Toutes les actions",
+    "allProperties": "Tous les établissements",
+    "dateFrom": "Du",
+    "dateTo": "Au",
+    "exportCsv": "Exporter CSV",
     "filteredByAgent": "Filtré par {{name}}",
     "filterByThisAgent": "Filtrer par cet agent",
     "action": {
@@ -297,12 +307,14 @@
     "resume": "Reprendre",
     "sendTest": "Message test",
     "resend": "Renvoyer",
+    "resendAll": "Relancer tout ({{n}})",
     "lastReady": "Dernière connexion",
     "allProperties": "Toutes les propriétés",
     "allStatuses": "Tous les statuts",
     "dateFrom": "Du",
     "dateTo": "Au",
     "empty": "Aucun envoi.",
+    "emptyHint": "Chaque check-in complété enfile ici une fiche par voyageur, envoyée automatiquement au poste de police.",
     "testLabel": "[TEST] Fiche factice",
     "attempts": "{{n}} tentative(s)",
     "session": {
@@ -327,7 +339,8 @@
       "paused": "Envois mis en pause.",
       "resumed": "Envois repris.",
       "testSent": "Message test enfilé.",
-      "resent": "Envoi remis en file."
+      "resent": "Envoi remis en file.",
+      "resentAll": "Tous les envois échoués ont été remis en file."
     },
     "photoAttached": "Photo jointe",
     "noPhoto": "Sans photo"
@@ -348,6 +361,13 @@
     "failedPayments": "Paiements en échec (30j)",
     "recentlySuspended": "Suspendus récemment (7j)",
     "nothingToReport": "Rien à signaler",
+    "mrrBreakdown": "Détail du MRR",
+    "pendingVirements": "Virements à valider",
+    "whatsappRelay": "Relais WhatsApp",
+    "validateVirement": "Valider",
+    "virementValidated": "Virement validé : paiement enregistré, facture payée, abonnement réactivé.",
+    "yearlyDiv12": "annuel / 12",
+    "negotiatedPrice": "prix négocié",
     "checkInsLast30Days": "Check-ins sur 30 jours",
     "topHotels": "Top établissements (check-ins ce mois)",
     "recentSignups": "Dernières inscriptions"
@@ -1274,10 +1294,13 @@
       "whatsapp": "WhatsApp"
     },
     "searchPlaceholder": "Rechercher un hébergeur, établissement, utilisateur…",
+    "palettePlaceholder": "Naviguer ou rechercher (hébergeur, facture INV-…, fiche QYD-…)",
+    "paletteNavigate": "Aller à",
     "searchResultHost": "Hébergeur",
     "searchResultProperty": "Établissement",
     "searchResultUser": "Utilisateur",
-    "searchResultCheckIn": "Check-in"
+    "searchResultCheckIn": "Check-in",
+    "searchResultInvoice": "Facture"
   },
   "hotelLayout": {
     "nav": {

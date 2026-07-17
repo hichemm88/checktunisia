@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { EmptyState } from '@/components/admin/EmptyState';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 
 /*
@@ -62,6 +63,11 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
   const testM = useAdminMutation({
     mutationFn: () => adminWhatsappApi.test(),
     successMessage: t('adminWhatsapp.toast.testSent'),
+    onSuccess: invalidate,
+  });
+  const resendAllM = useAdminMutation({
+    mutationFn: () => adminWhatsappApi.resendAll(),
+    successMessage: t('adminWhatsapp.toast.resentAll'),
     onSuccess: invalidate,
   });
 
@@ -119,6 +125,11 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
         <Button size="sm" variant="secondary" onClick={() => testM.mutate()} loading={testM.isPending} disabled={!health.enabled}>
           <Send className="h-4 w-4" /> {t('adminWhatsapp.sendTest')}
         </Button>
+        {health.queue.failed > 0 && (
+          <Button size="sm" variant="secondary" onClick={() => resendAllM.mutate()} loading={resendAllM.isPending}>
+            <RefreshCw className="h-4 w-4" /> {t('adminWhatsapp.resendAll', { n: health.queue.failed })}
+          </Button>
+        )}
         {health.last_ready_at && (
           <span className="ms-auto text-xs text-gray-400">
             {t('adminWhatsapp.lastReady')}: {new Date(health.last_ready_at).toLocaleString(locale, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
@@ -235,7 +246,7 @@ export const AdminWhatsappPage = () => {
         {isLoading && <ListSkeleton rows={4} />}
         {logs?.data.map((log) => <LogRow key={log.id} log={log} />)}
         {!isLoading && !logs?.data.length && (
-          <p className="py-6 text-center text-sm text-gray-400">{t('adminWhatsapp.empty')}</p>
+          <EmptyState title={t('adminWhatsapp.empty')} hint={t('adminWhatsapp.emptyHint')} />
         )}
       </Card>
 

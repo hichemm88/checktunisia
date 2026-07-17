@@ -26,20 +26,24 @@ const sizes = {
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', loading, fullWidth, children, disabled, style, ...props }, ref) => {
     const isPrimary = variant === 'primary' || variant === 'gold';
+    const isDisabled = disabled || loading;
 
+    // État désactivé franchement gris (jamais un violet délavé ambigu) ;
+    // état actif toujours violet cachet plein contraste.
     const inlineStyle = isPrimary
-      ? { background: 'var(--qayed-cachet)', ...style }
+      ? { background: isDisabled ? '#AEB4BF' : 'var(--qayed-cachet)', ...style }
       : style;
 
     return (
       <button
         ref={ref}
-        disabled={disabled || loading}
+        disabled={isDisabled}
         style={inlineStyle}
-        onMouseEnter={isPrimary ? (e) => { e.currentTarget.style.background = 'var(--qayed-cachet-fonce)'; } : undefined}
-        onMouseLeave={isPrimary ? (e) => { e.currentTarget.style.background = 'var(--qayed-cachet)'; } : undefined}
+        onMouseEnter={isPrimary && !isDisabled ? (e) => { e.currentTarget.style.background = 'var(--qayed-cachet-fonce)'; } : undefined}
+        onMouseLeave={isPrimary && !isDisabled ? (e) => { e.currentTarget.style.background = 'var(--qayed-cachet)'; } : undefined}
         className={cn(
-          'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-qayed-cachet focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none',
+          'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-qayed-cachet focus-visible:ring-offset-2 disabled:pointer-events-none',
+          isPrimary ? 'disabled:text-white' : 'disabled:opacity-50',
           variants[variant],
           sizes[size],
           fullWidth && 'w-full',

@@ -12,8 +12,23 @@ export interface AdminDashboardStats {
     expiring_subscriptions: { id: string; name: string; plan: string | null; expires_at: string }[];
     failed_payments: { id: string; hotel_name: string | null; amount: string; created_at: string }[];
     recently_suspended: { id: string; name: string; updated_at: string }[];
+    pending_virements: {
+      id: string;
+      name: string;
+      invoice_number: string | null;
+      amount: string;
+      reference: string | null;
+      declared_at: string | null;
+    }[];
   };
   mrr: string;
+  mrr_breakdown: {
+    customer: string;
+    plan: string;
+    billing_cycle: 'monthly' | 'yearly';
+    negotiated: boolean;
+    monthly_value: number;
+  }[];
   check_ins_chart: { date: string; count: number }[];
   top_hotels: { id: string; name: string; check_ins_count: number }[];
   recent_signups: { id: string; name: string; created_at: string }[];

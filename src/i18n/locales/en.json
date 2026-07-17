@@ -164,6 +164,10 @@
     "companyRc": "Trade register (RC)",
     "companyAddress": "Registered address",
     "companyHint": "This information appears on PDF invoices and as the bank-transfer beneficiary.",
+    "taxRate": "VAT (%)",
+    "taxRateHint": "Applied to automatically generated invoices. 0 = not subject.",
+    "timbreFiscal": "Fiscal stamp (TND)",
+    "timbreFiscalHint": "Added to every automatically generated invoice. 0 = disabled.",
     "toComplete": "To fill in",
     "flouciTitle": "Flouci (online payment)",
     "enableFlouci": "Enable Flouci",
@@ -180,6 +184,7 @@
     "statusFailed": "Failed",
     "statusExpired": "Expired",
     "noPayment": "No payment",
+    "noPaymentHint": "Payments appear here as soon as a bank transfer is validated or a Flouci payment is confirmed.",
     "ref": "ref.",
     "validate": "Validate",
     "reject": "Reject",
@@ -202,11 +207,16 @@
     "statusPaid": "Paid",
     "statusOverdue": "Overdue",
     "statusVoid": "Void",
-    "noInvoice": "No invoice"
+    "noInvoice": "No invoice",
+    "noInvoiceHint": "Invoices are generated automatically when subscriptions come due, or manually from a host's page."
   },
   "adminActivity": {
     "title": "Activity log",
     "allActions": "All actions",
+    "allProperties": "All properties",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "exportCsv": "Export CSV",
     "filteredByAgent": "Filtered by {{name}}",
     "filterByThisAgent": "Filter by this agent",
     "action": {
@@ -297,12 +307,14 @@
     "resume": "Resume",
     "sendTest": "Test message",
     "resend": "Resend",
+    "resendAll": "Retry all ({{n}})",
     "lastReady": "Last connected",
     "allProperties": "All properties",
     "allStatuses": "All statuses",
     "dateFrom": "From",
     "dateTo": "To",
     "empty": "No messages.",
+    "emptyHint": "Each completed check-in queues one record per traveler here, sent automatically to the police station.",
     "testLabel": "[TEST] Dummy form",
     "attempts": "{{n}} attempt(s)",
     "session": {
@@ -327,7 +339,8 @@
       "paused": "Sending paused.",
       "resumed": "Sending resumed.",
       "testSent": "Test message queued.",
-      "resent": "Message re-queued."
+      "resent": "Message re-queued.",
+      "resentAll": "All failed messages re-queued."
     },
     "photoAttached": "Photo attached",
     "noPhoto": "No photo"
@@ -348,6 +361,13 @@
     "failedPayments": "Failed payments (30d)",
     "recentlySuspended": "Recently suspended (7d)",
     "nothingToReport": "Nothing to report",
+    "mrrBreakdown": "MRR breakdown",
+    "pendingVirements": "Transfers to validate",
+    "whatsappRelay": "WhatsApp relay",
+    "validateVirement": "Validate",
+    "virementValidated": "Transfer validated: payment recorded, invoice paid, subscription reactivated.",
+    "yearlyDiv12": "yearly / 12",
+    "negotiatedPrice": "negotiated price",
     "checkInsLast30Days": "Check-ins over 30 days",
     "topHotels": "Top properties (check-ins this month)",
     "recentSignups": "Recent signups"
@@ -1274,10 +1294,13 @@
       "whatsapp": "WhatsApp"
     },
     "searchPlaceholder": "Search a host, property, user…",
+    "palettePlaceholder": "Navigate or search (host, invoice INV-…, check-in QYD-…)",
+    "paletteNavigate": "Go to",
     "searchResultHost": "Host",
     "searchResultProperty": "Property",
     "searchResultUser": "User",
-    "searchResultCheckIn": "Check-in"
+    "searchResultCheckIn": "Check-in",
+    "searchResultInvoice": "Invoice"
   },
   "hotelLayout": {
     "nav": {

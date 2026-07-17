@@ -57,6 +57,8 @@ export const adminWhatsappApi = {
   logs: (params?: WhatsappLogParams) =>
     api.get<LogsResponse>('/admin/whatsapp/logs', { params }).then((r) => r.data),
   resend: (id: string) => api.post(`/admin/whatsapp/logs/${id}/resend`).then((r) => r.data),
+  resendAll: () =>
+    api.post<{ data: { ok: boolean; requeued: number } }>('/admin/whatsapp/logs/resend-all').then((r) => r.data.data),
   test: (property_name?: string) => api.post('/admin/whatsapp/test', { property_name }).then((r) => r.data),
   pause: () => api.post('/admin/whatsapp/pause').then((r) => r.data),
   resume: () => api.post('/admin/whatsapp/resume').then((r) => r.data),
