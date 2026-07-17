@@ -519,6 +519,28 @@ const AbonnementTab = () => {
                 {t('settingsPage.daysCount', { count: sub.days_remaining })}
               </span>
             </div>
+
+            {/* Détail du prix : base + suppléments par établissement (formule
+                unique calculée côté serveur). N'affiché que si des suppléments
+                s'appliquent ou qu'un prix négocié est en place. */}
+            {sub.pricing && (sub.pricing.extra_count > 0 || sub.pricing.negotiated) && (
+              <div className="mt-2 rounded-xl p-3 text-sm" style={{ background: 'var(--qayed-papier)' }}>
+                <div className="flex justify-between text-gray-500">
+                  <span>{t('settingsPage.priceBase', { count: sub.pricing.included_properties })}</span>
+                  <span className="font-mono">{formatTND(sub.pricing.base)}</span>
+                </div>
+                {sub.pricing.extra_count > 0 && (
+                  <div className="flex justify-between text-gray-500 mt-1">
+                    <span>{t('settingsPage.priceExtra', { count: sub.pricing.extra_count, price: formatTND(sub.pricing.extra_property_price ?? 0) })}</span>
+                    <span className="font-mono">{formatTND(sub.pricing.extra_total)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold text-gray-900 mt-2 pt-2 border-t border-gray-200">
+                  <span>{sub.pricing.negotiated ? t('settingsPage.priceNegotiated') : t('settingsPage.priceMonthlyTotal')}</span>
+                  <span className="font-mono" style={{ color: '#5346A8' }}>{formatTND(sub.pricing.negotiated ? sub.pricing.cycle_total : sub.pricing.monthly_total)}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {sub.days_remaining <= 30 && (

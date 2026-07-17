@@ -37,6 +37,10 @@ export interface AdminPlan {
   /** price_yearly if set, else 11 × monthly (one month free) — computed by the backend. */
   effective_price_yearly: string;
   currency: string;
+  /** Établissements inclus dans le prix de base (grille tarifaire par établissement). */
+  included_properties: number;
+  /** Prix/mois par établissement supplémentaire (null = pas d'extension, pack plafonné aux inclus). */
+  extra_property_price: string | null;
   /** Limites/fonctions réellement appliquées par l'app (null ou -1 = illimité). */
   features: {
     max_properties?: number | null;

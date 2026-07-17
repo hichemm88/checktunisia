@@ -10,6 +10,21 @@ import { BillingCycle, priceForCycle } from '@/lib/billing';
 const compactPrice = (n: number): string =>
   Number.isInteger(n) ? String(n) : String(n).replace('.', ',');
 
+/** "X établissement(s) inclus" — dérivé de la config tarifaire (jamais codé en dur). */
+const includedLabel = (n: number, lang: string): string => {
+  if (lang === 'en') return `${n} propert${n > 1 ? 'ies' : 'y'} included`;
+  if (lang === 'ar') return `${n} مؤسسة مشمولة`;
+  return `${n} établissement${n > 1 ? 's' : ''} inclus`;
+};
+
+/** "+39 TND/mois par établissement supplémentaire" — dérivé de extra_property_price. */
+const extraLabel = (price: number, lang: string): string => {
+  const p = compactPrice(price);
+  if (lang === 'en') return `+${p} TND/month per extra property`;
+  if (lang === 'ar') return `+${p} د.ت/شهر لكل مؤسسة إضافية`;
+  return `+${p} TND/mois par établissement supplémentaire`;
+};
+
 const PricingCard = ({ plan, lang, cycle }: { plan: SubscriptionPlan; lang: string; cycle: BillingCycle }) => {
   const m = plan.marketing;
   const badge = m?.badge ? pickI18n(m.badge, lang) : '';
@@ -19,6 +34,12 @@ const PricingCard = ({ plan, lang, cycle }: { plan: SubscriptionPlan; lang: stri
   const note = cycle === 'yearly'
     ? pickI18n(m?.price_note_yearly ?? m?.price_note, lang)
     : pickI18n(m?.price_note, lang);
+
+  // Grille par établissement : sous-texte "N inclus" et bullet supplément,
+  // rendus depuis la config en base — pas de montant codé en dur.
+  const included = plan.included_properties ?? 1;
+  const extraPrice = plan.extra_property_price != null ? Number(plan.extra_property_price) : null;
+  const hasTieredProperties = extraPrice != null && extraPrice > 0;
 
   return (
     <div className={`pricing-card${m?.featured ? ' featured' : ''}`}>
@@ -33,10 +54,12 @@ const PricingCard = ({ plan, lang, cycle }: { plan: SubscriptionPlan; lang: stri
         {showWas && <span className="price-was">{compactPrice(fullYearly)} TND</span>}
       </div>
       {note && <div className="price-per">{note}</div>}
+      {hasTieredProperties && <div className="price-per" style={{ fontWeight: 600 }}>{includedLabel(included, lang)}</div>}
       <ul className="feat-list">
         {(m?.bullets ?? []).map((b, i) => (
           <li key={i} className={b.included ? undefined : 'off'}>{pickI18n(b.text, lang)}</li>
         ))}
+        {hasTieredProperties && <li>{extraLabel(extraPrice!, lang)}</li>}
       </ul>
       <Link to="/register" className={`btn ${m?.featured ? 'btn-primary' : 'btn-ghost'} btn-full`}>
         {m?.cta_label ? pickI18n(m.cta_label, lang) : 'Essayer 7 jours gratuit'}
