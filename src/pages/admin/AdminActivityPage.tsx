@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
-import { X } from 'lucide-react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { X, Download } from 'lucide-react';
 import { adminActivityApi } from '@/api/admin/activity';
+import { adminHotelsApi } from '@/api/admin/hotels';
 import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 
@@ -91,23 +93,50 @@ export const AdminActivityPage = () => {
   const actionLabel = (action: string) => action in ACTION_KEYS ? t(ACTION_KEYS[action]) : action.replace(/[._]/g, ' ');
   const [page, setPage] = useState(1);
   const [action, setAction] = useState('');
+  const [hotelId, setHotelId] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [actor, setActor] = useState<{ id: string; name: string } | null>(null);
 
+  const filters = {
+    action: action || undefined,
+    actor_id: actor?.id,
+    hotel_id: hotelId || undefined,
+    from: dateFrom || undefined,
+    to: dateTo ? `${dateTo} 23:59:59` : undefined,
+  };
+
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-activity', page, action, actor?.id],
-    queryFn: () => adminActivityApi.list({ page, per_page: 30, action: action || undefined, actor_id: actor?.id }),
+    queryKey: ['admin-activity', page, action, actor?.id, hotelId, dateFrom, dateTo],
+    queryFn: () => adminActivityApi.list({ page, per_page: 30, ...filters }),
   });
+
+  // Toutes les actions réellement présentes en base (le mapping ACTION_KEYS ne
+  // couvre que les libellés traduits, pas la liste).
+  const { data: allActions } = useQuery({ queryKey: ['admin-activity-actions'], queryFn: adminActivityApi.actions });
+  const { data: hotels } = useQuery({ queryKey: ['admin-activity-hotels'], queryFn: () => adminHotelsApi.list({ per_page: 200 }) });
+
+  const exportM = useMutation({ mutationFn: () => adminActivityApi.exportCsv(filters) });
 
   return (
     <div className="flex flex-col gap-4 max-w-3xl">
       <div className="flex items-center justify-between">
         <h1 className="qayed-display text-xl text-gray-900">{t('adminActivity.title')}</h1>
+        <Button size="sm" variant="secondary" loading={exportM.isPending} onClick={() => exportM.mutate()}>
+          <Download className="h-4 w-4" /> {t('adminActivity.exportCsv')}
+        </Button>
       </div>
       <div className="flex items-center gap-2 flex-wrap">
         <select className="input w-fit" value={action} onChange={(e) => { setAction(e.target.value); setPage(1); }}>
           <option value="">{t('adminActivity.allActions')}</option>
-          {Object.keys(ACTION_KEYS).map((a) => <option key={a} value={a}>{a}</option>)}
+          {(allActions ?? Object.keys(ACTION_KEYS)).map((a) => <option key={a} value={a}>{a in ACTION_KEYS ? t(ACTION_KEYS[a]) : a}</option>)}
         </select>
+        <select className="input w-fit" value={hotelId} onChange={(e) => { setHotelId(e.target.value); setPage(1); }}>
+          <option value="">{t('adminActivity.allProperties')}</option>
+          {hotels?.data.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+        </select>
+        <input type="date" className="input w-fit" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} aria-label={t('adminActivity.dateFrom')} />
+        <input type="date" className="input w-fit" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} aria-label={t('adminActivity.dateTo')} />
         {actor && (
           <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}>
             {t('adminActivity.filteredByAgent', { name: actor.name })}

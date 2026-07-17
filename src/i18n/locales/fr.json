@@ -211,6 +211,10 @@
   "adminActivity": {
     "title": "Journal d'activité",
     "allActions": "Toutes les actions",
+    "allProperties": "Tous les établissements",
+    "dateFrom": "Du",
+    "dateTo": "Au",
+    "exportCsv": "Exporter CSV",
     "filteredByAgent": "Filtré par {{name}}",
     "filterByThisAgent": "Filtrer par cet agent",
     "action": {
@@ -356,6 +360,7 @@
     "nothingToReport": "Rien à signaler",
     "mrrBreakdown": "Détail du MRR",
     "pendingVirements": "Virements à valider",
+    "whatsappRelay": "Relais WhatsApp",
     "validateVirement": "Valider",
     "virementValidated": "Virement validé : paiement enregistré, facture payée, abonnement réactivé.",
     "yearlyDiv12": "annuel / 12",

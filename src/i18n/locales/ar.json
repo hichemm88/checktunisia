@@ -211,6 +211,10 @@
   "adminActivity": {
     "title": "سجل النشاط",
     "allActions": "جميع الإجراءات",
+    "allProperties": "جميع المؤسسات",
+    "dateFrom": "من",
+    "dateTo": "إلى",
+    "exportCsv": "تصدير CSV",
     "filteredByAgent": "مُصفّى حسب {{name}}",
     "filterByThisAgent": "التصفية حسب هذا العون",
     "action": {
@@ -356,6 +360,7 @@
     "nothingToReport": "لا شيء للإبلاغ عنه",
     "mrrBreakdown": "تفاصيل الإيراد الشهري",
     "pendingVirements": "تحويلات في انتظار التحقق",
+    "whatsappRelay": "مرحل واتساب",
     "validateVirement": "تأكيد",
     "virementValidated": "تم تأكيد التحويل: سُجل الدفع، ودُفعت الفاتورة، وأُعيد تفعيل الاشتراك.",
     "yearlyDiv12": "سنوي / 12",

@@ -211,6 +211,10 @@
   "adminActivity": {
     "title": "Activity log",
     "allActions": "All actions",
+    "allProperties": "All properties",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "exportCsv": "Export CSV",
     "filteredByAgent": "Filtered by {{name}}",
     "filterByThisAgent": "Filter by this agent",
     "action": {
@@ -356,6 +360,7 @@
     "nothingToReport": "Nothing to report",
     "mrrBreakdown": "MRR breakdown",
     "pendingVirements": "Transfers to validate",
+    "whatsappRelay": "WhatsApp relay",
     "validateVirement": "Validate",
     "virementValidated": "Transfer validated: payment recorded, invoice paid, subscription reactivated.",
     "yearlyDiv12": "yearly / 12",
