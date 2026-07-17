@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Package, CreditCard, Plus, X, Pencil, Check, Trash2, Search, Globe } from 'lucide-react';
 import { adminPlansApi, adminSubscriptionsApi, AdminPlan } from '@/api/admin/subscriptions';
 import { PlanMarketingEditor } from '@/components/admin/PlanMarketingEditor';
+import { PlanFeaturesEditor, featureValuesFrom, featureValuesToPayload } from '@/components/admin/PlanFeaturesEditor';
 import { adminHostsApi } from '@/api/admin/hosts';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -75,11 +76,13 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
     price_monthly: plan.price_monthly, price_yearly: plan.price_yearly ?? '',
     max_rooms: plan.max_rooms ?? '', is_active: plan.is_active,
   });
+  const [features, setFeatures] = useState(() => featureValuesFrom(plan.features));
 
   const updateMut = useAdminMutation({
     mutationFn: () => adminPlansApi.update(plan.id, {
       price_monthly: parseFloat(form.price_monthly), price_yearly: form.price_yearly ? parseFloat(String(form.price_yearly)) : null,
       max_rooms: form.max_rooms ? parseInt(String(form.max_rooms)) : null, is_active: form.is_active,
+      features: featureValuesToPayload(features),
     }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-plans'] }); setEditing(false); },
   });
@@ -121,6 +124,7 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
               placeholder={(parseFloat(String(form.price_monthly) || '0') * 11).toFixed(3)} />
           </div>
           <Input label={t('adminSubscriptions.maxRooms')} type="number" value={String(form.max_rooms)} onChange={(e) => setForm((f) => ({ ...f, max_rooms: e.target.value }))} />
+          <PlanFeaturesEditor value={features} onChange={setFeatures} />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} /> {t('adminDashboard.active')}
           </label>
@@ -130,11 +134,28 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
           </div>
         </div>
       ) : (
-        <div className="flex gap-4 text-sm text-gray-600 flex-wrap items-baseline">
-          <span className="font-mono">{t('adminSubscriptions.priceMonth', { price: formatTNDAmount(plan.price_monthly) })}</span>
-          <span className="font-mono">{t('adminSubscriptions.priceYear', { price: formatTNDAmount(effectiveYearlyPrice(plan)) })}</span>
-          {!plan.price_yearly && <span className="text-xs text-gray-400">{t('adminSubscriptions.yearlyAutoHint')}</span>}
-        </div>
+        <>
+          <div className="flex gap-4 text-sm text-gray-600 flex-wrap items-baseline">
+            <span className="font-mono">{t('adminSubscriptions.priceMonth', { price: formatTNDAmount(plan.price_monthly) })}</span>
+            <span className="font-mono">{t('adminSubscriptions.priceYear', { price: formatTNDAmount(effectiveYearlyPrice(plan)) })}</span>
+            {!plan.price_yearly && <span className="text-xs text-gray-400">{t('adminSubscriptions.yearlyAutoHint')}</span>}
+          </div>
+          {/* Fonctionnalités RÉELLEMENT appliquées par l'app — pas le marketing. */}
+          <div className="flex gap-1.5 flex-wrap">
+            {([
+              ['maxProperties', plan.features?.max_properties],
+              ['maxUsers', plan.features?.max_users],
+              ['ocrScans', plan.features?.ocr_scans_per_month],
+            ] as const).map(([key, v]) => (
+              <span key={key} className="rounded-full bg-warm-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+                {t(`planFeatures.${key}`)} : <span className="font-mono">{v == null || v < 0 ? '∞' : v}</span>
+              </span>
+            ))}
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${plan.features?.whatsapp_relay === false ? 'bg-gray-100 text-gray-400' : 'bg-[--qayed-conforme-fond] text-[--qayed-conforme-texte]'}`}>
+              {t('planFeatures.whatsappRelay')} : {plan.features?.whatsapp_relay === false ? t('planFeatures.off') : t('planFeatures.on')}
+            </span>
+          </div>
+        </>
       )}
 
       {editingMarketing && <PlanMarketingEditor plan={plan} onDone={() => setEditingMarketing(false)} />}

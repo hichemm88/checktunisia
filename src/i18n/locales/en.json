@@ -1276,6 +1276,20 @@
     "copyKey": "Copy the key",
     "activateButton": "Enable two-factor authentication"
   },
+  "planFeatures": {
+    "title": "Real features (enforced by the app)",
+    "maxProperties": "Properties",
+    "maxUsers": "Users",
+    "ocrScans": "OCR scans / month",
+    "whatsappRelay": "Police WhatsApp relay",
+    "on": "on",
+    "off": "off",
+    "unlimitedHint": "Empty field = unlimited. These limits are actually enforced server-side (web and mobile).",
+    "inheritHint": "Empty field = plan value. -1 = unlimited. These overrides take precedence over the plan for this customer only.",
+    "inherit": "inherit from plan",
+    "currentUsage": "used: {{n}}",
+    "overriddenLegend": "* = overridden for this customer"
+  },
   "adminLayout": {
     "brand": "Admin",
     "nav": {

@@ -37,7 +37,13 @@ export interface AdminPlan {
   /** price_yearly if set, else 11 × monthly (one month free) — computed by the backend. */
   effective_price_yearly: string;
   currency: string;
-  features: Record<string, number>;
+  /** Limites/fonctions réellement appliquées par l'app (null ou -1 = illimité). */
+  features: {
+    max_properties?: number | null;
+    max_users?: number | null;
+    ocr_scans_per_month?: number | null;
+    whatsapp_relay?: boolean;
+  } | null;
   marketing: PlanMarketing | null;
   is_active: boolean;
   sort_order: number;

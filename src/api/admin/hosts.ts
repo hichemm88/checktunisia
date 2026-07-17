@@ -22,6 +22,10 @@ export interface AdminHostDetail extends Omit<AdminHost, 'properties_count' | 's
   } | null;
   users: { id: string; first_name: string; last_name: string; email: string; role: string; status: string }[];
   metrics: { last_check_in_at: string | null; check_ins_this_month: number; mrr: string | null };
+  /** Fonctionnalités effectives (pack + overrides) avec usage réel. */
+  entitlements: Record<string, { limit?: number | null; used?: number; enabled?: boolean; label: string }>;
+  /** Overrides négociés bruts de l'abonnement actif ({} si aucun). */
+  feature_overrides: Record<string, number | boolean | null>;
 }
 
 export const adminHostsApi = {
