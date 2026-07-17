@@ -12,6 +12,14 @@ export interface AdminDashboardStats {
     expiring_subscriptions: { id: string; name: string; plan: string | null; expires_at: string }[];
     failed_payments: { id: string; hotel_name: string | null; amount: string; created_at: string }[];
     recently_suspended: { id: string; name: string; updated_at: string }[];
+    pending_virements: {
+      id: string;
+      name: string;
+      invoice_number: string | null;
+      amount: string;
+      reference: string | null;
+      declared_at: string | null;
+    }[];
   };
   mrr: string;
   mrr_breakdown: {

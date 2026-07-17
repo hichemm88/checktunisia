@@ -1,9 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown, Wallet, Award, UserPlus } from 'lucide-react';
-import { adminDashboardApi } from '@/api/admin/dashboard';
+import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown, Wallet, Award, UserPlus, Landmark } from 'lucide-react';
+import { adminDashboardApi, AdminDashboardStats } from '@/api/admin/dashboard';
+import { adminPaymentsApi } from '@/api/admin/payments';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { Button } from '@/components/ui/Button';
+import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { formatTND } from '@/lib/money';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
@@ -59,6 +62,37 @@ const AlertCard = ({ icon: Icon, title, color, children, empty }: { icon: typeof
       </div>
       {empty ? <p className="text-xs text-gray-400 py-2">{t('adminDashboard.nothingToReport')}</p> : <div className="flex flex-col gap-2">{children}</div>}
     </div>
+  );
+};
+
+const PendingVirementsCard = ({ items }: { items: AdminDashboardStats['alerts']['pending_virements'] }) => {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const validateM = useAdminMutation({
+    mutationFn: (id: string) => adminPaymentsApi.validateVirement(id),
+    successMessage: t('adminDashboard.virementValidated'),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-stats'] });
+      qc.invalidateQueries({ queryKey: ['admin-payments'] });
+    },
+  });
+
+  return (
+    <AlertCard icon={Landmark} title={t('adminDashboard.pendingVirements')} color="var(--qayed-cachet)" empty={!items.length}>
+      {items.map((p) => (
+        <div key={p.id} className="flex items-center justify-between gap-2 text-sm">
+          <div className="min-w-0">
+            <p className="truncate font-medium text-gray-800">{p.name}</p>
+            <p className="font-mono text-[11px] text-gray-400 truncate">
+              {p.invoice_number ?? '—'} · {formatTND(p.amount)}{p.reference ? ` · ${p.reference}` : ''}
+            </p>
+          </div>
+          <Button size="sm" variant="ghost" loading={validateM.isPending} onClick={() => validateM.mutate(p.id)}>
+            {t('adminDashboard.validateVirement')}
+          </Button>
+        </div>
+      ))}
+    </AlertCard>
   );
 };
 
@@ -119,6 +153,7 @@ export const AdminDashboardPage = () => {
           <div>
             <p className="text-sm font-bold text-gray-700 mb-3">{t('adminDashboard.toWatch')}</p>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <PendingVirementsCard items={stats.alerts.pending_virements ?? []} />
               <AlertCard icon={CreditCard} title={t('adminDashboard.expiringSubscriptions')} color="var(--qayed-vigilance)" empty={!stats.alerts.expiring_subscriptions.length}>
                 {stats.alerts.expiring_subscriptions.map((s) => (
                   <div key={s.id} className="flex items-center justify-between text-sm">

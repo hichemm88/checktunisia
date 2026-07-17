@@ -12,6 +12,8 @@ export interface PlatformSettings {
   virement_bank_name: string | null;
   virement_beneficiary: string | null;
   virement_details: string | null;
+  tax_rate: string | null;
+  timbre_fiscal: string | null;
 }
 
 export interface AdminPayment {
