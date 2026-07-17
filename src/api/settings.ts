@@ -28,7 +28,18 @@ export const settingsApi = {
 
   // Subscription info — backend returns plan as nested SubscriptionPlan object
   getSubscription: () =>
-    api.get<{ data: { status: string; plan: { name: string } | string | null; expires_at: string; days_remaining: number } }>('/hotel/subscription')
+    api.get<{ data: {
+      status: string;
+      plan: { name: string } | string | null;
+      expires_at: string;
+      days_remaining: number;
+      /** Détail du prix : base + suppléments par établissement (formule unique serveur). */
+      pricing?: {
+        base: number; included_properties: number; property_count: number;
+        extra_count: number; extra_property_price: number | null;
+        extra_total: number; monthly_total: number; cycle_total: number; negotiated: boolean;
+      } | null;
+    } }>('/hotel/subscription')
       .then((r) => r.data.data),
 
   // Hotel profile (hotel_admin only)

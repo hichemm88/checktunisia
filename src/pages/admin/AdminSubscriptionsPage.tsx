@@ -26,7 +26,7 @@ const fmtDate = (d: string | null | undefined, locale: string) =>
 const CreatePlanForm = ({ onDone }: { onDone: () => void }) => {
   const { t } = useTranslation();
   const qc = useQueryClient();
-  const [form, setForm] = useState({ name: '', slug: '', min_rooms: '1', max_rooms: '', price_monthly: '', price_yearly: '' });
+  const [form, setForm] = useState({ name: '', slug: '', min_rooms: '1', max_rooms: '', price_monthly: '', price_yearly: '', included_properties: '1', extra_property_price: '' });
   const [error, setError] = useState('');
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -36,6 +36,8 @@ const CreatePlanForm = ({ onDone }: { onDone: () => void }) => {
       max_rooms: form.max_rooms ? parseInt(form.max_rooms) : null,
       price_monthly: parseFloat(form.price_monthly) || 0,
       price_yearly: form.price_yearly ? parseFloat(form.price_yearly) : null,
+      included_properties: parseInt(form.included_properties) || 1,
+      extra_property_price: form.extra_property_price.trim() === '' ? null : parseFloat(form.extra_property_price),
     }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-plans'] }); onDone(); },
     onError: (err) => setError(extractErrors(err)),
@@ -57,6 +59,10 @@ const CreatePlanForm = ({ onDone }: { onDone: () => void }) => {
         <Input label={t('adminSubscriptions.yearlyPrice')} type="number" value={form.price_yearly} onChange={(e) => set('price_yearly', e.target.value)}
           placeholder={form.price_monthly ? (parseFloat(form.price_monthly) * 11).toFixed(3) : ''} />
       </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Input label={t('adminSubscriptions.includedProperties')} type="number" min="1" value={form.included_properties} onChange={(e) => set('included_properties', e.target.value)} />
+        <Input label={t('adminSubscriptions.extraPropertyPrice')} type="number" min="0" value={form.extra_property_price} placeholder={t('adminSubscriptions.noExtension')} onChange={(e) => set('extra_property_price', e.target.value)} />
+      </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
       <div className="flex gap-2">
         <Button size="sm" loading={mut.isPending} disabled={!form.name || !form.slug || !form.price_monthly} onClick={() => mut.mutate()}>{t('adminHotels.create')}</Button>
@@ -75,6 +81,8 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
   const [form, setForm] = useState({
     price_monthly: plan.price_monthly, price_yearly: plan.price_yearly ?? '',
     max_rooms: plan.max_rooms ?? '', is_active: plan.is_active,
+    included_properties: String(plan.included_properties ?? 1),
+    extra_property_price: plan.extra_property_price ?? '',
   });
   const [features, setFeatures] = useState(() => featureValuesFrom(plan.features));
 
@@ -82,6 +90,8 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
     mutationFn: () => adminPlansApi.update(plan.id, {
       price_monthly: parseFloat(form.price_monthly), price_yearly: form.price_yearly ? parseFloat(String(form.price_yearly)) : null,
       max_rooms: form.max_rooms ? parseInt(String(form.max_rooms)) : null, is_active: form.is_active,
+      included_properties: parseInt(String(form.included_properties)) || 1,
+      extra_property_price: String(form.extra_property_price).trim() === '' ? null : parseFloat(String(form.extra_property_price)),
       features: featureValuesToPayload(features),
     }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-plans'] }); setEditing(false); },
@@ -124,6 +134,14 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
               placeholder={(parseFloat(String(form.price_monthly) || '0') * 11).toFixed(3)} />
           </div>
           <Input label={t('adminSubscriptions.maxRooms')} type="number" value={String(form.max_rooms)} onChange={(e) => setForm((f) => ({ ...f, max_rooms: e.target.value }))} />
+          {/* Grille tarifaire par établissement (base + supplément). */}
+          <div className="grid grid-cols-2 gap-2">
+            <Input label={t('adminSubscriptions.includedProperties')} type="number" min="1" value={form.included_properties}
+              onChange={(e) => setForm((f) => ({ ...f, included_properties: e.target.value }))} />
+            <Input label={t('adminSubscriptions.extraPropertyPrice')} type="number" min="0" value={String(form.extra_property_price)}
+              placeholder={t('adminSubscriptions.noExtension')}
+              onChange={(e) => setForm((f) => ({ ...f, extra_property_price: e.target.value }))} />
+          </div>
           <PlanFeaturesEditor value={features} onChange={setFeatures} />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} /> {t('adminDashboard.active')}
@@ -140,6 +158,13 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
             <span className="font-mono">{t('adminSubscriptions.priceYear', { price: formatTNDAmount(effectiveYearlyPrice(plan)) })}</span>
             {!plan.price_yearly && <span className="text-xs text-gray-400">{t('adminSubscriptions.yearlyAutoHint')}</span>}
           </div>
+          {/* Grille tarifaire par établissement. */}
+          <p className="text-xs text-gray-500">
+            {t('adminSubscriptions.includedPropertiesShort', { n: plan.included_properties ?? 1 })}
+            {plan.extra_property_price != null && (
+              <span className="text-[--qayed-cachet] font-medium"> · {t('adminSubscriptions.extraPropertyShort', { price: formatTNDAmount(plan.extra_property_price) })}</span>
+            )}
+          </p>
           {/* Fonctionnalités RÉELLEMENT appliquées par l'app — pas le marketing. */}
           <div className="flex gap-1.5 flex-wrap">
             {([
