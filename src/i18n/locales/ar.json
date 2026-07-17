@@ -184,6 +184,7 @@
     "statusFailed": "فاشلة",
     "statusExpired": "منتهية الصلاحية",
     "noPayment": "لا توجد مدفوعات",
+    "noPaymentHint": "تظهر المدفوعات هنا فور التحقق من تحويل بنكي أو تأكيد دفع Flouci.",
     "ref": "المرجع",
     "validate": "تحقّق",
     "reject": "رفض",
@@ -206,7 +207,8 @@
     "statusPaid": "مدفوعة",
     "statusOverdue": "متأخرة",
     "statusVoid": "ملغاة",
-    "noInvoice": "لا توجد فاتورة"
+    "noInvoice": "لا توجد فاتورة",
+    "noInvoiceHint": "تُنشأ الفواتير تلقائيًا عند استحقاق الاشتراكات، أو يدويًا من صفحة المضيف."
   },
   "adminActivity": {
     "title": "سجل النشاط",
@@ -312,6 +314,7 @@
     "dateFrom": "من",
     "dateTo": "إلى",
     "empty": "لا توجد رسائل.",
+    "emptyHint": "كل تسجيل وصول مكتمل يضيف هنا بطاقة لكل مسافر، تُرسل تلقائيًا إلى مركز الشرطة.",
     "testLabel": "[TEST] بطاقة تجريبية",
     "attempts": "{{n}} محاولة",
     "session": {
@@ -1269,6 +1272,8 @@
       "whatsapp": "واتساب"
     },
     "searchPlaceholder": "البحث عن مضيف، مؤسسة، مستخدم…",
+    "palettePlaceholder": "التنقل أو البحث (مضيف، فاتورة، بطاقة)",
+    "paletteNavigate": "الانتقال إلى",
     "searchResultHost": "مضيف",
     "searchResultProperty": "مؤسسة",
     "searchResultUser": "مستخدم",

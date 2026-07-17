@@ -6,6 +6,7 @@ import { Search } from 'lucide-react';
 import { adminSubscriptionsApi } from '@/api/admin/subscriptions';
 import { adminHostsApi } from '@/api/admin/hosts';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
+import { EmptyState } from '@/components/admin/EmptyState';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatTND } from '@/lib/money';
@@ -97,7 +98,7 @@ export const AdminFacturationPage = () => {
             </div>
           )
         ))}
-        {!isLoading && !data?.data.length && <p className="text-sm text-gray-400 text-center py-6">{t('adminFacturation.noInvoice')}</p>}
+        {!isLoading && !data?.data.length && <EmptyState title={t('adminFacturation.noInvoice')} hint={t('adminFacturation.noInvoiceHint')} />}
       </div>
 
       {data && (

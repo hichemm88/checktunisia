@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { EmptyState } from '@/components/admin/EmptyState';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 
 /*
@@ -245,7 +246,7 @@ export const AdminWhatsappPage = () => {
         {isLoading && <ListSkeleton rows={4} />}
         {logs?.data.map((log) => <LogRow key={log.id} log={log} />)}
         {!isLoading && !logs?.data.length && (
-          <p className="py-6 text-center text-sm text-gray-400">{t('adminWhatsapp.empty')}</p>
+          <EmptyState title={t('adminWhatsapp.empty')} hint={t('adminWhatsapp.emptyHint')} />
         )}
       </Card>
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -46,6 +46,83 @@ const TYPE_ROUTE: Record<string, (id: string) => string> = {
   user:         (id) => `/admin/users?highlight=${id}`,
   check_in:     (id) => `/admin/hotels/${id}`,
   invoice:      (id) => `/admin/facturation?highlight=${id}`,
+};
+
+/**
+ * Chantier D2 — command palette (Ctrl/Cmd+K) : navigation, recherche
+ * globale (hébergeurs, établissements, utilisateurs, fiches, factures) et
+ * accès rapide au clavier. Échap ferme, flèches naviguent, Entrée ouvre.
+ */
+const CommandPalette = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const navItems = useNavItems();
+  const [q, setQ] = useState('');
+  const [selected, setSelected] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data } = useQuery({
+    queryKey: ['admin-global-search', q],
+    queryFn: () => adminSearchApi.search(q),
+    enabled: open && q.trim().length >= 2,
+  });
+
+  const items = useMemo(() => {
+    const nav = navItems
+      .filter((n) => !q.trim() || n.label.toLowerCase().includes(q.trim().toLowerCase()))
+      .map((n) => ({ key: `nav-${n.to}`, label: n.label, sub: t('adminLayout.paletteNavigate'), to: n.to }));
+    const found = (data && q.trim().length >= 2
+      ? [...data.organizations, ...data.hotels, ...data.check_ins, ...data.users, ...(data.invoices ?? [])]
+      : []
+    ).map((r: GlobalSearchResult) => ({ key: `${r.type}-${r.id}`, label: r.label, sub: t(TYPE_LABEL_KEYS[r.type]), to: TYPE_ROUTE[r.type](r.id) }));
+    return [...found, ...nav].slice(0, 12);
+  }, [navItems, data, q, t]);
+
+  useEffect(() => { setSelected(0); }, [q, open]);
+  useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 30); else setQ(''); }, [open]);
+
+  if (!open) return null;
+
+  const go = (to: string) => { navigate(to); onClose(); };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-start justify-center pt-[15vh] px-4" role="dialog" aria-modal="true">
+      <div className="fixed inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden">
+        <div className="flex items-center gap-2 border-b border-gray-100 px-4">
+          <Search className="h-4 w-4 text-gray-400 shrink-0" />
+          <input
+            ref={inputRef}
+            className="h-12 w-full bg-transparent text-sm outline-none"
+            placeholder={t('adminLayout.palettePlaceholder')}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') onClose();
+              if (e.key === 'ArrowDown') { e.preventDefault(); setSelected((s) => Math.min(s + 1, items.length - 1)); }
+              if (e.key === 'ArrowUp') { e.preventDefault(); setSelected((s) => Math.max(s - 1, 0)); }
+              if (e.key === 'Enter' && items[selected]) go(items[selected].to);
+            }}
+          />
+          <kbd className="hidden sm:block shrink-0 rounded border border-gray-200 px-1.5 py-0.5 text-[10px] text-gray-400">Esc</kbd>
+        </div>
+        <div className="max-h-72 overflow-y-auto py-1.5">
+          {items.length === 0 && <p className="px-4 py-6 text-center text-sm text-gray-400">{t('common.noResults')}</p>}
+          {items.map((item, i) => (
+            <button
+              key={item.key}
+              className={`flex w-full items-center justify-between px-4 py-2 text-start text-sm ${i === selected ? 'bg-qayed-papier' : 'hover:bg-warm-100'}`}
+              onMouseEnter={() => setSelected(i)}
+              onClick={() => go(item.to)}
+            >
+              <span className="truncate">{item.label}</span>
+              <span className="ms-2 shrink-0 text-xs text-gray-400">{item.sub}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const GlobalSearch = () => {
@@ -100,14 +177,19 @@ const GlobalSearch = () => {
   );
 };
 
+/**
+ * Chantier D1 — la sidebar porte l'identité Qayed : encre nuit #10222E,
+ * texte clair, item actif violet cachet. Sépare visuellement la navigation
+ * du contenu (papier registre).
+ */
 const SidebarContent = ({ onNavigate, onLogout }: { onNavigate?: () => void; onLogout: () => void }) => {
   const { t } = useTranslation();
   const navItems = useNavItems();
   return (
     <>
-      <div className="flex items-center gap-2.5 px-5 h-16 border-b border-gray-100 shrink-0">
-        <QayedStamp size={30} />
-        <span className="qayed-display text-lg text-qayed-encre">QAYED <span className="qayed-mono text-xs font-normal normal-case tracking-normal text-qayed-fiche">{t('adminLayout.brand')}</span></span>
+      <div className="flex items-center gap-2.5 px-5 h-16 border-b border-white/10 shrink-0">
+        <QayedStamp size={30} onDark />
+        <span className="qayed-display text-lg text-white">QAYED <span className="qayed-mono text-xs font-normal normal-case tracking-normal text-white/50">{t('adminLayout.brand')}</span></span>
       </div>
       <nav className="flex-1 flex flex-col gap-0.5 p-3 overflow-y-auto">
         {navItems.map(({ to, icon: Icon, label }) => (
@@ -117,7 +199,7 @@ const SidebarContent = ({ onNavigate, onLogout }: { onNavigate?: () => void; onL
             onClick={onNavigate}
             className={({ isActive }) =>
               `flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                isActive ? 'text-white' : 'text-gray-500 hover:bg-qayed-papier hover:text-gray-800'
+                isActive ? 'text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'
               }`
             }
             style={({ isActive }) => (isActive ? { background: 'var(--qayed-cachet)' } : undefined)}
@@ -127,10 +209,10 @@ const SidebarContent = ({ onNavigate, onLogout }: { onNavigate?: () => void; onL
           </NavLink>
         ))}
       </nav>
-      <div className="p-3 border-t border-gray-100 shrink-0">
+      <div className="p-3 border-t border-white/10 shrink-0">
         <button
           onClick={onLogout}
-          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-white/40 hover:bg-red-500/15 hover:text-red-300 transition-colors"
         >
           <LogOut className="h-4 w-4" /> {t('common.logout')}
         </button>
@@ -144,6 +226,18 @@ export const AdminLayout = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((o) => !o);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const handleLogout = async () => {
     try { await authApi.logout(); } catch { /* ignore */ }
@@ -154,7 +248,7 @@ export const AdminLayout = () => {
   return (
     <div className="flex min-h-screen" style={{ background: 'var(--qayed-papier)' }}>
       {/* ── Sidebar (desktop) ── */}
-      <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-gray-100 bg-white">
+      <aside className="hidden md:flex w-60 shrink-0 flex-col" style={{ background: 'var(--qayed-encre)' }}>
         <SidebarContent onLogout={handleLogout} />
       </aside>
 
@@ -162,10 +256,10 @@ export const AdminLayout = () => {
       {mobileNavOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div className="fixed inset-0 bg-black/40" onClick={() => setMobileNavOpen(false)} />
-          <aside className="relative z-10 flex w-64 max-w-[80vw] flex-col bg-white shadow-xl">
+          <aside className="relative z-10 flex w-64 max-w-[80vw] flex-col shadow-xl" style={{ background: 'var(--qayed-encre)' }}>
             <button
               onClick={() => setMobileNavOpen(false)}
-              className="absolute top-4 end-3 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"
+              className="absolute top-4 end-3 rounded-lg p-1.5 text-white/50 hover:bg-white/10"
               aria-label={t('common.close')}
             >
               <X className="h-5 w-5" />
@@ -187,6 +281,13 @@ export const AdminLayout = () => {
           </button>
           <div className="flex-1 min-w-0 flex items-center justify-end gap-3">
             <GlobalSearch />
+            <button
+              onClick={() => setPaletteOpen(true)}
+              className="hidden md:flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1 text-[11px] text-gray-400 hover:text-gray-600 hover:border-gray-300"
+              title={t('adminLayout.palettePlaceholder')}
+            >
+              <kbd>Ctrl</kbd>+<kbd>K</kbd>
+            </button>
             <LanguageSwitcher />
             <span className="hidden sm:block text-sm text-gray-500 whitespace-nowrap">{user?.first_name} {user?.last_name}</span>
           </div>
@@ -194,6 +295,7 @@ export const AdminLayout = () => {
         <main className="flex-1 min-w-0 p-4 md:p-6">
           <Outlet />
         </main>
+        <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
       </div>
     </div>
   );

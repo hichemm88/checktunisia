@@ -184,6 +184,7 @@
     "statusFailed": "Échoués",
     "statusExpired": "Expirés",
     "noPayment": "Aucun paiement",
+    "noPaymentHint": "Les paiements apparaîtront ici dès la validation d'un virement ou un paiement Flouci confirmé.",
     "ref": "réf.",
     "validate": "Valider",
     "reject": "Rejeter",
@@ -206,7 +207,8 @@
     "statusPaid": "Payée",
     "statusOverdue": "En retard",
     "statusVoid": "Annulée",
-    "noInvoice": "Aucune facture"
+    "noInvoice": "Aucune facture",
+    "noInvoiceHint": "Les factures sont générées automatiquement à l'échéance des abonnements, ou manuellement depuis la fiche d'un hébergeur."
   },
   "adminActivity": {
     "title": "Journal d'activité",
@@ -312,6 +314,7 @@
     "dateFrom": "Du",
     "dateTo": "Au",
     "empty": "Aucun envoi.",
+    "emptyHint": "Chaque check-in complété enfile ici une fiche par voyageur, envoyée automatiquement au poste de police.",
     "testLabel": "[TEST] Fiche factice",
     "attempts": "{{n}} tentative(s)",
     "session": {
@@ -1291,6 +1294,8 @@
       "whatsapp": "WhatsApp"
     },
     "searchPlaceholder": "Rechercher un hébergeur, établissement, utilisateur…",
+    "palettePlaceholder": "Naviguer ou rechercher (hébergeur, facture INV-…, fiche QYD-…)",
+    "paletteNavigate": "Aller à",
     "searchResultHost": "Hébergeur",
     "searchResultProperty": "Établissement",
     "searchResultUser": "Utilisateur",

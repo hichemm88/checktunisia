@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { EmptyState } from '@/components/admin/EmptyState';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatTND } from '@/lib/money';
 
@@ -186,7 +187,7 @@ const HistoriqueTab = () => {
             )}
           </div>
         ))}
-        {!isLoading && !data?.data.length && <p className="text-sm text-gray-400 text-center py-6">{t('adminPayments.noPayment')}</p>}
+        {!isLoading && !data?.data.length && <EmptyState title={t('adminPayments.noPayment')} hint={t('adminPayments.noPaymentHint')} />}
       </Card>
       {data && (
         <Pagination meta={data.meta} currentCount={data.data.length} onPrev={() => setPage((p) => Math.max(1, p - 1))} onNext={() => setPage((p) => p + 1)} />
