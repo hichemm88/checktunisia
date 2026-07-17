@@ -297,6 +297,7 @@
     "resume": "Reprendre",
     "sendTest": "Message test",
     "resend": "Renvoyer",
+    "resendAll": "Relancer tout ({{n}})",
     "lastReady": "Dernière connexion",
     "allProperties": "Toutes les propriétés",
     "allStatuses": "Tous les statuts",
@@ -327,7 +328,8 @@
       "paused": "Envois mis en pause.",
       "resumed": "Envois repris.",
       "testSent": "Message test enfilé.",
-      "resent": "Envoi remis en file."
+      "resent": "Envoi remis en file.",
+      "resentAll": "Tous les envois échoués ont été remis en file."
     },
     "photoAttached": "Photo jointe",
     "noPhoto": "Sans photo"
@@ -348,6 +350,9 @@
     "failedPayments": "Paiements en échec (30j)",
     "recentlySuspended": "Suspendus récemment (7j)",
     "nothingToReport": "Rien à signaler",
+    "mrrBreakdown": "Détail du MRR",
+    "yearlyDiv12": "annuel / 12",
+    "negotiatedPrice": "prix négocié",
     "checkInsLast30Days": "Check-ins sur 30 jours",
     "topHotels": "Top établissements (check-ins ce mois)",
     "recentSignups": "Dernières inscriptions"
@@ -1277,7 +1282,8 @@
     "searchResultHost": "Hébergeur",
     "searchResultProperty": "Établissement",
     "searchResultUser": "Utilisateur",
-    "searchResultCheckIn": "Check-in"
+    "searchResultCheckIn": "Check-in",
+    "searchResultInvoice": "Facture"
   },
   "hotelLayout": {
     "nav": {

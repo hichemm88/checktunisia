@@ -297,6 +297,7 @@
     "resume": "Resume",
     "sendTest": "Test message",
     "resend": "Resend",
+    "resendAll": "Retry all ({{n}})",
     "lastReady": "Last connected",
     "allProperties": "All properties",
     "allStatuses": "All statuses",
@@ -327,7 +328,8 @@
       "paused": "Sending paused.",
       "resumed": "Sending resumed.",
       "testSent": "Test message queued.",
-      "resent": "Message re-queued."
+      "resent": "Message re-queued.",
+      "resentAll": "All failed messages re-queued."
     },
     "photoAttached": "Photo attached",
     "noPhoto": "No photo"
@@ -348,6 +350,9 @@
     "failedPayments": "Failed payments (30d)",
     "recentlySuspended": "Recently suspended (7d)",
     "nothingToReport": "Nothing to report",
+    "mrrBreakdown": "MRR breakdown",
+    "yearlyDiv12": "yearly / 12",
+    "negotiatedPrice": "negotiated price",
     "checkInsLast30Days": "Check-ins over 30 days",
     "topHotels": "Top properties (check-ins this month)",
     "recentSignups": "Recent signups"
@@ -1277,7 +1282,8 @@
     "searchResultHost": "Host",
     "searchResultProperty": "Property",
     "searchResultUser": "User",
-    "searchResultCheckIn": "Check-in"
+    "searchResultCheckIn": "Check-in",
+    "searchResultInvoice": "Invoice"
   },
   "hotelLayout": {
     "nav": {

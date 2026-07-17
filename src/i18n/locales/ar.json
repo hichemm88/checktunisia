@@ -297,6 +297,7 @@
     "resume": "استئناف",
     "sendTest": "رسالة اختبار",
     "resend": "إعادة الإرسال",
+    "resendAll": "إعادة إرسال الكل ({{n}})",
     "lastReady": "آخر اتصال",
     "allProperties": "كل المنشآت",
     "allStatuses": "كل الحالات",
@@ -327,7 +328,8 @@
       "paused": "تم إيقاف الإرسال مؤقتاً.",
       "resumed": "تم استئناف الإرسال.",
       "testSent": "تمت جدولة رسالة الاختبار.",
-      "resent": "تمت إعادة جدولة الإرسال."
+      "resent": "تمت إعادة جدولة الإرسال.",
+      "resentAll": "تمت إعادة جدولة جميع الرسائل الفاشلة."
     },
     "photoAttached": "صورة مرفقة",
     "noPhoto": "بدون صورة"
@@ -348,6 +350,9 @@
     "failedPayments": "مدفوعات فاشلة (30 يومًا)",
     "recentlySuspended": "معلّقة مؤخرًا (7 أيام)",
     "nothingToReport": "لا شيء للإبلاغ عنه",
+    "mrrBreakdown": "تفاصيل الإيراد الشهري",
+    "yearlyDiv12": "سنوي / 12",
+    "negotiatedPrice": "سعر متفاوض عليه",
     "checkInsLast30Days": "تسجيلات النزلاء خلال 30 يومًا",
     "topHotels": "أفضل المؤسسات (تسجيلات هذا الشهر)",
     "recentSignups": "أحدث التسجيلات"
@@ -1255,7 +1260,8 @@
     "searchResultHost": "مضيف",
     "searchResultProperty": "مؤسسة",
     "searchResultUser": "مستخدم",
-    "searchResultCheckIn": "تسجيل نزيل"
+    "searchResultCheckIn": "تسجيل نزيل",
+    "searchResultInvoice": "فاتورة"
   },
   "hotelLayout": {
     "nav": {

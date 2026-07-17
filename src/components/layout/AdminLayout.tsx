@@ -38,12 +38,14 @@ const TYPE_LABEL_KEYS: Record<string, string> = {
   hotel: 'adminLayout.searchResultProperty',
   user: 'adminLayout.searchResultUser',
   check_in: 'adminLayout.searchResultCheckIn',
+  invoice: 'adminLayout.searchResultInvoice',
 };
 const TYPE_ROUTE: Record<string, (id: string) => string> = {
   organization: (id) => `/admin/hosts/${id}`,
   hotel:        (id) => `/admin/hotels/${id}`,
   user:         (id) => `/admin/users?highlight=${id}`,
   check_in:     (id) => `/admin/hotels/${id}`,
+  invoice:      (id) => `/admin/facturation?highlight=${id}`,
 };
 
 const GlobalSearch = () => {
@@ -59,7 +61,7 @@ const GlobalSearch = () => {
   });
 
   const results: GlobalSearchResult[] = data
-    ? [...data.organizations, ...data.hotels, ...data.check_ins, ...data.users]
+    ? [...data.organizations, ...data.hotels, ...data.check_ins, ...data.users, ...(data.invoices ?? [])]
     : [];
 
   return (

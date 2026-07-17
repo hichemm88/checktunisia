@@ -160,8 +160,10 @@ const CreateAuthorityUserForm = ({ onDone }: { onDone: () => void }) => {
         <Input label={t('profile.firstName')} value={form.first_name} onChange={(e) => set('first_name', e.target.value)} />
         <Input label={t('profile.lastName')} value={form.last_name} onChange={(e) => set('last_name', e.target.value)} />
       </div>
-      <Input label={t('profile.email')} type="email" value={form.email} onChange={(e) => set('email', e.target.value)} />
-      <Input label={t('adminAuthority.initialPassword')} type="password" value={form.password} onChange={(e) => set('password', e.target.value)} />
+      {/* autoComplete off/new-password : le navigateur pré-remplissait ici les
+          identifiants admin (admin@qayed.tn + mot de passe) via l'autofill. */}
+      <Input label={t('profile.email')} type="email" autoComplete="off" value={form.email} onChange={(e) => set('email', e.target.value)} />
+      <Input label={t('adminAuthority.initialPassword')} type="password" autoComplete="new-password" value={form.password} onChange={(e) => set('password', e.target.value)} />
       <Select label={t('adminAuthority.organization')} value={form.organization_id} onChange={(e) => set('organization_id', e.target.value)}
         options={[{ value: '', label: t('adminUsers.choose') }, ...(orgs ?? []).map((o) => ({ value: String(o.id), label: o.name }))]} />
       <div className="grid grid-cols-2 gap-2">

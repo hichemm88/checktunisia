@@ -84,7 +84,7 @@ export const AdminDashboardPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Stat icon={TrendingUp} label={t('adminDashboard.checkinsToday')}     value={stats.check_ins.today}      color="var(--qayed-cachet-sombre)" />
             <Stat icon={Users}      label={t('adminDashboard.checkinsThisMonth')} value={stats.check_ins.this_month} color="var(--qayed-cachet-sombre)" />
-            <div className="card p-5">
+            <div className="card p-5 group relative">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">MRR</p>
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: 'var(--qayed-conforme)18' }}>
@@ -92,6 +92,20 @@ export const AdminDashboardPage = () => {
                 </div>
               </div>
               <p className="font-mono text-3xl font-extrabold text-gray-900">{formatTND(stats.mrr)}</p>
+              {(stats.mrr_breakdown?.length ?? 0) > 0 && (
+                <div className="pointer-events-none absolute top-full left-0 mt-1 hidden group-hover:block w-72 rounded-xl bg-gray-900 p-3 text-white shadow-xl z-20">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-2">{t('adminDashboard.mrrBreakdown')}</p>
+                  {stats.mrr_breakdown.map((b, i) => (
+                    <div key={i} className="flex items-center justify-between gap-2 text-xs py-0.5">
+                      <span className="truncate">
+                        {b.customer}
+                        <span className="text-gray-400"> — {b.plan}{b.billing_cycle === 'yearly' ? ` (${t('adminDashboard.yearlyDiv12')})` : ''}{b.negotiated ? ` (${t('adminDashboard.negotiatedPrice')})` : ''}</span>
+                      </span>
+                      <span className="font-mono shrink-0">{formatTND(b.monthly_value)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

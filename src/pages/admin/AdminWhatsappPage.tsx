@@ -64,6 +64,11 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
     successMessage: t('adminWhatsapp.toast.testSent'),
     onSuccess: invalidate,
   });
+  const resendAllM = useAdminMutation({
+    mutationFn: () => adminWhatsappApi.resendAll(),
+    successMessage: t('adminWhatsapp.toast.resentAll'),
+    onSuccess: invalidate,
+  });
 
   const stat = (label: string, value: number, color: string) => (
     <div className="flex flex-col items-center rounded-xl bg-warm-100 px-4 py-2 min-w-[72px]">
@@ -119,6 +124,11 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
         <Button size="sm" variant="secondary" onClick={() => testM.mutate()} loading={testM.isPending} disabled={!health.enabled}>
           <Send className="h-4 w-4" /> {t('adminWhatsapp.sendTest')}
         </Button>
+        {health.queue.failed > 0 && (
+          <Button size="sm" variant="secondary" onClick={() => resendAllM.mutate()} loading={resendAllM.isPending}>
+            <RefreshCw className="h-4 w-4" /> {t('adminWhatsapp.resendAll', { n: health.queue.failed })}
+          </Button>
+        )}
         {health.last_ready_at && (
           <span className="ms-auto text-xs text-gray-400">
             {t('adminWhatsapp.lastReady')}: {new Date(health.last_ready_at).toLocaleString(locale, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
