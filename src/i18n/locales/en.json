@@ -974,6 +974,7 @@
   "guestScan": {
     "scanFailed": "Scan failed",
     "scanFailedRetry": "Scan failed. Try again or enter details manually.",
+    "photoUploadFailed": "Document photo not saved — the fiche will be sent without a photo. Please rescan the document.",
     "photographHint": "Photograph the passport page with the MRZ zone (two code lines) clearly visible.",
     "takePhoto": "Take a photo",
     "importPhoto": "Import a photo",

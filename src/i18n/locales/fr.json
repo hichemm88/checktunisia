@@ -974,6 +974,7 @@
   "guestScan": {
     "scanFailed": "Scan échoué",
     "scanFailedRetry": "Scan échoué. Réessayez ou saisissez manuellement.",
+    "photoUploadFailed": "Photo du document non enregistrée — la fiche partira sans photo. Rescannez le document.",
     "photographHint": "Photographiez la page du passeport avec la zone MRZ (deux lignes de codes) bien visible.",
     "takePhoto": "Prendre une photo",
     "importPhoto": "Importer une photo",

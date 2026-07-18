@@ -77,11 +77,17 @@ export const GuestScanPanel = ({
 
   // MODULE PROVISOIRE — relais WhatsApp : l'image du document n'est stockée que
   // si le relais est actif (sinon aucune raison de conserver une pièce d'identité).
+  // On ne rabat PAS une erreur réseau sur `false` : sinon un simple incident de
+  // connexion faisait croire le relais éteint et l'image du passeport n'était
+  // jamais téléversée (silencieusement, 5 min durant) — la fiche de police
+  // partait alors sans sa photo. En cas d'échec la valeur reste `undefined`
+  // (« inconnu ») et le téléversement a lieu ; seul un `enabled: false` explicite
+  // le bloque.
   const { data: waEnabled } = useQuery({
     queryKey: ['whatsapp-enabled'],
-    queryFn: () => api.get('/health/whatsapp').then((r) => !!r.data?.data?.enabled).catch(() => false),
+    queryFn: () => api.get('/health/whatsapp').then((r) => !!r.data?.data?.enabled),
     staleTime: 5 * 60 * 1000,
-    retry: false,
+    retry: 2,
   });
 
   const fileRef       = useRef<HTMLInputElement>(null); // caméra (MRZ)
@@ -131,11 +137,13 @@ export const GuestScanPanel = ({
 
     // MODULE PROVISOIRE — relais WhatsApp : téléverse l'image du document et
     // mémorise son scan_id pour le relier à CE voyageur (multi-voyageurs).
-    // Best-effort, non bloquant ; l'image est purgée après 24 h côté backend.
+    // Non bloquant (l'ajout du voyageur ne doit jamais être empêché) ; l'image
+    // est purgée après 24 h côté backend. En cas d'échec on PRÉVIENT : sans ça,
+    // la fiche de police partait sans sa photo sans que personne ne le sache.
     if (waEnabled !== false) {
       pendingScanUpload.current = scansApi.upload(checkIn.id, file)
         .then((scan) => { setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })); return scan.scan_id; })
-        .catch(() => undefined);
+        .catch(() => { toast(t('guestScan.photoUploadFailed'), 'error'); return undefined; });
     }
   };
 
@@ -240,7 +248,7 @@ export const GuestScanPanel = ({
         const cinFile = new File([prepared], 'cin.jpg', { type: prepared.type || 'image/jpeg' });
         pendingScanUpload.current = scansApi.upload(checkIn.id, cinFile, 'front')
           .then((scan) => { setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })); return scan.scan_id; })
-          .catch(() => undefined);
+          .catch(() => { toast(t('guestScan.photoUploadFailed'), 'error'); return undefined; });
       }
     } catch (err: unknown) {
       const code = (err as { code?: string })?.code;
