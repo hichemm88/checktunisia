@@ -13,6 +13,7 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import Busboy from 'busboy';
 import Anthropic from '@anthropic-ai/sdk';
 import { MRZ_SYSTEM_PROMPT, MRZ_USER_PROMPT, parseMrzResponse, MrzParseError } from '../_lib/mrzExtraction.js';
+import { trackAiUsage } from '../_lib/aiUsageTracking.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -102,7 +103,12 @@ async function extractWithClaude(client: Anthropic, image: Buffer, mediaType: st
     ],
   });
   const textBlock = message.content.find((b) => b.type === 'text');
-  return textBlock && textBlock.type === 'text' ? textBlock.text : '';
+  return {
+    text: textBlock && textBlock.type === 'text' ? textBlock.text : '',
+    model: message.model,
+    inputTokens: message.usage?.input_tokens ?? 0,
+    outputTokens: message.usage?.output_tokens ?? 0,
+  };
 }
 
 export default async function handler(req: IncomingMessage & { method?: string }, res: ServerResponse): Promise<void> {
@@ -141,19 +147,41 @@ export default async function handler(req: IncomingMessage & { method?: string }
 
   const client = new Anthropic({ apiKey, timeout: HARD_TIMEOUT_MS, maxRetries: 0 });
 
+  // Tracking : chronométrage du/des appel(s) Anthropic + cumul des tokens facturés.
   let result: ReturnType<typeof parseMrzResponse> | null = null;
   let lastErr: unknown = null;
+  let usageModel = MODEL;
+  let inputTokens = 0;
+  let outputTokens = 0;
+  const aiStarted = Date.now();
   for (let attempt = 0; attempt < 2 && !result; attempt++) {
     try {
       const raw = await extractWithClaude(client, form.image, mediaType);
-      result = parseMrzResponse(raw);
+      usageModel = raw.model || usageModel;
+      inputTokens += raw.inputTokens;
+      outputTokens += raw.outputTokens;
+      result = parseMrzResponse(raw.text);
     } catch (e) {
       lastErr = e;
       if (!(e instanceof MrzParseError)) break;
     }
   }
+  const aiLatencyMs = Date.now() - aiStarted;
 
   form.image = null; // purge mémoire
+
+  // Tracking coût IA — repli passeport (feature passport_scan). Isolé, jamais bloquant.
+  const trackStatus = result ? 'success' : lastErr instanceof MrzParseError ? 'parse_error' : 'api_error';
+  await trackAiUsage({
+    feature: 'passport_scan',
+    establishmentId: propertyId,
+    actorToken: authorization.replace(/^Bearer\s+/i, ''),
+    model: usageModel,
+    status: trackStatus,
+    inputTokens: trackStatus === 'api_error' ? 0 : inputTokens,
+    outputTokens: trackStatus === 'api_error' ? 0 : outputTokens,
+    latencyMs: aiLatencyMs,
+  });
 
   if (!result) {
     const isTimeout =

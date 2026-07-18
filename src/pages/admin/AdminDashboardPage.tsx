@@ -1,14 +1,15 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown, Wallet, Award, UserPlus, Landmark } from 'lucide-react';
+import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown, Wallet, Award, UserPlus, Landmark, Cpu } from 'lucide-react';
 import { adminDashboardApi, AdminDashboardStats } from '@/api/admin/dashboard';
 import { adminPaymentsApi } from '@/api/admin/payments';
 import { adminWhatsappApi } from '@/api/admin/whatsapp';
+import { adminAiCostsApi, AiFeatureSummary } from '@/api/admin/aiCosts';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 import { Button } from '@/components/ui/Button';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
-import { formatTND } from '@/lib/money';
+import { formatTND, formatUSD } from '@/lib/money';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 
@@ -106,6 +107,124 @@ const WhatsappStatusStrip = () => {
   );
 };
 
+/**
+ * Widget "Coût IA" — dépenses Claude vision (scan CIN + repli passeport) du mois
+ * en cours, à côté du MRR. Chiffre principal en USD (la facture Anthropic est en
+ * USD), split CIN/passeport, taux d'échec global (ambre si > 5 %) et mini
+ * graphique barres empilées du volume des 30 derniers jours. Bandeau ambre tant
+ * que les tarifs ne sont pas saisis (coûts affichés faux).
+ */
+const AiCostWidget = () => {
+  const { t } = useTranslation();
+  const { data: summary } = useQuery({
+    queryKey: ['admin-ai-costs-summary', 'current_month'],
+    queryFn: () => adminAiCostsApi.summary('current_month'),
+  });
+  const { data: daily } = useQuery({
+    queryKey: ['admin-ai-costs-daily', 30, 'all'],
+    queryFn: () => adminAiCostsApi.daily(30, 'all'),
+  });
+
+  if (!summary) return null;
+
+  const byFeature = (name: AiFeatureSummary['feature']) => summary.features.find((f) => f.feature === name);
+  const cin = byFeature('cin_scan');
+  const passport = byFeature('passport_scan');
+
+  const errorsOf = (f?: AiFeatureSummary) => (f?.api_error_count ?? 0) + (f?.parse_error_count ?? 0);
+  const attemptsOf = (f?: AiFeatureSummary) => (f?.success_count ?? 0) + errorsOf(f);
+  const totalAttempts = attemptsOf(cin) + attemptsOf(passport);
+  const totalErrors = errorsOf(cin) + errorsOf(passport);
+  const failureRate = totalAttempts > 0 ? (totalErrors / totalAttempts) * 100 : 0;
+  const failureAmber = failureRate > 5;
+
+  const days = daily ?? [];
+  const maxCount = Math.max(1, ...days.map((d) => d.cin_count + d.passport_count));
+
+  return (
+    <div className="card p-5">
+      {!summary.pricing_configured && (
+        <div
+          className="mb-4 flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold"
+          style={{ background: 'var(--qayed-vigilance-fond)', color: 'var(--qayed-vigilance-texte)' }}
+        >
+          <AlertTriangle className="h-4 w-4 shrink-0 mt-px" />
+          <span>{t('aiCosts.pricingNotConfigured')}</span>
+        </div>
+      )}
+
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: 'var(--qayed-cachet)18' }}>
+            <Cpu className="h-4 w-4" style={{ color: 'var(--qayed-cachet)' }} />
+          </div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('aiCosts.widgetTitle')}</p>
+        </div>
+        <Link to="/admin/ai-costs" className="text-xs font-semibold text-gray-400 hover:text-gray-700">
+          {t('aiCosts.detail')}
+        </Link>
+      </div>
+
+      <p className="font-mono text-3xl font-extrabold text-gray-900">{formatUSD(summary.total_cost_usd)}</p>
+      <p className="mt-1 text-xs text-gray-500">
+        {t('aiCosts.cinLabel')} <span className="font-mono font-semibold text-gray-700">{formatUSD(cin?.cost_usd)}</span>
+        {'  ·  '}
+        {t('aiCosts.passportLabel')} <span className="font-mono font-semibold text-gray-700">{formatUSD(passport?.cost_usd)}</span>
+      </p>
+      <p className="mt-0.5 text-xs">
+        <span className="text-gray-500">{t('aiCosts.scansThisMonth', { count: totalAttempts })}</span>
+        {'  ·  '}
+        <span
+          className={failureAmber ? 'font-bold' : 'text-gray-500'}
+          style={failureAmber ? { color: 'var(--qayed-vigilance-texte)' } : undefined}
+        >
+          {t('aiCosts.failureRate', { rate: failureRate.toFixed(1) })}
+        </span>
+      </p>
+
+      <div className="mt-4">
+        {days.length === 0 ? (
+          <p className="text-xs text-gray-400 py-6 text-center">{t('aiCosts.noData')}</p>
+        ) : (
+          <div className="flex items-end gap-1 h-20">
+            {days.map((d) => {
+              const total = d.cin_count + d.passport_count;
+              const cinPct = total > 0 ? (d.cin_count / total) * 100 : 0;
+              return (
+                <div key={d.date} className="flex-1 group relative flex flex-col justify-end h-full">
+                  <div
+                    className="w-full rounded-sm overflow-hidden flex flex-col"
+                    style={{ height: `${Math.max(3, (total / maxCount) * 100)}%`, opacity: total === 0 ? 0.15 : 1 }}
+                  >
+                    <div style={{ height: `${100 - cinPct}%`, background: 'var(--qayed-conforme)' }} />
+                    <div style={{ height: `${cinPct}%`, background: 'var(--qayed-cachet)' }} />
+                  </div>
+                  <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white z-10">
+                    <span className="font-mono">
+                      {t('aiCosts.cinLabel')} {d.cin_count} · {t('aiCosts.passportLabel')} {d.passport_count}
+                    </span>
+                    <span>{d.date}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <div className="mt-2 flex items-center gap-4 text-[10px] text-gray-400">
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-2 w-2 rounded-sm" style={{ background: 'var(--qayed-cachet)' }} />
+            {t('aiCosts.cinLabel')}
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-2 w-2 rounded-sm" style={{ background: 'var(--qayed-conforme)' }} />
+            {t('aiCosts.passportLabel')}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const PendingVirementsCard = ({ items }: { items: AdminDashboardStats['alerts']['pending_virements'] }) => {
   const { t } = useTranslation();
   const qc = useQueryClient();
@@ -185,6 +304,8 @@ export const AdminDashboardPage = () => {
               )}
             </div>
           </div>
+
+          <AiCostWidget />
 
           <CheckInsChart data={stats.check_ins_chart} />
 

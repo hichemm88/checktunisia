@@ -1325,7 +1325,8 @@
       "activity": "Journal d'activité",
       "pages": "Pages du site",
       "menus": "Menus",
-      "whatsapp": "WhatsApp"
+      "whatsapp": "WhatsApp",
+      "aiCosts": "Coûts IA"
     },
     "searchPlaceholder": "Rechercher un hébergeur, établissement, utilisateur…",
     "palettePlaceholder": "Naviguer ou rechercher (hébergeur, facture INV-…, fiche QYD-…)",
@@ -1397,5 +1398,48 @@
     "title": "Notifications",
     "markAllRead": "Tout marquer lu",
     "empty": "Aucune notification"
+  },
+  "aiCosts": {
+    "widgetTitle": "Coût IA",
+    "pageTitle": "Coûts IA — Claude vision",
+    "detail": "Détail",
+    "totalCost": "Coût total",
+    "cost": "Coût",
+    "cinLabel": "CIN",
+    "passportLabel": "Passeport",
+    "scansThisMonth": "{{count}} scans ce mois",
+    "failureRate": "Taux d'échec {{rate}} %",
+    "failureRateLabel": "Taux d'échec",
+    "successfulScans": "Scans réussis",
+    "avgCostPerScan": "Coût moyen / scan",
+    "avgPerScan": "Coût moyen/scan",
+    "tokens": "Tokens",
+    "tokensInOut": "Tokens : {{in}} in · {{out}} out",
+    "noData": "Aucune donnée sur la période.",
+    "pricingNotConfigured": "Tarifs non configurés",
+    "pricingNotConfiguredLong": "Tarifs non configurés — les coûts affichés sont faux. Saisissez les tarifs officiels dans la section Tarifs ci-dessous.",
+    "byEstablishment": "Par établissement",
+    "establishment": "Établissement",
+    "passportFallbackTitle": "Taux de fallback passeport",
+    "passportShareOfTotal": "soit {{rate}} % du total des scans (CIN + passeport)",
+    "passportFallbackNote": "Volume brut de replis passeport (Vision). Le dénominateur idéal — nombre total de MRZ tentées — n'est pas disponible : l'OCR MRZ local réussit sans passer par le serveur, donc ces tentatives ne sont pas comptées.",
+    "pricingTitle": "Tarifs",
+    "pricingHint": "Prix USD par million de tokens, par modèle. Source : page pricing Anthropic. Modifie uniquement le coût des nouveaux événements.",
+    "pricingSaved": "Tarif enregistré.",
+    "inputPrice": "Prix input",
+    "outputPrice": "Prix output",
+    "confirmSave": "Confirmer l'enregistrement ?",
+    "confirm": "Confirmer",
+    "updatedAt": "Mis à jour le {{date}}",
+    "period": {
+      "current_month": "Mois en cours",
+      "last_month": "Mois dernier",
+      "last_30d": "30 derniers jours"
+    },
+    "feature": {
+      "all": "Tous",
+      "cin_scan": "CIN",
+      "passport_scan": "Passeport"
+    }
   }
 }
