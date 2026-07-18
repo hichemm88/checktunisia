@@ -7,6 +7,25 @@ export interface CreateCheckInPayload {
   adults_count?: number; children_count?: number; notes?: string;
 }
 
+// Édition d'un check-in par le manager. `room_id: null` détache la chambre
+// (séjour « sans chambre ») ; `undefined` laisse le champ inchangé côté backend.
+export interface UpdateCheckInPayload extends Partial<Omit<CreateCheckInPayload, 'room_id'>> {
+  room_id?: string | null;
+}
+
+// Édition des détails d'un voyageur déjà enregistré. Champs document envoyés à
+// plat par le formulaire, imbriqués sous « document » avant l'appel API (même
+// convention que addGuest).
+export interface UpdateGuestPayload {
+  first_name?: string; last_name?: string; date_of_birth?: string;
+  sex?: 'M' | 'F' | 'X'; nationality_code?: string; is_primary?: boolean;
+  document_type?: string; document_number?: string; issuing_country_code?: string;
+  issue_date?: string; expiry_date?: string;
+  // Champs arabes (CIN tunisienne) — persistés par le backend s'il les connaît.
+  last_name_ar?: string; first_name_ar?: string; filiation_ar?: string;
+  spouse_ar?: string; birth_place_ar?: string;
+}
+
 export interface AddGuestPayload {
   first_name: string; last_name: string; date_of_birth: string;
   sex: 'M' | 'F' | 'X'; nationality_code: string; is_primary?: boolean;
@@ -34,7 +53,7 @@ export const checkInsApi = {
   create: (payload: CreateCheckInPayload) =>
     api.post<ApiItem<CheckIn>>('/hotel/check-ins', payload).then((r) => r.data.data),
 
-  update: (id: string, payload: Partial<CreateCheckInPayload>) =>
+  update: (id: string, payload: UpdateCheckInPayload) =>
     api.patch<ApiItem<CheckIn>>(`/hotel/check-ins/${id}`, payload).then((r) => r.data.data),
 
   complete: (id: string) =>
@@ -57,6 +76,30 @@ export const checkInsApi = {
       },
     };
     return api.post<ApiItem<Guest>>(`/hotel/check-ins/${checkInId}/guests`, body).then((r) => r.data.data);
+  },
+
+  updateGuest: (checkInId: string, guestId: string, payload: UpdateGuestPayload) => {
+    // Backend expects document fields nested under a "document" key (comme addGuest).
+    // On n'imbrique « document » que si l'un des champs document est fourni, pour
+    // ne pas écraser un document existant avec des valeurs vides lors d'une simple
+    // correction d'identité.
+    const { document_type, document_number, issuing_country_code, issue_date, expiry_date, ...guestData } = payload;
+    const hasDoc =
+      document_type !== undefined || document_number !== undefined ||
+      issuing_country_code !== undefined || issue_date !== undefined || expiry_date !== undefined;
+    const body = hasDoc
+      ? {
+          ...guestData,
+          document: {
+            type:                 document_type,
+            document_number,
+            issuing_country_code,
+            issue_date,
+            expiry_date,
+          },
+        }
+      : guestData;
+    return api.patch<ApiItem<Guest>>(`/hotel/check-ins/${checkInId}/guests/${guestId}`, body).then((r) => r.data.data);
   },
 
   removeGuest: (checkInId: string, guestId: string) =>

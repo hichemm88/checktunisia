@@ -1059,7 +1059,14 @@
     "printPoliceForm": "Imprimer fiche de police",
     "confirmCheckout": "Confirmer le check-out",
     "actualDepartureDate": "Date de départ réelle",
-    "expiredTag": "Expiré"
+    "expiredTag": "Expiré",
+    "editCheckin": "Modifier le check-in",
+    "checkinUpdated": "Check-in mis à jour",
+    "invalidDates": "Le départ doit être postérieur à l'arrivée.",
+    "editGuest": "Modifier le voyageur",
+    "guestUpdated": "Voyageur mis à jour",
+    "guestRemoved": "Voyageur retiré",
+    "confirmRemoveGuest": "Retirer ce voyageur du check-in ?"
   },
   "cinScan": {
     "scanCin": "Scanner la CIN",
@@ -1163,7 +1170,8 @@
     "noFloor": "Sans étage",
     "capacityN": "{{count}} pers.",
     "noRoomConfigured": "Aucune chambre configurée pour cet établissement",
-    "otaDetected": "Réservation {{platform}} détectée"
+    "otaDetected": "Réservation {{platform}} détectée",
+    "roomCurrent": "Chambre actuelle"
   },
   "hotelHistory": {
     "title": "Historique",

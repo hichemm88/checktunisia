@@ -1059,7 +1059,14 @@
     "printPoliceForm": "Print police form",
     "confirmCheckout": "Confirm check-out",
     "actualDepartureDate": "Actual departure date",
-    "expiredTag": "Expired"
+    "expiredTag": "Expired",
+    "editCheckin": "Edit check-in",
+    "checkinUpdated": "Check-in updated",
+    "invalidDates": "Departure must be after arrival.",
+    "editGuest": "Edit traveler",
+    "guestUpdated": "Traveler updated",
+    "guestRemoved": "Traveler removed",
+    "confirmRemoveGuest": "Remove this traveler from the check-in?"
   },
   "cinScan": {
     "scanCin": "Scan the ID card",
@@ -1163,7 +1170,8 @@
     "noFloor": "No floor",
     "capacityN": "{{count}} guests",
     "noRoomConfigured": "No room configured for this property",
-    "otaDetected": "{{platform}} booking detected"
+    "otaDetected": "{{platform}} booking detected",
+    "roomCurrent": "Current room"
   },
   "hotelHistory": {
     "title": "History",
