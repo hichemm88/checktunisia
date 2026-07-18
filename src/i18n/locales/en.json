@@ -1325,7 +1325,8 @@
       "activity": "Activity log",
       "pages": "Site pages",
       "menus": "Menus",
-      "whatsapp": "WhatsApp"
+      "whatsapp": "WhatsApp",
+      "aiCosts": "AI costs"
     },
     "searchPlaceholder": "Search a host, property, user…",
     "palettePlaceholder": "Navigate or search (host, invoice INV-…, check-in QYD-…)",
@@ -1397,5 +1398,48 @@
     "title": "Notifications",
     "markAllRead": "Mark all read",
     "empty": "No notifications"
+  },
+  "aiCosts": {
+    "widgetTitle": "AI cost",
+    "pageTitle": "AI costs — Claude vision",
+    "detail": "Details",
+    "totalCost": "Total cost",
+    "cost": "Cost",
+    "cinLabel": "ID card",
+    "passportLabel": "Passport",
+    "scansThisMonth": "{{count}} scans this month",
+    "failureRate": "Failure rate {{rate}}%",
+    "failureRateLabel": "Failure rate",
+    "successfulScans": "Successful scans",
+    "avgCostPerScan": "Avg cost / scan",
+    "avgPerScan": "Avg cost/scan",
+    "tokens": "Tokens",
+    "tokensInOut": "Tokens: {{in}} in · {{out}} out",
+    "noData": "No data for this period.",
+    "pricingNotConfigured": "Pricing not configured",
+    "pricingNotConfiguredLong": "Pricing not configured — displayed costs are wrong. Enter the official rates in the Pricing section below.",
+    "byEstablishment": "By establishment",
+    "establishment": "Establishment",
+    "passportFallbackTitle": "Passport fallback rate",
+    "passportShareOfTotal": "i.e. {{rate}}% of all scans (ID + passport)",
+    "passportFallbackNote": "Raw volume of passport (Vision) fallbacks. The ideal denominator — total MRZ attempts — is not available: local MRZ OCR succeeds without hitting the server, so those attempts are not counted.",
+    "pricingTitle": "Pricing",
+    "pricingHint": "USD price per million tokens, per model. Source: Anthropic pricing page. Only affects the cost of new events.",
+    "pricingSaved": "Pricing saved.",
+    "inputPrice": "Input price",
+    "outputPrice": "Output price",
+    "confirmSave": "Confirm save?",
+    "confirm": "Confirm",
+    "updatedAt": "Updated {{date}}",
+    "period": {
+      "current_month": "Current month",
+      "last_month": "Last month",
+      "last_30d": "Last 30 days"
+    },
+    "feature": {
+      "all": "All",
+      "cin_scan": "ID card",
+      "passport_scan": "Passport"
+    }
   }
 }

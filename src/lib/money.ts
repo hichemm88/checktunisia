@@ -12,3 +12,16 @@ export const formatTNDAmount = (amount: number | string | null | undefined): str
 
 export const formatTND = (amount: number | string | null | undefined): string =>
   `${formatTNDAmount(amount)} TND`;
+
+/**
+ * Montants en dollars US pour le tracking des coûts IA (la facture Anthropic est
+ * en USD). Pas de conversion TND dans cette version. `maxDecimals` monte à 4 pour
+ * les coûts par scan, qui sont de l'ordre de quelques millièmes de dollar.
+ */
+export const formatUSD = (
+  amount: number | string | null | undefined,
+  maxDecimals = 2,
+): string => {
+  const n = Number(amount ?? 0);
+  return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: maxDecimals })}`;
+};

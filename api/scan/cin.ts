@@ -20,6 +20,7 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import Busboy from 'busboy';
 import Anthropic from '@anthropic-ai/sdk';
 import { CIN_SYSTEM_PROMPT, CIN_USER_PROMPT, parseCinResponse, CinParseError } from '../_lib/cinExtraction.js';
+import { trackAiUsage } from '../_lib/aiUsageTracking.js';
 
 // @vercel/node ne bufferise pas les corps multipart → on lit le flux nous-mêmes.
 export const config = { api: { bodyParser: false } };
@@ -122,7 +123,12 @@ async function extractWithClaude(client: Anthropic, image: Buffer, mediaType: st
     ],
   });
   const textBlock = message.content.find((b) => b.type === 'text');
-  return textBlock && textBlock.type === 'text' ? textBlock.text : '';
+  return {
+    text: textBlock && textBlock.type === 'text' ? textBlock.text : '',
+    model: message.model,
+    inputTokens: message.usage?.input_tokens ?? 0,
+    outputTokens: message.usage?.output_tokens ?? 0,
+  };
 }
 
 /**
@@ -227,20 +233,45 @@ export default async function handler(req: IncomingMessage & { method?: string }
   const client = new Anthropic({ apiKey, timeout: HARD_TIMEOUT_MS, maxRetries: 0 });
 
   // Extraction + 1 retry sur parse_error (cf. P1 robustesse).
+  // Tracking : on chronomètre le(s) appel(s) Anthropic et on cumule les tokens
+  // facturés (un retry parse_error a bien coûté deux appels).
   let result: ReturnType<typeof parseCinResponse> | null = null;
   let lastErr: unknown = null;
+  let usageModel = MODEL;
+  let inputTokens = 0;
+  let outputTokens = 0;
+  const aiStarted = Date.now();
   for (let attempt = 0; attempt < 2 && !result; attempt++) {
     try {
       const raw = await extractWithClaude(client, form.image, mediaType);
-      result = parseCinResponse(raw);
+      usageModel = raw.model || usageModel;
+      inputTokens += raw.inputTokens;
+      outputTokens += raw.outputTokens;
+      result = parseCinResponse(raw.text);
     } catch (e) {
       lastErr = e;
       if (!(e instanceof CinParseError)) break; // erreur réseau/timeout → on sort
     }
   }
+  const aiLatencyMs = Date.now() - aiStarted;
 
   // On efface la référence à l'image dès que possible (purge mémoire).
   form.image = null;
+
+  // Tracking coût IA — isolé, ne bloque ni ne casse jamais le scan (règle #2).
+  // Le coût est calculé côté backend avec le tarif actif ; ici, tokens + modèle.
+  const trackStatus = result ? 'success' : lastErr instanceof CinParseError ? 'parse_error' : 'api_error';
+  await trackAiUsage({
+    feature: 'cin_scan',
+    establishmentId: propertyId,
+    actorToken: authorization.replace(/^Bearer\s+/i, ''),
+    model: usageModel,
+    status: trackStatus,
+    // Un api_error Anthropic n'est pas facturé -> tokens 0. Sinon tokens réels.
+    inputTokens: trackStatus === 'api_error' ? 0 : inputTokens,
+    outputTokens: trackStatus === 'api_error' ? 0 : outputTokens,
+    latencyMs: aiLatencyMs,
+  });
 
   if (!result) {
     const isTimeout =

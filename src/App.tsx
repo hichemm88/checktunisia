@@ -34,6 +34,7 @@ import { ActivityPage } from '@/pages/authority/ActivityPage';
 import { WatchlistPage } from '@/pages/authority/WatchlistPage';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
+import { AdminAiCostsPage } from '@/pages/admin/AdminAiCostsPage';
 import { AdminHostsPage } from '@/pages/admin/AdminHostsPage';
 import { AdminHotelsPage } from '@/pages/admin/AdminHotelsPage';
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
@@ -167,6 +168,7 @@ export const App = () => (
       <Route element={<RequireRole roles={['platform_admin']} />}>
         <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard"     element={<AdminDashboardPage />} />
+          <Route path="/admin/ai-costs"      element={<AdminAiCostsPage />} />
           <Route path="/admin/hosts"         element={<AdminHostsPage />} />
           <Route path="/admin/hotels"        element={<AdminHotelsPage />} />
           <Route path="/admin/users"         element={<AdminUsersPage />} />

@@ -1303,7 +1303,8 @@
       "activity": "سجل النشاط",
       "pages": "صفحات الموقع",
       "menus": "القوائم",
-      "whatsapp": "واتساب"
+      "whatsapp": "واتساب",
+      "aiCosts": "تكاليف الذكاء الاصطناعي"
     },
     "searchPlaceholder": "البحث عن مضيف، مؤسسة، مستخدم…",
     "palettePlaceholder": "التنقل أو البحث (مضيف، فاتورة، بطاقة)",
@@ -1375,5 +1376,48 @@
     "title": "الإشعارات",
     "markAllRead": "تحديد الكل كمقروء",
     "empty": "لا توجد إشعارات"
+  },
+  "aiCosts": {
+    "widgetTitle": "تكلفة الذكاء الاصطناعي",
+    "pageTitle": "تكاليف الذكاء الاصطناعي — Claude vision",
+    "detail": "تفاصيل",
+    "totalCost": "التكلفة الإجمالية",
+    "cost": "التكلفة",
+    "cinLabel": "بطاقة التعريف",
+    "passportLabel": "جواز السفر",
+    "scansThisMonth": "{{count}} عملية مسح هذا الشهر",
+    "failureRate": "نسبة الفشل {{rate}} %",
+    "failureRateLabel": "نسبة الفشل",
+    "successfulScans": "عمليات مسح ناجحة",
+    "avgCostPerScan": "متوسط التكلفة / مسح",
+    "avgPerScan": "متوسط التكلفة/مسح",
+    "tokens": "الرموز",
+    "tokensInOut": "الرموز: {{in}} إدخال · {{out}} إخراج",
+    "noData": "لا توجد بيانات لهذه الفترة.",
+    "pricingNotConfigured": "الأسعار غير مضبوطة",
+    "pricingNotConfiguredLong": "الأسعار غير مضبوطة — التكاليف المعروضة خاطئة. أدخل الأسعار الرسمية في قسم الأسعار أدناه.",
+    "byEstablishment": "حسب المؤسسة",
+    "establishment": "المؤسسة",
+    "passportFallbackTitle": "نسبة اللجوء إلى جواز السفر",
+    "passportShareOfTotal": "أي {{rate}} % من إجمالي عمليات المسح (بطاقة + جواز)",
+    "passportFallbackNote": "الحجم الخام لعمليات اللجوء إلى جواز السفر (Vision). المقام المثالي — إجمالي محاولات MRZ — غير متوفر: ينجح مسح MRZ المحلي دون المرور بالخادم، لذلك لا تُحتسب هذه المحاولات.",
+    "pricingTitle": "الأسعار",
+    "pricingHint": "السعر بالدولار لكل مليون رمز، حسب النموذج. المصدر: صفحة أسعار Anthropic. يؤثر فقط على تكلفة الأحداث الجديدة.",
+    "pricingSaved": "تم حفظ السعر.",
+    "inputPrice": "سعر الإدخال",
+    "outputPrice": "سعر الإخراج",
+    "confirmSave": "تأكيد الحفظ؟",
+    "confirm": "تأكيد",
+    "updatedAt": "حُدّث في {{date}}",
+    "period": {
+      "current_month": "الشهر الحالي",
+      "last_month": "الشهر الماضي",
+      "last_30d": "آخر 30 يومًا"
+    },
+    "feature": {
+      "all": "الكل",
+      "cin_scan": "بطاقة التعريف",
+      "passport_scan": "جواز السفر"
+    }
   }
 }
