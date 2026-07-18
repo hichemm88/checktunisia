@@ -1086,6 +1086,8 @@
     "titleMrz": "Scanner le passeport (MRZ)",
     "mrzHint": "Cadrez la page, zone MRZ (2 lignes) en bas",
     "mrzNote": "Lecture effectuée sur l'appareil",
+    "mrzFallback": "Lecture approfondie du passeport…",
+    "mrzFallbackHint": "L'OCR local a échoué — analyse avancée en cours",
     "notCin": "Cette image n'est pas une CIN tunisienne. Reprenez la photo.",
     "backSide": "Cette photo montre le verso — الصورة تظهر الوجه الخلفي",
     "reimport": "Reprendre la photo",

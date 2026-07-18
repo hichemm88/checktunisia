@@ -1086,6 +1086,8 @@
     "titleMrz": "Scan the passport (MRZ)",
     "mrzHint": "Frame the page, MRZ zone (2 lines) at the bottom",
     "mrzNote": "Read on-device",
+    "mrzFallback": "Deep-reading the passport…",
+    "mrzFallbackHint": "On-device OCR failed — running advanced analysis",
     "notCin": "This image is not a Tunisian ID card. Retake the photo.",
     "backSide": "This photo shows the back — الصورة تظهر الوجه الخلفي",
     "reimport": "Retake the photo",

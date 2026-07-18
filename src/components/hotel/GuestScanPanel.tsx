@@ -16,6 +16,7 @@ import { scanMrz } from '@/lib/mrzScanner';
 import { CINCapture } from '@/components/hotel/CINCapture';
 import { prepareCinImage } from '@/lib/cinImagePrep';
 import { scanCin } from '@/api/scanCin';
+import { scanMrzVision } from '@/api/scanMrz';
 import { useAuthStore } from '@/stores/authStore';
 import { CheckIn, CinConfidence, CinScanResponse } from '@/types';
 
@@ -104,43 +105,66 @@ export const GuestScanPanel = ({
   const [usedExisting, setUsedExisting] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
   const [rotation, setRotation] = useState(0);
+  // Repli Claude vision passeport en cours (après échec de l'OCR local).
+  const [mrzFallback, setMrzFallback] = useState(false);
 
-  // ── MRZ (passeport) — OCR client-side, alimenté par l'upload OU la caméra in-app
+  // Remplit le formulaire à partir d'une lecture MRZ (locale OU Claude vision).
+  const applyMrz = (mrz: {
+    first_name?: string | null; last_name?: string | null; date_of_birth?: string | null;
+    sex?: string | null; nationality_code?: string | null; document_type?: string;
+    document_number?: string | null; issuing_country_code?: string | null; expiry_date?: string | null;
+  }, file: File) => {
+    setGuestForm({
+      first_name: mrz.first_name ?? '',
+      last_name: mrz.last_name ?? '',
+      date_of_birth: mrz.date_of_birth ?? '',
+      sex: mrz.sex ?? '',
+      nationality_code: mrz.nationality_code ?? '',
+      document_type: mrz.document_type ?? 'passport',
+      document_number: mrz.document_number ?? '',
+      issuing_country_code: mrz.issuing_country_code ?? '',
+      expiry_date: mrz.expiry_date ?? '',
+      is_primary: isPrimary,
+    });
+    setExtractedOk(true);
+    setScanState('done');
+
+    // MODULE PROVISOIRE — relais WhatsApp : téléverse l'image du document et
+    // mémorise son scan_id pour le relier à CE voyageur (multi-voyageurs).
+    // Best-effort, non bloquant ; l'image est purgée après 24 h côté backend.
+    if (waEnabled !== false) {
+      pendingScanUpload.current = scansApi.upload(checkIn.id, file)
+        .then((scan) => { setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })); return scan.scan_id; })
+        .catch(() => undefined);
+    }
+  };
+
+  // ── MRZ (passeport) — OCR local d'abord (gratuit/hors-ligne) ; repli Claude
+  // vision seulement si l'OCR local échoue (reflets, hologramme sur le texte).
   const runMrzScan = async (file: File) => {
     setScanKind('mrz');
     setScanState('scanning');
     setOcrProgress(0);
+    setMrzFallback(false);
     try {
       const mrz = await scanMrz(file, setOcrProgress);
-      setGuestForm({
-        first_name: mrz.first_name ?? '',
-        last_name: mrz.last_name ?? '',
-        date_of_birth: mrz.date_of_birth ?? '',
-        sex: mrz.sex ?? 'M',
-        nationality_code: mrz.nationality_code ?? '',
-        document_type: mrz.document_type,
-        document_number: mrz.document_number ?? '',
-        issuing_country_code: mrz.issuing_country_code ?? '',
-        expiry_date: mrz.expiry_date ?? '',
-        is_primary: isPrimary,
-      });
-      setExtractedOk(true);
-      setScanState('done');
-
-      // MODULE PROVISOIRE — relais WhatsApp : téléverse l'image du document et
-      // mémorise son scan_id pour le relier à CE voyageur (envoyé avec addGuest),
-      // afin que chaque fiche parte avec la bonne photo (multi-voyageurs).
-      // Best-effort, non bloquant ; l'image est purgée après 24 h côté backend.
-      if (waEnabled !== false) {
-        pendingScanUpload.current = scansApi.upload(checkIn.id, file)
-          .then((scan) => { setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })); return scan.scan_id; })
-          .catch(() => undefined);
+      applyMrz(mrz, file);
+    } catch {
+      // OCR local KO → repli Claude vision (fiable sur reflets/hologramme).
+      try {
+        setMrzFallback(true);
+        const prepared = await prepareCinImage(file);
+        const mrz = await scanMrzVision(prepared, propertyId);
+        applyMrz(mrz, file);
+      } catch (err: unknown) {
+        const code = (err as { code?: string })?.code;
+        const msg = code === 'timeout' ? t('cinScan.timeoutHint') : t('guestScan.scanFailed');
+        toast(msg, 'error');
+        setScanState('error');
+        if (fileRef.current) fileRef.current.value = '';
+      } finally {
+        setMrzFallback(false);
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : t('guestScan.scanFailed');
-      toast(msg, 'error');
-      setScanState('error');
-      if (fileRef.current) fileRef.current.value = '';
     }
   };
 
@@ -396,6 +420,12 @@ export const GuestScanPanel = ({
             <>
               <p className="text-sm font-semibold text-gray-700">{t('cinScan.reading')}</p>
               <p className="text-xs qayed-arabic text-gray-400" dir="rtl">{t('cinScan.readingAr')}</p>
+            </>
+          ) : mrzFallback ? (
+            // Repli Claude vision après échec de l'OCR local (barre indéterminée).
+            <>
+              <p className="text-sm font-semibold text-gray-700">{t('cinScan.mrzFallback')}</p>
+              <p className="text-xs text-gray-400">{t('cinScan.mrzFallbackHint')}</p>
             </>
           ) : (
             <>
