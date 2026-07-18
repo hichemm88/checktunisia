@@ -16,8 +16,8 @@ Schéma :
 {
   "document_type": "passport",
   "document_number": string | null,      // n° de document, sans les < de remplissage
-  "last_name": string | null,            // nom (partie avant le << dans la 1re ligne)
-  "first_name": string | null,           // premier prénom uniquement
+  "last_name": string | null,            // nom de famille (partie avant le << dans la 1re ligne)
+  "first_name": string | null,           // TOUS les prénoms (given names) dans l'ordre, séparés par des espaces (ex. "AMMAR ABDULLA MOHAMMED")
   "date_of_birth": "YYYY-MM-DD" | null,  // depuis YYMMDD : année 00..(année courante à 2 chiffres) = 20xx, sinon 19xx
   "expiry_date": "YYYY-MM-DD" | null,    // depuis YYMMDD : toujours 20xx
   "sex": "M" | "F" | "X" | null,
@@ -27,6 +27,7 @@ Schéma :
 
 Règles :
 - Remplace les < par des espaces dans les noms ; ignore les < de remplissage en fin.
+- first_name : inclure la TOTALITÉ des prénoms (given names), jamais seulement le premier. Si la MRZ tronque un nom long (limite de 44 caractères par ligne), complète avec la zone visuelle « Given names / Prénoms ».
 - Un champ illisible : null, jamais d'invention.
 - Si l'image n'est pas un passeport avec MRZ : tous les champs null.`;
 
