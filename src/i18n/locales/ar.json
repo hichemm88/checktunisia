@@ -1043,7 +1043,14 @@
     "printPoliceForm": "طباعة بطاقة الشرطة",
     "confirmCheckout": "تأكيد المغادرة",
     "actualDepartureDate": "تاريخ المغادرة الفعلي",
-    "expiredTag": "منتهية"
+    "expiredTag": "منتهية",
+    "editCheckin": "تعديل تسجيل الوصول",
+    "checkinUpdated": "تم تحديث تسجيل الوصول",
+    "invalidDates": "يجب أن يكون تاريخ المغادرة بعد تاريخ الوصول.",
+    "editGuest": "تعديل المسافر",
+    "guestUpdated": "تم تحديث المسافر",
+    "guestRemoved": "تمت إزالة المسافر",
+    "confirmRemoveGuest": "إزالة هذا المسافر من تسجيل الوصول؟"
   },
   "cinScan": {
     "scanCin": "مسح بطاقة التعريف",
@@ -1147,7 +1154,8 @@
     "noFloor": "بدون طابق",
     "capacityN": "{{count}} أشخاص",
     "noRoomConfigured": "لا توجد غرف مهيأة لهذه المؤسسة",
-    "otaDetected": "تم اكتشاف حجز {{platform}}"
+    "otaDetected": "تم اكتشاف حجز {{platform}}",
+    "roomCurrent": "الغرفة الحالية"
   },
   "hotelHistory": {
     "title": "السجل",

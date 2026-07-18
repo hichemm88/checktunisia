@@ -34,21 +34,28 @@ const DOT: Record<string, string> = {
 };
 
 const RoomRow = ({
-  room, selected, onSelect, locale,
+  room, selected, onSelect, locale, forceSelectable,
 }: {
   room: RoomAvailability; selected: boolean; onSelect: () => void; locale: string;
+  /** En édition : la chambre déjà assignée reste sélectionnable malgré le conflit qu'elle a avec son propre séjour. */
+  forceSelectable?: boolean;
 }) => {
   const { t } = useTranslation();
   const [showReason, setShowReason] = useState(false);
 
-  const selectable = room.state === 'free';
+  // « current » = la chambre actuellement assignée, rendue sélectionnable en
+  // édition alors que l'API la voit occupée (par le séjour qu'on est en train
+  // d'éditer). On la présente comme disponible plutôt qu'occupée.
+  const isCurrent = !!forceSelectable && room.state !== 'free';
+  const selectable = room.state === 'free' || !!forceSelectable;
   const dotColor = room.state === 'free'
     ? (room.departing_same_day ? DOT.departing : DOT.free)
-    : DOT[room.state];
+    : isCurrent ? DOT.free : DOT[room.state];
 
   const fmtD = (d: string) => new Date(d).toLocaleDateString(locale, { day: 'numeric', month: 'short' });
 
-  const stateLabel = room.state === 'occupied' ? t('checkinWizard.roomOccupied')
+  const stateLabel = isCurrent ? t('checkinWizard.roomCurrent')
+    : room.state === 'occupied' ? t('checkinWizard.roomOccupied')
     : room.state === 'unavailable' ? t('checkinWizard.roomUnavailable')
     : room.departing_same_day ? t('checkinWizard.roomFreesToday')
     : t('checkinWizard.roomFree');
@@ -87,7 +94,7 @@ const RoomRow = ({
         </span>
         <span
           className="text-[11px] font-semibold shrink-0"
-          style={{ color: room.state === 'free' ? (room.departing_same_day ? '#8A6206' : '#137453') : '#9CA3AF' }}
+          style={{ color: isCurrent ? '#137453' : room.state === 'free' ? (room.departing_same_day ? '#8A6206' : '#137453') : '#9CA3AF' }}
         >
           {stateLabel}
         </span>
@@ -103,11 +110,13 @@ const RoomRow = ({
 };
 
 export const RoomSelector = ({
-  from, to, value, onChange,
+  from, to, value, onChange, allowRoomId,
 }: {
   from: string; to: string;
   value: RoomChoice | null;
   onChange: (choice: RoomChoice) => void;
+  /** Id de la chambre déjà assignée (édition) : reste sélectionnable malgré le conflit avec son propre séjour. */
+  allowRoomId?: string;
 }) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'ar' ? 'ar-TN' : i18n.language === 'en' ? 'en-GB' : 'fr-TN';
@@ -193,6 +202,7 @@ export const RoomSelector = ({
         <div className="flex flex-col gap-2">
           {filtered.map((r) => (
             <RoomRow key={r.id} room={r} locale={locale}
+              forceSelectable={!!allowRoomId && r.id === allowRoomId}
               selected={value?.kind === 'room' && value.id === r.id}
               onSelect={() => onChange({ kind: 'room', id: r.id })} />
           ))}
@@ -214,6 +224,7 @@ export const RoomSelector = ({
             </button>
             {!closed && list.map((r) => (
               <RoomRow key={r.id} room={r} locale={locale}
+                forceSelectable={!!allowRoomId && r.id === allowRoomId}
                 selected={value?.kind === 'room' && value.id === r.id}
                 onSelect={() => onChange({ kind: 'room', id: r.id })} />
             ))}

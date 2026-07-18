@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, LogOut, CheckCircle, FileText, MapPin, CalendarDays, Printer, UserPlus } from 'lucide-react';
+import { ArrowLeft, LogOut, CheckCircle, FileText, MapPin, CalendarDays, Printer, UserPlus, Pencil, Trash2 } from 'lucide-react';
 import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card } from '@/components/ui/Card';
@@ -15,6 +15,9 @@ import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { PoliceFiche } from '@/components/PoliceFiche';
 import { GuestScanPanel } from '@/components/hotel/GuestScanPanel';
+import { GuestEditForm } from '@/components/hotel/GuestEditForm';
+import { EditCheckInModal } from '@/components/hotel/EditCheckInModal';
+import { useAuthStore } from '@/stores/authStore';
 
 const DetailRow = ({ label, value }: { label: string; value?: string | number | null }) => (
   <div className="flex justify-between items-start py-3 border-b border-gray-50 last:border-0">
@@ -35,12 +38,16 @@ export const HistoryDetailPage = () => {
   const navigate = useNavigate();
   const qc       = useQueryClient();
   const { toast } = useToast();
+  // « Manager établissement » = hotel_admin : seul habilité à éditer un check-in.
+  const isManager = useAuthStore((s) => s.user?.role === 'hotel_admin');
 
   const todayISO = new Date().toISOString().split('T')[0];
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [checkoutDate, setCheckoutDate] = useState(todayISO);
   const [addingSlot, setAddingSlot] = useState<number | null>(null);
   const [addingExtra, setAddingExtra] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingGuestId, setEditingGuestId] = useState<string | null>(null);
 
   const { data: ci, isLoading } = useQuery({
     queryKey: ['check-in', id],
@@ -65,6 +72,15 @@ export const HistoryDetailPage = () => {
       qc.invalidateQueries({ queryKey: ['check-in', id] });
       setShowCheckoutModal(false);
       toast(t('hotelHistoryDetail.checkoutSaved'), 'success');
+    },
+    onError: (err) => toast(extractErrors(err), 'error'),
+  });
+
+  const removeGuestMutation = useMutation({
+    mutationFn: (guestId: string) => checkInsApi.removeGuest(id!, guestId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['check-in', id] });
+      toast(t('hotelHistoryDetail.guestRemoved'), 'success');
     },
     onError: (err) => toast(extractErrors(err), 'error'),
   });
@@ -166,7 +182,18 @@ export const HistoryDetailPage = () => {
 
           {/* Booking details */}
           <Card>
-            <p className="label mb-3">{t('checkinWizard.bookingSummary')}</p>
+            <div className="mb-3 flex items-center justify-between">
+              <p className="label mb-0">{t('checkinWizard.bookingSummary')}</p>
+              {isManager && canEdit && (
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-colors"
+                  style={{ background: '#EEEBFA', color: '#5346A8' }}
+                >
+                  <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
+                </button>
+              )}
+            </div>
             <DetailRow label={t('checkinWizard.adults')}      value={ci.adults_count} />
             <DetailRow label={t('checkinWizard.children')}      value={ci.children_count} />
             <DetailRow label={t('hotelHistoryDetail.actualDeparture')}  value={fmtDate(ci.actual_check_out_date, locale)} />
@@ -186,6 +213,20 @@ export const HistoryDetailPage = () => {
             {ci.guests?.map((g) => {
               const gInitials = `${g.first_name?.[0] ?? ''}${g.last_name?.[0] ?? ''}`.toUpperCase();
               const gFlagUrl = getFlagUrl(g.nationality_code);
+              const canManageGuest = isManager && canEdit;
+
+              if (editingGuestId === g.id) {
+                return (
+                  <GuestEditForm
+                    key={g.id}
+                    checkIn={ci}
+                    guest={g}
+                    onSuccess={() => { setEditingGuestId(null); qc.invalidateQueries({ queryKey: ['check-in', id] }); }}
+                    onCancel={() => setEditingGuestId(null)}
+                  />
+                );
+              }
+
               return (
                 <Card key={g.id} className="flex items-start gap-3">
                   <div className="relative shrink-0">
@@ -235,6 +276,31 @@ export const HistoryDetailPage = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Actions manager — édition en place / retrait du voyageur */}
+                  {canManageGuest && (
+                    <div className="flex shrink-0 flex-col gap-1.5">
+                      <button
+                        onClick={() => setEditingGuestId(g.id)}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+                        style={{ background: '#EEEBFA', color: '#5346A8' }}
+                        aria-label={t('common.edit')}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (window.confirm(t('hotelHistoryDetail.confirmRemoveGuest'))) removeGuestMutation.mutate(g.id);
+                        }}
+                        disabled={removeGuestMutation.isPending && removeGuestMutation.variables === g.id}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors disabled:opacity-50"
+                        style={{ background: '#FEE2E2', color: '#DC2626' }}
+                        aria-label={t('common.delete')}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </Card>
               );
             })}
@@ -403,6 +469,11 @@ export const HistoryDetailPage = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Édition du check-in (chambre, dates, détails) — manager uniquement */}
+      {showEditModal && (
+        <EditCheckInModal checkIn={ci} onClose={() => setShowEditModal(false)} />
       )}
 
       {/* Portal vers document.body — body > *:not(#police-fiche-root) { display:none }
