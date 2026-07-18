@@ -71,14 +71,6 @@ export const EditCheckInModal = ({
     checkIn.room ? { kind: 'room', id: checkIn.room.id } : { kind: 'none' },
   );
 
-  // Dates inchangées → la chambre actuelle reste sélectionnable malgré le conflit
-  // qu'elle a avec son propre séjour. Dates modifiées → disponibilité réelle
-  // recalculée, plus de passe-droit (on évite de créer un double-booking).
-  const datesUnchanged =
-    checkInDate === checkIn.check_in_date.slice(0, 10) &&
-    checkOutDate === checkIn.expected_check_out_date.slice(0, 10);
-  const allowRoomId = datesUnchanged ? checkIn.room?.id : undefined;
-
   const setDate = (which: 'in' | 'out', v: string) => {
     if (which === 'in') {
       setCheckInDate(v);
@@ -151,12 +143,17 @@ export const EditCheckInModal = ({
           />
         </div>
 
+        {/* La chambre déjà assignée reste sélectionnable même en changeant les dates :
+            le backend ne s'exclut pas du calcul de dispo et rapporte le séjour comme
+            « occupant » sa propre chambre. `allowConflictReference` distingue ce
+            faux conflit (référence du séjour édité) d'un vrai conflit avec un autre client. */}
         <RoomSelector
           from={checkInDate}
           to={checkOutDate}
           value={roomChoice}
           onChange={setRoomChoice}
-          allowRoomId={allowRoomId}
+          allowRoomId={checkIn.room?.id}
+          allowConflictReference={checkIn.reference}
         />
 
         <div className="grid grid-cols-2 gap-3">
