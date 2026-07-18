@@ -1441,5 +1441,124 @@
       "cin_scan": "CIN",
       "passport_scan": "Passeport"
     }
+  },
+  "observatoire": {
+    "title": "Observatoire du Tourisme",
+    "subtitle": "Statistiques agrégées — Ministère du Tourisme",
+    "role": "Lecteur",
+    "demo": {
+      "badge": "Mode démo",
+      "tooltip": "Données synthétiques de démonstration — ne pas confondre avec les agrégats réels."
+    },
+    "nav": {
+      "overview": "Vue d'ensemble",
+      "nationalities": "Nationalités",
+      "zones": "Zones et saisonnalité",
+      "assistant": "Assistant",
+      "reports": "Rapports",
+      "methodology": "Méthodologie"
+    },
+    "kpi": {
+      "arrivees": "Arrivées",
+      "nuitees": "Nuitées",
+      "dureeMoyenne": "Durée moyenne de séjour",
+      "nationalites": "Nationalités actives",
+      "nights": "nuits"
+    },
+    "filters": {
+      "allZones": "Toutes les zones",
+      "preset": {
+        "7j": "7 jours",
+        "30j": "30 jours",
+        "trimestre": "Trimestre",
+        "annee": "Année"
+      }
+    },
+    "coverage": {
+      "banner": "Données issues de {{count}} établissement(s) actif(s) sur {{zones}} zone(s).",
+      "partial": "Représentativité partielle."
+    },
+    "overview": {
+      "timeSeries": "Arrivées et nuitées",
+      "topNationalities": "Top 10 nationalités",
+      "byType": "Répartition par type d'établissement"
+    },
+    "nationalities": {
+      "emergingFilter": "Marchés émergents (croissance > 50 % sur 3 mois)"
+    },
+    "table": {
+      "nationality": "Nationalité",
+      "variation": "Variation"
+    },
+    "zones": {
+      "seasonality": "Saisonnalité (mois × zone)",
+      "heatmapLegend": "Intensité proportionnelle aux nuitées. Les cellules hachurées sont sous le seuil de confidentialité.",
+      "comparison": "Comparaison inter-zones",
+      "covered": "Zones couvertes",
+      "byZone": "Répartition par zone",
+      "delegationOnly": "Granularité géographique limitée à la délégation — aucune géolocalisation fine."
+    },
+    "assistant": {
+      "guarantee": "L'assistant interroge uniquement la base de statistiques agrégées et anonymes. Il ne calcule aucun chiffre lui-même : la base calcule, chaque réponse est traçable via son identifiant de requête.",
+      "examplesTitle": "Questions d'exemple",
+      "examples": {
+        "q1": "Combien d'arrivées ce mois-ci ?",
+        "q2": "Quelle est la durée moyenne de séjour des Italiens sur les 90 derniers jours ?",
+        "q3": "Compare les nuitées françaises et allemandes sur 6 mois.",
+        "q4": "Quelle nationalité progresse le plus vite ?",
+        "q5": "ما هو متوسط مدة الإقامة هذا الشهر؟"
+      },
+      "placeholder": "Posez une question en français ou en arabe…",
+      "send": "Envoyer",
+      "showQuery": "Voir la requête",
+      "queryId": "Identifiant de requête",
+      "partialThreshold": "Certaines combinaisons sont sous le seuil de confidentialité et ne sont pas affichées.",
+      "error": "La requête n'a pas pu aboutir. Réessayez ou reformulez."
+    },
+    "reports": {
+      "generate": "Générer",
+      "regenerate": "Régénérer",
+      "pdf": "Export PDF",
+      "notYet": "Aucun rapport pour ce mois.",
+      "notYetHint": "Cliquez sur « Générer » pour produire le rapport narratif bilingue."
+    },
+    "export": {
+      "csv": "Export CSV"
+    },
+    "charts": {
+      "timeSeries": "Série temporelle",
+      "empty": "Aucune donnée disponible (ou sous le seuil de confidentialité)."
+    },
+    "methodology": {
+      "intro": "L'Observatoire du Tourisme publie des statistiques agrégées et anonymes issues des fiches d'hébergement dématérialisées par Qayed. Aucune donnée personnelle n'est traitée par ce module.",
+      "sources": {
+        "title": "Sources",
+        "body": "Les statistiques sont calculées à partir des fiches d'hébergement validées, agrégées par un traitement automatique qui n'exporte aucune donnée nominative. Le module Observatoire n'a jamais accès aux identités."
+      },
+      "definitions": {
+        "title": "Définitions",
+        "arrivee": "Arrivée : entrée d'un voyageur dans un établissement un jour donné.",
+        "nuitee": "Nuitée : présence d'un voyageur pour une nuit (un voyageur présent trois nuits compte pour trois nuitées).",
+        "sejourTermine": "Séjour terminé : séjour dont le départ a été enregistré.",
+        "dureeMoyenne": "Durée moyenne de séjour : somme des durées des séjours terminés divisée par leur nombre."
+      },
+      "threshold": {
+        "title": "Seuil d'agrégation (k = 10)",
+        "body": "Aucune statistique n'est calculée, stockée ou affichée si elle porte sur moins de dix séjours. En dessous de ce seuil, la valeur est masquée (« < seuil ») et n'est pas exportable. La règle s'applique à toutes les combinaisons de dimensions (nationalité, zone, période, type d'établissement).",
+        "why": "Ce seuil garantit qu'aucune statistique ne puisse permettre de ré-identifier un voyageur ou un établissement, y compris en croisant plusieurs dimensions."
+      },
+      "anonymity": {
+        "title": "Anonymisation",
+        "body": "L'anonymisation est réalisée en amont, par agrégation puis application du seuil k = 10. La base de l'Observatoire est physiquement distincte de la base opérationnelle et ne contient ni nom, ni numéro de document, ni date de naissance, ni adresse. Aucune jointure vers les identités n'est possible."
+      },
+      "frequency": {
+        "title": "Fréquence de mise à jour",
+        "body": "Les agrégats sont recalculés automatiquement toutes les heures à partir des fiches validées."
+      },
+      "limits": {
+        "title": "Limites de représentativité",
+        "body": "Cette version repose sur un nombre restreint d'établissements pilotes. Les chiffres illustrent ce que l'Observatoire permet à l'échelle ; ils ne constituent pas encore une mesure exhaustive du tourisme national. Un indicateur de couverture est affiché en permanence."
+      }
+    }
   }
 }

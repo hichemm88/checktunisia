@@ -1,7 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type Role = 'platform_admin' | 'hotel_admin' | 'receptionist' | 'authority_user';
+export type Role =
+  | 'platform_admin'
+  | 'hotel_admin'
+  | 'receptionist'
+  | 'authority_user'
+  | 'tourisme_lecteur';
 
 export interface AuthorityProfile {
   org_id: number;
