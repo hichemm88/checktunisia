@@ -147,6 +147,34 @@ php artisan db:seed --class=Database\\Seeders\\ObservatoireDemoSeeder   # MODE D
 php artisan observatoire:aggregate                                       # premier run reel
 ```
 
+## Compte de test (recette du dashboard)
+
+Pour tester le dashboard Observatoire avec le role `TOURISME_LECTEUR` :
+
+```bash
+php artisan migrate
+php artisan db:seed --class=Database\\Seeders\\ObservatoireDemoSeeder      # donnees MODE DEMO
+php artisan db:seed --class=Database\\Seeders\\ObservatoireTestUserSeeder   # compte de test
+```
+
+Identifiants par defaut (a changer, cf. `OBSERVATOIRE_TEST_EMAIL` /
+`OBSERVATOIRE_TEST_PASSWORD`) :
+
+| Champ | Valeur |
+|---|---|
+| e-mail | `tourisme.demo@qayed.tn` |
+| mot de passe | `Observatoire2026!` |
+| role | `tourisme_lecteur` |
+
+Apres connexion, l'utilisateur est redirige vers `/observatoire/apercu`. Le
+compte est cree **sans MFA** pour la recette ; en production, exiger l'enrolement
+MFA au premier login et ne pas laisser ce compte actif.
+
+> Ces identifiants ne fonctionnent QUE lorsque ce handoff backend a ete applique,
+> migre et seede sur l'instance Railway, et que le middleware `tourisme_lecteur`
+> est enregistre. Tant que le backend n'expose pas `/api/observatoire/v1/*`, le
+> dashboard s'affiche mais les appels de donnees restent vides.
+
 ## A adapter au schema nominatif reel
 
 `AggregationService` suppose `check_ins` (establishment_id, check_in_date,
