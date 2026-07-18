@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight } from 'lucide-react';
@@ -30,30 +30,62 @@ export const GuestEditForm = ({
     { value: 'X', label: t('common.other')  },
   ];
 
-  const [form, setForm] = useState<UpdateGuestPayload>({
+  // Snapshot des valeurs d'origine, pour n'envoyer QUE les champs modifiés.
+  // Crucial : le document n'est ré-envoyé que si l'on y touche réellement —
+  // sinon corriger un simple prénom re-soumettait le pays de délivrance existant
+  // (ex. « GBR », alpha-3) au backend, qui exige 2 caractères sur cet endpoint,
+  // et rejetait toute la modification.
+  const initial = useMemo(() => ({
     first_name: guest.first_name ?? '',
     last_name: guest.last_name ?? '',
     date_of_birth: guest.date_of_birth?.slice(0, 10) ?? '',
-    sex: guest.sex,
+    sex: (guest.sex ?? '') as string,
     nationality_code: guest.nationality_code ?? '',
     document_type: guest.document?.type ?? 'passport',
     document_number: guest.document?.document_number ?? '',
     issuing_country_code: guest.document?.issuing_country_code ?? '',
     expiry_date: guest.document?.expiry_date?.slice(0, 10) ?? '',
-  });
+  }), [guest]);
 
-  const set = (k: keyof UpdateGuestPayload, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const [form, setForm] = useState({ ...initial });
+
+  const set = (k: keyof typeof initial, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const isNationalId = form.document_type === 'national_id';
 
+  // Construit un payload différentiel : seulement les champs réellement changés.
+  const buildPayload = (): UpdateGuestPayload => {
+    const p: UpdateGuestPayload = {};
+    if (form.first_name !== initial.first_name) p.first_name = form.first_name;
+    if (form.last_name !== initial.last_name) p.last_name = form.last_name;
+    if (form.date_of_birth !== initial.date_of_birth) p.date_of_birth = form.date_of_birth;
+    if (form.sex !== initial.sex) p.sex = (form.sex || undefined) as UpdateGuestPayload['sex'];
+    if (form.nationality_code !== initial.nationality_code) p.nationality_code = form.nationality_code;
+
+    // Champs document (jamais pour la CIN, qui n'a ni pays de délivrance ni expiration ici).
+    if (!isNationalId) {
+      const docChanged =
+        form.document_type !== initial.document_type ||
+        form.document_number !== initial.document_number ||
+        form.issuing_country_code !== initial.issuing_country_code ||
+        form.expiry_date !== initial.expiry_date;
+      if (docChanged) {
+        p.document_type = form.document_type; // contexte pour le backend
+        if (form.document_number !== initial.document_number) p.document_number = form.document_number;
+        if (form.issuing_country_code !== initial.issuing_country_code) p.issuing_country_code = form.issuing_country_code;
+        if (form.expiry_date !== initial.expiry_date) p.expiry_date = form.expiry_date;
+      }
+    }
+    return p;
+  };
+
   const mutation = useMutation({
-    mutationFn: () => checkInsApi.updateGuest(checkIn.id, guest.id, {
-      ...form,
-      sex: (form.sex || undefined) as UpdateGuestPayload['sex'],
-      // La CIN tunisienne n'a pas d'expiration ni de pays de délivrance saisis ici.
-      issuing_country_code: isNationalId ? undefined : form.issuing_country_code,
-      expiry_date: isNationalId ? undefined : form.expiry_date,
-    }),
+    mutationFn: () => {
+      const payload = buildPayload();
+      // Rien à envoyer → on referme sans appel réseau inutile.
+      if (Object.keys(payload).length === 0) return Promise.resolve(guest);
+      return checkInsApi.updateGuest(checkIn.id, guest.id, payload);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['check-in', checkIn.id] });
       toast(t('hotelHistoryDetail.guestUpdated'), 'success');
