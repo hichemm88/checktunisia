@@ -110,13 +110,17 @@ const RoomRow = ({
 };
 
 export const RoomSelector = ({
-  from, to, value, onChange, allowRoomId,
+  from, to, value, onChange, allowRoomId, allowConflictReference,
 }: {
   from: string; to: string;
   value: RoomChoice | null;
   onChange: (choice: RoomChoice) => void;
   /** Id de la chambre déjà assignée (édition) : reste sélectionnable malgré le conflit avec son propre séjour. */
   allowRoomId?: string;
+  /** Référence du check-in en cours d'édition : un conflit portant cette référence est un
+   *  conflit du séjour avec lui-même (le backend ne s'exclut pas du calcul de dispo) et ne
+   *  doit donc jamais bloquer sa chambre. Un conflit portant une AUTRE référence reste réel. */
+  allowConflictReference?: string;
 }) => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'ar' ? 'ar-TN' : i18n.language === 'en' ? 'en-GB' : 'fr-TN';
@@ -202,7 +206,7 @@ export const RoomSelector = ({
         <div className="flex flex-col gap-2">
           {filtered.map((r) => (
             <RoomRow key={r.id} room={r} locale={locale}
-              forceSelectable={!!allowRoomId && r.id === allowRoomId}
+              forceSelectable={!!allowRoomId && r.id === allowRoomId && r.conflict?.reference === allowConflictReference}
               selected={value?.kind === 'room' && value.id === r.id}
               onSelect={() => onChange({ kind: 'room', id: r.id })} />
           ))}
@@ -224,7 +228,7 @@ export const RoomSelector = ({
             </button>
             {!closed && list.map((r) => (
               <RoomRow key={r.id} room={r} locale={locale}
-                forceSelectable={!!allowRoomId && r.id === allowRoomId}
+                forceSelectable={!!allowRoomId && r.id === allowRoomId && r.conflict?.reference === allowConflictReference}
                 selected={value?.kind === 'room' && value.id === r.id}
                 onSelect={() => onChange({ kind: 'room', id: r.id })} />
             ))}
