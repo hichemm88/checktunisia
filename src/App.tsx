@@ -53,6 +53,13 @@ import { AdminMenusPage } from '@/pages/admin/AdminMenusPage';
 // plus aucun fichier à récupérer au clic, l'erreur ne peut plus se produire.
 import AdminPageEditorPage from '@/pages/admin/AdminPageEditorPage';
 import { ProfilePage } from '@/pages/profile/ProfilePage';
+// Observatoire du Tourisme (role tourisme_lecteur)
+import { OverviewPage } from '@/pages/observatoire/OverviewPage';
+import { NationalitesPage } from '@/pages/observatoire/NationalitesPage';
+import { ZonesPage } from '@/pages/observatoire/ZonesPage';
+import { AssistantPage } from '@/pages/observatoire/AssistantPage';
+import { RapportsPage } from '@/pages/observatoire/RapportsPage';
+import { MethodologiePage } from '@/pages/observatoire/MethodologiePage';
 
 // ─── Guards ─────────────────────────────────────────────────────────────────
 const RequireAuth = () => {
@@ -69,6 +76,7 @@ const RoleRedirect = () => {
   const role = useAuthStore((s) => s.user?.role);
   if (role === 'authority_user') return <Navigate to="/authority/dashboard" replace />;
   if (role === 'platform_admin') return <Navigate to="/admin/dashboard" replace />;
+  if (role === 'tourisme_lecteur') return <Navigate to="/observatoire/apercu" replace />;
   return <Navigate to="/hotel/dashboard" replace />;
 };
 
@@ -162,6 +170,17 @@ export const App = () => (
         )}
         <Route path="/authority/watchlist"    element={<WatchlistPage />} />
         <Route path="/authority/activity"     element={<ActivityPage />} />
+      </Route>
+
+      {/* Observatoire du Tourisme — role dedie tourisme_lecteur (§7).
+          Lecture seule, aucune donnee nominative accessible. */}
+      <Route element={<RequireRole roles={['tourisme_lecteur']} />}>
+        <Route path="/observatoire/apercu"        element={<OverviewPage />} />
+        <Route path="/observatoire/nationalites"  element={<NationalitesPage />} />
+        <Route path="/observatoire/zones"         element={<ZonesPage />} />
+        <Route path="/observatoire/assistant"     element={<AssistantPage />} />
+        <Route path="/observatoire/rapports"      element={<RapportsPage />} />
+        <Route path="/observatoire/methodologie"  element={<MethodologiePage />} />
       </Route>
 
       {/* Admin */}

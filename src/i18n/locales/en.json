@@ -1441,5 +1441,124 @@
       "cin_scan": "ID card",
       "passport_scan": "Passport"
     }
+  },
+  "observatoire": {
+    "title": "Tourism Observatory",
+    "subtitle": "Aggregated statistics — Ministry of Tourism",
+    "role": "Reader",
+    "demo": {
+      "badge": "Demo mode",
+      "tooltip": "Synthetic demonstration data — not to be confused with real aggregates."
+    },
+    "nav": {
+      "overview": "Overview",
+      "nationalities": "Nationalities",
+      "zones": "Zones & seasonality",
+      "assistant": "Assistant",
+      "reports": "Reports",
+      "methodology": "Methodology"
+    },
+    "kpi": {
+      "arrivees": "Arrivals",
+      "nuitees": "Overnight stays",
+      "dureeMoyenne": "Average length of stay",
+      "nationalites": "Active nationalities",
+      "nights": "nights"
+    },
+    "filters": {
+      "allZones": "All zones",
+      "preset": {
+        "7j": "7 days",
+        "30j": "30 days",
+        "trimestre": "Quarter",
+        "annee": "Year"
+      }
+    },
+    "coverage": {
+      "banner": "Data from {{count}} active establishment(s) across {{zones}} zone(s).",
+      "partial": "Partial representativeness."
+    },
+    "overview": {
+      "timeSeries": "Arrivals and overnight stays",
+      "topNationalities": "Top 10 nationalities",
+      "byType": "Breakdown by establishment type"
+    },
+    "nationalities": {
+      "emergingFilter": "Emerging markets (growth > 50% over 3 months)"
+    },
+    "table": {
+      "nationality": "Nationality",
+      "variation": "Change"
+    },
+    "zones": {
+      "seasonality": "Seasonality (month × zone)",
+      "heatmapLegend": "Intensity proportional to overnight stays. Hatched cells are below the confidentiality threshold.",
+      "comparison": "Zone comparison",
+      "covered": "Covered zones",
+      "byZone": "Breakdown by zone",
+      "delegationOnly": "Geographic granularity limited to the delegation — no fine geolocation."
+    },
+    "assistant": {
+      "guarantee": "The assistant queries only the aggregated, anonymous statistics database. It never computes a figure itself: the database computes, and every answer is traceable via its query identifier.",
+      "examplesTitle": "Example questions",
+      "examples": {
+        "q1": "How many arrivals this month?",
+        "q2": "What is the average length of stay of Italians over the last 90 days?",
+        "q3": "Compare French and German overnight stays over 6 months.",
+        "q4": "Which nationality is growing fastest?",
+        "q5": "ما هو متوسط مدة الإقامة هذا الشهر؟"
+      },
+      "placeholder": "Ask a question in French or Arabic…",
+      "send": "Send",
+      "showQuery": "View query",
+      "queryId": "Query identifier",
+      "partialThreshold": "Some combinations are below the confidentiality threshold and are not shown.",
+      "error": "The query could not complete. Try again or rephrase."
+    },
+    "reports": {
+      "generate": "Generate",
+      "regenerate": "Regenerate",
+      "pdf": "PDF export",
+      "notYet": "No report for this month.",
+      "notYetHint": "Click “Generate” to produce the bilingual narrative report."
+    },
+    "export": {
+      "csv": "CSV export"
+    },
+    "charts": {
+      "timeSeries": "Time series",
+      "empty": "No data available (or below the confidentiality threshold)."
+    },
+    "methodology": {
+      "intro": "The Tourism Observatory publishes aggregated, anonymous statistics derived from the accommodation records digitalized by Qayed. This module processes no personal data.",
+      "sources": {
+        "title": "Sources",
+        "body": "Statistics are computed from validated accommodation records, aggregated by an automated process that exports no personal data. The Observatory module never has access to identities."
+      },
+      "definitions": {
+        "title": "Definitions",
+        "arrivee": "Arrival: a traveller entering an establishment on a given day.",
+        "nuitee": "Overnight stay: a traveller present for one night (a traveller present for three nights counts as three overnight stays).",
+        "sejourTermine": "Completed stay: a stay whose departure has been recorded.",
+        "dureeMoyenne": "Average length of stay: sum of completed stay durations divided by their count."
+      },
+      "threshold": {
+        "title": "Aggregation threshold (k = 10)",
+        "body": "No statistic is computed, stored or displayed if it covers fewer than ten stays. Below this threshold the value is masked (“< threshold”) and cannot be exported. The rule applies to all dimension combinations (nationality, zone, period, establishment type).",
+        "why": "This threshold ensures no statistic can allow re-identification of a traveller or establishment, even when crossing several dimensions."
+      },
+      "anonymity": {
+        "title": "Anonymization",
+        "body": "Anonymization is performed upstream, by aggregation then application of the k = 10 threshold. The Observatory database is physically separate from the operational database and contains no name, document number, date of birth or address. No join to identities is possible."
+      },
+      "frequency": {
+        "title": "Update frequency",
+        "body": "Aggregates are automatically recomputed every hour from validated records."
+      },
+      "limits": {
+        "title": "Representativeness limits",
+        "body": "This version relies on a small number of pilot establishments. The figures illustrate what the Observatory enables at scale; they are not yet an exhaustive measure of national tourism. A coverage indicator is displayed at all times."
+      }
+    }
   }
 }
