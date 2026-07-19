@@ -39,7 +39,7 @@ const FeatureCard = ({ f, titleKey }: { f: AiFeatureSummary | undefined; titleKe
         </div>
         <div>
           <p className="text-[11px] text-gray-400">{t('aiCosts.cost')}</p>
-          <p className="font-mono text-2xl font-extrabold text-gray-900">{formatUSD(f?.cost_usd)}</p>
+          <p className="font-mono text-2xl font-extrabold text-gray-900">{formatUSD(f?.cost_usd, 4)}</p>
         </div>
         <div>
           <p className="text-[11px] text-gray-400">{t('aiCosts.avgCostPerScan')}</p>
@@ -223,7 +223,7 @@ export const AdminAiCostsPage = () => {
           {/* Total + deux cartes par feature */}
           <div className="card p-5">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('aiCosts.totalCost')}</p>
-            <p className="font-mono text-4xl font-extrabold text-gray-900">{formatUSD(summary.total_cost_usd)}</p>
+            <p className="font-mono text-4xl font-extrabold text-gray-900">{formatUSD(summary.total_cost_usd, 4)}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -268,7 +268,7 @@ export const AdminAiCostsPage = () => {
                       <td className="px-3 py-2.5 text-right font-mono text-gray-600">{e.cin_scans}</td>
                       <td className="px-3 py-2.5 text-right font-mono text-gray-600">{e.passport_scans}</td>
                       <td className="px-3 py-2.5 text-right font-mono text-gray-500">{(e.input_tokens + e.output_tokens).toLocaleString('en-US')}</td>
-                      <td className="px-3 py-2.5 text-right font-mono font-semibold text-gray-900">{formatUSD(e.cost_usd)}</td>
+                      <td className="px-3 py-2.5 text-right font-mono font-semibold text-gray-900">{formatUSD(e.cost_usd, 4)}</td>
                       <td className="px-5 py-2.5 text-right font-mono text-gray-600">{formatUSD(e.avg_cost_per_scan_usd, 4)}</td>
                     </tr>
                   ))}
