@@ -165,11 +165,11 @@ const AiCostWidget = () => {
         </Link>
       </div>
 
-      <p className="font-mono text-3xl font-extrabold text-gray-900">{formatUSD(summary.total_cost_usd)}</p>
+      <p className="font-mono text-3xl font-extrabold text-gray-900">{formatUSD(summary.total_cost_usd, 4)}</p>
       <p className="mt-1 text-xs text-gray-500">
-        {t('aiCosts.cinLabel')} <span className="font-mono font-semibold text-gray-700">{formatUSD(cin?.cost_usd)}</span>
+        {t('aiCosts.cinLabel')} <span className="font-mono font-semibold text-gray-700">{formatUSD(cin?.cost_usd, 4)}</span>
         {'  ·  '}
-        {t('aiCosts.passportLabel')} <span className="font-mono font-semibold text-gray-700">{formatUSD(passport?.cost_usd)}</span>
+        {t('aiCosts.passportLabel')} <span className="font-mono font-semibold text-gray-700">{formatUSD(passport?.cost_usd, 4)}</span>
       </p>
       <p className="mt-0.5 text-xs">
         <span className="text-gray-500">{t('aiCosts.scansThisMonth', { count: totalAttempts })}</span>
