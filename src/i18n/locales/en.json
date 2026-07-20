@@ -21,7 +21,9 @@
     "confirmDeleteBody": "Permanently delete this host?",
     "propertiesWithCount": "Properties ({{count}})",
     "noProperty": "No property",
-    "usersWithCount": "Users ({{count}})"
+    "usersWithCount": "Users ({{count}})",
+    "couponCode": "Coupon code",
+    "couponPlaceholder": "Optional"
   },
   "adminSubscriptions": {
     "plans": "Plans",
@@ -1338,7 +1340,8 @@
       "pages": "Site pages",
       "menus": "Menus",
       "whatsapp": "WhatsApp",
-      "aiCosts": "AI costs"
+      "aiCosts": "AI costs",
+      "coupons": "Coupons"
     },
     "searchPlaceholder": "Search a host, property, user…",
     "palettePlaceholder": "Navigate or search (host, invoice INV-…, check-in QYD-…)",
@@ -1457,5 +1460,34 @@
     "scanCompareLegendMrz": "Local MRZ OCR",
     "scanCompareLegendVision": "Claude vision",
     "passportFallbackShort": "Passport fallback {{rate}}%"
+  },
+  "adminCoupons": {
+    "title": "Coupons",
+    "intro": "Create discount codes (percentage or fixed amount) to apply when creating an invoice.",
+    "newCoupon": "New coupon",
+    "code": "Code",
+    "type": "Discount type",
+    "typePercent": "Percentage",
+    "typeFixed": "Fixed amount (TND)",
+    "valuePercent": "Discount (%)",
+    "valueFixed": "Discount (TND)",
+    "minAmount": "Minimum amount (TND)",
+    "minAmountShort": "min. {{amount}}",
+    "maxUses": "Max uses",
+    "unlimited": "Unlimited",
+    "expiresAt": "Expires on",
+    "expiresShort": "expires {{date}}",
+    "description": "Description",
+    "optional": "Optional",
+    "saved": "Coupon updated",
+    "created": "Coupon created",
+    "removed": "Coupon deleted",
+    "inactive": "Inactive",
+    "expired": "Expired",
+    "active": "Active",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "usedCount": "{{used}}/{{max}} use(s)",
+    "empty": "No coupons yet."
   }
 }

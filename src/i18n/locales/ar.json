@@ -21,7 +21,9 @@
     "confirmDeleteBody": "حذف هذا المضيف نهائيًا؟",
     "propertiesWithCount": "العقارات ({{count}})",
     "noProperty": "لا يوجد عقار",
-    "usersWithCount": "المستخدمون ({{count}})"
+    "usersWithCount": "المستخدمون ({{count}})",
+    "couponCode": "رمز الخصم",
+    "couponPlaceholder": "اختياري"
   },
   "adminSubscriptions": {
     "plans": "الباقات",
@@ -1316,7 +1318,8 @@
       "pages": "صفحات الموقع",
       "menus": "القوائم",
       "whatsapp": "واتساب",
-      "aiCosts": "تكاليف الذكاء الاصطناعي"
+      "aiCosts": "تكاليف الذكاء الاصطناعي",
+      "coupons": "رموز الخصم"
     },
     "searchPlaceholder": "البحث عن مضيف، مؤسسة، مستخدم…",
     "palettePlaceholder": "التنقل أو البحث (مضيف، فاتورة، بطاقة)",
@@ -1435,5 +1438,34 @@
     "scanCompareLegendMrz": "OCR MRZ محلي",
     "scanCompareLegendVision": "Claude vision",
     "passportFallbackShort": "لجوء جواز السفر {{rate}} %"
+  },
+  "adminCoupons": {
+    "title": "رموز الخصم",
+    "intro": "أنشئ رموز خصم (نسبة مئوية أو مبلغ ثابت) لتطبيقها عند إنشاء فاتورة.",
+    "newCoupon": "رمز جديد",
+    "code": "الرمز",
+    "type": "نوع الخصم",
+    "typePercent": "نسبة مئوية",
+    "typeFixed": "مبلغ ثابت (د.ت)",
+    "valuePercent": "الخصم (%)",
+    "valueFixed": "الخصم (د.ت)",
+    "minAmount": "المبلغ الأدنى (د.ت)",
+    "minAmountShort": "الأدنى {{amount}}",
+    "maxUses": "أقصى عدد استخدامات",
+    "unlimited": "غير محدود",
+    "expiresAt": "ينتهي في",
+    "expiresShort": "ينتهي {{date}}",
+    "description": "الوصف",
+    "optional": "اختياري",
+    "saved": "تم تحديث رمز الخصم",
+    "created": "تم إنشاء رمز الخصم",
+    "removed": "تم حذف رمز الخصم",
+    "inactive": "غير مفعّل",
+    "expired": "منتهي",
+    "active": "مفعّل",
+    "deactivate": "تعطيل",
+    "activate": "تفعيل",
+    "usedCount": "{{used}}/{{max}} استخدام",
+    "empty": "لا توجد رموز خصم بعد."
   }
 }

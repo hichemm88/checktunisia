@@ -248,13 +248,14 @@ const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
     queryFn: () => adminSubscriptionsApi.invoicesForHost(host.id),
   });
 
-  const [form, setForm] = useState({ amount: '', tax_amount: '0', due_at: '' });
+  const [form, setForm] = useState({ amount: '', tax_amount: '0', due_at: '', coupon_code: '' });
   const createMut = useMutation({
     mutationFn: () => adminSubscriptionsApi.createInvoiceForHost(host.id, {
       subscription_id: sub!.id,
       amount: form.amount === '' ? undefined : parseFloat(form.amount),
       tax_amount: parseFloat(form.tax_amount) || 0,
       due_at: form.due_at || undefined,
+      coupon_code: form.coupon_code.trim() || undefined,
     }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-invoices', host.id] }); setShowCreate(false); },
     onError: (err) => setError(extractErrors(err)),
@@ -278,6 +279,7 @@ const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
             <Input label={t('adminHosts.tax')} type="number" value={form.tax_amount} onChange={(e) => setForm((f) => ({ ...f, tax_amount: e.target.value }))} />
             <Input label={t('adminHosts.dueDate')} type="date" value={form.due_at} onChange={(e) => setForm((f) => ({ ...f, due_at: e.target.value }))} />
           </div>
+          <Input label={t('adminHosts.couponCode')} value={form.coupon_code} onChange={(e) => setForm((f) => ({ ...f, coupon_code: e.target.value.toUpperCase() }))} placeholder={t('adminHosts.couponPlaceholder')} />
           {error && <p className="text-xs text-red-500">{error}</p>}
           <Button size="sm" loading={createMut.isPending} onClick={() => createMut.mutate()}>{t('adminHosts.createInvoice')}</Button>
         </div>
