@@ -1418,6 +1418,10 @@
       "all": "الكل",
       "cin_scan": "بطاقة التعريف",
       "passport_scan": "جواز السفر"
-    }
+    },
+    "scanCompareTitle": "مسح MRZ محلي مقابل Claude vision (30 يومًا)",
+    "scanCompareLegendMrz": "OCR MRZ محلي",
+    "scanCompareLegendVision": "Claude vision",
+    "passportFallbackShort": "لجوء جواز السفر {{rate}} %"
   }
 }

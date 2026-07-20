@@ -1440,6 +1440,10 @@
       "all": "All",
       "cin_scan": "ID card",
       "passport_scan": "Passport"
-    }
+    },
+    "scanCompareTitle": "Local MRZ OCR vs Claude vision scans (30d)",
+    "scanCompareLegendMrz": "Local MRZ OCR",
+    "scanCompareLegendVision": "Claude vision",
+    "passportFallbackShort": "Passport fallback {{rate}}%"
   }
 }

@@ -17,6 +17,7 @@ import { CINCapture } from '@/components/hotel/CINCapture';
 import { prepareCinImage } from '@/lib/cinImagePrep';
 import { scanCin } from '@/api/scanCin';
 import { scanMrzVision } from '@/api/scanMrz';
+import { reportLocalMrzScan } from '@/api/scanEvents';
 import { useAuthStore } from '@/stores/authStore';
 import { CheckIn, CinConfidence, CinScanResponse } from '@/types';
 
@@ -155,7 +156,11 @@ export const GuestScanPanel = ({
     setOcrProgress(0);
     setMrzFallback(false);
     try {
+      const startedAt = performance.now();
       const mrz = await scanMrz(file, setOcrProgress);
+      // OCR MRZ local réussi (gratuit) : beacon best-effort pour le graphe
+      // comparatif admin. N'impacte jamais le préremplissage ci-dessous.
+      reportLocalMrzScan(performance.now() - startedAt);
       applyMrz(mrz, file);
     } catch {
       // OCR local KO → repli Claude vision (fiable sur reflets/hologramme).
