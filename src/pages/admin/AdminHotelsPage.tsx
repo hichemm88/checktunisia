@@ -14,6 +14,7 @@ import { extractErrors } from '@/lib/api';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { Pagination } from '@/components/ui/Pagination';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { ErrorState } from '@/components/admin/ErrorState';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 
@@ -120,7 +121,7 @@ export const AdminHotelsPage = () => {
   const [showSuspend, setShowSuspend] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const { data: hotelsRes, isLoading } = useQuery({
+  const { data: hotelsRes, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin-hotels', search, filter, page],
     queryFn: () => adminHotelsApi.list({ search: search || undefined, status: filter || undefined, page, per_page: 15 }),
   });
@@ -177,6 +178,7 @@ export const AdminHotelsPage = () => {
           </div>
 
           {isLoading && <ListSkeleton rows={5} height="h-16" />}
+          {isError && <ErrorState onRetry={() => refetch()} />}
 
           <div className="flex flex-col gap-2">
             {hotels.map((h) => {

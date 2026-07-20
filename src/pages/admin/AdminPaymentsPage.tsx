@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 import { EmptyState } from '@/components/admin/EmptyState';
+import { ErrorState } from '@/components/admin/ErrorState';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatTND } from '@/lib/money';
 
@@ -131,7 +132,7 @@ const HistoriqueTab = () => {
   const [page, setPage] = useState(1);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
-  const { data, isLoading } = useQuery({ queryKey: ['admin-payments', status, page], queryFn: () => adminPaymentsApi.list({ status: status || undefined, page, per_page: 30 }) });
+  const { data, isLoading, isError, refetch } = useQuery({ queryKey: ['admin-payments', status, page], queryFn: () => adminPaymentsApi.list({ status: status || undefined, page, per_page: 30 }) });
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ['admin-payments'] });
   const validateMut = useMutation({
@@ -156,6 +157,7 @@ const HistoriqueTab = () => {
       </select>
       <Card>
         {isLoading && <ListSkeleton rows={3} height="h-14" />}
+        {isError && <ErrorState onRetry={() => refetch()} />}
         {data?.data.map((p) => (
           <div key={p.id} className="flex flex-col gap-2 py-2.5 border-b border-gray-50 last:border-0 text-sm">
             <div className="flex items-center justify-between">

@@ -19,6 +19,7 @@ import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { Pagination } from '@/components/ui/Pagination';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { ErrorState } from '@/components/admin/ErrorState';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 
@@ -310,7 +311,7 @@ export const AdminHostsPage = () => {
   const [suspendReason, setSuspendReason] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin-hosts', search, status, page],
     queryFn: () => adminHostsApi.list({ search: search || undefined, status: status || undefined, page, per_page: 15 }),
   });
@@ -367,6 +368,7 @@ export const AdminHostsPage = () => {
           </div>
 
           {isLoading && <ListSkeleton rows={5} height="h-16" />}
+          {isError && <ErrorState onRetry={() => refetch()} />}
 
           <div className="flex flex-col gap-2">
             {hosts.map((h) => (

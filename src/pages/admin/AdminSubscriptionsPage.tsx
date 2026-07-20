@@ -15,6 +15,7 @@ import { BillingCycle, cycleEndDate, effectiveYearlyPrice, priceForCycle } from 
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { ErrorState } from '@/components/admin/ErrorState';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 
@@ -199,7 +200,7 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
 const PacksTab = () => {
   const { t } = useTranslation();
   const [showCreate, setShowCreate] = useState(false);
-  const { data: plans, isLoading } = useQuery({ queryKey: ['admin-plans'], queryFn: adminPlansApi.list });
+  const { data: plans, isLoading, isError, refetch } = useQuery({ queryKey: ['admin-plans'], queryFn: adminPlansApi.list });
 
   return (
     <div className="flex flex-col gap-3">
@@ -210,6 +211,7 @@ const PacksTab = () => {
       </div>
       {showCreate && <CreatePlanForm onDone={() => setShowCreate(false)} />}
       {isLoading && <ListSkeleton rows={3} />}
+      {isError && <ErrorState onRetry={() => refetch()} />}
       {plans?.map((p) => <PlanRow key={p.id} plan={p} />)}
     </div>
   );
