@@ -201,7 +201,8 @@
     "invoiceStatusUpdated": "Invoice status updated",
     "invoiceDeleted": "Invoice deleted",
     "deleteInvoice": "Delete invoice",
-    "changeStatus": "Change status"
+    "changeStatus": "Change status",
+    "loadError": "Could not load the data. Check your connection and try again."
   },
   "adminFacturation": {
     "title": "Invoicing",
@@ -738,7 +739,8 @@
     "male": "Male",
     "female": "Female",
     "other": "Other",
-    "sex": "Sex"
+    "sex": "Sex",
+    "retry": "Retry"
   },
   "authorityWatchlist": {
     "title": "Watched persons",

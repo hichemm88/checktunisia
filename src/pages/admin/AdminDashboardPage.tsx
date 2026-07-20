@@ -7,6 +7,7 @@ import { adminPaymentsApi } from '@/api/admin/payments';
 import { adminWhatsappApi } from '@/api/admin/whatsapp';
 import { adminAiCostsApi, AiFeatureSummary } from '@/api/admin/aiCosts';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { ErrorState } from '@/components/admin/ErrorState';
 import { Button } from '@/components/ui/Button';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { formatTND, formatUSD } from '@/lib/money';
@@ -333,7 +334,7 @@ const PendingVirementsCard = ({ items }: { items: AdminDashboardStats['alerts'][
 export const AdminDashboardPage = () => {
   const { t, i18n } = useTranslation();
   const locale = dateLocaleFor(i18n.language);
-  const { data: stats, isLoading } = useQuery({ queryKey: ['admin-stats'], queryFn: adminDashboardApi.stats });
+  const { data: stats, isLoading, isError, refetch } = useQuery({ queryKey: ['admin-stats'], queryFn: adminDashboardApi.stats });
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl">
@@ -342,6 +343,7 @@ export const AdminDashboardPage = () => {
       <WhatsappStatusStrip />
 
       {isLoading && <ListSkeleton rows={4} height="h-20" />}
+      {isError && <ErrorState onRetry={() => refetch()} />}
 
       {stats && (
         <>

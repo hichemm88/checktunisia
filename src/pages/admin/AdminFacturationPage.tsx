@@ -8,6 +8,7 @@ import { adminHostsApi } from '@/api/admin/hosts';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
 import { EmptyState } from '@/components/admin/EmptyState';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { ErrorState } from '@/components/admin/ErrorState';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatTND } from '@/lib/money';
 
@@ -35,7 +36,7 @@ export const AdminFacturationPage = () => {
     enabled: hostSearch.length >= 2,
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin-all-invoices', status, page, selectedHost?.id],
     queryFn: () => adminSubscriptionsApi.allInvoices({ status: status || undefined, organization_id: selectedHost?.id, page, per_page: 20 }),
   });
@@ -77,6 +78,7 @@ export const AdminFacturationPage = () => {
 
       <div className="card p-2">
         {isLoading && <ListSkeleton rows={4} height="h-10" />}
+        {isError && <ErrorState onRetry={() => refetch()} />}
         {data?.data.map((inv) => (
           inv.organization ? (
             <div key={inv.id} className={inv.id === highlightId ? 'rounded-xl ring-2 ring-[--qayed-cachet] bg-warm-100' : ''}>

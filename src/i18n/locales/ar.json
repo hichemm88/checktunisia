@@ -201,7 +201,8 @@
     "invoiceStatusUpdated": "تم تحديث حالة الفاتورة",
     "invoiceDeleted": "تم حذف الفاتورة",
     "deleteInvoice": "حذف الفاتورة",
-    "changeStatus": "تغيير الحالة"
+    "changeStatus": "تغيير الحالة",
+    "loadError": "تعذّر تحميل البيانات. تحقّق من اتصالك وأعد المحاولة."
   },
   "adminFacturation": {
     "title": "الفوترة",
@@ -738,7 +739,8 @@
     "male": "ذكر",
     "female": "أنثى",
     "other": "آخر",
-    "sex": "الجنس"
+    "sex": "الجنس",
+    "retry": "إعادة المحاولة"
   },
   "authorityWatchlist": {
     "title": "الأشخاص الخاضعون للمراقبة",

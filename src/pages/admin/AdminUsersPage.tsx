@@ -12,6 +12,7 @@ import { extractErrors } from '@/lib/api';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { Pagination } from '@/components/ui/Pagination';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { ErrorState } from '@/components/admin/ErrorState';
 
 // ─── Create form ────────────────────────────────────────────────────────────────
 
@@ -159,7 +160,7 @@ export const AdminUsersPage = () => {
 
   const { data: hotels } = useQuery({ queryKey: ['admin-hotels-all'], queryFn: () => adminHotelsApi.list({ per_page: 200 }) });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin-users', search, role, hotelId, page],
     queryFn: () => adminUsersApi.list({ search: search || undefined, role: role || undefined, hotel_id: hotelId || undefined, page, per_page: 20 }),
   });
@@ -196,6 +197,7 @@ export const AdminUsersPage = () => {
 
       <div className="card p-4">
         {isLoading && <ListSkeleton rows={3} />}
+        {isError && <ErrorState onRetry={() => refetch()} />}
         {users.map((u) => <UserRow key={u.id} u={u} />)}
         {!isLoading && !users.length && <p className="py-6 text-center text-sm text-gray-400">{t('settingsPage.noUser')}</p>}
       </div>
