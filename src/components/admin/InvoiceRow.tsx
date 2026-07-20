@@ -35,13 +35,21 @@ export const InvoiceRow = ({ invoice, hostId, subtitle, invalidateKey }: Invoice
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Statut choisi dans le select mais pas encore appliqué : un changement de
+  // statut de facture (payée / annulée…) est comptable et sans undo, il exige
+  // donc une confirmation explicite avant d'être écrit.
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
 
   const statusMut = useAdminMutation({
     mutationFn: (newStatus: string) => adminSubscriptionsApi.updateInvoiceForHost(hostId, invoice.id, {
       status: newStatus, paid_at: newStatus === 'paid' ? new Date().toISOString().slice(0, 10) : null,
     }),
     successMessage: t('adminShared.invoiceStatusUpdated'),
-    onSuccess: () => qc.invalidateQueries({ queryKey: invalidateKey }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: invalidateKey });
+      setPendingStatus(null);
+    },
+    onError: () => setPendingStatus(null),
   });
 
   const deleteMut = useAdminMutation({
@@ -58,16 +66,29 @@ export const InvoiceRow = ({ invoice, hostId, subtitle, invalidateKey }: Invoice
       </div>
       <span className="font-mono text-xs text-gray-500 me-3 shrink-0">{formatTND(invoice.total_amount)}</span>
       <select
-        value={invoice.status}
+        value={pendingStatus ?? invoice.status}
         disabled={statusMut.isPending}
-        onChange={(e) => statusMut.mutate(e.target.value)}
+        onChange={(e) => setPendingStatus(e.target.value === invoice.status ? null : e.target.value)}
         title={t('adminShared.changeStatus')}
-        className={`text-xs font-bold px-2 py-0.5 rounded-full me-2 shrink-0 border-0 cursor-pointer appearance-none disabled:opacity-50 ${STATUS_STYLE[invoice.status] ?? DEFAULT_STYLE}`}
+        className={`text-xs font-bold px-2 py-0.5 rounded-full me-2 shrink-0 border-0 cursor-pointer appearance-none disabled:opacity-50 ${STATUS_STYLE[pendingStatus ?? invoice.status] ?? DEFAULT_STYLE}`}
       >
         {Object.entries(STATUS_LABEL_KEY).map(([value, labelKey]) => (
           <option key={value} value={value}>{t(labelKey)}</option>
         ))}
       </select>
+      {pendingStatus && (
+        <span className="flex items-center gap-2 me-2 shrink-0 rounded-lg px-2 py-1" style={{ background: 'var(--qayed-cachet-dilue)' }}>
+          <button
+            onClick={() => statusMut.mutate(pendingStatus)}
+            disabled={statusMut.isPending}
+            className="text-xs font-bold disabled:opacity-50"
+            style={{ color: 'var(--qayed-cachet)' }}
+          >
+            {t('common.confirm')}
+          </button>
+          <button onClick={() => setPendingStatus(null)} className="text-xs text-gray-400">{t('common.cancel')}</button>
+        </span>
+      )}
       <button onClick={() => adminSubscriptionsApi.downloadInvoicePdf(hostId, invoice.id, `facture-${invoice.invoice_number}.pdf`)}
         className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet] shrink-0">
         <Download className="h-3.5 w-3.5" />
