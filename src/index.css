@@ -73,8 +73,13 @@
 
 @layer components {
 
-  /* ── Input ── */
-  .input-field {
+  /* ── Input ──
+     `.input` est un alias de `.input-field` : de nombreuses barres de filtre et
+     recherches de l'admin utilisent `className="input"` (qui n'existait pas et
+     rendait donc en input navigateur brut, sans bordure ni focus ring). Les deux
+     partagent exactement le meme style. */
+  .input-field,
+  .input {
     @apply h-input w-full px-4 bg-white border border-warm-300 rounded-input
            text-gray-900 placeholder:text-gray-400
            focus:outline-none focus:border-qayed-cachet
