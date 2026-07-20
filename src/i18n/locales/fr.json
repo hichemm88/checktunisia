@@ -202,7 +202,8 @@
     "invoiceDeleted": "Facture supprimée",
     "deleteInvoice": "Supprimer la facture",
     "changeStatus": "Modifier le statut",
-    "loadError": "Impossible de charger les données. Vérifie ta connexion et réessaie."
+    "loadError": "Impossible de charger les données. Vérifie ta connexion et réessaie.",
+    "backToList": "Retour à la liste"
   },
   "adminFacturation": {
     "title": "Facturation",
