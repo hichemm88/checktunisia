@@ -202,7 +202,8 @@
     "invoiceDeleted": "Invoice deleted",
     "deleteInvoice": "Delete invoice",
     "changeStatus": "Change status",
-    "loadError": "Could not load the data. Check your connection and try again."
+    "loadError": "Could not load the data. Check your connection and try again.",
+    "backToList": "Back to list"
   },
   "adminFacturation": {
     "title": "Invoicing",

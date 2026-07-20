@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Building2, Search, CheckCircle2, XCircle, Clock, Plus, X, Trash2, RefreshCw,
+  Building2, Search, CheckCircle2, XCircle, Clock, Plus, X, Trash2, RefreshCw, ArrowLeft,
 } from 'lucide-react';
 import { adminHotelsApi, AdminHotel } from '@/api/admin/hotels';
 import { adminHostsApi } from '@/api/admin/hosts';
@@ -162,7 +162,8 @@ export const AdminHotelsPage = () => {
       {showCreate && <CreateHotelForm onDone={() => setShowCreate(false)} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 flex flex-col gap-4">
+        {/* Liste : plein écran sur mobile ; masquée quand un détail est ouvert. */}
+        <div className={`lg:col-span-2 flex-col gap-4 lg:flex ${selected ? 'hidden' : 'flex'}`}>
           <div className="flex gap-3">
             <div className="relative flex-1">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -215,7 +216,8 @@ export const AdminHotelsPage = () => {
           )}
         </div>
 
-        <div>
+        {/* Détail : masqué sur mobile tant que rien n'est sélectionné. */}
+        <div className={selected ? '' : 'hidden lg:block'}>
           {!selected ? (
             <div className="card p-8 text-center text-sm text-gray-400">
               <Building2 className="h-8 w-8 mx-auto mb-3 text-gray-200" />
@@ -223,6 +225,9 @@ export const AdminHotelsPage = () => {
             </div>
           ) : (
             <div className="card p-5 flex flex-col gap-4">
+              <button onClick={() => setSelected(null)} className="lg:hidden flex items-center gap-1.5 -mb-1 text-sm font-medium text-gray-500 hover:text-gray-800">
+                <ArrowLeft className="h-4 w-4" /> {t('adminShared.backToList')}
+              </button>
               <div>
                 <h3 className="font-bold text-gray-900 text-lg leading-tight">{selected.name}</h3>
                 <p className="text-sm text-gray-400">{selected.type} · {t('adminHotels.roomsCount', { count: selected.room_count })}</p>
