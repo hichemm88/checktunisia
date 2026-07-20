@@ -33,7 +33,7 @@ export const LoginPage = () => {
       setAuth(result.token, { ...result.user, _token_expires_at: result.expires_at });
       // Role-based redirect
       if (result.user.role === 'authority_user') navigate('/authority/search');
-      else if (result.user.role === 'platform_admin') navigate('/admin/hotels');
+      else if (result.user.role === 'platform_admin') navigate('/admin/dashboard');
       else navigate('/hotel/dashboard');
     } catch (err) {
       setError(extractErrors(err));

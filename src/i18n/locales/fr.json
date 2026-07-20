@@ -1440,6 +1440,10 @@
       "all": "Tous",
       "cin_scan": "CIN",
       "passport_scan": "Passeport"
-    }
+    },
+    "scanCompareTitle": "Scans OCR MRZ local vs Claude vision (30 j)",
+    "scanCompareLegendMrz": "OCR MRZ local",
+    "scanCompareLegendVision": "Claude vision",
+    "passportFallbackShort": "Repli passeport {{rate}} %"
   }
 }

@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown, Wallet, Award, UserPlus, Landmark, Cpu } from 'lucide-react';
+import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown, Wallet, Award, UserPlus, Landmark, Cpu, ScanLine } from 'lucide-react';
 import { adminDashboardApi, AdminDashboardStats } from '@/api/admin/dashboard';
 import { adminPaymentsApi } from '@/api/admin/payments';
 import { adminWhatsappApi } from '@/api/admin/whatsapp';
@@ -225,6 +225,80 @@ const AiCostWidget = () => {
   );
 };
 
+/**
+ * Graphe comparatif OCR MRZ local (gratuit, tesseract cote navigateur) vs Claude
+ * vision (paye). Barres groupees par jour sur 30 j ; en-tete avec les totaux et
+ * le taux de repli passeport reel. Repond a la question "combien de scans sont
+ * traites gratuitement en local vs partent vers l'IA payante".
+ */
+const ScanComparisonChart = () => {
+  const { t } = useTranslation();
+  const { data } = useQuery({
+    queryKey: ['admin-scan-comparison', 30],
+    queryFn: () => adminAiCostsApi.scanComparison(30),
+  });
+
+  if (!data) return null;
+
+  const max = Math.max(1, ...data.series.map((d) => Math.max(d.mrz_local, d.vision)));
+  const noData = data.total_mrz_local === 0 && data.total_vision === 0;
+
+  return (
+    <div className="card p-5">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: 'var(--qayed-conforme)18' }}>
+            <ScanLine className="h-4 w-4" style={{ color: 'var(--qayed-conforme)' }} />
+          </div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('aiCosts.scanCompareTitle')}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-gray-500">
+            {t('aiCosts.scanCompareLegendMrz')} <span className="font-mono font-semibold text-gray-700">{data.total_mrz_local}</span>
+            {'  ·  '}
+            {t('aiCosts.scanCompareLegendVision')} <span className="font-mono font-semibold text-gray-700">{data.total_vision}</span>
+          </p>
+          <p className="text-[11px] text-gray-400">{t('aiCosts.passportFallbackShort', { rate: data.passport_fallback_rate.toFixed(1) })}</p>
+        </div>
+      </div>
+
+      {noData ? (
+        <p className="text-xs text-gray-400 py-8 text-center">{t('aiCosts.noData')}</p>
+      ) : (
+        <div className="flex items-end gap-1 h-28">
+          {data.series.map((d) => (
+            <div key={d.date} className="flex-1 group relative flex items-end justify-center gap-px h-full">
+              <div
+                className="w-1/2 rounded-sm"
+                style={{ height: `${Math.max(2, (d.mrz_local / max) * 100)}%`, background: 'var(--qayed-conforme)', opacity: d.mrz_local === 0 ? 0.12 : 0.9 }}
+              />
+              <div
+                className="w-1/2 rounded-sm"
+                style={{ height: `${Math.max(2, (d.vision / max) * 100)}%`, background: 'var(--qayed-cachet)', opacity: d.vision === 0 ? 0.12 : 0.9 }}
+              />
+              <div className="pointer-events-none absolute -top-11 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white z-10">
+                <span className="font-mono">{t('aiCosts.scanCompareLegendMrz')} {d.mrz_local} · {t('aiCosts.scanCompareLegendVision')} {d.vision}</span>
+                <span>{d.date}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-2 flex items-center gap-4 text-[10px] text-gray-400">
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-2 rounded-sm" style={{ background: 'var(--qayed-conforme)' }} />
+          {t('aiCosts.scanCompareLegendMrz')}
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-2 w-2 rounded-sm" style={{ background: 'var(--qayed-cachet)' }} />
+          {t('aiCosts.scanCompareLegendVision')}
+        </span>
+      </div>
+    </div>
+  );
+};
+
 const PendingVirementsCard = ({ items }: { items: AdminDashboardStats['alerts']['pending_virements'] }) => {
   const { t } = useTranslation();
   const qc = useQueryClient();
@@ -306,6 +380,8 @@ export const AdminDashboardPage = () => {
           </div>
 
           <AiCostWidget />
+
+          <ScanComparisonChart />
 
           <CheckInsChart data={stats.check_ins_chart} />
 

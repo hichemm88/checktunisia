@@ -55,6 +55,24 @@ export interface AiCostDailyPoint {
   passport_count: number;
 }
 
+export interface ScanComparisonPoint {
+  date: string; // YYYY-MM-DD
+  mrz_local: number;
+  vision: number;
+  vision_cin: number;
+  vision_passport: number;
+}
+
+export interface ScanComparison {
+  days: number;
+  series: ScanComparisonPoint[];
+  total_mrz_local: number;
+  total_vision: number;
+  total_passports: number;
+  /** Part des passeports partis en Claude vision (l'OCR MRZ local a echoue). */
+  passport_fallback_rate: number;
+}
+
 export interface AiPricing {
   id: string;
   model: string;
@@ -84,6 +102,11 @@ export const adminAiCostsApi = {
   daily: (days = 30, feature: AiFeatureFilter = 'all') =>
     api
       .get<{ data: AiCostDailyPoint[] }>('/admin/ai-costs/daily', { params: { days, feature } })
+      .then((r) => r.data.data),
+
+  scanComparison: (days = 30) =>
+    api
+      .get<{ data: ScanComparison }>('/admin/ai-costs/scan-comparison', { params: { days } })
       .then((r) => r.data.data),
 
   pricing: () =>
