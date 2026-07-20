@@ -352,6 +352,15 @@
     "photoAttached": "Photo attached",
     "noPhoto": "No photo"
   },
+  "adminKpis": {
+    "arpu": "ARPU",
+    "payingCustomers": "{{count}} paying customers",
+    "churn": "Churn rate",
+    "churnedThisMonth": "{{count}} lost this month",
+    "activation": "Activation",
+    "activatedCohort": "{{activated}}/{{total}} · {{days}}d",
+    "netMrr": "Net MRR (month)"
+  },
   "adminDashboard": {
     "title": "Dashboard",
     "properties": "Properties",

@@ -352,6 +352,15 @@
     "photoAttached": "Photo jointe",
     "noPhoto": "Sans photo"
   },
+  "adminKpis": {
+    "arpu": "ARPU",
+    "payingCustomers": "{{count}} clients payants",
+    "churn": "Taux d'attrition",
+    "churnedThisMonth": "{{count}} partis ce mois",
+    "activation": "Activation",
+    "activatedCohort": "{{activated}}/{{total}} · {{days}} j",
+    "netMrr": "MRR net (mois)"
+  },
   "adminDashboard": {
     "title": "Tableau de bord",
     "properties": "Établissements",

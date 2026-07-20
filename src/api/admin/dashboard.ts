@@ -34,6 +34,26 @@ export interface AdminDashboardStats {
   recent_signups: { id: string; name: string; created_at: string }[];
 }
 
+/**
+ * KPIs business (endpoint dédié /admin/metrics/kpis). Complète le dashboard avec
+ * les indicateurs SaaS de pilotage. Montants en TND. Les taux valent null quand
+ * la base de calcul est vide (aucune donnée -> on n'affiche pas un 0 % trompeur).
+ */
+export interface AdminKpis {
+  currency: string;
+  mrr: {
+    current: number;
+    new_this_month: number;
+    churned_this_month: number;
+    net_new_this_month: number;
+  };
+  arpu: { value: number; paying_customers: number };
+  churn: { rate_pct: number | null; churned_customers: number; base_customers: number; window: string };
+  activation: { rate_pct: number | null; activated: number; cohort_size: number; window_days: number };
+  trial_conversion: { rate_pct: number | null; converted: number; trials: number };
+}
+
 export const adminDashboardApi = {
   stats: () => api.get<{ data: AdminDashboardStats }>('/admin/dashboard').then((r) => r.data.data),
+  kpis: () => api.get<{ data: AdminKpis }>('/admin/metrics/kpis').then((r) => r.data.data),
 };

@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown, Wallet, Award, UserPlus, Landmark, Cpu, ScanLine } from 'lucide-react';
+import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown, Wallet, Award, UserPlus, Landmark, Cpu, ScanLine, Coins, Zap, Gauge } from 'lucide-react';
 import { adminDashboardApi, AdminDashboardStats } from '@/api/admin/dashboard';
 import { adminPaymentsApi } from '@/api/admin/payments';
 import { adminWhatsappApi } from '@/api/admin/whatsapp';
@@ -331,6 +331,82 @@ const PendingVirementsCard = ({ items }: { items: AdminDashboardStats['alerts'][
   );
 };
 
+/**
+ * Bandeau de KPIs business (endpoint dedie /admin/metrics/kpis) : ARPU, churn
+ * logo, activation, et mouvement net de MRR. Complete le MRR courant et la
+ * conversion d'essai deja affiches. Les taux null (aucune base de calcul)
+ * s'affichent en tiret plutot qu'en 0 % trompeur.
+ */
+const KpiTile = ({ icon: Icon, label, value, sub, color, amber }: { icon: typeof Gauge; label: string; value: string; sub?: React.ReactNode; color: string; amber?: boolean }) => (
+  <div className="card p-5">
+    <div className="flex items-center justify-between mb-2">
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{label}</p>
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: `${color}18` }}>
+        <Icon className="h-4 w-4" style={{ color }} />
+      </div>
+    </div>
+    <p
+      className="font-mono text-3xl font-extrabold"
+      style={{ color: amber ? 'var(--qayed-vigilance-texte)' : '#111827' }}
+    >
+      {value}
+    </p>
+    {sub != null && <p className="mt-1 text-xs text-gray-500">{sub}</p>}
+  </div>
+);
+
+const BusinessKpis = () => {
+  const { t } = useTranslation();
+  const { data } = useQuery({ queryKey: ['admin-kpis'], queryFn: adminDashboardApi.kpis });
+
+  if (!data) return null;
+
+  const pct = (v: number | null) => (v == null ? '—' : `${v}%`);
+  const churnAmber = (data.churn.rate_pct ?? 0) > 5;
+  const net = data.mrr.net_new_this_month;
+  const netSign = net > 0 ? '+' : '';
+
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <KpiTile
+        icon={Coins}
+        color="var(--qayed-conforme)"
+        label={t('adminKpis.arpu')}
+        value={formatTND(data.arpu.value)}
+        sub={t('adminKpis.payingCustomers', { count: data.arpu.paying_customers })}
+      />
+      <KpiTile
+        icon={TrendingDown}
+        color="#ef4444"
+        amber={churnAmber}
+        label={t('adminKpis.churn')}
+        value={pct(data.churn.rate_pct)}
+        sub={t('adminKpis.churnedThisMonth', { count: data.churn.churned_customers })}
+      />
+      <KpiTile
+        icon={Zap}
+        color="var(--qayed-cachet)"
+        label={t('adminKpis.activation')}
+        value={pct(data.activation.rate_pct)}
+        sub={t('adminKpis.activatedCohort', { activated: data.activation.activated, total: data.activation.cohort_size, days: data.activation.window_days })}
+      />
+      <KpiTile
+        icon={TrendingUp}
+        color={net >= 0 ? 'var(--qayed-conforme)' : '#ef4444'}
+        label={t('adminKpis.netMrr')}
+        value={`${netSign}${formatTND(net)}`}
+        sub={
+          <>
+            <span style={{ color: 'var(--qayed-conforme)' }}>+{formatTND(data.mrr.new_this_month)}</span>
+            {'  ·  '}
+            <span style={{ color: '#ef4444' }}>-{formatTND(data.mrr.churned_this_month)}</span>
+          </>
+        }
+      />
+    </div>
+  );
+};
+
 export const AdminDashboardPage = () => {
   const { t, i18n } = useTranslation();
   const locale = dateLocaleFor(i18n.language);
@@ -380,6 +456,8 @@ export const AdminDashboardPage = () => {
               )}
             </div>
           </div>
+
+          <BusinessKpis />
 
           <AiCostWidget />
 
