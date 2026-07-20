@@ -91,7 +91,7 @@ const OrgRow = ({ org }: { org: AdminAuthorityOrganization }) => {
         <p className="text-xs text-gray-400">{org.type in TYPE_KEYS ? t(TYPE_KEYS[org.type]) : org.type}{org.governorate ? ` · ${org.governorate}` : ''}{org.user_profiles_count ? ` · ${t('adminAuthority.usersCount', { count: org.user_profiles_count })}` : ''}</p>
       </div>
       <div className="flex items-center gap-1 shrink-0 ms-2">
-        <button onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500"><Pencil className="h-3.5 w-3.5" /></button>
+        <button onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet]"><Pencil className="h-3.5 w-3.5" /></button>
         {!confirmDelete ? (
           <button onClick={() => setConfirmDelete(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
         ) : (

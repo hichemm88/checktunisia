@@ -147,7 +147,7 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
     <div>
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('settingsPage.subscription')}</p>
-        {!editing && <button onClick={() => setEditing(true)} className="text-gray-300 hover:text-blue-500"><Pencil className="h-3.5 w-3.5" /></button>}
+        {!editing && <button onClick={() => setEditing(true)} className="text-gray-300 hover:text-[--qayed-cachet]"><Pencil className="h-3.5 w-3.5" /></button>}
       </div>
       {!editing ? (
         <div className="rounded-xl p-3 text-sm" style={{ background: 'var(--qayed-papier)' }}>
@@ -264,7 +264,7 @@ const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('adminFacturation.title')}</p>
         {sub && (
-          <button onClick={() => setShowCreate((s) => !s)} className="text-gray-300 hover:text-blue-500">
+          <button onClick={() => setShowCreate((s) => !s)} className="text-gray-300 hover:text-[--qayed-cachet]">
             {showCreate ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
           </button>
         )}

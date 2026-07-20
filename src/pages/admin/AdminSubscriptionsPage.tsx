@@ -118,8 +118,8 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
           <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${plan.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{plan.is_active ? t('adminDashboard.active') : t('adminSubscriptions.inactive')}</span>
           {!editing && !editingMarketing && (
             <>
-              <button onClick={() => setEditingMarketing(true)} title={t('adminSubscriptions.publicContent')} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500"><Globe className="h-3.5 w-3.5" /></button>
-              <button onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500"><Pencil className="h-3.5 w-3.5" /></button>
+              <button onClick={() => setEditingMarketing(true)} title={t('adminSubscriptions.publicContent')} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet]"><Globe className="h-3.5 w-3.5" /></button>
+              <button onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet]"><Pencil className="h-3.5 w-3.5" /></button>
               <button onClick={() => setConfirmDelete((s) => !s)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
             </>
           )}
@@ -338,7 +338,7 @@ const AbonnementsActifsTab = () => {
                       {t(`settingsPage.subscriptionStatus.${s.status}`, s.status)}
                     </span>
                     {(s.status === 'active' || s.status === 'trial') && (
-                      <button onClick={() => { setEditingExpiry(!editingExpiry); setExpiryForm({ expires_at: s.expires_at.slice(0, 10), custom_price: s.custom_price ?? '' }); }} className="text-gray-300 hover:text-blue-500">
+                      <button onClick={() => { setEditingExpiry(!editingExpiry); setExpiryForm({ expires_at: s.expires_at.slice(0, 10), custom_price: s.custom_price ?? '' }); }} className="text-gray-300 hover:text-[--qayed-cachet]">
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                     )}

@@ -131,11 +131,11 @@ const UserRow = ({ u }: { u: AdminUser }) => {
           </span>
           <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{ background: 'var(--qayed-cachet)18', color: 'var(--qayed-cachet)' }}>{u.role === 'hotel_admin' ? t('settingsPage.roleAdmin') : u.role === 'receptionist' ? t('settingsPage.roleReceptionist') : u.role}</span>
           {!u.last_login_at && (
-            <button onClick={() => resendMut.mutate()} disabled={resendMut.isPending} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors" title={t('settingsPage.resendInvite')}>
+            <button onClick={() => resendMut.mutate()} disabled={resendMut.isPending} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet] transition-colors" title={t('settingsPage.resendInvite')}>
               <Send className="h-3.5 w-3.5" />
             </button>
           )}
-          <button onClick={() => setMode('edit')} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors"><Pencil className="h-3.5 w-3.5" /></button>
+          <button onClick={() => setMode('edit')} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet] transition-colors"><Pencil className="h-3.5 w-3.5" /></button>
           <button onClick={() => setMode('confirm_delete')} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
         </div>
       </div>

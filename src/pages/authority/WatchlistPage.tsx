@@ -87,9 +87,9 @@ const AddEntryModal = ({ onClose, isMinistry }: { onClose: () => void; isMinistr
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-gray-600">{t('authorityWatchlist.severityLabel')}</label>
               <select className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-qayed-cachet/20" value={form.severity} onChange={e => set('severity', e.target.value)}>
-                <option value="critique">🔴 {t('authoritySearch.severityCritical')}</option>
-                <option value="eleve">🟠 {t('authoritySearch.severityHigh')}</option>
-                <option value="moyen">🟡 {t('authorityWatchlist.severityMedium')}</option>
+                <option value="critique">{t('authoritySearch.severityCritical')}</option>
+                <option value="eleve">{t('authoritySearch.severityHigh')}</option>
+                <option value="moyen">{t('authorityWatchlist.severityMedium')}</option>
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -288,9 +288,9 @@ export const WatchlistPage = () => {
               <label className="text-xs font-medium text-gray-600">{t('authorityWatchlist.degree')}</label>
               <select className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none" value={severity} onChange={e => handleSeverity(e.target.value)}>
                 <option value="">{t('common.all')}</option>
-                <option value="critique">🔴 {t('authoritySearch.severityCritical')}</option>
-                <option value="eleve">🟠 {t('authoritySearch.severityHigh')}</option>
-                <option value="moyen">🟡 {t('authorityWatchlist.severityMedium')}</option>
+                <option value="critique">{t('authoritySearch.severityCritical')}</option>
+                <option value="eleve">{t('authoritySearch.severityHigh')}</option>
+                <option value="moyen">{t('authorityWatchlist.severityMedium')}</option>
               </select>
             </div>
           </div>
@@ -382,7 +382,7 @@ export const WatchlistPage = () => {
                           : { background: '#F3F4F6', color: '#9CA3AF' }
                         }
                       >
-                        {isGlobal ? `🌐 ${t('authorityWatchlist.sourceInterpolUn')}` : entry.source === 'import' ? t('authorityWatchlist.sourceCsvImport') : t('authorityWatchlist.sourceManual')}
+                        {isGlobal ? t('authorityWatchlist.sourceInterpolUn') : entry.source === 'import' ? t('authorityWatchlist.sourceCsvImport') : t('authorityWatchlist.sourceManual')}
                       </span>
 
                       {/* Actions */}

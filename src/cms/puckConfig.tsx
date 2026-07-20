@@ -156,11 +156,11 @@ export const puckConfig: Config<Props> = {
         items: {
           type: 'array', label: 'Cartes',
           arrayFields: {
-            emoji: { type: 'text', label: 'Emoji / icône' },
+            emoji: { type: 'text', label: 'Icône (texte court)' },
             title: { type: 'text', label: 'Titre' },
             text: { type: 'textarea', label: 'Texte' },
           },
-          defaultItemProps: { emoji: '✓', title: '', text: '' },
+          defaultItemProps: { emoji: '', title: '', text: '' },
           getItemSummary: (item) => item.title || 'Carte',
         },
         variant: {
@@ -194,11 +194,11 @@ export const puckConfig: Config<Props> = {
         items: {
           type: 'array', label: 'Points',
           arrayFields: {
-            emoji: { type: 'text', label: 'Emoji' },
+            emoji: { type: 'text', label: 'Icône (texte court)' },
             title: { type: 'text', label: 'Titre' },
             text: { type: 'textarea', label: 'Texte' },
           },
-          defaultItemProps: { emoji: '🛡️', title: '', text: '' },
+          defaultItemProps: { emoji: '', title: '', text: '' },
           getItemSummary: (item) => item.title || 'Point',
         },
         showMockup: { type: 'radio', label: 'Dashboard autorités', options: [{ label: 'Afficher', value: true }, { label: 'Masquer', value: false }] },
