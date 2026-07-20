@@ -7,7 +7,9 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "oxlint",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",
@@ -41,6 +43,7 @@
     "@vercel/node": "^5.0.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.20",
+    "oxlint": "^1.74.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.13",
     "typescript": "~5.5.3",

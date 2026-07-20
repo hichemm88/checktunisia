@@ -905,18 +905,21 @@ export const PropertiesPage = () => {
     enabled: isAdmin,
   });
 
-  if (!isAdmin) {
-    return <ReceptionistPropertiesView />;
-  }
-
   // Auto-initialize activePropertyId to the first property when not yet set.
   // This keeps the UI in sync with what ResolveTenant uses as the default.
+  // Doit rester AVANT le retour anticipé ci-dessous : un hook appelé après un
+  // return conditionnel change l'ordre des hooks entre rôles (rules-of-hooks).
+  // Pour un réceptionniste, la requête `org` est désactivée → l'effet no-op.
   useEffect(() => {
     if (!activePropertyId && org?.properties?.length) {
       const first = org.properties[0];
       setActiveProperty(first.id, first.name);
     }
   }, [org?.properties, activePropertyId, setActiveProperty]);
+
+  if (!isAdmin) {
+    return <ReceptionistPropertiesView />;
+  }
 
   // Derive display name: prefer org name, fallback to hotel name from auth store
   const displayName = org?.name ?? user?.hotel?.name ?? t('propertiesPage.myOrganization');
