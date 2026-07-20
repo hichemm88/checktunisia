@@ -35,6 +35,7 @@ import { WatchlistPage } from '@/pages/authority/WatchlistPage';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
 import { AdminAiCostsPage } from '@/pages/admin/AdminAiCostsPage';
+import { AdminCouponsPage } from '@/pages/admin/AdminCouponsPage';
 import { AdminHostsPage } from '@/pages/admin/AdminHostsPage';
 import { AdminHotelsPage } from '@/pages/admin/AdminHotelsPage';
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
@@ -175,6 +176,7 @@ export const App = () => (
           <Route path="/admin/authority"     element={<AdminAuthorityPage />} />
           <Route path="/admin/subscriptions" element={<AdminSubscriptionsPage />} />
           <Route path="/admin/facturation"   element={<AdminFacturationPage />} />
+          <Route path="/admin/coupons"       element={<AdminCouponsPage />} />
           <Route path="/admin/payments"      element={<AdminPaymentsPage />} />
           <Route path="/admin/emails"        element={<AdminEmailsPage />} />
           <Route path="/admin/activity"      element={<AdminActivityPage />} />

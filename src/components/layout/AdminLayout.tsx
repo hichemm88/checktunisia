@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, Building2, Home, Users, Landmark,
   CreditCard, Wallet, Mail, Activity, LogOut, Search, X, FileText, Menu,
-  Globe, ListTree, MessageCircle, Cpu,
+  Globe, ListTree, MessageCircle, Cpu, Ticket,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
@@ -23,6 +23,7 @@ const useNavItems = () => {
     { to: '/admin/authority',     icon: Landmark,        label: t('adminLayout.nav.authority') },
     { to: '/admin/subscriptions', icon: CreditCard,      label: t('adminLayout.nav.subscriptions') },
     { to: '/admin/facturation',   icon: FileText,        label: t('adminLayout.nav.facturation') },
+    { to: '/admin/coupons',       icon: Ticket,          label: t('adminLayout.nav.coupons') },
     { to: '/admin/payments',      icon: Wallet,          label: t('adminLayout.nav.payments') },
     { to: '/admin/ai-costs',      icon: Cpu,             label: t('adminLayout.nav.aiCosts') },
     { to: '/admin/emails',        icon: Mail,            label: t('adminLayout.nav.emails') },

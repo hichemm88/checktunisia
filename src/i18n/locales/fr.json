@@ -21,7 +21,9 @@
     "confirmDeleteBody": "Supprimer définitivement cet hébergeur ?",
     "propertiesWithCount": "Biens ({{count}})",
     "noProperty": "Aucun bien",
-    "usersWithCount": "Utilisateurs ({{count}})"
+    "usersWithCount": "Utilisateurs ({{count}})",
+    "couponCode": "Code promo",
+    "couponPlaceholder": "Optionnel"
   },
   "adminSubscriptions": {
     "plans": "Packs",
@@ -1338,7 +1340,8 @@
       "pages": "Pages du site",
       "menus": "Menus",
       "whatsapp": "WhatsApp",
-      "aiCosts": "Coûts IA"
+      "aiCosts": "Coûts IA",
+      "coupons": "Codes promo"
     },
     "searchPlaceholder": "Rechercher un hébergeur, établissement, utilisateur…",
     "palettePlaceholder": "Naviguer ou rechercher (hébergeur, facture INV-…, fiche QYD-…)",
@@ -1457,5 +1460,34 @@
     "scanCompareLegendMrz": "OCR MRZ local",
     "scanCompareLegendVision": "Claude vision",
     "passportFallbackShort": "Repli passeport {{rate}} %"
+  },
+  "adminCoupons": {
+    "title": "Codes promo",
+    "intro": "Créez des codes de réduction (pourcentage ou montant fixe) à appliquer lors de la création d'une facture.",
+    "newCoupon": "Nouveau code",
+    "code": "Code",
+    "type": "Type de remise",
+    "typePercent": "Pourcentage",
+    "typeFixed": "Montant fixe (TND)",
+    "valuePercent": "Remise (%)",
+    "valueFixed": "Remise (TND)",
+    "minAmount": "Montant minimum (TND)",
+    "minAmountShort": "min. {{amount}}",
+    "maxUses": "Utilisations max",
+    "unlimited": "Illimité",
+    "expiresAt": "Expire le",
+    "expiresShort": "expire {{date}}",
+    "description": "Description",
+    "optional": "Optionnel",
+    "saved": "Code promo mis à jour",
+    "created": "Code promo créé",
+    "removed": "Code promo supprimé",
+    "inactive": "Inactif",
+    "expired": "Expiré",
+    "active": "Actif",
+    "deactivate": "Désactiver",
+    "activate": "Activer",
+    "usedCount": "{{used}}/{{max}} utilisation(s)",
+    "empty": "Aucun code promo pour le moment."
   }
 }
