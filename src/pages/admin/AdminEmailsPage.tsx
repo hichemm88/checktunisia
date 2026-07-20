@@ -59,7 +59,7 @@ const TemplateCard = ({ template }: { template: EmailTemplateItem }) => {
           <Mail className="h-4 w-4 text-gray-400" />
           <p className="font-bold text-gray-900">{template.label}</p>
         </div>
-        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${template.is_custom ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${template.is_custom ? 'bg-[--qayed-cachet-dilue] text-[--qayed-cachet]' : 'bg-gray-100 text-gray-500'}`}>
           {template.is_custom ? t('adminEmails.custom') : t('adminEmails.default')}
         </span>
       </div>

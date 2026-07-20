@@ -39,11 +39,11 @@ const PageRow = ({ page }: { page: AdminPageListItem }) => {
             {page.status === 'published' ? t('adminPages.published') : t('adminPages.draft')}
           </span>
           {page.status === 'published' && (
-            <a href={`/fr/${page.slug}`} target="_blank" rel="noreferrer" className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500" title={t('adminPages.view')}>
+            <a href={`/fr/${page.slug}`} target="_blank" rel="noreferrer" className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet]" title={t('adminPages.view')}>
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
           )}
-          <Link to={`/admin/pages/${page.id}/edit`} className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500" title={t('common.edit')}>
+          <Link to={`/admin/pages/${page.id}/edit`} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet]" title={t('common.edit')}>
             <Pencil className="h-3.5 w-3.5" />
           </Link>
           <button onClick={() => setConfirmDelete((s) => !s)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500">

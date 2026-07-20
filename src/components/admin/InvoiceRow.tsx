@@ -69,7 +69,7 @@ export const InvoiceRow = ({ invoice, hostId, subtitle, invalidateKey }: Invoice
         ))}
       </select>
       <button onClick={() => adminSubscriptionsApi.downloadInvoicePdf(hostId, invoice.id, `facture-${invoice.invoice_number}.pdf`)}
-        className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500 shrink-0">
+        className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet] shrink-0">
         <Download className="h-3.5 w-3.5" />
       </button>
       {confirmDelete ? (
