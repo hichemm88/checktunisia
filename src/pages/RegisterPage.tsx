@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useTranslation, Trans } from 'react-i18next';
@@ -13,8 +13,12 @@ import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { fetchPlans, registerOrganization, RegisterPayload } from '@/api/public';
 import { effectiveYearlyPrice } from '@/lib/billing';
 import { formatTNDAmount } from '@/lib/money';
+import { track } from '@/lib/analytics';
 
 type FormData = RegisterPayload & { password_confirmation: string };
+
+/** Noms stables des étapes (indépendants de la langue) pour l'analytics. */
+const STEP_NAMES = ['type', 'organisation', 'account', 'plan'] as const;
 
 const INIT: FormData = {
   entity_type: 'company',
@@ -42,11 +46,17 @@ export const RegisterPage = () => {
 
   const set = (k: keyof FormData, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
 
+  // Tunnel d'inscription — mesure du drop-off par étape (attribution jointe).
+  useEffect(() => {
+    track('register_step_view', { step, step_name: STEP_NAMES[step] });
+  }, [step]);
+
   const { data: plans = [] } = useQuery({ queryKey: ['plans'], queryFn: fetchPlans });
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: () => registerOrganization(form as RegisterPayload),
     onSuccess: (res) => {
+      track('register_success', { plan: form.plan_slug, entity_type: form.entity_type });
       setDone({
         orgName:   res.data.organization.name,
         email:     res.data.user.email,
@@ -336,7 +346,7 @@ export const RegisterPage = () => {
               {t('common.next')} <ArrowRight className="h-4 w-4" />
             </Button>
           ) : (
-            <Button fullWidth loading={isPending} disabled={!form.plan_slug} onClick={() => mutate()}>
+            <Button fullWidth loading={isPending} disabled={!form.plan_slug} onClick={() => { track('register_submit', { plan: form.plan_slug, entity_type: form.entity_type }); mutate(); }}>
               {t('register.createAccount')}
             </Button>
           )}

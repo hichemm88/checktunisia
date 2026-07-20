@@ -2,10 +2,15 @@ import { StrictMode, Component, ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Analytics } from '@vercel/analytics/react';
 import { ToastProvider } from '@/components/ui/Toast';
+import { captureAttribution } from '@/lib/analytics';
 import { App } from './App';
 import './index.css';
 import './i18n';
+
+// Capture des UTM / referrer au premier chargement (attribution des signups).
+captureAttribution();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,6 +74,7 @@ createRoot(document.getElementById('root')!).render(
         <QueryClientProvider client={queryClient}>
           <ToastProvider>
             <App />
+            <Analytics />
           </ToastProvider>
         </QueryClientProvider>
       </BrowserRouter>
