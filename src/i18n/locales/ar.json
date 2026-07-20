@@ -352,6 +352,15 @@
     "photoAttached": "صورة مرفقة",
     "noPhoto": "بدون صورة"
   },
+  "adminKpis": {
+    "arpu": "متوسط الإيراد لكل عميل",
+    "payingCustomers": "{{count}} عميل مدفوع",
+    "churn": "معدل التسرّب",
+    "churnedThisMonth": "{{count}} غادروا هذا الشهر",
+    "activation": "التفعيل",
+    "activatedCohort": "{{activated}}/{{total}} · {{days}} يوم",
+    "netMrr": "صافي الإيراد الشهري"
+  },
   "adminDashboard": {
     "title": "لوحة التحكم",
     "properties": "المؤسسات",
