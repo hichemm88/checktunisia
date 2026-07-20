@@ -23,6 +23,9 @@ export interface RegisterPayload {
   // Subscription
   plan_slug: string;
   billing_cycle?: 'monthly' | 'yearly';
+
+  // Langue de communication (emails) — la langue de l'interface au moment de l'inscription.
+  locale?: 'fr' | 'en' | 'ar';
 }
 
 export interface SubscriptionPlan {

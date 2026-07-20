@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Mail, Save, Eye, Send, MailCheck } from 'lucide-react';
-import { adminEmailsApi, EmailTemplateItem } from '@/api/admin/emails';
+import { adminEmailsApi, EmailTemplateItem, EmailLocale, EMAIL_LOCALES } from '@/api/admin/emails';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
@@ -21,7 +21,7 @@ const PLACEHOLDER_HINTS: Record<string, string[]> = {
   invoice_available: ['name', 'plan_name', 'invoice_number', 'credentials_box', 'cta_button'],
 };
 
-const TemplateCard = ({ template }: { template: EmailTemplateItem }) => {
+const TemplateCard = ({ template, locale }: { template: EmailTemplateItem; locale: EmailLocale }) => {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -29,21 +29,22 @@ const TemplateCard = ({ template }: { template: EmailTemplateItem }) => {
   const [form, setForm] = useState({ subject: template.subject, body_html: template.body_html });
   const [showPreview, setShowPreview] = useState(false);
   const [error, setError] = useState('');
+  const rtl = locale === 'ar';
 
   const saveMut = useMutation({
-    mutationFn: () => adminEmailsApi.update(template.key, form),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-emails'] }); toast(t('adminEmails.templateSaved'), 'success'); },
+    mutationFn: () => adminEmailsApi.update(template.key, { ...form, locale }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-emails', locale] }); toast(t('adminEmails.templateSaved'), 'success'); },
     onError: (err) => setError(extractErrors(err)),
   });
 
   const sendTestMut = useAdminMutation({
-    mutationFn: () => adminEmailsApi.sendTest(template.key),
+    mutationFn: () => adminEmailsApi.sendTest(template.key, locale),
     successMessage: t('adminEmails.testSent', { email: currentUser?.email ?? '' }),
   });
 
   const { data: preview, refetch: refetchPreview, isFetching: previewLoading } = useQuery({
-    queryKey: ['admin-email-preview', template.key],
-    queryFn: () => adminEmailsApi.preview(template.key),
+    queryKey: ['admin-email-preview', locale, template.key],
+    queryFn: () => adminEmailsApi.preview(template.key, locale),
     enabled: false,
   });
 
@@ -65,12 +66,13 @@ const TemplateCard = ({ template }: { template: EmailTemplateItem }) => {
       </div>
 
       <div className="flex flex-col gap-3">
-        <Input label={t('adminEmails.subject')} value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} />
+        <Input label={t('adminEmails.subject')} value={form.subject} dir={rtl ? 'rtl' : 'ltr'} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} />
         <div className="flex flex-col gap-1.5">
           <label className="label">{t('adminEmails.bodyHtml')}</label>
           <textarea
             className="input-field font-mono text-xs"
             rows={8}
+            dir={rtl ? 'rtl' : 'ltr'}
             value={form.body_html}
             onChange={(e) => setForm((f) => ({ ...f, body_html: e.target.value }))}
           />
@@ -101,10 +103,16 @@ const TemplateCard = ({ template }: { template: EmailTemplateItem }) => {
   );
 };
 
+const LOCALE_NAMES: Record<EmailLocale, string> = { fr: 'Français', en: 'English', ar: 'العربية' };
+
 export const AdminEmailsPage = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { data: templates, isLoading } = useQuery({ queryKey: ['admin-emails'], queryFn: adminEmailsApi.list });
+  const [locale, setLocale] = useState<EmailLocale>('fr');
+  const { data: templates, isLoading } = useQuery({
+    queryKey: ['admin-emails', locale],
+    queryFn: () => adminEmailsApi.list(locale),
+  });
 
   const remindersMut = useAdminMutation({
     mutationFn: adminEmailsApi.sendReminders,
@@ -123,9 +131,23 @@ export const AdminEmailsPage = () => {
         {t('adminEmails.remindersHint')}
       </p>
 
+      {/* Onglets de langue : chaque email s'edite independamment par langue (repli francais). */}
+      <div className="flex items-center gap-1 rounded-xl p-1 self-start" style={{ background: 'var(--qayed-papier)' }}>
+        {EMAIL_LOCALES.map((l) => (
+          <button
+            key={l}
+            onClick={() => setLocale(l)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${locale === l ? 'bg-white text-[--qayed-cachet] shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+          >
+            {LOCALE_NAMES[l]}
+          </button>
+        ))}
+      </div>
+
       {isLoading && <ListSkeleton rows={4} height="h-24" />}
       <div className="flex flex-col gap-4">
-        {templates?.map((tpl) => <TemplateCard key={tpl.key} template={tpl} />)}
+        {/* La cle inclut la langue : changer d'onglet remonte les cartes avec le bon contenu. */}
+        {templates?.map((tpl) => <TemplateCard key={`${locale}-${tpl.key}`} template={tpl} locale={locale} />)}
       </div>
     </div>
   );
