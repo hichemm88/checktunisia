@@ -30,7 +30,7 @@ const INIT: FormData = {
 };
 
 export const RegisterPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate   = useNavigate();
   const [params]   = useSearchParams();
   const [step, setStep] = useState(0);
@@ -53,8 +53,12 @@ export const RegisterPage = () => {
 
   const { data: plans = [] } = useQuery({ queryKey: ['plans'], queryFn: fetchPlans });
 
+  // Langue de communication = langue de l'interface au moment de l'inscription
+  // (fr/en/ar), pour que les emails partent dans la bonne langue.
+  const uiLocale = (['fr', 'en', 'ar'].includes(i18n.language) ? i18n.language : 'fr') as 'fr' | 'en' | 'ar';
+
   const { mutate, isPending, error } = useMutation({
-    mutationFn: () => registerOrganization(form as RegisterPayload),
+    mutationFn: () => registerOrganization({ ...form, locale: uiLocale } as RegisterPayload),
     onSuccess: (res) => {
       track('register_success', { plan: form.plan_slug, entity_type: form.entity_type });
       setDone({
