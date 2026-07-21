@@ -1489,5 +1489,11 @@
     "activate": "Activate",
     "usedCount": "{{used}}/{{max}} use(s)",
     "empty": "No coupons yet."
+  },
+  "seo": {
+    "registerTitle": "Sign up — Qayed",
+    "registerDescription": "Create your Qayed account and register your travelers in 30 seconds: passport or ID scan, automatic and compliant police form.",
+    "loginTitle": "Sign in — Qayed",
+    "loginDescription": "Access your Qayed workspace to manage your property's traveler registrations."
   }
 }

@@ -14,6 +14,7 @@ import { fetchPlans, registerOrganization, RegisterPayload } from '@/api/public'
 import { effectiveYearlyPrice } from '@/lib/billing';
 import { formatTNDAmount } from '@/lib/money';
 import { track } from '@/lib/analytics';
+import { useSeoMeta } from '@/cms/useSeoMeta';
 
 type FormData = RegisterPayload & { password_confirmation: string };
 
@@ -43,6 +44,13 @@ export const RegisterPage = () => {
     { label: t('register.step2Label'), icon: User },
     { label: t('register.step3Label'), icon: CreditCard },
   ];
+
+  useSeoMeta({
+    title: t('seo.registerTitle'),
+    description: t('seo.registerDescription'),
+    lang: i18n.language,
+    canonicalPath: '/register',
+  });
 
   const set = (k: keyof FormData, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
 
