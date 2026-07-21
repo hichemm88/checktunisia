@@ -9,6 +9,40 @@ import { useSeoMeta } from '@/cms/useSeoMeta';
 
 const VALID_LANGS: CmsLang[] = ['fr', 'en', 'ar'];
 
+/**
+ * Donnée structurée schema.org de la page d'accueil (éditeur + application).
+ * Statique : décrit le produit Qayed pour les résultats enrichis Google.
+ */
+const HOME_STRUCTURED_DATA: Record<string, unknown> = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://qayed.tn/#organization',
+      name: 'Qayed',
+      url: 'https://qayed.tn',
+      logo: 'https://qayed.tn/icon-512.png',
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://qayed.tn/#website',
+      url: 'https://qayed.tn',
+      name: 'Qayed',
+      publisher: { '@id': 'https://qayed.tn/#organization' },
+      inLanguage: ['fr', 'en', 'ar'],
+    },
+    {
+      '@type': 'SoftwareApplication',
+      name: 'Qayed',
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Web, iOS, Android',
+      offers: { '@type': 'Offer', priceCurrency: 'TND' },
+      description:
+        "Qayed remplace la fiche de police papier : scan du passeport ou de la CIN, extraction automatique des données et transmission aux autorités en temps réel.",
+    },
+  ],
+};
+
 const NotFoundView = () => (
   <div style={{ padding: '120px 24px', textAlign: 'center' }}>
     <p style={{ fontFamily: 'var(--font-d)', fontSize: 40, fontWeight: 900 }}>404</p>
@@ -48,11 +82,15 @@ export const CmsPage = ({ slugOverride, localeOverride }: { slugOverride?: strin
   });
 
   const meta = page?.meta?.[locale] ?? page?.meta?.fr;
+  const isHome = slug === 'home';
   useSeoMeta({
     title: meta?.title ?? (page ? `${slug} — Qayed` : 'Qayed'),
     description: meta?.description,
-    slug: slug === 'home' ? '' : slug,
+    slug: isHome ? '' : slug,
     lang: locale,
+    // Donnée structurée schema.org sur la page d'accueil : aide aux résultats
+    // enrichis (nom, logo, application, éditeur).
+    structuredData: isHome ? HOME_STRUCTURED_DATA : undefined,
   });
 
   const data = page?.content?.[locale] ?? page?.content?.fr;

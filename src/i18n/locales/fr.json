@@ -1489,5 +1489,11 @@
     "activate": "Activer",
     "usedCount": "{{used}}/{{max}} utilisation(s)",
     "empty": "Aucun code promo pour le moment."
+  },
+  "seo": {
+    "registerTitle": "Inscription — Qayed",
+    "registerDescription": "Créez votre compte Qayed et enregistrez vos voyageurs en 30 secondes : scan du passeport ou de la CIN, fiche de police automatique et conforme.",
+    "loginTitle": "Connexion — Qayed",
+    "loginDescription": "Accédez à votre espace Qayed pour gérer les enregistrements de voyageurs de votre établissement."
   }
 }

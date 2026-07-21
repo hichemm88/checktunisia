@@ -8,10 +8,18 @@ import { Input } from '@/components/ui/Input';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { extractErrors } from '@/lib/api';
+import { useSeoMeta } from '@/cms/useSeoMeta';
 
 export const LoginPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+
+  useSeoMeta({
+    title: t('seo.loginTitle'),
+    description: t('seo.loginDescription'),
+    lang: i18n.language,
+    canonicalPath: '/login',
+  });
   const setAuth = useAuthStore((s) => s.setAuth);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
