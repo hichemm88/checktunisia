@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Check, ChevronDown, Search } from 'lucide-react';
-import { roomsApi, RoomAvailability } from '@/api/rooms';
+import { roomsApi, type RoomAvailability } from '@/api/rooms';
 
 /** Explicit choice: a room, or consciously "no room". null = not chosen yet (blocks the step). */
 export type RoomChoice = { kind: 'room'; id: string } | { kind: 'none' };

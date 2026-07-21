@@ -1,21 +1,21 @@
 import type { Config } from '@measured/puck';
 import {
-  HeroBlock, HeroProps,
-  TrustBarBlock, TrustBarProps,
-  StatsBarBlock, StatsBarProps,
-  SectionHeadingBlock, SectionHeadingProps,
-  RichTextBlock, RichTextProps,
-  ImageBlock, ImageProps,
-  FeaturesGridBlock, FeaturesGridProps,
-  StepsBlock, StepsProps,
-  FicheShowcaseBlock, FicheShowcaseProps,
-  SecurityBlock, SecurityProps,
-  PricingBlock, PricingBlockProps,
-  TestimonialsBlock, TestimonialsProps,
-  FaqBlock, FaqProps,
-  CtaBandBlock, CtaBandProps,
-  MockupBlock, MockupProps,
-  ProseBlock, ProseProps,
+  HeroBlock, type HeroProps,
+  TrustBarBlock, type TrustBarProps,
+  StatsBarBlock, type StatsBarProps,
+  SectionHeadingBlock, type SectionHeadingProps,
+  RichTextBlock, type RichTextProps,
+  ImageBlock, type ImageProps,
+  FeaturesGridBlock, type FeaturesGridProps,
+  StepsBlock, type StepsProps,
+  FicheShowcaseBlock, type FicheShowcaseProps,
+  SecurityBlock, type SecurityProps,
+  PricingBlock, type PricingBlockProps,
+  TestimonialsBlock, type TestimonialsProps,
+  FaqBlock, type FaqProps,
+  CtaBandBlock, type CtaBandProps,
+  MockupBlock, type MockupProps,
+  ProseBlock, type ProseProps,
   SpacerBlock,
 } from './blocks';
 import { MOCKUP_CHOICES } from './mockups';
@@ -76,6 +76,10 @@ export const puckConfig: Config<Props> = {
         mockup: {
           type: 'select', label: 'Visuel',
           options: [{ label: 'Aucun', value: 'none' }, ...MOCKUP_CHOICES.map((m) => ({ label: m.label, value: m.value }))],
+        },
+        showWave: {
+          type: 'radio', label: 'Vague décorative',
+          options: [{ label: 'Masquée', value: false }, { label: 'Affichée', value: true }],
         },
       },
       defaultProps: {

@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { authorityApi } from '@/api/authority';
-import { WatchlistEntry, WatchlistSeverity, WatchlistReasonCode } from '@/types';
+import { type WatchlistEntry, type WatchlistSeverity, type WatchlistReasonCode } from '@/types';
 import { extractErrors } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 

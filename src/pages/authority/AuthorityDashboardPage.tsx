@@ -8,7 +8,7 @@ import {
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Card } from '@/components/ui/Card';
 import { authorityApi } from '@/api/authority';
-import { AuthorityDashboardMinistry, AuthorityDashboardPolice } from '@/types';
+import { type AuthorityDashboardMinistry, type AuthorityDashboardPolice } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import { FEATURES } from '@/config/features';
 

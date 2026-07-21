@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { authApi } from '@/api/auth';
@@ -32,8 +32,11 @@ export const LoginPage = () => {
     setLoading(true);
     try {
       const result = await authApi.login(email, password);
-      // Authority user with 2FA enabled → go to TOTP verification step
-      if (result.requires_2fa) {
+      // Authority user with 2FA enabled → go to TOTP verification step.
+      // Le garde `in` narrow de façon fiable l'union (le discriminant
+      // requires_2fa est optionnel côté LoginResult, ce qui empêche le
+      // narrowing par booléen).
+      if (!('token' in result)) {
         navigate('/auth/2fa/verify', { state: { partialToken: result.partial_token } });
         return;
       }

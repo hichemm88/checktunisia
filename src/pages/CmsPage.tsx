@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { fetchCmsPage, CmsLang } from '@/api/cms';
+import { fetchCmsPage, type CmsLang } from '@/api/cms';
 import { RenderContent } from '@/cms/RenderContent';
 import { SiteChrome } from '@/cms/SiteChrome';
 import { useSeoMeta } from '@/cms/useSeoMeta';

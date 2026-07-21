@@ -1,9 +1,9 @@
-import { useRef, useState, ChangeEvent } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Upload, ScanLine, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
-import { scanMrz, MrzData } from '@/lib/mrzScanner';
+import { scanMrz, type MrzData } from '@/lib/mrzScanner';
 
 /**
  * Reusable "Scan MRZ" control: opens the camera (or file picker), runs the MRZ

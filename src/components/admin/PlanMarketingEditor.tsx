@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Check, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
-import { adminPlansApi, AdminPlan, PlanMarketing, PlanBullet, I18nText } from '@/api/admin/subscriptions';
+import { adminPlansApi, type AdminPlan, type PlanMarketing, type PlanBullet, type I18nText } from '@/api/admin/subscriptions';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useAdminMutation } from '@/hooks/useAdminMutation';

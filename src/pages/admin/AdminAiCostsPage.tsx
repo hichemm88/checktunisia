@@ -4,10 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { Cpu, AlertTriangle, Info } from 'lucide-react';
 import {
   adminAiCostsApi,
-  AiCostPeriod,
-  AiFeatureFilter,
-  AiFeatureSummary,
-  AiPricing,
+  type AiCostPeriod,
+  type AiFeatureFilter,
+  type AiFeatureSummary,
+  type AiPricing,
 } from '@/api/admin/aiCosts';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 import { Button } from '@/components/ui/Button';

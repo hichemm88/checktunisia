@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { AuthUser } from '@/stores/authStore';
+import { type AuthUser } from '@/stores/authStore';
 
 export interface LoginResult {
   token: string;

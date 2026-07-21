@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
-import { fetchPlans, registerOrganization, RegisterPayload } from '@/api/public';
+import { fetchPlans, registerOrganization, type RegisterPayload } from '@/api/public';
 import { effectiveYearlyPrice } from '@/lib/billing';
 import { formatTNDAmount } from '@/lib/money';
 import { track } from '@/lib/analytics';

@@ -5,7 +5,7 @@
  */
 
 import { useAuthStore } from '@/stores/authStore';
-import { CinScanResponse } from '@/types';
+import { type CinScanResponse } from '@/types';
 
 export class CinScanError extends Error {
   constructor(

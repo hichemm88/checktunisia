@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, Plus, X, Send, Trash2, Pencil, Save } from 'lucide-react';
-import { adminUsersApi, AdminUser } from '@/api/admin/users';
+import { adminUsersApi, type AdminUser } from '@/api/admin/users';
 import { adminHotelsApi } from '@/api/admin/hotels';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';

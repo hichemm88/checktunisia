@@ -1,9 +1,9 @@
 import { api } from '@/lib/api';
 import {
-  AuthorityGuest, AuthorityGuestProfile, AuthorityHotel, AuthorityCheckIn,
-  AuthorityDashboard, AuthorityAlert, AuthorityActivity, AuthorityRecentCheckIn,
-  WatchlistEntry, WatchlistImportResult,
-  ApiList,
+  type AuthorityGuest, type AuthorityGuestProfile, type AuthorityHotel, type AuthorityCheckIn,
+  type AuthorityDashboard, type AuthorityAlert, type AuthorityActivity, type AuthorityRecentCheckIn,
+  type WatchlistEntry, type WatchlistImportResult,
+  type ApiList,
 } from '@/types';
 
 export interface SearchParams {

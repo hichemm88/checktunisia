@@ -5,10 +5,10 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { checkInsApi, UpdateGuestPayload } from '@/api/checkIns';
+import { checkInsApi, type UpdateGuestPayload } from '@/api/checkIns';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
-import { CheckIn, Guest } from '@/types';
+import { type CheckIn, type Guest } from '@/types';
 
 // Édition en place des détails d'un voyageur déjà enregistré (correction de
 // saisie, mise à jour de pièce). Réutilise les champs du formulaire d'ajout,

@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { CheckIn, Guest, ApiList, ApiItem } from '@/types';
+import { type CheckIn, type Guest, type ApiList, type ApiItem } from '@/types';
 
 export interface CreateCheckInPayload {
   room_id?: string; booking_reference?: string; booking_source?: string;

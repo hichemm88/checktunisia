@@ -11,13 +11,13 @@ import { StepIndicator } from '@/components/ui/StepIndicator';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
-import { checkInsApi, CreateCheckInPayload } from '@/api/checkIns';
+import { checkInsApi, type CreateCheckInPayload } from '@/api/checkIns';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { GuestScanPanel } from '@/components/hotel/GuestScanPanel';
-import { RoomSelector, RoomChoice } from '@/components/hotel/RoomSelector';
+import { RoomSelector, type RoomChoice } from '@/components/hotel/RoomSelector';
 import { detectOta } from '@/lib/otaDetect';
-import { CheckIn } from '@/types';
+import { type CheckIn } from '@/types';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-TN');
 const fmtDate = (d: string | null | undefined, locale: string) =>

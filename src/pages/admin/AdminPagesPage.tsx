@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FileText, Plus, X, Trash2, ExternalLink, Pencil } from 'lucide-react';
-import { adminPagesApi, AdminPageListItem } from '@/api/admin/cms';
+import { adminPagesApi, type AdminPageListItem } from '@/api/admin/cms';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useAdminMutation } from '@/hooks/useAdminMutation';

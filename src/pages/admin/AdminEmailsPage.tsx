@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Mail, Save, Eye, Send, MailCheck } from 'lucide-react';
-import { adminEmailsApi, EmailTemplateItem, EmailLocale, EMAIL_LOCALES } from '@/api/admin/emails';
+import { adminEmailsApi, type EmailTemplateItem, type EmailLocale, EMAIL_LOCALES } from '@/api/admin/emails';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';

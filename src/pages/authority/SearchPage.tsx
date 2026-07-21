@@ -4,19 +4,19 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Search, User, MapPin, Lock, ShieldAlert, Building2, BedDouble, UserCog } from 'lucide-react';
 import { getFlagUrl } from '@/lib/flags';
-import { WatchlistSeverity } from '@/types';
+import { type WatchlistSeverity } from '@/types';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Pagination } from '@/components/ui/Pagination';
-import { authorityApi, SearchParams } from '@/api/authority';
-import { AuthorityGuest, ApiList } from '@/types';
+import { authorityApi, type SearchParams } from '@/api/authority';
+import { type AuthorityGuest, type ApiList } from '@/types';
 import { extractErrors } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { MrzScanButton } from '@/components/MrzScanButton';
-import { MrzData } from '@/lib/mrzScanner';
+import { type MrzData } from '@/lib/mrzScanner';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 const fmtDate = (d: string | null | undefined, locale: string) =>
@@ -103,8 +103,7 @@ const RecentCheckInsSection = () => {
 };
 
 export const SearchPage = () => {
-  const { t, i18n } = useTranslation();
-  const locale = dateLocaleFor(i18n.language);
+  const { t } = useTranslation();
   const WATCHLIST_COLORS: Record<WatchlistSeverity, { bg: string; border: string; text: string; label: string }> = {
     critique: { bg: '#FEF2F2', border: '#EF4444', text: '#991B1B', label: t('authoritySearch.severityCritical') },
     eleve:    { bg: '#FBF0D7', border: '#E3A008', text: '#8A6206', label: t('authoritySearch.severityHigh') },

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ticket, Plus, X, Trash2, Pencil, Check, Ban } from 'lucide-react';
-import { adminCouponsApi, Coupon, CouponInput, CouponType } from '@/api/admin/coupons';
+import { adminCouponsApi, type Coupon, type CouponInput, type CouponType } from '@/api/admin/coupons';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';

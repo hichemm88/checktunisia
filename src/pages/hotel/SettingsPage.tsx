@@ -17,8 +17,8 @@ import { useAuthStore } from '@/stores/authStore';
 import { settingsApi } from '@/api/settings';
 import { extractErrors } from '@/lib/api';
 import { formatTND } from '@/lib/money';
-import { HotelUser, CreateUserPayload } from '@/types';
-import { organizationApi, OrgInfo } from '@/api/organization';
+import { type HotelUser, type CreateUserPayload } from '@/types';
+import { organizationApi, type OrgInfo } from '@/api/organization';
 import { fetchPlatformSettings } from '@/api/public';
 import { paymentApi } from '@/api/payment';
 
@@ -492,7 +492,7 @@ const AbonnementTab = () => {
             <div className="flex justify-between py-1.5 border-b border-gray-50">
               <span className="text-sm text-gray-500">{t('settingsPage.plan')}</span>
               <span className="text-sm font-bold" style={{ color: '#5346A8' }}>
-                {typeof sub.plan === 'object' && sub.plan !== null ? sub.plan.name : (sub.plan ?? '—')}
+                {typeof sub.plan === 'string' ? sub.plan : (sub.plan?.name ?? '—')}
               </span>
             </div>
             <div className="flex justify-between py-1.5 border-b border-gray-50">

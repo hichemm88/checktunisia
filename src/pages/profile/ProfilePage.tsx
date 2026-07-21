@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { User, Lock, Shield, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';

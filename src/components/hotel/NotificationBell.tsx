@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Bell } from 'lucide-react';
-import { notificationsApi, AppNotification } from '@/api/notifications';
+import { notificationsApi, type AppNotification } from '@/api/notifications';
 import { useAuthStore } from '@/stores/authStore';
 
 /**

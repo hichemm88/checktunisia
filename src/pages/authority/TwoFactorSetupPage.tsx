@@ -5,7 +5,6 @@ import { Smartphone, CheckCircle, Copy, KeyRound } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { authApi } from '@/api/auth';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { extractErrors } from '@/lib/api';

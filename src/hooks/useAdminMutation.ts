@@ -1,4 +1,4 @@
-import { useMutation, UseMutationOptions, UseMutationResult } from '@tanstack/react-query';
+import { useMutation, type UseMutationOptions, type UseMutationResult } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 
@@ -21,13 +21,15 @@ export function useAdminMutation<TData, TVariables = void>(
 
   return useMutation<TData, unknown, TVariables>({
     ...rest,
-    onSuccess: (data, variables, context) => {
+    // Rest params : on relaie tous les arguments de rappel quelle que soit leur
+    // arité (elle varie selon la version de React Query).
+    onSuccess: (...args: Parameters<NonNullable<typeof onSuccess>>) => {
       if (successMessage) toast(successMessage, 'success');
-      onSuccess?.(data, variables, context);
+      onSuccess?.(...args);
     },
-    onError: (err, variables, context) => {
-      toast(extractErrors(err), 'error');
-      onError?.(err, variables, context);
+    onError: (...args: Parameters<NonNullable<typeof onError>>) => {
+      toast(extractErrors(args[0]), 'error');
+      onError?.(...args);
     },
   });
 }

@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { Minus, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { RoomSelector, RoomChoice } from '@/components/hotel/RoomSelector';
-import { checkInsApi, UpdateCheckInPayload } from '@/api/checkIns';
+import { RoomSelector, type RoomChoice } from '@/components/hotel/RoomSelector';
+import { checkInsApi, type UpdateCheckInPayload } from '@/api/checkIns';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
-import { CheckIn } from '@/types';
+import { type CheckIn } from '@/types';
 
 // Ajoute n jours à une date ISO (YYYY-MM-DD), calcul en UTC pour éviter le
 // décalage d'un jour en local (Tunisie UTC+1) — même logique que le wizard.
