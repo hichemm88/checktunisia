@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 const SITE_URL = 'https://qayed.tn';
-const DEFAULT_IMAGE = `${SITE_URL}/og-image.svg`;
+const DEFAULT_IMAGE = `${SITE_URL}/og-image.png`;
 const LANGS = ['fr', 'en', 'ar'] as const;
 
 /** og:locale par langue d'interface. */
