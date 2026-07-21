@@ -385,7 +385,7 @@ export const AdminSubscriptionsPage = () => {
   const [tab, setTab] = useState<'packs' | 'active'>('packs');
 
   return (
-    <div className="flex flex-col gap-4 max-w-3xl">
+    <div className="flex flex-col gap-4 w-full">
       <h1 className="qayed-display text-xl text-gray-900">{t('settingsPage.subscription')}</h1>
       <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: 'var(--qayed-ligne)' }}>
         <button onClick={() => setTab('packs')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'packs' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>

@@ -218,7 +218,7 @@ export const AdminWhatsappPage = () => {
   const resetPage = () => setPage(1);
 
   return (
-    <div className="flex flex-col gap-4 max-w-3xl">
+    <div className="flex flex-col gap-4 w-full">
       <div className="flex items-center gap-3">
         <h1 className="qayed-display text-xl text-gray-900">{t('adminWhatsapp.title')}</h1>
         <Badge variant="draft">{t('adminWhatsapp.provisional')}</Badge>

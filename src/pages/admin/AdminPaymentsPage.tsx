@@ -203,7 +203,7 @@ export const AdminPaymentsPage = () => {
   const [tab, setTab] = useState<'config' | 'history'>('config');
 
   return (
-    <div className="flex flex-col gap-4 max-w-2xl">
+    <div className="flex flex-col gap-4 w-full">
       <h1 className="qayed-display text-xl text-gray-900">{t('adminPayments.title')}</h1>
       <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: 'var(--qayed-ligne)' }}>
         <button onClick={() => setTab('config')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'config' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'}`}>

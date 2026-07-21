@@ -42,7 +42,7 @@ export const AdminFacturationPage = () => {
   });
 
   return (
-    <div className="flex flex-col gap-4 max-w-3xl">
+    <div className="flex flex-col gap-4 w-full">
       <h1 className="qayed-display text-xl text-gray-900">{t('adminFacturation.title')}</h1>
 
       <div className="flex gap-3 flex-wrap">
