@@ -280,8 +280,9 @@ export const AdminLayout = () => {
 
   return (
     <div className="flex min-h-screen" style={{ background: 'var(--qayed-papier)' }}>
-      {/* ── Sidebar (desktop) ── */}
-      <aside className="hidden md:flex w-60 shrink-0 flex-col" style={{ background: 'var(--qayed-encre)' }}>
+      {/* ── Sidebar (desktop) ── épinglée au viewport : la nav défile en interne,
+           l'en-tête et le bouton « Se déconnecter » restent fixes. ── */}
+      <aside className="hidden md:flex w-60 shrink-0 flex-col sticky top-0 h-screen" style={{ background: 'var(--qayed-encre)' }}>
         <SidebarContent onLogout={handleLogout} />
       </aside>
 
