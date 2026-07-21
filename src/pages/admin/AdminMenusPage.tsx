@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Menu as MenuIcon, Plus, X, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
-import { adminMenuItemsApi, adminPagesApi, AdminMenuItem } from '@/api/admin/cms';
+import { adminMenuItemsApi, adminPagesApi, type AdminMenuItem } from '@/api/admin/cms';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';

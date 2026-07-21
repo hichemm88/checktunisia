@@ -11,8 +11,8 @@ import { Input } from '@/components/ui/Input';
 import {
   organizationApi,
   buildBulkRoomNumbers,
-  Property,
-  PropertyRoom,
+  type Property,
+  type PropertyRoom,
 } from '@/api/organization';
 import { useAuthStore } from '@/stores/authStore';
 

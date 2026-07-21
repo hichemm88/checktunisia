@@ -6,7 +6,7 @@ import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { authorityApi } from '@/api/authority';
-import { AuthorityActivity } from '@/types';
+import { type AuthorityActivity } from '@/types';
 
 const actionIcon = (action: string) => {
   if (action.includes('search'))       return <Search className="h-4 w-4" />;

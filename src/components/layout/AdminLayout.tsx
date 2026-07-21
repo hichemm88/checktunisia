@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
-import { adminSearchApi, GlobalSearchResult } from '@/api/admin/search';
+import { adminSearchApi, type GlobalSearchResult } from '@/api/admin/search';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 

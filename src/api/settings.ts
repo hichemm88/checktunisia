@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { HotelUser, CreateUserPayload, UpdateProfilePayload, ChangePasswordPayload, HotelProfile, UpdateHotelPayload, ActivityLogEntry } from '@/types';
+import { type HotelUser, type CreateUserPayload, type UpdateProfilePayload, type ChangePasswordPayload, type HotelProfile, type UpdateHotelPayload, type ActivityLogEntry } from '@/types';
 
 export const settingsApi = {
   // Profile
@@ -31,6 +31,7 @@ export const settingsApi = {
     api.get<{ data: {
       status: string;
       plan: { name: string } | string | null;
+      billing_cycle?: 'monthly' | 'yearly';
       expires_at: string;
       days_remaining: number;
       /** Détail du prix : base + suppléments par établissement (formule unique serveur). */

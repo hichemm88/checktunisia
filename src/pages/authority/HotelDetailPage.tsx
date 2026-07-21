@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft, Building2, MapPin, Hash, Star, Users, Calendar,
-  Search, ChevronRight, ChevronLeft, Mail, Phone, Briefcase,
+  Search, ChevronRight, ChevronLeft, Mail, Phone,
   User, Building, UserCheck,
 } from 'lucide-react';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
@@ -44,21 +44,6 @@ const fmtRange = (from: string, to: string, locale: string) => {
 };
 
 const STATUS_FILTERS = ['all', 'active', 'completed', 'draft'] as const;
-
-// ─── Flag image component ─────────────────────────────────────────────────────
-
-const FlagImg = ({ code, size = 16 }: { code?: string | null; size?: number }) => {
-  const url = getFlagUrl(code);
-  if (!url) return null;
-  return (
-    <img
-      src={url}
-      alt={code ?? ''}
-      width={size}
-      style={{ display: 'inline-block', borderRadius: 2, border: '1px solid rgba(0,0,0,0.08)', verticalAlign: 'middle' }}
-    />
-  );
-};
 
 // ─── Staff card ───────────────────────────────────────────────────────────────
 

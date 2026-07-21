@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { Room, ApiList, ApiItem } from '@/types';
+import { type Room, type ApiList, type ApiItem } from '@/types';
 
 export interface RoomAvailability extends Room {
   /** free = selectable · occupied = stay overlaps the requested nights · unavailable = maintenance/inactive */

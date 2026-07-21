@@ -24,11 +24,14 @@ export interface AuthUser {
     name: string;
     slug: string;
     type?: string;
+    room_count?: number;
     subscription_status: string;
     subscription_expires_at?: string;
   } | null;
   authority_profile?: AuthorityProfile | null;
   permissions: string[];
+  /** Échéance du token, posée côté client au login pour l'auto-refresh (non renvoyée par l'API). */
+  _token_expires_at?: string;
 }
 
 interface AuthState {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, ChangeEvent, DragEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Camera, X, Zap, ZapOff, Upload, RefreshCw, Check } from 'lucide-react';
 import { Button } from '@/components/ui/Button';

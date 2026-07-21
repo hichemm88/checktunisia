@@ -1,5 +1,5 @@
 import { api } from '@/lib/api';
-import { ScanStatus } from '@/types';
+import { type ScanStatus } from '@/types';
 
 export const scansApi = {
   upload: (checkInId: string, file: File, side: 'front' | 'back' = 'front') => {

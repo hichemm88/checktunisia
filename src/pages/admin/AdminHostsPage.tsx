@@ -5,7 +5,7 @@ import {
   Building2, Search, CheckCircle2, XCircle, Plus, X, Trash2,
   Pencil, Check, FileText, CalendarClock, TrendingUp, BedDouble, ArrowLeft,
 } from 'lucide-react';
-import { adminHostsApi, AdminHost, AdminHostDetail } from '@/api/admin/hosts';
+import { adminHostsApi, type AdminHost, type AdminHostDetail } from '@/api/admin/hosts';
 import { adminSubscriptionsApi, adminPlansApi } from '@/api/admin/subscriptions';
 import { PlanFeaturesEditor, featureValuesFrom, featureValuesToPayload } from '@/components/admin/PlanFeaturesEditor';
 import { Button } from '@/components/ui/Button';
@@ -14,7 +14,7 @@ import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { formatTND, formatTNDAmount } from '@/lib/money';
-import { BillingCycle, cycleEndDate, priceForCycle } from '@/lib/billing';
+import { type BillingCycle, cycleEndDate, priceForCycle } from '@/lib/billing';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { Pagination } from '@/components/ui/Pagination';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';

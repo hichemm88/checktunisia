@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Users, Landmark, Plus, X, Trash2, Pencil, Save, ShieldCheck, ShieldAlert } from 'lucide-react';
-import { adminAuthorityApi, AdminAuthorityUser, AdminAuthorityOrganization } from '@/api/admin/authority';
+import { adminAuthorityApi, type AdminAuthorityUser, type AdminAuthorityOrganization } from '@/api/admin/authority';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';

@@ -1,4 +1,4 @@
-import { useState, useRef, ChangeEvent, ReactNode } from 'react';
+import { useState, useRef, type ChangeEvent, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -8,7 +8,7 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { checkInsApi, AddGuestPayload } from '@/api/checkIns';
+import { checkInsApi, type AddGuestPayload } from '@/api/checkIns';
 import { scansApi } from '@/api/scans';
 import { useToast } from '@/components/ui/Toast';
 import { api, extractErrors } from '@/lib/api';
@@ -19,7 +19,7 @@ import { scanCin } from '@/api/scanCin';
 import { scanMrzVision } from '@/api/scanMrz';
 import { reportLocalMrzScan } from '@/api/scanEvents';
 import { useAuthStore } from '@/stores/authStore';
-import { CheckIn, CinConfidence, CinScanResponse } from '@/types';
+import { type CheckIn, type CinConfidence, type CinScanResponse } from '@/types';
 
 // ─── Pastille de confiance (scan CIN uniquement) ──────────────────────────────
 const CONF_STYLE: Record<CinConfidence, { bg: string; fg: string; key: string }> = {
@@ -125,7 +125,7 @@ export const GuestScanPanel = ({
       first_name: mrz.first_name ?? '',
       last_name: mrz.last_name ?? '',
       date_of_birth: mrz.date_of_birth ?? '',
-      sex: mrz.sex ?? '',
+      sex: mrz.sex === 'M' || mrz.sex === 'F' || mrz.sex === 'X' ? mrz.sex : undefined,
       nationality_code: mrz.nationality_code ?? '',
       document_type: mrz.document_type ?? 'passport',
       document_number: mrz.document_number ?? '',
@@ -233,7 +233,7 @@ export const GuestScanPanel = ({
         spouse_ar: res.spouseAr ?? '',
         birth_place_ar: res.birthPlaceAr ?? '',
         date_of_birth: c.birthDate === 'low' ? '' : res.birthDate ?? '',
-        sex: inferSex(res.filiationAr, res.spouseAr),
+        sex: inferSex(res.filiationAr, res.spouseAr) || undefined,
         nationality_code: 'TUN',
         issuing_country_code: 'TUN',
         card_format: res.cardFormat,

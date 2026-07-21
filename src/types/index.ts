@@ -187,7 +187,7 @@ export interface WatchlistEntry {
   reason?: string | null; // ministry only
   status: 'active' | 'inactive';
   expires_at?: string | null;
-  source: 'manual' | 'import';
+  source: 'manual' | 'import' | 'opensanctions';
   added_at?: string;
   added_by_name?: string;
   organization_name?: string;

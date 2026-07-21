@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useAuthStore, Role } from '@/stores/authStore';
+import { useAuthStore, type Role } from '@/stores/authStore';
 import { FEATURES } from '@/config/features';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import { IdleWarningModal } from '@/components/IdleWarningModal';

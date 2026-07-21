@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { fetchPlans, SubscriptionPlan } from '@/api/public';
+import { fetchPlans, type SubscriptionPlan } from '@/api/public';
 import { pickI18n } from '@/lib/i18nContent';
-import { BillingCycle, priceForCycle } from '@/lib/billing';
+import { type BillingCycle, priceForCycle } from '@/lib/billing';
 
 /** 59 → "59", 59.5 → "59,5" — the landing shows compact prices. */
 const compactPrice = (n: number): string =>

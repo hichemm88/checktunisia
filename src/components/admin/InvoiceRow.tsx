@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Download, Trash2 } from 'lucide-react';
-import { adminSubscriptionsApi, AdminInvoice } from '@/api/admin/subscriptions';
+import { adminSubscriptionsApi, type AdminInvoice } from '@/api/admin/subscriptions';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { formatTND } from '@/lib/money';
 

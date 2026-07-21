@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Globe, ChevronDown } from 'lucide-react';
-import { fetchCmsMenus, CmsMenuItem } from '@/api/cms';
+import { fetchCmsMenus, type CmsMenuItem } from '@/api/cms';
 import { pickI18n } from '@/lib/i18nContent';
 import { SITE_CSS } from './siteCss';
 

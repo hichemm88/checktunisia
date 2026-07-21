@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building2, Search, CheckCircle2, XCircle, Clock, Plus, X, Trash2, RefreshCw, ArrowLeft,
 } from 'lucide-react';
-import { adminHotelsApi, AdminHotel } from '@/api/admin/hotels';
+import { adminHotelsApi, type AdminHotel } from '@/api/admin/hotels';
 import { adminHostsApi } from '@/api/admin/hosts';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';

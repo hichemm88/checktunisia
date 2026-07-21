@@ -4,7 +4,7 @@ import { ShieldAlert, CheckCircle, Phone, AlertTriangle } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { hotelApi, WatchlistHitItem } from '@/api/hotel';
+import { hotelApi, type WatchlistHitItem } from '@/api/hotel';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-TN');
 

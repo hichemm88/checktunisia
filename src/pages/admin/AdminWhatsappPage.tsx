@@ -4,10 +4,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Send, Pause, Play, AlertTriangle, Image as ImageIcon, ImageOff } from 'lucide-react';
 import {
   adminWhatsappApi,
-  WhatsappHealth,
-  WhatsappLog,
-  WhatsappSession,
-  WhatsappStatus,
+  type WhatsappHealth,
+  type WhatsappLog,
+  type WhatsappSession,
+  type WhatsappStatus,
 } from '@/api/admin/whatsapp';
 import { adminHotelsApi } from '@/api/admin/hotels';
 import { Card } from '@/components/ui/Card';

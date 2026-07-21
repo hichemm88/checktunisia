@@ -5,7 +5,7 @@ import { AlertTriangle, FileWarning, MapPin, Calendar, ChevronRight } from 'luci
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Badge } from '@/components/ui/Badge';
 import { authorityApi } from '@/api/authority';
-import { AuthorityAlert } from '@/types';
+import { type AuthorityAlert } from '@/types';
 
 // Urgency color by days remaining
 const urgencyStyle = (days: number): { bg: string; text: string; border: string } => {
