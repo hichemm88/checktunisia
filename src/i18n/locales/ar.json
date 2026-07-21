@@ -1328,7 +1328,13 @@
     "searchResultProperty": "مؤسسة",
     "searchResultUser": "مستخدم",
     "searchResultCheckIn": "تسجيل نزيل",
-    "searchResultInvoice": "فاتورة"
+    "searchResultInvoice": "فاتورة",
+    "group": {
+      "accounts": "الحسابات",
+      "billing": "الفوترة",
+      "content": "المحتوى",
+      "supervision": "الإشراف"
+    }
   },
   "hotelLayout": {
     "nav": {

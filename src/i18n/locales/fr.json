@@ -1350,7 +1350,13 @@
     "searchResultProperty": "Établissement",
     "searchResultUser": "Utilisateur",
     "searchResultCheckIn": "Check-in",
-    "searchResultInvoice": "Facture"
+    "searchResultInvoice": "Facture",
+    "group": {
+      "accounts": "Comptes",
+      "billing": "Facturation",
+      "content": "Contenu",
+      "supervision": "Supervision"
+    }
   },
   "hotelLayout": {
     "nav": {
