@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/sitemap.xml",
-      "destination": "https://api.qayed.tn/api/v1/public/sitemap.xml"
+      "destination": "https://checktunisia-backend-production.up.railway.app/api/v1/public/sitemap.xml"
     },
     {
       "source": "/(.*)",
