@@ -77,7 +77,7 @@ export const AdminPagesPage = () => {
   });
 
   return (
-    <div className="flex flex-col gap-4 max-w-3xl">
+    <div className="flex flex-col gap-4 w-full">
       <div className="flex items-center justify-between">
         <h1 className="qayed-display text-xl text-gray-900">{t('adminPages.title')}</h1>
         <Button size="sm" onClick={() => setShowCreate((s) => !s)} className="gap-1.5">

@@ -120,7 +120,7 @@ export const AdminEmailsPage = () => {
   });
 
   return (
-    <div className="flex flex-col gap-4 max-w-2xl">
+    <div className="flex flex-col gap-4 w-full">
       <div className="flex items-center justify-between">
         <h1 className="qayed-display text-xl text-gray-900">{t('adminEmails.title')}</h1>
         <Button size="sm" variant="secondary" loading={remindersMut.isPending} onClick={() => remindersMut.mutate()} className="gap-1.5">

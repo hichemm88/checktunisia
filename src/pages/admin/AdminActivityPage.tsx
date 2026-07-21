@@ -119,7 +119,7 @@ export const AdminActivityPage = () => {
   const exportM = useMutation({ mutationFn: () => adminActivityApi.exportCsv(filters) });
 
   return (
-    <div className="flex flex-col gap-4 max-w-3xl">
+    <div className="flex flex-col gap-4 w-full">
       <div className="flex items-center justify-between">
         <h1 className="qayed-display text-xl text-gray-900">{t('adminActivity.title')}</h1>
         <Button size="sm" variant="secondary" loading={exportM.isPending} onClick={() => exportM.mutate()}>

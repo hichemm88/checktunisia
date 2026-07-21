@@ -189,7 +189,7 @@ export const AdminCouponsPage = () => {
   const coupons = data?.data ?? [];
 
   return (
-    <div className="flex flex-col gap-4 max-w-4xl">
+    <div className="flex flex-col gap-4 w-full">
       <div className="flex items-center justify-between">
         <h1 className="qayed-display text-xl text-gray-900 flex items-center gap-2">
           <Ticket className="h-5 w-5" style={{ color: 'var(--qayed-cachet)' }} />

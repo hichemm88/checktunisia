@@ -172,7 +172,7 @@ export const AdminAiCostsPage = () => {
   const passportShare = totalSuccess > 0 ? (passportSuccess / totalSuccess) * 100 : 0;
 
   return (
-    <div className="flex flex-col gap-6 max-w-6xl">
+    <div className="flex flex-col gap-6 w-full">
       <div className="flex items-center gap-2">
         <Cpu className="h-5 w-5" style={{ color: 'var(--qayed-cachet)' }} />
         <h1 className="qayed-display text-xl text-gray-900">{t('aiCosts.pageTitle')}</h1>
