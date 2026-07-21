@@ -13,27 +13,49 @@ import { adminSearchApi, type GlobalSearchResult } from '@/api/admin/search';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 
-const useNavItems = () => {
+interface NavItem { to: string; icon: typeof LayoutDashboard; label: string }
+interface NavGroup { title?: string; items: NavItem[] }
+
+/**
+ * Navigation admin regroupée par thème : le tableau de bord isolé en tête, puis
+ * quatre sections (Comptes, Facturation, Contenu, Supervision) avec un en-tête
+ * discret. Une seule source de vérité — la palette de commandes en dérive la
+ * liste à plat.
+ */
+const useNavGroups = (): NavGroup[] => {
   const { t } = useTranslation();
   return [
-    { to: '/admin/dashboard',     icon: LayoutDashboard, label: t('adminLayout.nav.dashboard') },
-    { to: '/admin/hosts',         icon: Building2,       label: t('adminLayout.nav.hosts') },
-    { to: '/admin/hotels',        icon: Home,            label: t('adminLayout.nav.hotels') },
-    { to: '/admin/users',         icon: Users,           label: t('adminLayout.nav.users') },
-    { to: '/admin/authority',     icon: Landmark,        label: t('adminLayout.nav.authority') },
-    { to: '/admin/subscriptions', icon: CreditCard,      label: t('adminLayout.nav.subscriptions') },
-    { to: '/admin/facturation',   icon: FileText,        label: t('adminLayout.nav.facturation') },
-    { to: '/admin/coupons',       icon: Ticket,          label: t('adminLayout.nav.coupons') },
-    { to: '/admin/payments',      icon: Wallet,          label: t('adminLayout.nav.payments') },
-    { to: '/admin/ai-costs',      icon: Cpu,             label: t('adminLayout.nav.aiCosts') },
-    { to: '/admin/emails',        icon: Mail,            label: t('adminLayout.nav.emails') },
-    { to: '/admin/pages',         icon: Globe,           label: t('adminLayout.nav.pages') },
-    { to: '/admin/menus',         icon: ListTree,        label: t('adminLayout.nav.menus') },
-    { to: '/admin/activity',      icon: Activity,        label: t('adminLayout.nav.activity') },
-    // MODULE PROVISOIRE — relais WhatsApp (à retirer après homologation MI).
-    { to: '/admin/whatsapp',      icon: MessageCircle,   label: t('adminLayout.nav.whatsapp') },
+    { items: [
+      { to: '/admin/dashboard',     icon: LayoutDashboard, label: t('adminLayout.nav.dashboard') },
+    ] },
+    { title: t('adminLayout.group.accounts'), items: [
+      { to: '/admin/hosts',         icon: Building2,       label: t('adminLayout.nav.hosts') },
+      { to: '/admin/hotels',        icon: Home,            label: t('adminLayout.nav.hotels') },
+      { to: '/admin/users',         icon: Users,           label: t('adminLayout.nav.users') },
+      { to: '/admin/authority',     icon: Landmark,        label: t('adminLayout.nav.authority') },
+    ] },
+    { title: t('adminLayout.group.billing'), items: [
+      { to: '/admin/subscriptions', icon: CreditCard,      label: t('adminLayout.nav.subscriptions') },
+      { to: '/admin/facturation',   icon: FileText,        label: t('adminLayout.nav.facturation') },
+      { to: '/admin/coupons',       icon: Ticket,          label: t('adminLayout.nav.coupons') },
+      { to: '/admin/payments',      icon: Wallet,          label: t('adminLayout.nav.payments') },
+    ] },
+    { title: t('adminLayout.group.content'), items: [
+      { to: '/admin/pages',         icon: Globe,           label: t('adminLayout.nav.pages') },
+      { to: '/admin/menus',         icon: ListTree,        label: t('adminLayout.nav.menus') },
+      { to: '/admin/emails',        icon: Mail,            label: t('adminLayout.nav.emails') },
+    ] },
+    { title: t('adminLayout.group.supervision'), items: [
+      { to: '/admin/ai-costs',      icon: Cpu,             label: t('adminLayout.nav.aiCosts') },
+      { to: '/admin/activity',      icon: Activity,        label: t('adminLayout.nav.activity') },
+      // MODULE PROVISOIRE — relais WhatsApp (à retirer après homologation MI).
+      { to: '/admin/whatsapp',      icon: MessageCircle,   label: t('adminLayout.nav.whatsapp') },
+    ] },
   ];
 };
+
+/** Liste à plat des entrées de navigation (pour la palette de commandes). */
+const useNavItems = (): NavItem[] => useNavGroups().flatMap((g) => g.items);
 
 const TYPE_LABEL_KEYS: Record<string, string> = {
   organization: 'adminLayout.searchResultHost',
@@ -186,7 +208,7 @@ const GlobalSearch = () => {
  */
 const SidebarContent = ({ onNavigate, onLogout }: { onNavigate?: () => void; onLogout: () => void }) => {
   const { t } = useTranslation();
-  const navItems = useNavItems();
+  const navGroups = useNavGroups();
   return (
     <>
       <div className="flex items-center gap-2.5 px-5 h-16 border-b border-white/10 shrink-0">
@@ -194,21 +216,30 @@ const SidebarContent = ({ onNavigate, onLogout }: { onNavigate?: () => void; onL
         <span className="qayed-display text-lg text-white">QAYED <span className="qayed-mono text-xs font-normal normal-case tracking-normal text-white/50">{t('adminLayout.brand')}</span></span>
       </div>
       <nav className="flex-1 flex flex-col gap-0.5 p-3 overflow-y-auto">
-        {navItems.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              `flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                isActive ? 'text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'
-              }`
-            }
-            style={({ isActive }) => (isActive ? { background: 'var(--qayed-cachet)' } : undefined)}
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            {label}
-          </NavLink>
+        {navGroups.map((group, gi) => (
+          <div key={group.title ?? `group-${gi}`} className={gi > 0 ? 'mt-4' : ''}>
+            {group.title && (
+              <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-white/35">{group.title}</p>
+            )}
+            <div className="flex flex-col gap-0.5">
+              {group.items.map(({ to, icon: Icon, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  onClick={onNavigate}
+                  className={({ isActive }) =>
+                    `flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                      isActive ? 'text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'
+                    }`
+                  }
+                  style={({ isActive }) => (isActive ? { background: 'var(--qayed-cachet)' } : undefined)}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {label}
+                </NavLink>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
       <div className="p-3 border-t border-white/10 shrink-0">

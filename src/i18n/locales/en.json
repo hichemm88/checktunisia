@@ -1350,7 +1350,13 @@
     "searchResultProperty": "Property",
     "searchResultUser": "User",
     "searchResultCheckIn": "Check-in",
-    "searchResultInvoice": "Invoice"
+    "searchResultInvoice": "Invoice",
+    "group": {
+      "accounts": "Accounts",
+      "billing": "Billing",
+      "content": "Content",
+      "supervision": "Monitoring"
+    }
   },
   "hotelLayout": {
     "nav": {
