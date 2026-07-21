@@ -6,7 +6,7 @@
     <text x="75" y="82" text-anchor="middle" dominant-baseline="central" font-family="'IBM Plex Sans Arabic', Tahoma, Arial, sans-serif" font-weight="700" font-size="70" fill="#5346A8">قيد</text>
   </g>
   <text x="340" y="270" font-family="Archivo, Arial, sans-serif" font-weight="900" font-size="86" letter-spacing="-2" fill="#F6F5F1">QAYED</text>
-  <text x="342" y="330" font-family="'IBM Plex Sans Arabic', Tahoma, Arial, sans-serif" font-weight="700" font-size="24" fill="#8B7FE0" direction="rtl">سجّل نزلاءك رقمياً</text>
+  <text x="340" y="332" font-family="'IBM Plex Sans Arabic', Tahoma, Arial, sans-serif" font-weight="700" font-size="24" fill="#8B7FE0" direction="rtl" text-anchor="end">سجّل نزلاءك رقمياً</text>
   <text x="140" y="430" font-family="'IBM Plex Sans', Arial, sans-serif" font-weight="500" font-size="34" fill="#F6F5F1">Enregistrez vos voyageurs en 30 secondes.</text>
   <text x="140" y="475" font-family="'IBM Plex Sans', Arial, sans-serif" font-weight="400" font-size="22" fill="#9BA8B3">La fiche de police digitale pour hébergements tunisiens.</text>
   <text x="140 " y="560" font-family="'IBM Plex Mono', monospace" font-size="18" letter-spacing="2" fill="#8B7FE0">QAYED.TN</text>
