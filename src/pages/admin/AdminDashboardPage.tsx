@@ -413,7 +413,7 @@ export const AdminDashboardPage = () => {
   const { data: stats, isLoading, isError, refetch } = useQuery({ queryKey: ['admin-stats'], queryFn: adminDashboardApi.stats });
 
   return (
-    <div className="flex flex-col gap-6 max-w-6xl">
+    <div className="flex flex-col gap-6 w-full">
       <h1 className="qayed-display text-xl text-gray-900">{t('adminDashboard.title')}</h1>
 
       <WhatsappStatusStrip />
