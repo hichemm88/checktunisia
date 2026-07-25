@@ -121,6 +121,9 @@ export const GuestScanPanel = ({
   const [rotation, setRotation] = useState(0);
   // Repli Claude vision passeport en cours (après échec de l'OCR local).
   const [mrzFallback, setMrzFallback] = useState(false);
+  // Vision Claude en LECTURE PRINCIPALE (import de fichier) — barre indéterminée
+  // sans le sous-texte « OCR local échoué » (qui ne s'applique qu'au repli).
+  const [visionPrimary, setVisionPrimary] = useState(false);
 
   // MODULE PROVISOIRE — relais WhatsApp : téléverse l'image du document et
   // mémorise son scan_id pour le relier à CE voyageur (multi-voyageurs).
@@ -207,13 +210,59 @@ export const GuestScanPanel = ({
     }
   };
 
-  // Upload / galerie MRZ (input fichier) → même pipeline.
-  const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) runMrzScan(file);
+  // Import d'un fichier (ordinateur / galerie) → Claude vision EN PREMIER.
+  //
+  // Pourquoi différent de la caméra live : l'OCR local (tesseract) accepte un
+  // résultat dès qu'il lit un nom de famille, même si le numéro de document, la
+  // date de naissance ou la nationalité sont mal lus — et le repli vision ne se
+  // déclenchait alors jamais. Sur une photo importée (statique, souvent haute
+  // résolution, poste connecté), la lecture Claude vision est bien plus fiable :
+  // on la privilégie pour minimiser les corrections manuelles. Repli local puis
+  // saisie manuelle si la vision est indisponible.
+  const runMrzImport = async (file: File) => {
+    setScanKind('mrz');
+    setScanState('scanning');
+    setOcrProgress(0);
+    setMrzFallback(false);
+    setVisionPrimary(true); // barre indéterminée « Lecture approfondie »
+
+    // L'image part quoi qu'il arrive (la fiche garde sa photo).
+    uploadDocImage(file);
+
+    try {
+      // 1) Claude vision (précis sur une photo importée).
+      const prepared = await prepareCinImage(file);
+      const mrz = await scanMrzVision(prepared, propertyId);
+      applyMrz(mrz);
+    } catch {
+      // 2) Vision indisponible (réseau/extraction) → repli OCR local.
+      try {
+        const mrz = await scanMrz(file, setOcrProgress);
+        applyMrz(mrz);
+      } catch (err: unknown) {
+        // 3) Rien n'a lu → saisie manuelle, la photo est conservée.
+        const code = (err as { code?: string })?.code;
+        const msg = code === 'timeout' ? t('cinScan.timeoutHint') : t('guestScan.scanFailedManualKeepsPhoto');
+        toast(msg, 'error');
+        setGuestForm((f) => ({ ...f, is_primary: isPrimary }));
+        setExtractedOk(false);
+        setScanState('done');
+        if (uploadRef.current) uploadRef.current.value = '';
+        if (fileRef.current) fileRef.current.value = '';
+      }
+    } finally {
+      setVisionPrimary(false);
+    }
   };
 
-  // Capture caméra in-app MRZ → wrap le Blob en File pour le pipeline existant.
+  // Upload / galerie MRZ (input fichier) → vision d'abord (voir runMrzImport).
+  const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) runMrzImport(file);
+  };
+
+  // Capture caméra in-app MRZ → OCR local d'abord (rapide/hors-ligne), vision en
+  // repli (pipeline runMrzScan inchangé).
   const handleMrzCapture = (blob: Blob) => {
     setCapture(null);
     runMrzScan(new File([blob], 'mrz.jpg', { type: 'image/jpeg' }));
@@ -471,11 +520,12 @@ export const GuestScanPanel = ({
               <p className="text-sm font-semibold text-gray-700">{t('cinScan.reading')}</p>
               <p className="text-xs qayed-arabic text-gray-400" dir="rtl">{t('cinScan.readingAr')}</p>
             </>
-          ) : mrzFallback ? (
-            // Repli Claude vision après échec de l'OCR local (barre indéterminée).
+          ) : (mrzFallback || visionPrimary) ? (
+            // Lecture Claude vision (barre indéterminée). Le sous-texte « OCR
+            // local échoué » n'a de sens que pour le repli, pas l'import direct.
             <>
               <p className="text-sm font-semibold text-gray-700">{t('cinScan.mrzFallback')}</p>
-              <p className="text-xs text-gray-400">{t('cinScan.mrzFallbackHint')}</p>
+              {mrzFallback && <p className="text-xs text-gray-400">{t('cinScan.mrzFallbackHint')}</p>}
             </>
           ) : (
             <>
