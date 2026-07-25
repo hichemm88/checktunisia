@@ -97,6 +97,13 @@ export const GuestScanPanel = ({
   // cours (résout vers le scan_id). L'ajout du voyageur l'attend pour toujours
   // relier l'image, même si l'utilisateur clique avant la fin de l'upload.
   const pendingScanUpload = useRef<Promise<string | undefined> | null>(null);
+  // MODULE PROVISOIRE — relais WhatsApp : la fiche de police doit partir avec la
+  // photo du document. `docCaptured` = un document a été photographié pour ce
+  // voyageur (scan réussi OU échoué : l'image est uploadée dans les deux cas).
+  // `noDocAck` = l'agent confirme explicitement l'absence de document (rare) —
+  // seule échappatoire pour ne pas bloquer un check-in légitime sans pièce.
+  const [docCaptured, setDocCaptured] = useState(false);
+  const [noDocAck, setNoDocAck] = useState(false);
   const [scanState, setScanState] = useState<'idle' | 'scanning' | 'done' | 'error'>('idle');
   const [scanKind, setScanKind] = useState<'mrz' | 'cin'>('mrz');
   const [ocrProgress, setOcrProgress] = useState(0);
@@ -128,6 +135,7 @@ export const GuestScanPanel = ({
   // jetée, et la fiche partait sans photo.
   const uploadDocImage = (file: File) => {
     if (waEnabled === false) return; // relais éteint : pas de raison de stocker une pièce d'identité
+    setDocCaptured(true); // un document a été photographié (même si l'OCR échoue ensuite)
     pendingScanUpload.current = scansApi.upload(checkIn.id, file)
       .then((scan) => { setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })); return scan.scan_id; })
       .catch(() => { toast(t('guestScan.photoUploadFailed'), 'error'); return undefined; });
@@ -268,6 +276,7 @@ export const GuestScanPanel = ({
       // voyageur, afin que sa fiche parte avec sa photo. Best-effort, non
       // bloquant ; l'image est purgée après 24 h côté backend.
       if (waEnabled !== false) {
+        setDocCaptured(true); // la CIN a été photographiée
         const cinFile = new File([prepared], 'cin.jpg', { type: prepared.type || 'image/jpeg' });
         pendingScanUpload.current = scansApi.upload(checkIn.id, cinFile, 'front')
           .then((scan) => { setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })); return scan.scan_id; })
@@ -332,6 +341,15 @@ export const GuestScanPanel = ({
     (conf.birthDate === 'low' && !guestForm.date_of_birth)
   );
 
+  // MODULE PROVISOIRE — relais WhatsApp : on EXIGE un document photographié pour
+  // que la fiche de police parte avec sa photo. Un document illisible n'est PAS
+  // bloqué (l'image est uploadée même quand l'OCR échoue → docCaptured=true) ;
+  // seule la saisie 100 % manuelle sans aucune photo l'est. L'agent peut malgré
+  // tout passer outre en confirmant explicitement l'absence de document (rare),
+  // pour ne jamais empêcher un check-in légitime. Inactif si le relais est coupé.
+  const docRequired = waEnabled !== false && !docCaptured;
+  const docBlocksSubmit = docRequired && !noDocAck;
+
   const isCin = scanKind === 'cin' && !!cinScan;
   // Focus auto sur le premier champ non-`high` (ordre : numéro, nom, prénom, date).
   const focusKey =
@@ -344,6 +362,7 @@ export const GuestScanPanel = ({
   const reset = () => {
     setScanState('idle'); setExtractedOk(false);
     setGuestForm({ is_primary: isPrimary });
+    setDocCaptured(false); setNoDocAck(false);
     pendingScanUpload.current = null;
     setScanKind('mrz');
     setCinScan(null); setConf(null); setUsedExisting(false); setCinError(null);
@@ -608,11 +627,25 @@ export const GuestScanPanel = ({
             </div>
           )}
 
+          {docRequired && (
+            <label className="flex items-start gap-2 rounded-xl px-3 py-2.5 cursor-pointer" style={{ background: '#FBF0D7', border: '1px solid #E3A008' }}>
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[#8A6206]"
+                checked={noDocAck}
+                onChange={(e) => setNoDocAck(e.target.checked)}
+              />
+              <span className="text-xs font-semibold" style={{ color: '#8A6206' }}>
+                {t('guestScan.noDocumentAck')}
+              </span>
+            </label>
+          )}
+
           <Button
             fullWidth size="lg"
             loading={addGuestMutation.isPending}
             onClick={() => addGuestMutation.mutate()}
-            disabled={!guestForm.first_name || !guestForm.last_name || !guestForm.date_of_birth || hasUnfilledLow}
+            disabled={!guestForm.first_name || !guestForm.last_name || !guestForm.date_of_birth || hasUnfilledLow || docBlocksSubmit}
           >
             {t('guestScan.confirmGuest')} <ArrowRight className="h-4 w-4" />
           </Button>
