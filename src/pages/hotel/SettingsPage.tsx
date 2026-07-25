@@ -809,13 +809,68 @@ const ActiviteTab = () => {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-type Tab = 'societe' | 'equipe' | 'activite' | 'abonnement';
+// ─── Destinataires WhatsApp des fiches de police (manager établissement) ───────
+
+const DestinatairesTab = () => {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const { data: recipients, isLoading } = useQuery({
+    queryKey: ['wa-recipients'],
+    queryFn: settingsApi.getWhatsappRecipients,
+  });
+  const [selected, setSelected] = useState<Set<number> | null>(null);
+  const current = selected ?? new Set((recipients ?? []).filter(r => r.selected).map(r => r.id));
+
+  const save = useMutation({
+    mutationFn: () => settingsApi.setWhatsappRecipients([...current]),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['wa-recipients'] }); setSelected(null); toast(t('settingsPage.recipientsSaved'), 'success'); },
+    onError: (e) => toast(extractErrors(e), 'error'),
+  });
+
+  const toggle = (id: number) => {
+    const next = new Set(current);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setSelected(next);
+  };
+
+  if (isLoading) return <div className="h-40 animate-pulse rounded-2xl bg-gray-100" />;
+
+  return (
+    <Card>
+      <CardHeader><CardTitle>{t('settingsPage.recipientsTitle')}</CardTitle></CardHeader>
+      <p className="text-sm text-gray-500 px-4 -mt-2 mb-3">{t('settingsPage.recipientsHelp')}</p>
+      <div className="flex flex-col gap-2 px-2">
+        {(recipients ?? []).length === 0 && (
+          <p className="text-sm text-gray-400 px-2 py-4">{t('settingsPage.recipientsEmpty')}</p>
+        )}
+        {(recipients ?? []).map(r => (
+          <label key={r.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer hover:bg-warm-100" style={{ border: '1px solid #E5E7EB' }}>
+            <input type="checkbox" className="h-4 w-4 shrink-0" checked={current.has(r.id)} onChange={() => toggle(r.id)} />
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-semibold text-gray-900 truncate">{r.name}{r.rank ? ` · ${r.rank}` : ''}</span>
+              <span className="text-xs text-gray-400 truncate">{r.organization ?? '—'} · {r.number_masked}</span>
+            </div>
+          </label>
+        ))}
+      </div>
+      <div className="p-3">
+        <Button size="sm" loading={save.isPending} disabled={selected === null} onClick={() => save.mutate()}>
+          <Save className="h-4 w-4" /> {t('common.save')}
+        </Button>
+      </div>
+    </Card>
+  );
+};
+
+type Tab = 'societe' | 'equipe' | 'destinataires' | 'activite' | 'abonnement';
 
 const TAB_DEFS: { id: Tab; labelKey: string; icon: React.ElementType }[] = [
-  { id: 'societe',     labelKey: 'settingsPage.tabCompany',      icon: Building   },
-  { id: 'equipe',      labelKey: 'settingsPage.team',            icon: Users      },
-  { id: 'activite',    labelKey: 'settingsPage.activity',        icon: Activity   },
-  { id: 'abonnement',  labelKey: 'settingsPage.subscription',    icon: CreditCard },
+  { id: 'societe',       labelKey: 'settingsPage.tabCompany',      icon: Building   },
+  { id: 'equipe',        labelKey: 'settingsPage.team',            icon: Users      },
+  { id: 'destinataires', labelKey: 'settingsPage.recipientsTab',   icon: Send       },
+  { id: 'activite',      labelKey: 'settingsPage.activity',        icon: Activity   },
+  { id: 'abonnement',    labelKey: 'settingsPage.subscription',    icon: CreditCard },
 ];
 
 export const SettingsPage = () => {
@@ -833,7 +888,7 @@ export const SettingsPage = () => {
           className="sticky top-0 z-10 flex border-b px-4"
           style={{ background: '#fff', borderColor: '#E5E7EB' }}
         >
-          {(isAdmin ? TAB_DEFS : TAB_DEFS.filter(td => td.id !== 'societe' && td.id !== 'equipe' && td.id !== 'activite')).map(td => (
+          {(isAdmin ? TAB_DEFS : TAB_DEFS.filter(td => td.id !== 'societe' && td.id !== 'equipe' && td.id !== 'destinataires' && td.id !== 'activite')).map(td => (
             <button
               key={td.id}
               onClick={() => setTab(td.id)}
@@ -851,10 +906,11 @@ export const SettingsPage = () => {
 
         {/* ── Tab content ── */}
         <div className="p-4 flex flex-col gap-4">
-          {tab === 'societe'    && isAdmin && <SocieteTab />}
-          {tab === 'equipe'     && isAdmin && <EquipeTab />}
-          {tab === 'activite'   && isAdmin && <ActiviteTab />}
-          {tab === 'abonnement' && <AbonnementTab />}
+          {tab === 'societe'      && isAdmin && <SocieteTab />}
+          {tab === 'equipe'       && isAdmin && <EquipeTab />}
+          {tab === 'destinataires' && isAdmin && <DestinatairesTab />}
+          {tab === 'activite'     && isAdmin && <ActiviteTab />}
+          {tab === 'abonnement'   && <AbonnementTab />}
         </div>
 
       </div>

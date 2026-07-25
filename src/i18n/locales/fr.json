@@ -396,6 +396,11 @@
     "title": "Paramètres",
     "tabCompany": "Société",
     "team": "Équipe",
+    "recipientsTab": "Destinataires",
+    "recipientsTitle": "Destinataires des fiches de police",
+    "recipientsHelp": "Cochez les agents à qui les fiches de cet établissement sont envoyées par WhatsApp. Les numéros sont gérés et vérifiés par Qayed.",
+    "recipientsEmpty": "Aucun destinataire disponible pour le moment. Contactez Qayed pour en ajouter.",
+    "recipientsSaved": "Destinataires enregistrés",
     "activity": "Activité",
     "subscription": "Abonnement",
     "subscriptionStatus": {

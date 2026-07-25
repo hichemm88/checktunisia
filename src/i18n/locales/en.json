@@ -396,6 +396,11 @@
     "title": "Settings",
     "tabCompany": "Company",
     "team": "Team",
+    "recipientsTab": "Recipients",
+    "recipientsTitle": "Police fiche recipients",
+    "recipientsHelp": "Tick the officers this establishment's fiches are sent to via WhatsApp. Numbers are managed and verified by Qayed.",
+    "recipientsEmpty": "No recipients available yet. Contact Qayed to add some.",
+    "recipientsSaved": "Recipients saved",
     "activity": "Activity",
     "subscription": "Subscription",
     "subscriptionStatus": {

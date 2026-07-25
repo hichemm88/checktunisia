@@ -1,6 +1,15 @@
 import { api } from '@/lib/api';
 import { type HotelUser, type CreateUserPayload, type UpdateProfilePayload, type ChangePasswordPayload, type HotelProfile, type UpdateHotelPayload, type ActivityLogEntry } from '@/types';
 
+export interface WhatsappRecipientOption {
+  id: number;
+  name: string;
+  organization: string | null;
+  rank: string | null;
+  number_masked: string;
+  selected: boolean;
+}
+
 export const settingsApi = {
   // Profile
   updateProfile: (payload: UpdateProfilePayload) =>
@@ -25,6 +34,13 @@ export const settingsApi = {
 
   resendInvite: (id: string) =>
     api.post<{ data: { id: string; email_sent: boolean } }>(`/hotel/users/${id}/resend-invite`).then((r) => r.data.data),
+
+  // Destinataires WhatsApp des fiches (hotel_admin) — voir/cocher les agents.
+  getWhatsappRecipients: () =>
+    api.get<{ data: WhatsappRecipientOption[] }>('/hotel/whatsapp-recipients').then((r) => r.data.data),
+
+  setWhatsappRecipients: (recipient_ids: number[]) =>
+    api.put<{ data: { count: number } }>('/hotel/whatsapp-recipients', { recipient_ids }).then((r) => r.data.data),
 
   // Subscription info — backend returns plan as nested SubscriptionPlan object
   getSubscription: () =>

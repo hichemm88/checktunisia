@@ -396,6 +396,11 @@
     "title": "الإعدادات",
     "tabCompany": "الشركة",
     "team": "الفريق",
+    "recipientsTab": "المستلمون",
+    "recipientsTitle": "مستلمو بطاقات الشرطة",
+    "recipientsHelp": "حدّد الأعوان الذين تُرسل إليهم بطاقات هذا النزل عبر واتساب. الأرقام تُدار وتُتحقّق من قبل Qayed.",
+    "recipientsEmpty": "لا يوجد مستلمون متاحون حاليًا. تواصل مع Qayed لإضافتهم.",
+    "recipientsSaved": "تم حفظ المستلمين",
     "activity": "النشاط",
     "subscription": "الاشتراك",
     "subscriptionStatus": {
