@@ -99,6 +99,8 @@
     "newAuthorityUser": "مستخدم سلطة جديد",
     "initialPassword": "كلمة المرور الأولية",
     "organization": "الهيئة",
+    "whatsappNumber": "رقم واتساب (صيغة دولية)",
+    "receivesFiches": "يستقبل بطاقات الشرطة عبر واتساب",
     "twoFaEnabled": "المصادقة الثنائية مفعّلة",
     "twoFaDisabled": "المصادقة الثنائية غير مفعّلة"
   },

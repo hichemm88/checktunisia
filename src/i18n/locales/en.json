@@ -99,6 +99,8 @@
     "newAuthorityUser": "New authority user",
     "initialPassword": "Initial password",
     "organization": "Organization",
+    "whatsappNumber": "WhatsApp number (international format)",
+    "receivesFiches": "Receives police fiches via WhatsApp",
     "twoFaEnabled": "Two-factor authentication enabled",
     "twoFaDisabled": "Two-factor authentication not set up"
   },

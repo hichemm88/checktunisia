@@ -7,7 +7,11 @@ export interface AdminAuthorityUser {
   email: string;
   status: string;
   organization: string | null;
+  organization_id: number | null;
   badge_number: string | null;
+  rank: string | null;
+  whatsapp_number: string | null;
+  receives_whatsapp_fiches: boolean;
   last_login_at: string | null;
   two_factor_confirmed_at: string | null;
 }

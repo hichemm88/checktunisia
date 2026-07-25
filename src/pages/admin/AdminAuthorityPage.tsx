@@ -140,7 +140,7 @@ const OrganismesTab = () => {
 const CreateAuthorityUserForm = ({ onDone }: { onDone: () => void }) => {
   const { t } = useTranslation();
   const qc = useQueryClient();
-  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '', organization_id: '', badge_number: '', rank: '' });
+  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '', organization_id: '', badge_number: '', rank: '', whatsapp_number: '', receives_whatsapp_fiches: false });
   const [error, setError] = useState('');
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -170,6 +170,22 @@ const CreateAuthorityUserForm = ({ onDone }: { onDone: () => void }) => {
         <Input label={t('profile.badge')} value={form.badge_number} onChange={(e) => set('badge_number', e.target.value)} />
         <Input label={t('profile.rank')} value={form.rank} onChange={(e) => set('rank', e.target.value)} />
       </div>
+      {/* Envoi direct des fiches : numéro WhatsApp (vérifié par l'admin) + option de réception. */}
+      <Input
+        label={t('adminAuthority.whatsappNumber')}
+        placeholder="+216 ..."
+        value={form.whatsapp_number}
+        onChange={(e) => set('whatsapp_number', e.target.value)}
+      />
+      <label className="flex items-start gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          className="mt-0.5 h-4 w-4 shrink-0"
+          checked={form.receives_whatsapp_fiches}
+          onChange={(e) => setForm((f) => ({ ...f, receives_whatsapp_fiches: e.target.checked }))}
+        />
+        <span className="text-xs font-medium text-gray-600">{t('adminAuthority.receivesFiches')}</span>
+      </label>
       {error && <p className="text-xs text-red-500">{error}</p>}
       <div className="flex gap-2">
         <Button size="sm" loading={mut.isPending}

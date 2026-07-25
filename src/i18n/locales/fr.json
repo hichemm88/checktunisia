@@ -99,6 +99,8 @@
     "newAuthorityUser": "Nouvel utilisateur autorité",
     "initialPassword": "Mot de passe initial",
     "organization": "Organisme",
+    "whatsappNumber": "Numéro WhatsApp (format international)",
+    "receivesFiches": "Reçoit les fiches de police par WhatsApp",
     "twoFaEnabled": "Double authentification activée",
     "twoFaDisabled": "Double authentification non configurée"
   },
