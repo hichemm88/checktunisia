@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, LogOut, CheckCircle, FileText, MapPin, CalendarDays, Printer, UserPlus, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, LogOut, CheckCircle, FileText, MapPin, CalendarDays, Printer, UserPlus, Pencil, Trash2, RotateCcw } from 'lucide-react';
 import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card } from '@/components/ui/Card';
@@ -72,6 +72,16 @@ export const HistoryDetailPage = () => {
       qc.invalidateQueries({ queryKey: ['check-in', id] });
       setShowCheckoutModal(false);
       toast(t('hotelHistoryDetail.checkoutSaved'), 'success');
+    },
+    onError: (err) => toast(extractErrors(err), 'error'),
+  });
+
+  // Manager établissement : annuler un départ enregistré par erreur (Terminé → Actif).
+  const revertCheckoutMutation = useMutation({
+    mutationFn: () => checkInsApi.revertCheckout(id!),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['check-in', id] });
+      toast(t('hotelHistoryDetail.checkoutReverted'), 'success');
     },
     onError: (err) => toast(extractErrors(err), 'error'),
   });
@@ -405,6 +415,20 @@ export const HistoryDetailPage = () => {
                 onClick={() => { setCheckoutDate(todayISO); setShowCheckoutModal(true); }}
               >
                 <LogOut className="h-5 w-5" /> {t('hotelHistoryDetail.recordCheckout')}
+              </Button>
+            )}
+            {/* Manager uniquement : rattraper un départ enregistré par erreur (le client est encore là). */}
+            {ci.status === 'completed' && isManager && (
+              <Button
+                variant="secondary" fullWidth size="lg"
+                loading={revertCheckoutMutation.isPending}
+                onClick={() => {
+                  if (window.confirm(t('hotelHistoryDetail.revertCheckoutConfirm'))) {
+                    revertCheckoutMutation.mutate();
+                  }
+                }}
+              >
+                <RotateCcw className="h-5 w-5" /> {t('hotelHistoryDetail.revertCheckout')}
               </Button>
             )}
             {hotel && (
