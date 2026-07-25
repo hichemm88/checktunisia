@@ -362,11 +362,29 @@ async function runOcr(
 // ─── Parsing d'un texte OCR → MrzData ──────────────────────────────────────────
 
 /**
+ * Fiabilité d'une lecture MRZ via ses CHIFFRES DE CONTRÔLE (check digits).
+ * La MRZ inclut ces chiffres précisément pour détecter les erreurs d'OCR.
+ * « Confiant » = le check digit composite passe (il couvre numéro + date de
+ * naissance + expiration en TD3) ; à défaut, numéro ET date de naissance valides.
+ * Un résultat NON confiant est une lecture douteuse → on préférera Claude vision.
+ */
+function isConfidentRead(result: ReturnType<typeof mrzParse>): boolean {
+  const dg = (field: string) => result.details.find((d) => d.field === field);
+  const composite = dg('compositeCheckDigit');
+  if (composite) return composite.valid;
+  const docNum = dg('documentNumberCheckDigit');
+  const birth = dg('birthDateCheckDigit');
+  return !!(docNum?.valid && birth?.valid);
+}
+
+/**
  * Tente d'extraire une fiche MrzData depuis un texte OCR brut.
- * Retourne null si aucune ligne MRZ exploitable (nom de famille au minimum).
+ * Retourne null si aucune ligne MRZ exploitable (nom de famille au minimum),
+ * sinon la donnée + un drapeau `confident` (check digits) pour arbitrer entre
+ * garder l'OCR local (gratuit) et basculer sur Claude vision (payant).
  * Partagé par les deux pipelines (OpenCV et crop bas classique).
  */
-function parseOcrText(text: string): MrzData | null {
+function parseOcrText(text: string): { data: MrzData; confident: boolean } | null {
   const extracted = extractMrzLines(text);
   if (!extracted) return null;
 
@@ -374,9 +392,9 @@ function parseOcrText(text: string): MrzData | null {
   const td3Line2 = extracted.format === 'TD3' ? extracted.lines[1] : null;
   const data     = toMrzData(result, td3Line2);
 
-  // Validation minimale : au moins le nom de famille (un check digit faux ne
-  // doit pas bloquer la saisie si les champs clés sont corrects).
-  return data.last_name ? data : null;
+  // Nom de famille au minimum pour considérer qu'on a une lecture.
+  if (!data.last_name) return null;
+  return { data, confident: isConfidentRead(result) };
 }
 
 // ─── API publique ───────────────────────────────────────────────────────────────
@@ -456,10 +474,15 @@ function getWorker(report: (pct: number) => void): Promise<TesseractWorker> {
   return cachedWorker;
 }
 
+export type MrzScanResult = MrzData & {
+  /** Les chiffres de contrôle MRZ passent → lecture fiable (pas besoin de vision). */
+  confident: boolean;
+};
+
 export async function scanMrz(
   file: File,
   onProgress?: (pct: number) => void,
-): Promise<MrzData> {
+): Promise<MrzScanResult> {
   const report = (pct: number) => onProgress?.(Math.min(99, Math.max(0, Math.round(pct))));
 
   report(5);
@@ -474,8 +497,14 @@ export async function scanMrz(
   // l'envers, puis pivoté. Les 4 orientations couvrent bas/haut/gauche/droite.
   const order = [0, 180, 90, 270];
   let lastError: Error | null = null;
+  // Meilleure lecture PARSABLE mais dont les check digits échouent : on la garde
+  // en dernier recours (renvoyée avec confident=false → l'appelant tentera la
+  // vision, et retombera dessus si la vision est indisponible).
+  let partial: MrzData | null = null;
 
   // Une passe = crop bas de l'image pivotée de `deg`, puis OCR éprouvé.
+  // Renvoie une lecture CONFIANTE (check digits OK), sinon null en mémorisant
+  // la première lecture douteuse dans `partial`.
   const tryOrientations = async (orients: number[], base: number, span: number): Promise<MrzData | null> => {
     const fractions = [0.28, 0.48]; // bande du bas : serrée puis large
     let k = 0;
@@ -486,11 +515,12 @@ export async function scanMrz(
         try {
           const image = renderRotatedCrop(img, deg, fraction);
           const text  = await runOcr(worker, image, '6');
-          const data  = parseOcrText(text);
-          if (data) {
-            console.log(`[MRZ] Succès rotation=${deg}° crop=${fraction}`);
-            return data;
+          const parsed = parseOcrText(text);
+          if (parsed?.confident) {
+            console.log(`[MRZ] Lecture fiable rotation=${deg}° crop=${fraction}`);
+            return parsed.data;
           }
+          if (parsed && !partial) partial = parsed.data; // lecture douteuse mémorisée
           lastError = new Error('Lignes MRZ non détectées dans cette zone');
         } catch (err) {
           lastError = err instanceof Error ? err : new Error(String(err));
@@ -506,23 +536,23 @@ export async function scanMrz(
     let data = await tryOrientations([order[0]], 52, 16);       // 52 → 68
     // 2) Document à l'envers / pivoté.
     if (!data) data = await tryOrientations(order.slice(1), 68, 22); // 68 → 90
-    if (data) { report(100); return data; }
+    if (data) { report(100); return { ...data, confident: true }; }
 
-    // 3) SECOURS OpenCV — uniquement si toutes les rotations ont raté. Validation
-    //    STRICTE (nom + numéro + date de naissance) pour ne jamais renvoyer une
-    //    lecture douteuse à la place d'un échec propre (→ saisie manuelle).
+    // 3) SECOURS OpenCV — si toutes les rotations ont raté. On n'accepte que des
+    //    lectures FIABLES (check digits OK) ; les douteuses alimentent `partial`.
     try {
       const candidates = await detectMrzCandidates(file, 6);
       for (let i = 0; i < candidates.length; i++) {
         report(91 + i);
         try {
           const text = await runOcr(worker, candidates[i], '6');
-          const d = parseOcrText(text);
-          if (d && d.last_name && d.document_number && d.date_of_birth) {
-            console.log('[MRZ] Succès via secours OpenCV, candidat', i);
+          const parsed = parseOcrText(text);
+          if (parsed?.confident && parsed.data.document_number && parsed.data.date_of_birth) {
+            console.log('[MRZ] Lecture fiable via secours OpenCV, candidat', i);
             report(100);
-            return d;
+            return { ...parsed.data, confident: true };
           }
+          if (parsed && !partial) partial = parsed.data;
         } catch (err) {
           lastError = err instanceof Error ? err : new Error(String(err));
         }
@@ -534,9 +564,12 @@ export async function scanMrz(
   // NE PAS terminer le worker : il est mis en cache et réutilisé d'un scan à
   // l'autre (c'était le principal coût). L'<img> est libéré par le GC.
 
-  // Toutes tentatives échouées
+  // Aucune lecture fiable, mais une lecture douteuse existe → on la renvoie
+  // marquée non confiante (l'appelant tentera la vision d'abord).
+  if (partial) { report(100); return { ...partial, confident: false }; }
+
+  // Rien de parsable du tout → échec (l'appelant bascule sur la vision).
   const baseMsg = lastError?.message ?? 'Zone MRZ non détectée';
-  // Garder seulement la première ligne du message d'erreur (sans les bullets \n)
   const firstLine = baseMsg.split('\n')[0];
   throw new Error(`${firstLine} — reprenez la photo cadrée sur la page du passeport, sans reflet ni marge autour.`);
 }

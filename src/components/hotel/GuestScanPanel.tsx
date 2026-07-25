@@ -119,11 +119,8 @@ export const GuestScanPanel = ({
   const [usedExisting, setUsedExisting] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
   const [rotation, setRotation] = useState(0);
-  // Repli Claude vision passeport en cours (après échec de l'OCR local).
+  // Repli Claude vision passeport en cours (lecture locale douteuse/absente).
   const [mrzFallback, setMrzFallback] = useState(false);
-  // Vision Claude en LECTURE PRINCIPALE (import de fichier) — barre indéterminée
-  // sans le sous-texte « OCR local échoué » (qui ne s'applique qu'au repli).
-  const [visionPrimary, setVisionPrimary] = useState(false);
 
   // MODULE PROVISOIRE — relais WhatsApp : téléverse l'image du document et
   // mémorise son scan_id pour le relier à CE voyageur (multi-voyageurs).
@@ -167,8 +164,11 @@ export const GuestScanPanel = ({
     setScanState('done');
   };
 
-  // ── MRZ (passeport) — OCR local d'abord (gratuit/hors-ligne) ; repli Claude
-  // vision seulement si l'OCR local échoue (reflets, hologramme sur le texte).
+  // ── MRZ (passeport) — OCR local D'ABORD (gratuit/hors-ligne), Claude vision
+  // seulement EN CAS DE FAUTE. « Faute » = les chiffres de contrôle MRZ ne
+  // passent pas (lecture douteuse) OU rien n'est lisible. Une lecture locale
+  // FIABLE (check digits OK) est gardée telle quelle → aucun appel payant.
+  // Ce chemin sert la caméra live ET l'import de fichier.
   const runMrzScan = async (file: File) => {
     setScanKind('mrz');
     setScanState('scanning');
@@ -176,93 +176,61 @@ export const GuestScanPanel = ({
     setMrzFallback(false);
 
     // Sauvegarde l'image AVANT toute lecture : la fiche gardera sa photo même
-    // si l'OCR échoue et que l'agent doit compléter les champs à la main.
+    // si tout échoue et que l'agent doit compléter à la main.
     uploadDocImage(file);
 
+    // 1) OCR local.
+    let local: import('@/lib/mrzScanner').MrzScanResult | null = null;
     try {
       const startedAt = performance.now();
-      const mrz = await scanMrz(file, setOcrProgress);
-      // OCR MRZ local réussi (gratuit) : beacon best-effort pour le graphe
-      // comparatif admin. N'impacte jamais le préremplissage ci-dessous.
-      reportLocalMrzScan(performance.now() - startedAt);
-      applyMrz(mrz);
+      local = await scanMrz(file, setOcrProgress);
+      reportLocalMrzScan(performance.now() - startedAt); // beacon best-effort (graphe admin)
     } catch {
-      // OCR local KO → repli Claude vision (fiable sur reflets/hologramme).
-      try {
-        setMrzFallback(true);
-        const prepared = await prepareCinImage(file);
-        const mrz = await scanMrzVision(prepared, propertyId);
-        applyMrz(mrz);
-      } catch (err: unknown) {
-        // Lecture impossible : on NE jette PAS l'image (déjà en cours d'envoi).
-        // On bascule en saisie manuelle — l'agent tape les informations, la
-        // photo est conservée et partira avec la fiche.
+      local = null; // rien de lisible
+    }
+
+    // 2) Lecture locale FIABLE → on la garde (gratuit, pas de vision).
+    if (local?.confident) {
+      applyMrz(local);
+      return;
+    }
+
+    // 3) Lecture douteuse ou nulle → Claude vision pour corriger.
+    try {
+      setMrzFallback(true);
+      const prepared = await prepareCinImage(file);
+      const mrz = await scanMrzVision(prepared, propertyId);
+      applyMrz(mrz);
+    } catch (err: unknown) {
+      setMrzFallback(false);
+      if (local) {
+        // Vision indisponible mais on a une lecture locale (douteuse) :
+        // on pré-remplit avec, en demandant de vérifier — mieux qu'un formulaire vide.
+        applyMrz(local);
+        toast(t('guestScan.verifyExtracted'), 'error');
+      } else {
+        // Rien du tout → saisie manuelle, la photo est conservée.
         const code = (err as { code?: string })?.code;
         const msg = code === 'timeout' ? t('cinScan.timeoutHint') : t('guestScan.scanFailedManualKeepsPhoto');
         toast(msg, 'error');
         setGuestForm((f) => ({ ...f, is_primary: isPrimary }));
         setExtractedOk(false);
         setScanState('done'); // ouvre le formulaire de saisie manuelle
-        if (fileRef.current) fileRef.current.value = '';
-      } finally {
-        setMrzFallback(false);
-      }
-    }
-  };
-
-  // Import d'un fichier (ordinateur / galerie) → Claude vision EN PREMIER.
-  //
-  // Pourquoi différent de la caméra live : l'OCR local (tesseract) accepte un
-  // résultat dès qu'il lit un nom de famille, même si le numéro de document, la
-  // date de naissance ou la nationalité sont mal lus — et le repli vision ne se
-  // déclenchait alors jamais. Sur une photo importée (statique, souvent haute
-  // résolution, poste connecté), la lecture Claude vision est bien plus fiable :
-  // on la privilégie pour minimiser les corrections manuelles. Repli local puis
-  // saisie manuelle si la vision est indisponible.
-  const runMrzImport = async (file: File) => {
-    setScanKind('mrz');
-    setScanState('scanning');
-    setOcrProgress(0);
-    setMrzFallback(false);
-    setVisionPrimary(true); // barre indéterminée « Lecture approfondie »
-
-    // L'image part quoi qu'il arrive (la fiche garde sa photo).
-    uploadDocImage(file);
-
-    try {
-      // 1) Claude vision (précis sur une photo importée).
-      const prepared = await prepareCinImage(file);
-      const mrz = await scanMrzVision(prepared, propertyId);
-      applyMrz(mrz);
-    } catch {
-      // 2) Vision indisponible (réseau/extraction) → repli OCR local.
-      try {
-        const mrz = await scanMrz(file, setOcrProgress);
-        applyMrz(mrz);
-      } catch (err: unknown) {
-        // 3) Rien n'a lu → saisie manuelle, la photo est conservée.
-        const code = (err as { code?: string })?.code;
-        const msg = code === 'timeout' ? t('cinScan.timeoutHint') : t('guestScan.scanFailedManualKeepsPhoto');
-        toast(msg, 'error');
-        setGuestForm((f) => ({ ...f, is_primary: isPrimary }));
-        setExtractedOk(false);
-        setScanState('done');
         if (uploadRef.current) uploadRef.current.value = '';
         if (fileRef.current) fileRef.current.value = '';
       }
     } finally {
-      setVisionPrimary(false);
+      setMrzFallback(false);
     }
   };
 
-  // Upload / galerie MRZ (input fichier) → vision d'abord (voir runMrzImport).
+  // Upload / galerie MRZ (input fichier) → même pipeline que la caméra.
   const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) runMrzImport(file);
+    if (file) runMrzScan(file);
   };
 
-  // Capture caméra in-app MRZ → OCR local d'abord (rapide/hors-ligne), vision en
-  // repli (pipeline runMrzScan inchangé).
+  // Capture caméra in-app MRZ → pipeline runMrzScan (OCR local, vision si faute).
   const handleMrzCapture = (blob: Blob) => {
     setCapture(null);
     runMrzScan(new File([blob], 'mrz.jpg', { type: 'image/jpeg' }));
@@ -520,12 +488,11 @@ export const GuestScanPanel = ({
               <p className="text-sm font-semibold text-gray-700">{t('cinScan.reading')}</p>
               <p className="text-xs qayed-arabic text-gray-400" dir="rtl">{t('cinScan.readingAr')}</p>
             </>
-          ) : (mrzFallback || visionPrimary) ? (
-            // Lecture Claude vision (barre indéterminée). Le sous-texte « OCR
-            // local échoué » n'a de sens que pour le repli, pas l'import direct.
+          ) : mrzFallback ? (
+            // Repli Claude vision après une lecture locale douteuse (barre indéterminée).
             <>
               <p className="text-sm font-semibold text-gray-700">{t('cinScan.mrzFallback')}</p>
-              {mrzFallback && <p className="text-xs text-gray-400">{t('cinScan.mrzFallbackHint')}</p>}
+              <p className="text-xs text-gray-400">{t('cinScan.mrzFallbackHint')}</p>
             </>
           ) : (
             <>

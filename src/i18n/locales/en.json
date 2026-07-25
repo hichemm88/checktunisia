@@ -990,6 +990,7 @@
   "guestScan": {
     "scanFailed": "Scan failed",
     "scanFailedManualKeepsPhoto": "Document not read — enter the details. The photo is kept and will be sent with the fiche.",
+    "verifyExtracted": "Uncertain read and advanced analysis unavailable — please double-check the pre-filled fields.",
     "noDocumentAck": "No document scanned. I confirm the document is unavailable or unreadable — the police fiche will be sent without a photo.",
     "scanFailedRetry": "Scan failed. Try again or enter details manually.",
     "photoUploadFailed": "Document photo not saved — the fiche will be sent without a photo. Please rescan the document.",
