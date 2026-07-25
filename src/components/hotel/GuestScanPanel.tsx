@@ -115,13 +115,32 @@ export const GuestScanPanel = ({
   // Repli Claude vision passeport en cours (après échec de l'OCR local).
   const [mrzFallback, setMrzFallback] = useState(false);
 
+  // MODULE PROVISOIRE — relais WhatsApp : téléverse l'image du document et
+  // mémorise son scan_id pour le relier à CE voyageur (multi-voyageurs).
+  // Non bloquant (l'ajout du voyageur ne doit jamais être empêché) ; l'image
+  // est purgée après 24 h côté backend. En cas d'échec on PRÉVIENT.
+  //
+  // IMPORTANT : découplé de la lecture OCR. Un document photographié dont le
+  // MRZ ne se lit pas (reflet, hologramme, doc abîmé) reste une pièce valable
+  // pour la fiche de police — l'image doit donc partir MÊME si l'OCR échoue et
+  // que l'agent saisit les données à la main. Historiquement l'upload était
+  // dans applyMrz (succès OCR uniquement) → toute photo dont l'OCR ratait était
+  // jetée, et la fiche partait sans photo.
+  const uploadDocImage = (file: File) => {
+    if (waEnabled === false) return; // relais éteint : pas de raison de stocker une pièce d'identité
+    pendingScanUpload.current = scansApi.upload(checkIn.id, file)
+      .then((scan) => { setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })); return scan.scan_id; })
+      .catch(() => { toast(t('guestScan.photoUploadFailed'), 'error'); return undefined; });
+  };
+
   // Remplit le formulaire à partir d'une lecture MRZ (locale OU Claude vision).
   const applyMrz = (mrz: {
     first_name?: string | null; last_name?: string | null; date_of_birth?: string | null;
-    sex?: string | null; nationality_code?: string | null; document_type?: string;
+    sex?: 'M' | 'F' | 'X' | null; nationality_code?: string | null; document_type?: string;
     document_number?: string | null; issuing_country_code?: string | null; expiry_date?: string | null;
-  }, file: File) => {
-    setGuestForm({
+  }) => {
+    setGuestForm((f) => ({
+      ...f,
       first_name: mrz.first_name ?? '',
       last_name: mrz.last_name ?? '',
       date_of_birth: mrz.date_of_birth ?? '',
@@ -132,20 +151,9 @@ export const GuestScanPanel = ({
       issuing_country_code: mrz.issuing_country_code ?? '',
       expiry_date: mrz.expiry_date ?? '',
       is_primary: isPrimary,
-    });
+    }));
     setExtractedOk(true);
     setScanState('done');
-
-    // MODULE PROVISOIRE — relais WhatsApp : téléverse l'image du document et
-    // mémorise son scan_id pour le relier à CE voyageur (multi-voyageurs).
-    // Non bloquant (l'ajout du voyageur ne doit jamais être empêché) ; l'image
-    // est purgée après 24 h côté backend. En cas d'échec on PRÉVIENT : sans ça,
-    // la fiche de police partait sans sa photo sans que personne ne le sache.
-    if (waEnabled !== false) {
-      pendingScanUpload.current = scansApi.upload(checkIn.id, file)
-        .then((scan) => { setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })); return scan.scan_id; })
-        .catch(() => { toast(t('guestScan.photoUploadFailed'), 'error'); return undefined; });
-    }
   };
 
   // ── MRZ (passeport) — OCR local d'abord (gratuit/hors-ligne) ; repli Claude
@@ -155,25 +163,35 @@ export const GuestScanPanel = ({
     setScanState('scanning');
     setOcrProgress(0);
     setMrzFallback(false);
+
+    // Sauvegarde l'image AVANT toute lecture : la fiche gardera sa photo même
+    // si l'OCR échoue et que l'agent doit compléter les champs à la main.
+    uploadDocImage(file);
+
     try {
       const startedAt = performance.now();
       const mrz = await scanMrz(file, setOcrProgress);
       // OCR MRZ local réussi (gratuit) : beacon best-effort pour le graphe
       // comparatif admin. N'impacte jamais le préremplissage ci-dessous.
       reportLocalMrzScan(performance.now() - startedAt);
-      applyMrz(mrz, file);
+      applyMrz(mrz);
     } catch {
       // OCR local KO → repli Claude vision (fiable sur reflets/hologramme).
       try {
         setMrzFallback(true);
         const prepared = await prepareCinImage(file);
         const mrz = await scanMrzVision(prepared, propertyId);
-        applyMrz(mrz, file);
+        applyMrz(mrz);
       } catch (err: unknown) {
+        // Lecture impossible : on NE jette PAS l'image (déjà en cours d'envoi).
+        // On bascule en saisie manuelle — l'agent tape les informations, la
+        // photo est conservée et partira avec la fiche.
         const code = (err as { code?: string })?.code;
-        const msg = code === 'timeout' ? t('cinScan.timeoutHint') : t('guestScan.scanFailed');
+        const msg = code === 'timeout' ? t('cinScan.timeoutHint') : t('guestScan.scanFailedManualKeepsPhoto');
         toast(msg, 'error');
-        setScanState('error');
+        setGuestForm((f) => ({ ...f, is_primary: isPrimary }));
+        setExtractedOk(false);
+        setScanState('done'); // ouvre le formulaire de saisie manuelle
         if (fileRef.current) fileRef.current.value = '';
       } finally {
         setMrzFallback(false);
