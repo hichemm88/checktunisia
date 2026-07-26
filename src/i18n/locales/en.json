@@ -1226,7 +1226,8 @@
     "departure": "Departure",
     "tryOtherFilter": "Try another filter or search",
     "docExpired": "Expired document",
-    "departureNotConfirmed": "Departure not confirmed"
+    "departureNotConfirmed": "Departure not confirmed",
+    "exportPickEnd": "Pick the end day"
   },
   "hotelDashboard": {
     "title": "Dashboard",

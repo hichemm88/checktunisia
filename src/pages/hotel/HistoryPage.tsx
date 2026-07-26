@@ -7,6 +7,7 @@ import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { DateRangeCalendar } from '@/components/ui/DateRangeCalendar';
 import { checkInsApi } from '@/api/checkIns';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
@@ -254,19 +255,25 @@ export const HistoryPage = () => {
                     );
                   })}
                 </div>
-                {/* Dates + bouton */}
-                <div className="grid grid-cols-2 gap-3 sm:flex sm:items-end">
-                  <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-                    {t('hotelHistory.exportFrom')}
-                    <input type="date" value={exportFrom} max={exportTo} onChange={(e) => setExportFrom(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-                  </label>
-                  <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
-                    {t('hotelHistory.exportTo')}
-                    <input type="date" value={exportTo} min={exportFrom} max={todayStr} onChange={(e) => setExportTo(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-                  </label>
-                  <Button fullWidth size="sm" loading={exportMut.isPending} onClick={() => exportMut.mutate()} className="col-span-2 sm:w-auto">
+                {/* Sélecteur de période : clic début → clic fin (sans OK) */}
+                <div className="flex justify-center rounded-xl border border-gray-100 bg-gray-50 py-2">
+                  <DateRangeCalendar
+                    from={exportFrom}
+                    to={exportTo}
+                    max={todayStr}
+                    locale={i18n.language}
+                    onChange={(f, tt) => { setExportFrom(f); setExportTo(tt); }}
+                  />
+                </div>
+
+                {/* Récap + bouton */}
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs text-gray-500">
+                    {exportFrom && exportTo
+                      ? <>{new Date(exportFrom + 'T00:00').toLocaleDateString(locale, { day: '2-digit', month: 'short' })} — {new Date(exportTo + 'T00:00').toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}</>
+                      : t('hotelHistory.exportPickEnd')}
+                  </span>
+                  <Button size="sm" loading={exportMut.isPending} disabled={!exportFrom || !exportTo} onClick={() => exportMut.mutate()}>
                     <Download className="h-4 w-4" /> {t('hotelHistory.exportButton')}
                   </Button>
                 </div>

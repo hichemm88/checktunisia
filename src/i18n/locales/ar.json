@@ -1210,7 +1210,8 @@
     "departure": "مغادرة",
     "tryOtherFilter": "جرّب مرشّحًا أو بحثًا آخر",
     "docExpired": "وثيقة منتهية الصلاحية",
-    "departureNotConfirmed": "مغادرة غير مؤكدة"
+    "departureNotConfirmed": "مغادرة غير مؤكدة",
+    "exportPickEnd": "اختر يوم النهاية"
   },
   "hotelDashboard": {
     "title": "لوحة التحكم",
