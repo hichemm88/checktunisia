@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   UserCheck, DoorOpen, ChevronRight, ChevronLeft, LogIn, LogOut,
   TrendingUp, FileWarning, AlertCircle, Plus, ShieldAlert, Building2,
-  CalendarClock, CalendarCheck, Globe, Timer,
+  CalendarClock, CalendarCheck, Globe, Moon,
 } from 'lucide-react';
 import { dashboardApi, type OccupancyDay } from '@/api/dashboard';
 import { getFlagUrl } from '@/lib/flags';
@@ -396,18 +396,15 @@ const ArrivalsDeparturesCard = ({ d }: { d: DashboardData }) => {
 // Deux indicateurs discrets sous le graphe : ils informent sans encombrer la
 // grille de conformité.
 const MonthInsightsCard = ({ insights }: { insights: NonNullable<DashboardData['month_insights']> }) => {
-  const { t } = useTranslation();
-  const nat   = insights.top_nationality;
-  const delay = insights.avg_submission_delay_hours;
-  const flag  = nat ? getFlagUrl(nat.code) : null;
+  const { t, i18n } = useTranslation();
+  const nat    = insights.top_nationality;
+  const nights = insights.avg_stay_nights;
+  const flag   = nat ? getFlagUrl(nat.code) : null;
 
-  // Délai en heures si < 48h, sinon en jours (valeur signée : négative = fiche
-  // soumise avant le jour d'arrivée, càd pré-enregistrée).
-  const delayText = delay == null
+  // Durée moyenne de séjour (nuits) — nombre localisé + unité.
+  const stayText = nights == null
     ? '—'
-    : Math.abs(delay) < 48
-      ? t('hotelDashboard.delayHours', { count: Math.round(delay) })
-      : t('hotelDashboard.delayDays',  { count: Math.round(delay / 24) });
+    : `${Number(nights).toLocaleString(localeFor(i18n.language))} ${t('hotelDashboard.nightsUnit')}`;
 
   return (
     <Card>
@@ -429,14 +426,14 @@ const MonthInsightsCard = ({ insights }: { insights: NonNullable<DashboardData['
           </div>
         </div>
 
-        {/* Délai moyen de soumission de la fiche */}
+        {/* Durée moyenne de séjour */}
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: '#E4F5EC' }}>
-            <Timer className="h-4 w-4" style={{ color: '#1F9D6B' }} />
+            <Moon className="h-4 w-4" style={{ color: '#1F9D6B' }} />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-gray-900 truncate">{delayText}</p>
-            <p className="text-[11px] text-gray-400 leading-snug">{t('hotelDashboard.avgSubmissionDelay')}</p>
+            <p className="text-sm font-bold text-gray-900 truncate">{stayText}</p>
+            <p className="text-[11px] text-gray-400 leading-snug">{t('hotelDashboard.avgStay')}</p>
           </div>
         </div>
       </div>
@@ -490,7 +487,7 @@ export const DashboardPage = () => {
   // Aperçu analytique du mois — réservé au Manager (absent du DOM réceptionniste).
   const isManager = user?.role === 'hotel_admin';
   const insights = d.month_insights;
-  const hasInsights = !!insights && (insights.top_nationality != null || insights.avg_submission_delay_hours != null);
+  const hasInsights = !!insights && (insights.top_nationality != null || insights.avg_stay_nights != null);
 
   return (
     <HotelLayout title={t('hotelDashboard.title')}>

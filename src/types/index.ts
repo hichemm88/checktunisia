@@ -165,9 +165,9 @@ export interface DashboardData {
   /** Aperçu analytique du mois (Manager) — non actionnable. */
   month_insights?: {
     top_nationality: { code: string; count: number } | null;
-    /** Délai moyen (heures) entre l'arrivée (check_in_date) et la soumission de la fiche (completed_at). null si aucun échantillon. */
-    avg_submission_delay_hours: number | null;
-    submission_sample: number;
+    /** Durée moyenne de séjour (nuits) parmi les séjours arrivant ce mois. null si aucun échantillon. */
+    avg_stay_nights: number | null;
+    stay_sample: number;
   };
 }
 
