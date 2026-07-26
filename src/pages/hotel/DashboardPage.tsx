@@ -5,9 +5,10 @@ import { useTranslation } from 'react-i18next';
 import {
   UserCheck, DoorOpen, ChevronRight, ChevronLeft, LogIn, LogOut,
   TrendingUp, FileWarning, AlertCircle, Plus, ShieldAlert, Building2,
-  CalendarClock, CalendarCheck,
+  CalendarClock, CalendarCheck, Globe, Timer,
 } from 'lucide-react';
 import { dashboardApi, type OccupancyDay } from '@/api/dashboard';
+import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { statusBadge } from '@/components/ui/Badge';
@@ -391,6 +392,58 @@ const ArrivalsDeparturesCard = ({ d }: { d: DashboardData }) => {
   );
 };
 
+// ── Aperçu du mois — analytique, Manager uniquement (non actionnable) ───────
+// Deux indicateurs discrets sous le graphe : ils informent sans encombrer la
+// grille de conformité.
+const MonthInsightsCard = ({ insights }: { insights: NonNullable<DashboardData['month_insights']> }) => {
+  const { t } = useTranslation();
+  const nat   = insights.top_nationality;
+  const delay = insights.avg_submission_delay_hours;
+  const flag  = nat ? getFlagUrl(nat.code) : null;
+
+  // Délai en heures si < 48h, sinon en jours (valeur signée : négative = fiche
+  // soumise avant le jour d'arrivée, càd pré-enregistrée).
+  const delayText = delay == null
+    ? '—'
+    : Math.abs(delay) < 48
+      ? t('hotelDashboard.delayHours', { count: Math.round(delay) })
+      : t('hotelDashboard.delayDays',  { count: Math.round(delay / 24) });
+
+  return (
+    <Card>
+      <p className="label mb-2.5">{t('hotelDashboard.monthInsights')}</p>
+      <div className="grid grid-cols-2 gap-3">
+        {/* Top nationalité */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl overflow-hidden" style={{ background: '#EEEBFA' }}>
+            {flag
+              ? <img src={flag} alt={nat!.code} width={22} className="rounded-sm" style={{ border: '1px solid rgba(0,0,0,0.1)' }} />
+              : <Globe className="h-4 w-4" style={{ color: '#5346A8' }} />}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-900 truncate">
+              {nat ? nat.code : '—'}
+              {nat && <span className="ms-1.5 text-xs font-semibold text-gray-400 tabular-nums">{nat.count}</span>}
+            </p>
+            <p className="text-[11px] text-gray-400 leading-snug">{t('hotelDashboard.topNationality')}</p>
+          </div>
+        </div>
+
+        {/* Délai moyen de soumission de la fiche */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: '#E4F5EC' }}>
+            <Timer className="h-4 w-4" style={{ color: '#1F9D6B' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-900 truncate">{delayText}</p>
+            <p className="text-[11px] text-gray-400 leading-snug">{t('hotelDashboard.avgSubmissionDelay')}</p>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
 // ── Dashboard ────────────────────────────────────────────────────────────────
 const EMPTY_DASH: DashboardData = {
   today: { arrivals_expected: 0, arrivals_done: 0, currently_present: 0, departures_today: 0, departures_tomorrow: 0, drafts_pending: 0, occupancy_rate: 0 },
@@ -433,6 +486,11 @@ export const DashboardPage = () => {
 
   // Brouillons non soumis = fiches non transmises → conformité prioritaire.
   const drafts = d.today.drafts_pending;
+
+  // Aperçu analytique du mois — réservé au Manager (absent du DOM réceptionniste).
+  const isManager = user?.role === 'hotel_admin';
+  const insights = d.month_insights;
+  const hasInsights = !!insights && (insights.top_nationality != null || insights.avg_submission_delay_hours != null);
 
   return (
     <HotelLayout title={t('hotelDashboard.title')}>
@@ -580,6 +638,9 @@ export const DashboardPage = () => {
               roomCount={d.room_count ?? user?.hotel?.room_count ?? 0}
             />
           )}
+
+          {/* Aperçu du mois — analytique, Manager uniquement */}
+          {isManager && hasInsights && <MonthInsightsCard insights={insights!} />}
 
           {/* Document expiry alerts */}
           {hasAlerts && (

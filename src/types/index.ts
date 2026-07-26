@@ -162,6 +162,13 @@ export interface DashboardData {
   subscription: { status: string; expires_at?: string; days_remaining?: number; plan?: string };
   recent_check_ins: Array<{ id: string; reference: string; room?: string; status: string; primary_guest?: string; check_in_date: string }>;
   pending_watchlist_hits?: number;
+  /** Aperçu analytique du mois (Manager) — non actionnable. */
+  month_insights?: {
+    top_nationality: { code: string; count: number } | null;
+    /** Délai moyen (heures) entre l'arrivée (check_in_date) et la soumission de la fiche (completed_at). null si aucun échantillon. */
+    avg_submission_delay_hours: number | null;
+    submission_sample: number;
+  };
 }
 
 // ─── Watchlist ────────────────────────────────────────────────────────────────
