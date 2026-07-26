@@ -1,18 +1,36 @@
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  UserCheck, Users, DoorOpen, ChevronRight, LogIn, LogOut,
-  TrendingUp, FileWarning, Percent, AlertCircle, Plus, ShieldAlert, Building2,
+  UserCheck, DoorOpen, ChevronRight, ChevronLeft, LogIn, LogOut,
+  TrendingUp, FileWarning, AlertCircle, Plus, ShieldAlert, Building2,
+  CalendarClock, CalendarCheck, Globe, Timer,
 } from 'lucide-react';
-import { dashboardApi } from '@/api/dashboard';
-import { organizationApi } from '@/api/organization';
+import { dashboardApi, type OccupancyDay } from '@/api/dashboard';
+import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
 import { statusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
 import type { DashboardData } from '@/types';
+
+const localeFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
+
+// "20 → 26 juil. 2026" — plage compacte (parse date-only, sans décalage UTC).
+const fmtRangeLabel = (start: string, end: string, locale: string): string => {
+  if (!start || !end) return '';
+  const [ys, ms, ds] = start.split('-').map(Number);
+  const [ye, me, de] = end.split('-').map(Number);
+  const s = new Date(ys, ms - 1, ds);
+  const e = new Date(ye, me - 1, de);
+  const sameYear  = ys === ye;
+  const sameMonth = sameYear && ms === me;
+  if (sameMonth) return `${ds} → ${e.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  if (sameYear)  return `${s.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} → ${e.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+  return `${s.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })} → ${e.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })}`;
+};
 
 // ── SVG occupancy ring ───────────────────────────────────────────────────────
 const OccupancyRing = ({ pct, present, total }: { pct: number; present: number; total?: number }) => {
@@ -22,7 +40,7 @@ const OccupancyRing = ({ pct, present, total }: { pct: number; present: number; 
   const color  = pct >= 80 ? '#4ade80' : pct >= 50 ? '#fbbf24' : '#93c5fd';
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <svg width="106" height="106" viewBox="0 0 106 106">
+      <svg width="104" height="104" viewBox="0 0 106 106" className="block">
         {/* Track */}
         <circle cx="53" cy="53" r={r} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="9" />
         {/* Fill */}
@@ -52,15 +70,15 @@ const OccupancyRing = ({ pct, present, total }: { pct: number; present: number; 
   );
 };
 
-// ── Occupation 7 jours (j−4 → j+2) — parité mobile ──────────────────────────
+// ── Occupation 7 jours — rendu des barres ────────────────────────────────────
 // Passé : violet clair plein · aujourd'hui : violet cachet · futur : pointillés (projection).
-const OccupancyChart = ({ data }: { data: { label: string; rate: number; is_today: boolean; is_future: boolean }[] }) => (
+const OccupancyChart = ({ data }: { data: OccupancyDay[] }) => (
   <div className="flex items-end gap-1.5 h-28 w-full">
     {data.map((d) => {
       const pct = Math.max(Math.min(d.rate, 100), 2);
       const color = d.is_today ? '#5346A8' : '#AFA9EC';
       return (
-        <div key={d.label} className="flex flex-1 flex-col items-center gap-1 h-full justify-end">
+        <div key={d.date} className="flex flex-1 flex-col items-center gap-1 h-full justify-end">
           <span
             className="text-[10px] font-semibold leading-none tabular-nums"
             style={{ color: d.is_today ? '#5346A8' : d.is_future ? '#C4BFF0' : '#9CA3AF' }}
@@ -88,48 +106,136 @@ const OccupancyChart = ({ data }: { data: { label: string; rate: number; is_toda
   </div>
 );
 
-// ── Compact stat tile ────────────────────────────────────────────────────────
-const StatTile = ({
-  icon: Icon, label, value, accent,
-}: {
-  icon: React.ElementType; label: string; value: number | string; accent: string;
-}) => (
-  <Card className="flex flex-col gap-2 p-4">
-    <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: accent + '20' }}>
-      <Icon className="h-4 w-4" style={{ color: accent }} />
-    </div>
-    <p className="text-2xl font-black" style={{ color: '#111827' }}>{value}</p>
-    <p className="text-[11px] font-medium leading-snug" style={{ color: '#6B7280' }}>{label}</p>
-  </Card>
-);
+// ── Occupation — carte navigable semaine par semaine ─────────────────────────
+const OccupancyCard = ({ initial, property, roomCount }: {
+  initial: OccupancyDay[]; property: string; roomCount: number;
+}) => {
+  const { t, i18n } = useTranslation();
+  const locale = localeFor(i18n.language);
+  const [offset, setOffset] = useState(0);
 
-// ── Tendance check-ins 7 jours — bloc analytique (Manager uniquement) ───────
-const WeeklyChart = ({ data }: { data: { label: string; count: number }[] }) => {
-  const max = Math.max(...data.map((d) => d.count), 1);
+  // offset 0 = fenêtre courante déjà fournie par le dashboard (aucune requête).
+  // Semaines passées : fetch dédié (offset < 0), sans projection.
+  const { data: win, isFetching } = useQuery({
+    queryKey: ['occupancy', offset],
+    queryFn: () => dashboardApi.occupancy(offset),
+    enabled: offset !== 0,
+    placeholderData: (prev) => prev,
+  });
+
+  const days  = offset === 0 ? initial : (win?.occupancy ?? []);
+  const start = days[0]?.date ?? '';
+  const end   = days[days.length - 1]?.date ?? '';
+
+  const goOlder = () => setOffset((o) => o - 1);
+  const goNewer = () => setOffset((o) => Math.min(0, o + 1));
+
+  // Swipe horizontal : vers la droite = passé, vers la gauche = revenir.
+  const touchX = useRef<number | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => { touchX.current = e.touches[0].clientX; };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchX.current == null) return;
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    touchX.current = null;
+    if (Math.abs(dx) < 40) return;
+    if (dx > 0) goOlder(); else goNewer();
+  };
+
+  const subtitle = offset === 0
+    ? t('hotelDashboard.occupancy7dSubtitle', { property, count: roomCount })
+    : t('hotelDashboard.occupancy7dSubtitlePast', { property, count: roomCount });
+
+  const iconBtn = 'flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed';
+
   return (
-    <div className="flex items-end gap-1.5 h-20 w-full">
-      {data.map((d, i) => {
-        const pct = Math.max((d.count / max) * 100, 3);
-        const isToday = i === data.length - 1;
-        return (
-          <div key={d.label} className="flex flex-1 flex-col items-center gap-1">
-            {d.count > 0 && (
-              <span className="text-[10px] font-semibold leading-none" style={{ color: isToday ? '#5346A8' : '#9CA3AF' }}>
-                {d.count}
-              </span>
-            )}
-            <div className="w-full rounded-t-md transition-all" style={{ height: `${pct}%`, background: isToday ? '#5346A8' : '#EEEBFA' }} />
-            <span className="text-[9px] leading-none truncate" style={{ color: isToday ? '#5346A8' : '#9CA3AF', fontWeight: isToday ? 700 : 400 }}>
-              {d.label}
-            </span>
-          </div>
-        );
-      })}
-    </div>
+    <Card>
+      <CardHeader className="mb-2">
+        <CardTitle>
+          <button
+            type="button"
+            onClick={() => setOffset(0)}
+            disabled={offset === 0}
+            className="flex items-center gap-2 disabled:cursor-default"
+            title={offset !== 0 ? t('hotelDashboard.occThisWeek') : undefined}
+          >
+            <TrendingUp className="h-4 w-4 text-gray-400" />
+            {t('hotelDashboard.occupancy7d')}
+          </button>
+        </CardTitle>
+        <div className="flex items-center gap-1">
+          {offset !== 0 && (
+            <button
+              type="button"
+              onClick={() => setOffset(0)}
+              className="rounded-full px-2.5 py-1 text-[11px] font-bold"
+              style={{ background: '#EEEBFA', color: '#5346A8' }}
+            >
+              {t('hotelDashboard.occThisWeek')}
+            </button>
+          )}
+          <button type="button" onClick={goOlder} aria-label={t('hotelDashboard.occPrevWeek')} className={`${iconBtn} hover:bg-warm-100`}>
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={goNewer} disabled={offset === 0} aria-label={t('hotelDashboard.occNextWeek')} className={`${iconBtn} hover:bg-warm-100`}>
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </CardHeader>
+
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <p className="text-xs text-gray-400 truncate">{subtitle}</p>
+        <p className="text-xs font-semibold shrink-0" style={{ color: '#5346A8' }}>{fmtRangeLabel(start, end, locale)}</p>
+      </div>
+
+      <div
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        className="pt-1"
+        style={{ touchAction: 'pan-y', opacity: isFetching ? 0.45 : 1, transition: 'opacity 0.2s ease' }}
+      >
+        {days.length > 0
+          ? <OccupancyChart data={days} />
+          : <div className="h-28 animate-pulse rounded-md bg-gray-100" />}
+      </div>
+    </Card>
   );
 };
 
+// ── Compact stat tile (compliance-oriented) ──────────────────────────────────
+const StatTile = ({
+  icon: Icon, label, value, accent, emphasis, onClick,
+}: {
+  icon: React.ElementType; label: string; value: number | string; accent: string;
+  emphasis?: boolean; onClick?: () => void;
+}) => {
+  const inner = (
+    <>
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ background: accent + '20' }}>
+        <Icon className="h-4 w-4" style={{ color: accent }} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xl font-black leading-none tabular-nums" style={{ color: emphasis ? accent : '#111827' }}>{value}</p>
+        <p className="text-[11px] font-medium leading-snug mt-1" style={{ color: '#6B7280' }}>{label}</p>
+      </div>
+    </>
+  );
+  const base = 'flex items-center gap-3 rounded-card bg-white p-3 shadow-card text-start';
+  return onClick
+    ? (
+      <button
+        onClick={onClick}
+        className={`${base} w-full transition-transform active:scale-[0.98]`}
+        style={emphasis ? { border: `1px solid ${accent}66` } : undefined}
+      >
+        {inner}
+      </button>
+    )
+    : <div className={base}>{inner}</div>;
+};
+
 // ── Récap par propriété — commun aux deux rôles (règle transverse n°1) ──────
+// Hauteur fixe : 5 établissements max visibles, scroll interne au-delà, l'actif
+// est toujours ramené dans la vue à l'ouverture.
 const PropertiesSummaryCard = ({
   summary, others, onSwitch,
 }: {
@@ -138,31 +244,59 @@ const PropertiesSummaryCard = ({
   onSwitch: (id: string, name: string) => void;
 }) => {
   const { t } = useTranslation();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef<HTMLButtonElement>(null);
+  const overflowing = summary.length > 5;
+
+  useEffect(() => {
+    if (overflowing && activeRef.current) {
+      activeRef.current.scrollIntoView({ block: 'nearest' });
+    }
+  }, [overflowing]);
+
   return (
     <Card>
       <p className="label mb-2">{t('hotelDashboard.propertiesRecap')}</p>
-      <div className="flex flex-col gap-1.5">
-        {summary.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => !p.is_active && onSwitch(p.id, p.name)}
-            className="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-start transition-all"
-            style={{
-              border: p.is_active ? '2px solid #5346A8' : '1px solid #F3F4F6',
-              background: p.is_active ? 'rgba(83,70,168,0.04)' : '#fff',
-              cursor: p.is_active ? 'default' : 'pointer',
-            }}
-          >
-            <span className="flex items-center gap-2 min-w-0">
-              <Building2 className="h-4 w-4 shrink-0" style={{ color: p.is_active ? '#5346A8' : '#9CA3AF' }} />
-              <span className="text-sm font-semibold text-gray-900 truncate">{p.name}</span>
-            </span>
-            <span className="flex items-center gap-3 shrink-0 text-xs">
-              <span className="font-bold tabular-nums" style={{ color: p.occupancy_rate >= 80 ? '#1F9D6B' : '#5346A8' }}>{p.occupancy_rate}%</span>
-              <span className="text-gray-400">{t('hotelDashboard.presentCount', { count: p.present })}</span>
-            </span>
-          </button>
-        ))}
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          className="flex flex-col gap-1.5 overflow-y-auto scrollbar-none"
+          // ~5 lignes visibles ; au-delà, scroll interne.
+          style={{ maxHeight: '17.5rem' }}
+        >
+          {summary.map((p) => (
+            <button
+              key={p.id}
+              ref={p.is_active ? activeRef : undefined}
+              onClick={() => !p.is_active && onSwitch(p.id, p.name)}
+              className="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-start transition-all shrink-0"
+              style={{
+                border: p.is_active ? '2px solid #5346A8' : '1px solid #F3F4F6',
+                background: p.is_active ? 'rgba(83,70,168,0.06)' : '#fff',
+                cursor: p.is_active ? 'default' : 'pointer',
+              }}
+            >
+              <span className="flex items-center gap-2 min-w-0">
+                <Building2 className="h-4 w-4 shrink-0" style={{ color: p.is_active ? '#5346A8' : '#9CA3AF' }} />
+                <span className="text-sm font-semibold text-gray-900 truncate">{p.name}</span>
+              </span>
+              <span className="flex items-center gap-2.5 shrink-0 text-xs">
+                <span className="font-bold tabular-nums" style={{ color: p.occupancy_rate >= 80 ? '#1F9D6B' : '#5346A8' }}>{p.occupancy_rate}%</span>
+                <span className="text-gray-400">{t('hotelDashboard.presentCount', { count: p.present })}</span>
+                {p.is_active
+                  ? <span className="h-4 w-4 shrink-0" />
+                  : <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />}
+              </span>
+            </button>
+          ))}
+        </div>
+        {/* Dégradé bas — indique qu'il y a plus de contenu à faire défiler. */}
+        {overflowing && (
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-8 rounded-b-xl"
+            style={{ background: 'linear-gradient(to top, #fff, rgba(255,255,255,0))' }}
+          />
+        )}
       </div>
       {others && (others.arrivals > 0 || others.departures > 0) && (
         <p className="text-xs text-gray-400 mt-2">
@@ -197,6 +331,17 @@ const ArrivalsDeparturesCard = ({ d }: { d: DashboardData }) => {
   const arrivals   = d.arrivals_today ?? [];
   const departures = d.departures_today_list ?? [];
 
+  // Ligne compacte unique quand il n'y a ni arrivée ni départ (évite deux gros
+  // blocs vides qui prennent toute la hauteur).
+  if (!arrivals.length && !departures.length) {
+    return (
+      <Card className="flex items-center gap-3 py-3.5">
+        <CalendarCheck className="h-5 w-5 shrink-0" style={{ color: '#5346A8' }} />
+        <p className="text-sm text-gray-500">{t('hotelDashboard.todayNoMovement')}</p>
+      </Card>
+    );
+  }
+
   const Column = ({
     icon: Icon, title, count, children,
   }: { icon: React.ElementType; title: string; count: number; children: React.ReactNode }) => (
@@ -219,7 +364,8 @@ const ArrivalsDeparturesCard = ({ d }: { d: DashboardData }) => {
               key={a.id}
               name={a.guest_name || a.reference}
               sub={`${a.room ?? t('hotelDashboard.noRoom')}${a.booking_reference ? ` · ${a.booking_reference}` : ''} · ${t('hotelDashboard.personsCount', { count: a.adults_count + a.children_count })}`}
-              onClick={() => navigate(`/hotel/check-ins/new?resume=${a.id}`)}
+              // Brouillon → reprise du check-in ; fiche active → détail de la fiche.
+              onClick={() => navigate(a.status === 'draft' ? `/hotel/check-ins/new?resume=${a.id}` : `/hotel/history/${a.id}`)}
             />
           ))}
           {!arrivals.length && <p className="text-sm text-gray-400 py-3 text-center">{t('hotelDashboard.noArrivalToday')}</p>}
@@ -246,9 +392,61 @@ const ArrivalsDeparturesCard = ({ d }: { d: DashboardData }) => {
   );
 };
 
+// ── Aperçu du mois — analytique, Manager uniquement (non actionnable) ───────
+// Deux indicateurs discrets sous le graphe : ils informent sans encombrer la
+// grille de conformité.
+const MonthInsightsCard = ({ insights }: { insights: NonNullable<DashboardData['month_insights']> }) => {
+  const { t } = useTranslation();
+  const nat   = insights.top_nationality;
+  const delay = insights.avg_submission_delay_hours;
+  const flag  = nat ? getFlagUrl(nat.code) : null;
+
+  // Délai en heures si < 48h, sinon en jours (valeur signée : négative = fiche
+  // soumise avant le jour d'arrivée, càd pré-enregistrée).
+  const delayText = delay == null
+    ? '—'
+    : Math.abs(delay) < 48
+      ? t('hotelDashboard.delayHours', { count: Math.round(delay) })
+      : t('hotelDashboard.delayDays',  { count: Math.round(delay / 24) });
+
+  return (
+    <Card>
+      <p className="label mb-2.5">{t('hotelDashboard.monthInsights')}</p>
+      <div className="grid grid-cols-2 gap-3">
+        {/* Top nationalité */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl overflow-hidden" style={{ background: '#EEEBFA' }}>
+            {flag
+              ? <img src={flag} alt={nat!.code} width={22} className="rounded-sm" style={{ border: '1px solid rgba(0,0,0,0.1)' }} />
+              : <Globe className="h-4 w-4" style={{ color: '#5346A8' }} />}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-900 truncate">
+              {nat ? nat.code : '—'}
+              {nat && <span className="ms-1.5 text-xs font-semibold text-gray-400 tabular-nums">{nat.count}</span>}
+            </p>
+            <p className="text-[11px] text-gray-400 leading-snug">{t('hotelDashboard.topNationality')}</p>
+          </div>
+        </div>
+
+        {/* Délai moyen de soumission de la fiche */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: '#E4F5EC' }}>
+            <Timer className="h-4 w-4" style={{ color: '#1F9D6B' }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-900 truncate">{delayText}</p>
+            <p className="text-[11px] text-gray-400 leading-snug">{t('hotelDashboard.avgSubmissionDelay')}</p>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
 // ── Dashboard ────────────────────────────────────────────────────────────────
 const EMPTY_DASH: DashboardData = {
-  today: { arrivals_expected: 0, arrivals_done: 0, currently_present: 0, departures_today: 0, occupancy_rate: 0 },
+  today: { arrivals_expected: 0, arrivals_done: 0, currently_present: 0, departures_today: 0, departures_tomorrow: 0, drafts_pending: 0, occupancy_rate: 0 },
   month: { check_ins_total: 0 },
   weekly_trend:    [],
   expiry_alerts:   [],
@@ -265,8 +463,6 @@ export const DashboardPage = () => {
     queryFn: dashboardApi.get,
     refetchInterval: 60_000,
   });
-  // Bascule rapide multi-établissements — jamais conditionnée au rôle (règle transverse n°1).
-  const { data: myProperties } = useQuery({ queryKey: ['my-properties'], queryFn: organizationApi.myProperties });
 
   const d   = data ?? EMPTY_DASH;
   const sub = d.subscription;
@@ -279,10 +475,6 @@ export const DashboardPage = () => {
   const hasAlerts          = d.expiry_alerts.length > 0;
   const securityHitCount   = d.pending_watchlist_hits ?? 0;
 
-  // Contenu analytique réservé au Manager — absent du DOM pour la Réceptionniste.
-  // Les blocs opérationnels (multi-établissements, arrivées/départs, occupation 7j) ne sont JAMAIS gatés par rôle.
-  const isManager = user?.role === 'hotel_admin';
-
   const greeting = () => {
     const h = new Date().getHours();
     if (h < 12) return t('hotelDashboard.greetingMorning');
@@ -290,62 +482,70 @@ export const DashboardPage = () => {
     return t('hotelDashboard.greetingEvening');
   };
 
-  const dateLocale = i18n.language === 'ar' ? 'ar-TN' : i18n.language === 'en' ? 'en-GB' : 'fr-TN';
+  const dateLocale = localeFor(i18n.language);
+
+  // Brouillons non soumis = fiches non transmises → conformité prioritaire.
+  const drafts = d.today.drafts_pending;
+
+  // Aperçu analytique du mois — réservé au Manager (absent du DOM réceptionniste).
+  const isManager = user?.role === 'hotel_admin';
+  const insights = d.month_insights;
+  const hasInsights = !!insights && (insights.top_nationality != null || insights.avg_submission_delay_hours != null);
 
   return (
     <HotelLayout title={t('hotelDashboard.title')}>
       <div className="flex flex-col gap-4 pb-4">
 
-        {/* ── Hero: greeting + occupancy ring ── */}
-        <div
-          className="px-4 pt-5 pb-5 flex items-center justify-between gap-4"
-          style={{ background: 'var(--qayed-cachet)' }}
-        >
-          <div className="flex flex-col gap-1 flex-1 min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#5346A8' }}>
-              {greeting()}
-            </p>
-            <h1 className="qayed-display text-xl text-white truncate">
-              {user?.first_name ?? t('hotelDashboard.welcome')}
-            </h1>
-            <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
-              {new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long' })}
-            </p>
+        {/* ── Hero: greeting + occupancy ring + CTA plein largeur ── */}
+        <div className="px-4 pt-5 pb-5 flex flex-col gap-4" style={{ background: 'var(--qayed-cachet)' }}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-1 flex-1 min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                {greeting()}
+              </p>
+              <h1 className="qayed-display text-xl text-white truncate">
+                {user?.first_name ?? t('hotelDashboard.welcome')}
+              </h1>
+              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                {new Date().toLocaleDateString(dateLocale, { weekday: 'long', day: 'numeric', month: 'long' })}
+              </p>
 
-            {/* Quick stats row */}
-            <div className="flex gap-3 mt-3">
-              <div className="flex flex-col" style={{ color: 'rgba(255,255,255,0.9)' }}>
-                <span className="text-lg font-black leading-none">{d.today.arrivals_expected}</span>
-                <span className="text-[10px] font-medium uppercase tracking-wide mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('hotelDashboard.arrivals')}</span>
-              </div>
-              <div className="w-px self-stretch" style={{ background: 'rgba(255,255,255,0.15)' }} />
-              <div className="flex flex-col" style={{ color: 'rgba(255,255,255,0.9)' }}>
-                <span className="text-lg font-black leading-none">{d.today.departures_today}</span>
-                <span className="text-[10px] font-medium uppercase tracking-wide mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('hotelDashboard.departures')}</span>
+              {/* Quick stats row */}
+              <div className="flex gap-4 mt-3">
+                <div className="flex flex-col" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                  <span className="text-lg font-black leading-none tabular-nums">{d.today.arrivals_expected}</span>
+                  <span className="text-[10px] font-medium uppercase tracking-wide mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('hotelDashboard.arrivals')}</span>
+                </div>
+                <div className="w-px self-stretch" style={{ background: 'rgba(255,255,255,0.15)' }} />
+                <div className="flex flex-col" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                  <span className="text-lg font-black leading-none tabular-nums">{d.today.departures_today}</span>
+                  <span className="text-[10px] font-medium uppercase tracking-wide mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('hotelDashboard.departures')}</span>
+                </div>
               </div>
             </div>
 
-            <button
-              onClick={() => navigate('/hotel/check-ins/new')}
-              className="mt-3 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all active:scale-95 self-start"
-              style={{ background: '#5346A8', color: '#fff', boxShadow: '0 2px 8px rgba(83,70,168,0.3)' }}
-            >
-              <Plus className="h-4 w-4" />
-              {t('hotelDashboard.newCheckin')}
-            </button>
+            {/* Occupancy ring — entièrement visible, aligné en haut */}
+            <div className="shrink-0">
+              {isLoading
+                ? <div className="h-[104px] w-[104px] rounded-full animate-pulse" style={{ background: 'rgba(255,255,255,0.1)' }} />
+                : <OccupancyRing
+                    pct={d.today.occupancy_rate}
+                    present={d.today.currently_present}
+                    total={user?.hotel?.room_count ?? undefined}
+                  />
+              }
+            </div>
           </div>
 
-          {/* Occupancy ring */}
-          <div className="shrink-0">
-            {isLoading
-              ? <div className="h-[106px] w-[106px] rounded-full animate-pulse" style={{ background: 'rgba(255,255,255,0.1)' }} />
-              : <OccupancyRing
-                  pct={d.today.occupancy_rate}
-                  present={d.today.currently_present}
-                  total={user?.hotel?.room_count ?? undefined}
-                />
-            }
-          </div>
+          {/* CTA principal — plein largeur, centré, blanc sur violet, tactile ≥ 48px */}
+          <button
+            onClick={() => navigate('/hotel/check-ins/new')}
+            className="flex w-full items-center justify-center gap-2 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
+            style={{ background: '#fff', color: '#5346A8', minHeight: 48, boxShadow: '0 4px 14px rgba(0,0,0,0.18)' }}
+          >
+            <Plus className="h-5 w-5" />
+            {t('hotelDashboard.newCheckin')}
+          </button>
         </div>
 
         <div className="px-4 flex flex-col gap-4">
@@ -395,28 +595,7 @@ export const DashboardPage = () => {
             </div>
           )}
 
-          {/* Bascule rapide d'établissement (visible dès 2 propriétés, quel que soit le rôle) */}
-          {(myProperties?.length ?? 0) > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-              {myProperties!.map((p) => {
-                const isActive = activePropertyId ? activePropertyId === p.id : myProperties![0].id === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => setActiveProperty(p.id, p.name)}
-                    className="flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-bold transition-all"
-                    style={isActive
-                      ? { background: '#5346A8', color: '#fff' }
-                      : { background: '#fff', color: '#6B7280', border: '1px solid #E5E7EB' }}
-                  >
-                    <Building2 className="h-3 w-3" /> {p.name}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Récap par propriété — commun aux deux rôles */}
+          {/* Récap par propriété — sélecteur unique d'établissement (chips supprimés) */}
           {(d.properties_summary?.length ?? 0) > 1 && (
             <PropertiesSummaryCard
               summary={d.properties_summary!}
@@ -425,66 +604,43 @@ export const DashboardPage = () => {
             />
           )}
 
-          {/* Arrivées / Départs du jour — listes actionnables */}
+          {/* Arrivées / Départs du jour — listes actionnables (ou ligne compacte si vide) */}
           {isLoading
-            ? <div className="h-40 animate-pulse rounded-card bg-gray-100" />
+            ? <div className="h-20 animate-pulse rounded-card bg-gray-100" />
             : <ArrivalsDeparturesCard d={d} />}
 
-          {/* Stats grid */}
+          {/* Rangée de stats compacte — orientée conformité */}
           {isLoading ? (
             <div className="grid grid-cols-2 gap-3">
-              {[1,2,3,4].map(i => <div key={i} className="h-24 animate-pulse rounded-card bg-gray-100" />)}
+              {[1,2,3,4].map(i => <div key={i} className="h-16 animate-pulse rounded-card bg-gray-100" />)}
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              <StatTile icon={Users}      label={t('hotelDashboard.statCheckinsDone')}   value={d.today.arrivals_done}     accent="#1F9D6B" />
-              <StatTile icon={DoorOpen}   label={t('hotelDashboard.statPresent')}          value={d.today.currently_present} accent="#443896" />
-              <StatTile icon={Percent}    label={t('hotelDashboard.statOccupancyRate')} value={`${d.today.occupancy_rate}%`} accent={d.today.occupancy_rate >= 80 ? '#1F9D6B' : '#5346A8'} />
-              {isManager && (
-                <StatTile icon={TrendingUp} label={t('hotelDashboard.statCheckinsMonth')} value={d.month.check_ins_total} accent="#8B7FE0" />
-              )}
+              <StatTile
+                icon={FileWarning}
+                label={t('hotelDashboard.statDraftsPending')}
+                value={drafts}
+                accent={drafts > 0 ? '#E3A008' : '#1F9D6B'}
+                emphasis={drafts > 0}
+                onClick={drafts > 0 ? () => navigate('/hotel/history?status=draft') : undefined}
+              />
+              <StatTile icon={DoorOpen}      label={t('hotelDashboard.statPresent')}            value={d.today.currently_present}   accent="#443896" />
+              <StatTile icon={CalendarClock} label={t('hotelDashboard.statDeparturesTomorrow')} value={d.today.departures_tomorrow} accent="#5346A8" />
+              <StatTile icon={TrendingUp}    label={t('hotelDashboard.statCheckinsMonth')}      value={d.month.check_ins_total}     accent="#8B7FE0" />
             </div>
           )}
 
-          {/* Occupation 7 jours (j−4 → j+2) */}
+          {/* Occupation 7 jours — navigable semaine par semaine */}
           {(d.occupancy_7d?.length ?? 0) > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-gray-400" />
-                    {t('hotelDashboard.occupancy7d')}
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <p className="text-xs text-gray-400 mb-1">
-                {t('hotelDashboard.occupancy7dSubtitle', {
-                  property: activePropertyName ?? user?.hotel?.name ?? '',
-                  count: d.room_count ?? user?.hotel?.room_count ?? 0,
-                })}
-              </p>
-              <div className="pt-1">
-                <OccupancyChart data={d.occupancy_7d!} />
-              </div>
-            </Card>
+            <OccupancyCard
+              initial={d.occupancy_7d!}
+              property={activePropertyName ?? user?.hotel?.name ?? ''}
+              roomCount={d.room_count ?? user?.hotel?.room_count ?? 0}
+            />
           )}
 
-          {/* Tendance check-ins — analytique, Manager uniquement */}
-          {isManager && d.weekly_trend.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-gray-400" />
-                    {t('hotelDashboard.weeklyTrend')}
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <div className="pt-1">
-                <WeeklyChart data={d.weekly_trend} />
-              </div>
-            </Card>
-          )}
+          {/* Aperçu du mois — analytique, Manager uniquement */}
+          {isManager && hasInsights && <MonthInsightsCard insights={insights!} />}
 
           {/* Document expiry alerts */}
           {hasAlerts && (

@@ -135,6 +135,7 @@ export interface DashboardData {
   today: {
     arrivals_expected: number; arrivals_done: number;
     currently_present: number; departures_today: number;
+    departures_tomorrow: number; drafts_pending: number;
     occupancy_rate: number;
   };
   month: { check_ins_total: number };
@@ -142,9 +143,9 @@ export interface DashboardData {
   weekly_trend: Array<{ date: string; label: string; count: number }>;
   /** Fenêtre glissante j−4 → j+2 ; is_future = projection (barres pointillées). */
   occupancy_7d?: Array<{ date: string; label: string; rate: number; is_today: boolean; is_future: boolean }>;
-  /** Arrivées du jour (fiches brouillon) — cliquables pour reprendre le check-in. */
+  /** Arrivées du jour — brouillon (reprise du check-in) ou actif (fiche). */
   arrivals_today?: Array<{
-    id: string; reference: string; guest_name?: string | null; booking_reference?: string | null;
+    id: string; reference: string; status: string; guest_name?: string | null; booking_reference?: string | null;
     room?: string | null; room_id?: string | null;
     check_in_date: string; expected_check_out_date: string; adults_count: number; children_count: number;
   }>;
@@ -161,6 +162,13 @@ export interface DashboardData {
   subscription: { status: string; expires_at?: string; days_remaining?: number; plan?: string };
   recent_check_ins: Array<{ id: string; reference: string; room?: string; status: string; primary_guest?: string; check_in_date: string }>;
   pending_watchlist_hits?: number;
+  /** Aperçu analytique du mois (Manager) — non actionnable. */
+  month_insights?: {
+    top_nationality: { code: string; count: number } | null;
+    /** Délai moyen (heures) entre l'arrivée (check_in_date) et la soumission de la fiche (completed_at). null si aucun échantillon. */
+    avg_submission_delay_hours: number | null;
+    submission_sample: number;
+  };
 }
 
 // ─── Watchlist ────────────────────────────────────────────────────────────────
@@ -288,7 +296,7 @@ export interface AuthorityHotel {
   staff?: AuthorityHotelStaff[];
 }
 
-export interface ApiList<T> { data: T[]; meta: { total: number; current_page: number; per_page: number; last_page: number } }
+export interface ApiList<T> { data: T[]; meta: { total: number; current_page: number; per_page: number; last_page: number; draft_count?: number } }
 export interface ApiItem<T> { data: T }
 
 // ─── Authority dashboard ──────────────────────────────────────────────────────

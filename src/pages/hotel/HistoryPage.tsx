@@ -1,8 +1,8 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, ChevronRight, Trash2, LogOut, Download } from 'lucide-react';
+import { Search, ChevronRight, Trash2, LogOut, Download, Mail } from 'lucide-react';
 import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Input } from '@/components/ui/Input';
@@ -112,7 +112,8 @@ const fmtRange = (from: string, to: string, locale: string): string => {
   return `${fmtDate(from, locale)} → ${fmtDate(to, locale)}`;
 };
 
-const STATUS_FILTERS = ['all', 'draft', 'active', 'completed'] as const;
+// Ordre : Actif · Brouillon · Terminé · Tous (Actif par défaut à l'ouverture).
+const STATUS_FILTERS = ['active', 'draft', 'completed', 'all'] as const;
 
 // Left border + subtle bg per status
 const STATUS_ROW_STYLE: Record<string, { border: string; dot: string }> = {
@@ -154,8 +155,14 @@ export const HistoryPage = () => {
   const qc         = useQueryClient();
   const { toast }  = useToast();
   const isAdmin    = useAuthStore((s) => s.user?.role === 'hotel_admin');
+  const userEmail  = useAuthStore((s) => s.user?.email ?? '');
+  const [searchParams] = useSearchParams();
+  // Filtre initial : ?status=... (ex. lien « Brouillons non soumis » du dashboard),
+  // sinon « Actif » par défaut.
+  const qpStatus = searchParams.get('status') ?? '';
+  const initialStatus = (STATUS_FILTERS as readonly string[]).includes(qpStatus) ? qpStatus : 'active';
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState<string>('all');
+  const [status, setStatus] = useState<string>(initialStatus);
   const [page, setPage]     = useState(1);
 
   const STATUS_FILTER_LABELS: Record<string, string> = {
@@ -170,6 +177,8 @@ export const HistoryPage = () => {
     queryKey: ['check-ins', { search, status, page }],
     queryFn: () => checkInsApi.list({ search, status: status === 'all' ? '' : status, page }),
   });
+  // Compteur de brouillons (renvoyé par l'API, indépendant du filtre actif).
+  const draftCount = data?.meta.draft_count ?? 0;
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => checkInsApi.deleteCheckIn(id),
@@ -204,22 +213,34 @@ export const HistoryPage = () => {
           leftIcon={<Search className="h-4 w-4" />}
         />
 
-        {/* Status filter chips */}
+        {/* Status filter chips — badge ambre sur Brouillon (fiches non transmises) */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {STATUS_FILTERS.map((s) => (
-            <button
-              key={s}
-              onClick={() => { setStatus(s); setPage(1); }}
-              className="whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-bold transition-all"
-              style={
-                status === s
-                  ? { background: '#5346A8', color: '#fff', boxShadow: '0 4px 14px rgba(83,70,168,0.25)' }
-                  : { background: '#fff', color: '#6B7280', border: '1px solid #E5E7EB' }
-              }
-            >
-              {STATUS_FILTER_LABELS[s]}
-            </button>
-          ))}
+          {STATUS_FILTERS.map((s) => {
+            const selected = status === s;
+            const showDraftBadge = s === 'draft' && draftCount > 0;
+            return (
+              <button
+                key={s}
+                onClick={() => { setStatus(s); setPage(1); }}
+                className="flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-bold transition-all"
+                style={
+                  selected
+                    ? { background: '#5346A8', color: '#fff', boxShadow: '0 4px 14px rgba(83,70,168,0.25)' }
+                    : { background: '#fff', color: '#6B7280', border: '1px solid #E5E7EB' }
+                }
+              >
+                {STATUS_FILTER_LABELS[s]}
+                {showDraftBadge && (
+                  <span
+                    className="inline-flex min-w-[1.125rem] items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none tabular-nums"
+                    style={{ background: '#E3A008', color: '#fff', height: '1.125rem' }}
+                  >
+                    {draftCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Export fiches de police (PDF par email) — manager uniquement */}
@@ -234,7 +255,7 @@ export const HistoryPage = () => {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold text-gray-900">{t('hotelHistory.exportTitle')}</span>
-                <span className="block truncate text-xs text-gray-400">{t('hotelHistory.exportHelp')}</span>
+                <span className="block text-xs leading-snug text-gray-400">{t('hotelHistory.exportHelp')}</span>
               </span>
               <ChevronRight className={`h-4 w-4 shrink-0 text-gray-300 transition-transform ${showExport ? 'rotate-90' : ''}`} />
             </button>
@@ -265,6 +286,14 @@ export const HistoryPage = () => {
                     onChange={(f, tt) => { setExportFrom(f); setExportTo(tt); }}
                   />
                 </div>
+
+                {/* Rappel du destinataire — le PDF part par e-mail à cette adresse. */}
+                {userEmail && (
+                  <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs" style={{ background: '#EEEBFA', color: '#5346A8' }}>
+                    <Mail className="h-4 w-4 shrink-0" />
+                    <span className="min-w-0 truncate">{t('hotelHistory.exportSentTo', { email: userEmail })}</span>
+                  </div>
+                )}
 
                 {/* Récap + bouton */}
                 <div className="flex items-center justify-between gap-3">
