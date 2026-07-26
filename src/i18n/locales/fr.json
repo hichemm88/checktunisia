@@ -837,10 +837,12 @@
     "staff": "Personnel",
     "reception": "Réception",
     "totalCheckins": "Check-ins total",
-    "checkinHistory": "Historique des check-ins",
+    "checkinHistory": "Fiches des voyageurs",
     "searchPlaceholder": "Nom, référence, numéro de document…",
-    "noCheckinFound": "Aucun check-in trouvé",
+    "noCheckinFound": "Aucune fiche trouvée",
     "guestsAbbrev": "{{count}} voy.",
+    "companionTag": "accompagnant",
+    "travelingWith": "Avec :",
     "actualDeparture": "départ réel"
   },
   "authorityActivity": {

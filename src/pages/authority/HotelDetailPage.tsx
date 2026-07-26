@@ -344,19 +344,16 @@ export const HotelDetailPage = () => {
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              {checkIns?.data.map(ci => {
-                const st      = STATUS_STYLE[ci.status] ?? { color: '#9ca3af', label: ci.status };
-                const guests  = ci.guests ?? [];
-                const pg      = guests.find(g => g.is_primary) ?? guests[0] ?? ci.primary_guest ?? null;
-                const name    = pg ? `${pg.last_name} ${pg.first_name}` : t('hotelHistory.noGuest');
-                const initials = pg
-                  ? `${pg.first_name?.[0] ?? ''}${pg.last_name?.[0] ?? ''}`.toUpperCase()
-                  : '?';
-                const pgFlag = getFlagUrl(pg?.nationality_code);
+              {checkIns?.data.map(row => {
+                const st       = STATUS_STYLE[row.status] ?? { color: '#9ca3af', label: row.status };
+                const g        = row.guest;
+                const name     = `${g.last_name} ${g.first_name}`;
+                const initials = `${g.first_name?.[0] ?? ''}${g.last_name?.[0] ?? ''}`.toUpperCase() || '?';
+                const flag     = getFlagUrl(g.nationality_code);
 
                 return (
                   <div
-                    key={ci.id}
+                    key={row.id}
                     className="flex bg-white rounded-xl shadow-sm overflow-hidden"
                     style={{ borderLeft: `4px solid ${st.color}` }}
                   >
@@ -369,10 +366,10 @@ export const HotelDetailPage = () => {
                         >
                           {initials}
                         </div>
-                        {pgFlag && (
+                        {flag && (
                           <img
-                            src={pgFlag}
-                            alt={pg?.nationality_code ?? ''}
+                            src={flag}
+                            alt={g.nationality_code ?? ''}
                             width={16}
                             className="absolute -bottom-1 -end-1 rounded-sm shadow-sm"
                             style={{ border: '1px solid rgba(0,0,0,0.1)' }}
@@ -380,44 +377,29 @@ export const HotelDetailPage = () => {
                         )}
                       </div>
 
-                      {/* Info */}
+                      {/* Une fiche = un voyageur */}
                       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                        {/* Primary guest name */}
-                        <span className="text-sm font-semibold text-gray-900 truncate">{name}</span>
-
-                        {/* Additional guests */}
-                        {guests.length > 1 && (
-                          <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
-                            {guests
-                              .filter(g => !g.is_primary && g.id !== pg?.id)
-                              .map(g => {
-                                const gUrl = getFlagUrl(g.nationality_code);
-                                return (
-                                  <span key={g.id} className="flex items-center gap-1 text-xs text-gray-500">
-                                    {gUrl && (
-                                      <img
-                                        src={gUrl}
-                                        alt={g.nationality_code ?? ''}
-                                        width={14}
-                                        className="rounded-sm"
-                                        style={{ border: '1px solid rgba(0,0,0,0.08)' }}
-                                      />
-                                    )}
-                                    {g.first_name} {g.last_name}
-                                  </span>
-                                );
-                              })}
-                          </div>
-                        )}
+                        <span className="text-sm font-semibold text-gray-900 truncate">
+                          {name}
+                          {!g.is_primary && <span className="ms-1.5 text-[10px] font-medium text-gray-400">{t('authorityHotelDetail.companionTag')}</span>}
+                        </span>
 
                         <span className="text-xs text-gray-500 truncate">
-                          {ci.room_number ? `${t('checkinWizard.roomShort')} ${ci.room_number}` : t('hotelHistory.noUnit')}
-                          {' · '}<span className="font-mono">{ci.reference}</span>
-                          {ci.guests_count > 1 && ` · ${t('authorityHotelDetail.guestsAbbrev', { count: ci.guests_count })}`}
+                          {row.room_number ? `${t('checkinWizard.roomShort')} ${row.room_number}` : t('hotelHistory.noUnit')}
+                          {' · '}<span className="font-mono">{row.reference}</span>
+                          {g.document_number && <> · <span className="font-mono">{g.document_number}</span></>}
                         </span>
+
+                        {/* Contexte séjour : accompagnants */}
+                        {row.companions.length > 0 && (
+                          <span className="text-xs text-gray-400 truncate">
+                            {t('authorityHotelDetail.travelingWith')} {row.companions.join(', ')}
+                          </span>
+                        )}
+
                         <span className="text-xs text-gray-400">
-                          {fmtRange(ci.check_in_date, ci.expected_check_out_date, locale)}
-                          {ci.actual_check_out_date && ` · ${t('authorityHotelDetail.actualDeparture')} ${fmtDate(ci.actual_check_out_date, locale)}`}
+                          {fmtRange(row.check_in_date, row.expected_check_out_date, locale)}
+                          {row.actual_check_out_date && ` · ${t('authorityHotelDetail.actualDeparture')} ${fmtDate(row.actual_check_out_date, locale)}`}
                         </span>
                       </div>
 

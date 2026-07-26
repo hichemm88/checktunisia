@@ -837,10 +837,12 @@
     "staff": "Staff",
     "reception": "Reception",
     "totalCheckins": "Total check-ins",
-    "checkinHistory": "Check-in history",
+    "checkinHistory": "Traveler fiches",
     "searchPlaceholder": "Name, reference, document number…",
     "noCheckinFound": "No check-in found",
     "guestsAbbrev": "{{count}} guests",
+    "companionTag": "companion",
+    "travelingWith": "With:",
     "actualDeparture": "actual departure"
   },
   "authorityActivity": {

@@ -834,10 +834,12 @@
     "staff": "الموظفون",
     "reception": "الاستقبال",
     "totalCheckins": "إجمالي تسجيلات الوصول",
-    "checkinHistory": "سجل تسجيلات الوصول",
+    "checkinHistory": "بطاقات المسافرين",
     "searchPlaceholder": "الاسم، المرجع، رقم الوثيقة…",
     "noCheckinFound": "لم يُعثر على تسجيل وصول",
     "guestsAbbrev": "{{count}} نزيل",
+    "companionTag": "مرافق",
+    "travelingWith": "مع:",
     "actualDeparture": "المغادرة الفعلية"
   },
   "authorityActivity": {

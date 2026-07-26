@@ -218,31 +218,27 @@ export interface AuthorityGuestProfile {
   }>;
 }
 
+// Une entrée = UNE FICHE par voyageur (détachée du check-in, avec son contexte).
 export interface AuthorityCheckIn {
-  id: string;
+  id: string;            // clé de ligne : `${check_in_id}-${guest_id}`
+  check_in_id: string;
   reference: string;
   status: string;
   check_in_date: string;
   expected_check_out_date: string;
   actual_check_out_date?: string | null;
-  adults_count: number;
-  children_count: number;
   room_number?: string | null;
-  guests_count: number;
-  primary_guest?: {
+  guest: {
     id: string;
     first_name: string;
     last_name: string;
     nationality_code?: string | null;
     date_of_birth?: string | null;
-  } | null;
-  guests?: Array<{
-    id: string;
-    first_name: string;
-    last_name: string;
-    nationality_code?: string | null;
     is_primary: boolean;
-  }>;
+    document_number?: string | null;
+  };
+  companions: string[];       // "NOM Prénom" des autres voyageurs du même séjour
+  companions_count: number;
 }
 
 /** One row per traveler — a multi-guest stay produces one entry per guest, not one per check-in. */
