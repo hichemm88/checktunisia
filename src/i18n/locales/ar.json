@@ -1195,6 +1195,12 @@
   "hotelHistory": {
     "title": "السجل",
     "deleted": "تم حذف تسجيل الوصول",
+    "exportTitle": "تصدير بطاقات الشرطة (PDF)",
+    "exportHelp": "اختر مجالًا زمنيًا. سيُرسَل ملف PDF لكل البطاقات إلى بريدك الإلكتروني.",
+    "exportFrom": "من",
+    "exportTo": "إلى",
+    "exportButton": "تصدير",
+    "exportQueued": "جارٍ الإنشاء — سيُرسَل ملف PDF إلى {{email}}.",
     "searchPlaceholder": "الاسم، المرجع، الغرفة…",
     "noGuest": "بدون نزيل",
     "noUnit": "بدون وحدة",

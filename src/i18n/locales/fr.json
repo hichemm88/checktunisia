@@ -1211,6 +1211,12 @@
   "hotelHistory": {
     "title": "Historique",
     "deleted": "Check-in supprimé",
+    "exportTitle": "Exporter les fiches de police (PDF)",
+    "exportHelp": "Choisissez une plage de dates. Le PDF de toutes les fiches vous sera envoyé par email.",
+    "exportFrom": "Du",
+    "exportTo": "Au",
+    "exportButton": "Exporter",
+    "exportQueued": "Génération en cours — le PDF sera envoyé à {{email}}.",
     "searchPlaceholder": "Nom, référence, chambre…",
     "noGuest": "Sans voyageur",
     "noUnit": "Sans unité",

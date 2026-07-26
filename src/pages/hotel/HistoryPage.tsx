@@ -2,10 +2,11 @@ import { useRef, useState, type ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, ChevronRight, Trash2, LogOut } from 'lucide-react';
+import { Search, ChevronRight, Trash2, LogOut, Download } from 'lucide-react';
 import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 import { checkInsApi } from '@/api/checkIns';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
@@ -165,6 +166,18 @@ export const HistoryPage = () => {
     onError: (err) => toast(extractErrors(err), 'error'),
   });
 
+  // Export des fiches de police (PDF par email) — manager uniquement.
+  const todayStr   = new Date().toISOString().slice(0, 10);
+  const monthAgo   = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+  const [showExport, setShowExport] = useState(false);
+  const [exportFrom, setExportFrom] = useState(monthAgo);
+  const [exportTo, setExportTo]     = useState(todayStr);
+  const exportMut = useMutation({
+    mutationFn: () => checkInsApi.exportPoliceFiches(exportFrom, exportTo),
+    onSuccess: (d) => { toast(t('hotelHistory.exportQueued', { email: d.email }), 'success'); setShowExport(false); },
+    onError: (err) => toast(extractErrors(err), 'error'),
+  });
+
   return (
     <HotelLayout title={t('hotelHistory.title')}>
       <div className="flex flex-col gap-4 p-4">
@@ -194,6 +207,39 @@ export const HistoryPage = () => {
             </button>
           ))}
         </div>
+
+        {/* Export fiches de police (PDF par email) — manager uniquement */}
+        {isAdmin && (
+          <div className="rounded-xl border border-gray-200 bg-white">
+            <button
+              onClick={() => setShowExport((s) => !s)}
+              className="flex w-full items-center justify-between px-3.5 py-2.5 text-sm font-semibold text-gray-700"
+            >
+              <span className="flex items-center gap-2"><Download className="h-4 w-4 text-gray-400" /> {t('hotelHistory.exportTitle')}</span>
+              <span className="text-xs text-gray-400">{showExport ? '▲' : '▼'}</span>
+            </button>
+            {showExport && (
+              <div className="flex flex-col gap-3 border-t border-gray-100 px-3.5 py-3">
+                <p className="text-xs text-gray-500">{t('hotelHistory.exportHelp')}</p>
+                <div className="flex flex-wrap items-end gap-3">
+                  <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                    {t('hotelHistory.exportFrom')}
+                    <input type="date" value={exportFrom} max={exportTo} onChange={(e) => setExportFrom(e.target.value)}
+                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
+                    {t('hotelHistory.exportTo')}
+                    <input type="date" value={exportTo} min={exportFrom} max={todayStr} onChange={(e) => setExportTo(e.target.value)}
+                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                  </label>
+                  <Button size="sm" loading={exportMut.isPending} onClick={() => exportMut.mutate()}>
+                    <Download className="h-4 w-4" /> {t('hotelHistory.exportButton')}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* List */}
         <div className="flex flex-col gap-2">

@@ -47,6 +47,11 @@ export const checkInsApi = {
   list: (params?: Record<string, string | number>) =>
     api.get<ApiList<CheckIn>>('/hotel/check-ins', { params }).then((r) => r.data),
 
+  // Export PDF des fiches de police d'une plage de dates → envoyé par email (async).
+  exportPoliceFiches: (date_from: string, date_to: string) =>
+    api.post<{ data: { queued: boolean; email: string } }>('/hotel/exports/police-fiches', { date_from, date_to })
+      .then((r) => r.data.data),
+
   get: (id: string) =>
     api.get<ApiItem<CheckIn>>(`/hotel/check-ins/${id}`).then((r) => r.data.data),
 
