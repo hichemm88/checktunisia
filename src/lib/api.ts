@@ -9,7 +9,11 @@ export const api = axios.create({
 // Attach token + active property on every request
 api.interceptors.request.use((config) => {
   const { token, activePropertyId } = useAuthStore.getState();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  // NE PAS écraser un Authorization explicitement fourni par l'appel (ex. le
+  // token partiel de la vérification 2FA) : sinon, quand une session est déjà
+  // ouverte (ex. admin), la vérif 2FA d'un AUTRE compte partait avec le token
+  // stocké → « Full token already issued ».
+  if (token && !config.headers.Authorization) config.headers.Authorization = `Bearer ${token}`;
   if (activePropertyId) config.headers['X-Property-Id'] = activePropertyId;
   return config;
 });

@@ -33,6 +33,7 @@ export const adminAuthorityApi = {
       api.get<{ data: AdminAuthorityUser[]; meta: { total: number; current_page: number; per_page: number } }>('/admin/authority-users', { params }).then((r) => r.data),
     create: (data: object) => api.post('/admin/authority-users', data).then((r) => r.data.data),
     update: (id: string, data: object) => api.patch(`/admin/authority-users/${id}`, data).then((r) => r.data.data),
+    invite: (id: string) => api.post<{ data: { email: string; email_sent: boolean } }>(`/admin/authority-users/${id}/invite`).then((r) => r.data.data),
     remove: (id: string) => api.delete(`/admin/authority-users/${id}`),
   },
   organizations: {

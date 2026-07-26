@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Users, Landmark, Plus, X, Trash2, Pencil, Save, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Users, Landmark, Plus, X, Trash2, Pencil, Save, Send, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { adminAuthorityApi, type AdminAuthorityUser, type AdminAuthorityOrganization } from '@/api/admin/authority';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -201,23 +201,62 @@ const AuthorityUserRow = ({ u }: { u: AdminAuthorityUser }) => {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    first_name: u.first_name, last_name: u.last_name, email: u.email,
+    whatsapp_number: u.whatsapp_number ?? '', receives_whatsapp_fiches: u.receives_whatsapp_fiches,
+  });
+  const set = (k: string, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
+  const isFakeEmail = u.email.endsWith('@wa-recipient.qayed.local');
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['admin-authority-users'] });
 
   const statusMut = useAdminMutation({
     mutationFn: (status: string) => adminAuthorityApi.users.update(u.id, { status }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-authority-users'] }),
+    onSuccess: invalidate,
+  });
+  const saveMut = useAdminMutation({
+    mutationFn: () => adminAuthorityApi.users.update(u.id, form),
+    successMessage: t('common.saved'),
+    onSuccess: () => { invalidate(); setEditing(false); },
+  });
+  const inviteMut = useAdminMutation({
+    mutationFn: () => adminAuthorityApi.users.invite(u.id),
+    successMessage: t('adminAuthority.inviteSent'),
+    onSuccess: invalidate,
   });
   const deleteMut = useAdminMutation({
     mutationFn: () => adminAuthorityApi.users.remove(u.id),
     successMessage: t('adminUsers.userDeleted'),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-authority-users'] }),
+    onSuccess: invalidate,
   });
+
+  if (editing) {
+    return (
+      <div className="py-3 border-b border-gray-50 last:border-0 flex flex-col gap-2">
+        <div className="grid grid-cols-2 gap-2">
+          <Input label={t('profile.firstName')} value={form.first_name} onChange={(e) => set('first_name', e.target.value)} />
+          <Input label={t('profile.lastName')} value={form.last_name} onChange={(e) => set('last_name', e.target.value)} />
+        </div>
+        <Input label={t('profile.email')} type="email" value={form.email} onChange={(e) => set('email', e.target.value)} />
+        <Input label={t('adminAuthority.whatsappNumber')} value={form.whatsapp_number} onChange={(e) => set('whatsapp_number', e.target.value)} placeholder="216XXXXXXXX" />
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" className="h-4 w-4" checked={form.receives_whatsapp_fiches} onChange={(e) => set('receives_whatsapp_fiches', e.target.checked)} />
+          <span className="text-xs font-medium text-gray-600">{t('adminAuthority.receivesFiches')}</span>
+        </label>
+        <div className="flex gap-2 mt-1">
+          <Button size="sm" onClick={() => saveMut.mutate()} loading={saveMut.isPending} className="gap-1.5"><Save className="h-3.5 w-3.5" /> {t('common.save')}</Button>
+          <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>{t('common.cancel')}</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-3 border-b border-gray-50 last:border-0">
       <div className="flex items-center justify-between">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900 truncate">{u.first_name} {u.last_name}</p>
-          <p className="text-xs text-gray-500 truncate">{u.email}</p>
+          <p className="text-xs text-gray-500 truncate">{isFakeEmail ? <span className="text-amber-600">{t('adminAuthority.noRealEmail')}</span> : u.email}</p>
           <p className="text-xs text-gray-400 truncate">{u.organization ?? '—'}{u.badge_number ? ` · ${u.badge_number}` : ''}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0 ms-2">
@@ -231,6 +270,9 @@ const AuthorityUserRow = ({ u }: { u: AdminAuthorityUser }) => {
             </span>
           )}
           <span className={`text-xs font-semibold px-2 py-1 rounded-full ${u.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{u.status}</span>
+          {/* Inviter : envoie un lien 'définir mon mot de passe' (compte utilisable). */}
+          <button onClick={() => inviteMut.mutate()} disabled={isFakeEmail || inviteMut.isPending} title={isFakeEmail ? t('adminAuthority.setEmailFirst') : t('adminAuthority.sendInvite')} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet] disabled:opacity-40 disabled:hover:bg-transparent"><Send className="h-3.5 w-3.5" /></button>
+          <button onClick={() => setEditing(true)} title={t('common.edit')} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet]"><Pencil className="h-3.5 w-3.5" /></button>
           {u.status === 'active' ? (
             <button onClick={() => statusMut.mutate('suspended')} className="text-xs text-gray-400 hover:text-red-500">{t('adminHotels.suspend')}</button>
           ) : (

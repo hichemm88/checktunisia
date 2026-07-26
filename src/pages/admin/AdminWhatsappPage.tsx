@@ -169,6 +169,16 @@ const LogRow = ({ log }: { log: WhatsappLog }) => {
               : <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-amber-600" title={t('adminWhatsapp.noPhoto')}><ImageOff className="h-3 w-3" />{t('adminWhatsapp.noPhoto')}</span>
           )}
         </p>
+        {!log.is_test && (log.recipient_name || log.recipient_number) && (
+          <p className="text-xs text-gray-500 flex items-center gap-1 truncate">
+            <Send className="h-3 w-3 shrink-0 text-gray-400" />
+            <span className="truncate">
+              {t('adminWhatsapp.sentTo')} <span className="font-medium">{log.recipient_name ?? log.recipient_number}</span>
+              {log.recipient_org && <span className="text-gray-400"> · {log.recipient_org}</span>}
+              {log.recipient_name && log.recipient_number && <span className="text-gray-400"> · {log.recipient_number}</span>}
+            </span>
+          </p>
+        )}
         <p className="text-xs text-gray-400">
           {new Date(log.queued_at).toLocaleString(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
           {log.attempts > 0 && <span> · {t('adminWhatsapp.attempts', { n: log.attempts })}</span>}

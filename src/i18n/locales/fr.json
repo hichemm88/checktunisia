@@ -101,6 +101,10 @@
     "organization": "Organisme",
     "whatsappNumber": "Numéro WhatsApp (format international)",
     "receivesFiches": "Reçoit les fiches de police par WhatsApp",
+    "sendInvite": "Envoyer l'invitation (créer l'accès)",
+    "inviteSent": "Invitation envoyée",
+    "noRealEmail": "Email non renseigné",
+    "setEmailFirst": "Renseignez d'abord un email réel",
     "twoFaEnabled": "Double authentification activée",
     "twoFaDisabled": "Double authentification non configurée"
   },
@@ -354,6 +358,7 @@
       "resentAll": "Tous les envois échoués ont été remis en file."
     },
     "photoAttached": "Photo jointe",
+    "sentTo": "Destinataire :",
     "noPhoto": "Sans photo"
   },
   "adminKpis": {
@@ -759,7 +764,8 @@
     "female": "Féminin",
     "other": "Autre",
     "sex": "Sexe",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "saved": "Enregistré"
   },
   "authorityWatchlist": {
     "title": "Personnes surveillées",

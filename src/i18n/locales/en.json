@@ -101,6 +101,10 @@
     "organization": "Organization",
     "whatsappNumber": "WhatsApp number (international format)",
     "receivesFiches": "Receives police fiches via WhatsApp",
+    "sendInvite": "Send invitation (create access)",
+    "inviteSent": "Invitation sent",
+    "noRealEmail": "No email set",
+    "setEmailFirst": "Set a real email first",
     "twoFaEnabled": "Two-factor authentication enabled",
     "twoFaDisabled": "Two-factor authentication not set up"
   },
@@ -354,6 +358,7 @@
       "resentAll": "All failed messages re-queued."
     },
     "photoAttached": "Photo attached",
+    "sentTo": "Recipient:",
     "noPhoto": "No photo"
   },
   "adminKpis": {
@@ -759,7 +764,8 @@
     "female": "Female",
     "other": "Other",
     "sex": "Sex",
-    "retry": "Retry"
+    "retry": "Retry",
+    "saved": "Saved"
   },
   "authorityWatchlist": {
     "title": "Watched persons",
