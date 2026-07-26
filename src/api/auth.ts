@@ -58,7 +58,7 @@ export const authApi = {
       .then((r) => r.data.data),
 
   // Profile — update name/phone
-  updateProfile: (data: { first_name?: string; last_name?: string; phone?: string }) =>
+  updateProfile: (data: { first_name?: string; last_name?: string; phone?: string | null }) =>
     api
       .patch<{ data: { id: string; email: string; first_name: string; last_name: string; phone: string | null } }>(
         '/profile',

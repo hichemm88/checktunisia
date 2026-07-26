@@ -12,6 +12,13 @@ type Tab = 'info' | 'security';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-TN');
 
+// Téléphone tunisien : +216 suivi de 8 chiffres. On tolère espaces/points/tirets à la saisie.
+const normalizePhone = (v: string) => v.replace(/[\s.\-()]/g, '');
+const isValidTnPhone = (v: string) => {
+  const n = normalizePhone(v);
+  return n === '' || /^\+216\d{8}$/.test(n);
+};
+
 const PasswordRule = ({ ok, label }: { ok: boolean; label: string }) => (
   <span className={`flex items-center gap-1.5 text-xs ${ok ? 'text-green-600' : 'text-gray-400'}`}>
     <span className={`h-1.5 w-1.5 rounded-full ${ok ? 'bg-green-500' : 'bg-gray-300'}`} />
@@ -28,7 +35,7 @@ export const ProfilePage = () => {
   // ── Info tab state ───────────────────────────────────────────────────────────
   const [firstName, setFirstName] = useState(user?.first_name ?? '');
   const [lastName,  setLastName]  = useState(user?.last_name  ?? '');
-  const [phone,     setPhone]     = useState((user as any)?.phone ?? '');
+  const [phone,     setPhone]     = useState(user?.phone ?? '');
   const [infoLoading, setInfoLoading] = useState(false);
   const [infoError,   setInfoError]   = useState('');
   const [infoSuccess, setInfoSuccess] = useState(false);
@@ -60,15 +67,26 @@ export const ProfilePage = () => {
     e.preventDefault();
     setInfoError('');
     setInfoSuccess(false);
+
+    // Validation format tunisien AVANT tout appel — on n'affiche jamais un succès
+    // si la saisie est invalide (le champ ne serait de toute façon pas persisté).
+    if (!isValidTnPhone(phone)) {
+      setInfoError(t('profile.invalidPhone'));
+      return;
+    }
+
     setInfoLoading(true);
     try {
       const updated = await authApi.updateProfile({
         first_name: firstName,
         last_name:  lastName,
-        phone:      phone || undefined,
+        // Envoi normalisé ; chaîne vide → null pour permettre l'effacement.
+        phone:      normalizePhone(phone) || null,
       });
-      // Sync store with updated name
-      if (user) setUser({ ...user, first_name: updated.first_name, last_name: updated.last_name });
+      // Sync store with the fresh values returned by the API (dont le téléphone —
+      // c'était le maillon manquant : sans ça, le rechargement relisait l'ancien
+      // état persisté et le numéro « disparaissait »).
+      if (user) setUser({ ...user, first_name: updated.first_name, last_name: updated.last_name, phone: updated.phone });
       setInfoSuccess(true);
     } catch (err) {
       setInfoError(extractErrors(err));
@@ -265,16 +283,19 @@ export const ProfilePage = () => {
             <Input
               label={t('profile.phone')}
               type="tel"
+              inputMode="tel"
               value={phone}
-              onChange={(e) => { setPhone(e.target.value); setInfoSuccess(false); }}
+              onChange={(e) => { setPhone(e.target.value); setInfoSuccess(false); setInfoError(''); }}
               placeholder="+216 XX XXX XXX"
+              hint={t('profile.phoneHint')}
+              error={phone.trim() && !isValidTnPhone(phone) ? t('profile.invalidPhone') : undefined}
             />
 
             <Button
               type="submit"
               fullWidth
               loading={infoLoading}
-              disabled={!firstName.trim() || !lastName.trim()}
+              disabled={!firstName.trim() || !lastName.trim() || (!!phone.trim() && !isValidTnPhone(phone))}
             >
               {t('profile.saveInfo')}
             </Button>
