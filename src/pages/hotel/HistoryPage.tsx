@@ -133,6 +133,19 @@ const isCheckoutDue = (status: string, expectedCheckOut: string) => {
   return checkout <= today;
 };
 
+// Raccourcis de plage pour l'export (dates locales, sans décalage UTC).
+const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const RANGE_PRESETS: { key: string; labelKey: string; range: () => [string, string] }[] = [
+  { key: '7d', labelKey: 'hotelHistory.range7d', range: () => [ymd(new Date(Date.now() - 6 * 86_400_000)), ymd(new Date())] },
+  { key: 'thisMonth', labelKey: 'hotelHistory.rangeThisMonth', range: () => {
+    const n = new Date(); return [ymd(new Date(n.getFullYear(), n.getMonth(), 1)), ymd(n)];
+  } },
+  { key: 'lastMonth', labelKey: 'hotelHistory.rangeLastMonth', range: () => {
+    const n = new Date();
+    return [ymd(new Date(n.getFullYear(), n.getMonth() - 1, 1)), ymd(new Date(n.getFullYear(), n.getMonth(), 0))];
+  } },
+];
+
 export const HistoryPage = () => {
   const { t, i18n } = useTranslation();
   const locale = dateLocaleFor(i18n.language);
@@ -210,29 +223,50 @@ export const HistoryPage = () => {
 
         {/* Export fiches de police (PDF par email) — manager uniquement */}
         {isAdmin && (
-          <div className="rounded-xl border border-gray-200 bg-white">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
             <button
               onClick={() => setShowExport((s) => !s)}
-              className="flex w-full items-center justify-between px-3.5 py-2.5 text-sm font-semibold text-gray-700"
+              className="flex w-full items-center gap-3 px-4 py-3 text-start"
             >
-              <span className="flex items-center gap-2"><Download className="h-4 w-4 text-gray-400" /> {t('hotelHistory.exportTitle')}</span>
-              <span className="text-xs text-gray-400">{showExport ? '▲' : '▼'}</span>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: '#EEEBFA', color: '#5346A8' }}>
+                <Download className="h-4.5 w-4.5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-gray-900">{t('hotelHistory.exportTitle')}</span>
+                <span className="block truncate text-xs text-gray-400">{t('hotelHistory.exportHelp')}</span>
+              </span>
+              <ChevronRight className={`h-4 w-4 shrink-0 text-gray-300 transition-transform ${showExport ? 'rotate-90' : ''}`} />
             </button>
+
             {showExport && (
-              <div className="flex flex-col gap-3 border-t border-gray-100 px-3.5 py-3">
-                <p className="text-xs text-gray-500">{t('hotelHistory.exportHelp')}</p>
-                <div className="flex flex-wrap items-end gap-3">
+              <div className="flex flex-col gap-3 border-t border-gray-100 px-4 py-3.5">
+                {/* Raccourcis de plage */}
+                <div className="flex flex-wrap gap-2">
+                  {RANGE_PRESETS.map((p) => {
+                    const [f, tt] = p.range();
+                    const active = exportFrom === f && exportTo === tt;
+                    return (
+                      <button key={p.key} onClick={() => { setExportFrom(f); setExportTo(tt); }}
+                        className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                        style={active ? { background: '#5346A8', color: '#fff' } : { background: '#F3F4F6', color: '#6B7280' }}>
+                        {t(p.labelKey)}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Dates + bouton */}
+                <div className="grid grid-cols-2 gap-3 sm:flex sm:items-end">
                   <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
                     {t('hotelHistory.exportFrom')}
                     <input type="date" value={exportFrom} max={exportTo} onChange={(e) => setExportFrom(e.target.value)}
-                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-medium text-gray-600">
                     {t('hotelHistory.exportTo')}
                     <input type="date" value={exportTo} min={exportFrom} max={todayStr} onChange={(e) => setExportTo(e.target.value)}
-                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                   </label>
-                  <Button size="sm" loading={exportMut.isPending} onClick={() => exportMut.mutate()}>
+                  <Button fullWidth size="sm" loading={exportMut.isPending} onClick={() => exportMut.mutate()} className="col-span-2 sm:w-auto">
                     <Download className="h-4 w-4" /> {t('hotelHistory.exportButton')}
                   </Button>
                 </div>

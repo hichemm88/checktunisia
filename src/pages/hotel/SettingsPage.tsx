@@ -883,16 +883,16 @@ export const SettingsPage = () => {
     <HotelLayout title={t('settingsPage.title')}>
       <div className="flex flex-col">
 
-        {/* ── Tab bar ── */}
+        {/* ── Tab bar (scroll horizontal sur mobile plutôt que déborder) ── */}
         <div
-          className="sticky top-0 z-10 flex border-b px-4"
+          className="sticky top-0 z-10 flex border-b px-4 overflow-x-auto scrollbar-none"
           style={{ background: '#fff', borderColor: '#E5E7EB' }}
         >
           {(isAdmin ? TAB_DEFS : TAB_DEFS.filter(td => td.id !== 'societe' && td.id !== 'equipe' && td.id !== 'destinataires' && td.id !== 'activite')).map(td => (
             <button
               key={td.id}
               onClick={() => setTab(td.id)}
-              className="flex items-center gap-1.5 px-3 py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap"
+              className="flex shrink-0 items-center gap-1.5 px-3 py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap"
               style={tab === td.id
                 ? { borderColor: '#5346A8', color: '#5346A8' }
                 : { borderColor: 'transparent', color: '#9CA3AF' }
