@@ -13,6 +13,7 @@ import { scansApi } from '@/api/scans';
 import { useToast } from '@/components/ui/Toast';
 import { api, extractErrors } from '@/lib/api';
 import { scanMrz } from '@/lib/mrzScanner';
+import { downscaleForUpload } from '@/lib/uploadImagePrep';
 import { CINCapture } from '@/components/hotel/CINCapture';
 import { prepareCinImage } from '@/lib/cinImagePrep';
 import { scanCin } from '@/api/scanCin';
@@ -136,7 +137,10 @@ export const GuestScanPanel = ({
   const uploadDocImage = (file: File) => {
     if (waEnabled === false) return; // relais éteint : pas de raison de stocker une pièce d'identité
     setDocCaptured(true); // un document a été photographié (même si l'OCR échoue ensuite)
-    pendingScanUpload.current = scansApi.upload(checkIn.id, file)
+    // Réduction AVANT upload (1600 px JPEG) : une photo brute de téléphone
+    // dépassait la limite d'upload du backend → rejet → fiche sans photo.
+    pendingScanUpload.current = downscaleForUpload(file)
+      .then((prepared) => scansApi.upload(checkIn.id, prepared))
       .then((scan) => { setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })); return scan.scan_id; })
       .catch(() => { toast(t('guestScan.photoUploadFailed'), 'error'); return undefined; });
   };
@@ -295,7 +299,8 @@ export const GuestScanPanel = ({
       if (waEnabled !== false) {
         setDocCaptured(true); // la CIN a été photographiée
         const cinFile = new File([prepared], 'cin.jpg', { type: prepared.type || 'image/jpeg' });
-        pendingScanUpload.current = scansApi.upload(checkIn.id, cinFile, 'front')
+        pendingScanUpload.current = downscaleForUpload(cinFile)
+          .then((small) => scansApi.upload(checkIn.id, small, 'front'))
           .then((scan) => { setGuestForm((f) => ({ ...f, scan_id: scan.scan_id })); return scan.scan_id; })
           .catch(() => { toast(t('guestScan.photoUploadFailed'), 'error'); return undefined; });
       }
