@@ -51,10 +51,21 @@ const AlertRow = ({ alert }: { alert: AuthoritySecurityAlert }) => {
     },
   });
 
-  const fmtDate = (d: string | null) =>
-    d ? new Date(d + 'T00:00:00').toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-  const fmtDateTime = (d: string) =>
-    new Date(d).toLocaleString(locale, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  // Tolère une date nue (YYYY-MM-DD) comme un ISO datetime ; « — » si invalide.
+  const fmtDate = (d: string | null) => {
+    if (!d) return '—';
+    const parsed = new Date(/^\d{4}-\d{2}-\d{2}$/.test(d) ? d + 'T00:00:00' : d);
+    return isNaN(parsed.getTime())
+      ? '—'
+      : parsed.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+  const fmtDateTime = (d: string | null) => {
+    if (!d) return '—';
+    const parsed = new Date(d);
+    return isNaN(parsed.getTime())
+      ? '—'
+      : parsed.toLocaleString(locale, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  };
 
   const fullName = [alert.guest.last_name, alert.guest.first_name].filter(Boolean).join(', ') || '—';
 
