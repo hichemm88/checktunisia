@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Users, ArrowDownToLine, ArrowUpFromLine, Building2,
-  AlertTriangle, Globe2, TrendingUp, Clock, MapPin,
+  AlertTriangle, Globe2, TrendingUp, Clock, MapPin, ShieldAlert, Shield, BedDouble,
 } from 'lucide-react';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Card } from '@/components/ui/Card';
@@ -83,6 +83,34 @@ const NationalityList = ({ items }: { items: Array<{ nationality_code: string; c
   );
 };
 
+// ─── Security-alerts banner (watchlist matches at check-in) ───────────────────
+const SecurityAlertBanner = ({ count }: { count: number }) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  if (!count || count <= 0) return null;
+
+  return (
+    <button
+      onClick={() => navigate('/authority/watchlist')}
+      className="flex items-center gap-4 rounded-2xl p-5 text-start transition-shadow hover:shadow-md w-full"
+      style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}
+    >
+      <div
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+        style={{ background: '#FEE2E2' }}
+      >
+        <ShieldAlert className="h-6 w-6" style={{ color: '#DC2626' }} />
+      </div>
+      <div className="min-w-0">
+        <p className="font-semibold" style={{ color: '#991B1B' }}>
+          {t('authoritySecurityAlerts.bannerCount', { count })}
+        </p>
+        <p className="text-sm" style={{ color: '#B91C1C' }}>{t('authoritySecurityAlerts.bannerHint')}</p>
+      </div>
+    </button>
+  );
+};
+
 // ─── Ministry view ───────────────────────────────────────────────────────────
 const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
   const { t } = useTranslation();
@@ -90,12 +118,23 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Alerte de sécurité — bannière prioritaire */}
+      <SecurityAlertBanner count={data.security_alerts_active} />
+
       {/* KPI grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <KpiTile icon={Users}          label={t('authorityDashboard.activeGuests')} value={data.active_guests}    color="#5346A8" />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <KpiTile icon={Users}          label={t('authorityDashboard.activeGuests')}  value={data.guests_present}   color="#5346A8" />
+        <KpiTile icon={BedDouble}      label={t('authorityDashboard.activeStays')}   value={data.active_guests}    color="#8B7FE0" />
         <KpiTile icon={ArrowDownToLine} label={t('authorityDashboard.checkinsToday')} value={data.check_ins_today}  color="#137453" />
         <KpiTile icon={ArrowUpFromLine} label={t('authorityDashboard.checkoutsToday')} value={data.check_outs_today} color="#8B7FE0" />
-        <KpiTile icon={Building2}      label={t('authorityDashboard.activeHotels')} value={data.active_hotels}   color="#5346A8" />
+        <KpiTile icon={Building2}      label={t('authorityDashboard.activeHotels')}  value={data.active_hotels}    color="#5346A8" />
+        <KpiTile icon={Shield}         label={t('authorityDashboard.watchlistActive')} value={data.watchlist_active_entries} color="#5346A8" />
+        <KpiTile
+          icon={ShieldAlert}
+          label={t('authorityDashboard.securityAlerts')}
+          value={data.security_alerts_active}
+          color={data.security_alerts_active > 0 ? '#DC2626' : '#6B7280'}
+        />
         {FEATURES.expiredDocAlerts && (
           <KpiTile
             icon={AlertTriangle}
@@ -111,9 +150,14 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Weekly trend */}
         <Card>
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="h-4 w-4" style={{ color: '#5346A8' }} />
-            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>{t('authorityDashboard.weeklyTrend')}</p>
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" style={{ color: '#5346A8' }} />
+              <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>{t('authorityDashboard.weeklyTrend')}</p>
+            </div>
+            <span className="text-xs text-gray-400">
+              {t('authorityDashboard.arrivals7dTotal', { count: data.weekly_trend.reduce((s, x) => s + x.count, 0) })}
+            </span>
           </div>
           <WeeklyTrend trend={data.weekly_trend} />
         </Card>
@@ -143,7 +187,7 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
               <tr className="border-b border-gray-100">
                 <th className="py-2 text-start text-xs font-medium text-gray-400">{t('authorityDashboard.governorate')}</th>
                 <th className="py-2 text-end text-xs font-medium text-gray-400">{t('authorityLayout.nav.hotels')}</th>
-                <th className="py-2 text-end text-xs font-medium text-gray-400">{t('authorityDashboard.activeGuests')}</th>
+                <th className="py-2 text-end text-xs font-medium text-gray-400">{t('authorityDashboard.activeStays')}</th>
               </tr>
             </thead>
             <tbody>
@@ -201,12 +245,23 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
         </div>
       )}
 
+      {/* Alerte de sécurité — bannière prioritaire */}
+      <SecurityAlertBanner count={data.security_alerts_active} />
+
       {/* KPI grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <KpiTile icon={Users}          label={t('authorityDashboard.activeGuests')} value={data.active_guests}    color="#5346A8" />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <KpiTile icon={Users}          label={t('authorityDashboard.activeGuests')}  value={data.guests_present}   color="#5346A8" />
+        <KpiTile icon={BedDouble}      label={t('authorityDashboard.activeStays')}   value={data.active_guests}    color="#8B7FE0" />
         <KpiTile icon={ArrowDownToLine} label={t('authorityDashboard.checkinsToday')} value={data.check_ins_today}  color="#137453" />
         <KpiTile icon={ArrowUpFromLine} label={t('authorityDashboard.checkoutsToday')} value={data.check_outs_today} color="#8B7FE0" />
-        <KpiTile icon={Building2}      label={t('authorityDashboard.hotelsInZone')} value={data.hotels_in_zone}   color="#5346A8" />
+        <KpiTile icon={Building2}      label={t('authorityDashboard.hotelsInZone')}  value={data.hotels_in_zone}   color="#5346A8" />
+        <KpiTile icon={Shield}         label={t('authorityDashboard.watchlistActive')} value={data.watchlist_active_entries} color="#5346A8" />
+        <KpiTile
+          icon={ShieldAlert}
+          label={t('authorityDashboard.securityAlerts')}
+          value={data.security_alerts_active}
+          color={data.security_alerts_active > 0 ? '#DC2626' : '#6B7280'}
+        />
       </div>
 
       {/* Alert card for expiring docs */}

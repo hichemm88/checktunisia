@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Activity, Search, Eye, User, Calendar, Globe2 } from 'lucide-react';
+import { Activity, Search, Eye, User, Calendar, Globe2, ShieldAlert } from 'lucide-react';
 import { AuthorityLayout } from '@/components/layout/AuthorityLayout';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -9,12 +9,14 @@ import { authorityApi } from '@/api/authority';
 import { type AuthorityActivity } from '@/types';
 
 const actionIcon = (action: string) => {
+  if (action.includes('security_alert')) return <ShieldAlert className="h-4 w-4" />;
   if (action.includes('search'))       return <Search className="h-4 w-4" />;
   if (action.includes('hotel_viewed')) return <Globe2 className="h-4 w-4" />;
   return <Eye className="h-4 w-4" />;
 };
 
 const actionColor = (action: string): string => {
+  if (action.includes('security_alert')) return '#DC2626';
   if (action.includes('search'))       return '#5346A8';
   if (action.includes('hotel_viewed')) return '#5346A8';
   return '#8B7FE0';
@@ -27,6 +29,8 @@ const LogRow = ({ log }: { log: AuthorityActivity }) => {
       'authority.search':      t('authorityActivity.actionSearch'),
       'authority.guest_viewed':t('authorityActivity.actionGuestViewed'),
       'authority.hotel_viewed':t('authorityActivity.actionHotelViewed'),
+      'authority.security_alert_viewed':       t('authorityActivity.actionSecurityAlertViewed'),
+      'authority.security_alert_acknowledged': t('authorityActivity.actionSecurityAlertAcknowledged'),
     };
     return map[action] ?? action;
   };

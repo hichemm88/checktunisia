@@ -19,7 +19,7 @@ type Step = 'loading' | 'show_qr' | 'confirm' | 'done';
  *   1. Fetch secret + QR URI from GET /auth/2fa/setup
  *   2. User scans QR in their authenticator app
  *   3. User enters the first 6-digit code to confirm setup
- *   4. Redirect to /authority/search
+ *   4. Redirect to /authority/dashboard
  */
 export const TwoFactorSetupPage = () => {
   const { t } = useTranslation();
@@ -37,7 +37,7 @@ export const TwoFactorSetupPage = () => {
     authApi.get2FASetup()
       .then(({ secret, qr_uri, already_enabled }) => {
         if (already_enabled) {
-          navigate('/authority/search', { replace: true });
+          navigate('/authority/dashboard', { replace: true });
           return;
         }
         setSecret(secret);
@@ -92,7 +92,7 @@ export const TwoFactorSetupPage = () => {
               {t('authority2fa.enabledHint')}
             </p>
           </div>
-          <Button fullWidth size="lg" onClick={() => navigate('/authority/search', { replace: true })}>
+          <Button fullWidth size="lg" onClick={() => navigate('/authority/dashboard', { replace: true })}>
             {t('authority2fa.goToPlatform')}
           </Button>
         </div>

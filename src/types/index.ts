@@ -303,10 +303,13 @@ export interface ApiItem<T> { data: T }
 export interface AuthorityDashboardMinistry {
   type: 'ministry';
   active_guests: number;
+  guests_present: number;
   check_ins_today: number;
   check_outs_today: number;
   active_hotels: number;
   expiring_docs_30d: number;
+  watchlist_active_entries: number;
+  security_alerts_active: number;
   by_governorate: Array<{ governorate: string; active_guests: number; hotels: number }>;
   top_nationalities: Array<{ nationality_code: string; count: number }>;
   weekly_trend: Array<{ date: string; label: string; count: number }>;
@@ -316,10 +319,13 @@ export interface AuthorityDashboardPolice {
   type: 'police';
   governorate: string | null;
   active_guests: number;
+  guests_present: number;
   check_ins_today: number;
   check_outs_today: number;
   hotels_in_zone: number;
   expiring_docs_30d: number;
+  watchlist_active_entries: number;
+  security_alerts_active: number;
   nationalities: Array<{ nationality_code: string; count: number }>;
   recent_arrivals: Array<{
     check_in_id: string;
@@ -346,6 +352,42 @@ export interface AuthorityAlert {
   hotel: { name: string; city?: string; governorate?: string } | null;
   room_number: string | null;
   check_in_id: string | null;
+}
+
+// ─── Authority security alerts (watchlist match at check-in) ───────────────────
+export type SecurityAlertStatus = 'new' | 'seen' | 'acknowledged';
+
+export interface AuthoritySecurityAlert {
+  id: string;
+  status: SecurityAlertStatus;
+  hit_type: string;
+  occurred_at: string;
+  seen_at: string | null;
+  acknowledged_at: string | null;
+  guest: {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    nationality_code: string | null;
+    date_of_birth: string | null;
+    document_type: string | null;
+    document_number: string | null;
+  };
+  hotel: {
+    id: string;
+    name: string | null;
+    governorate: string | null;
+    city: string | null;
+  };
+  room_number: string | null;
+  check_in_id: string;
+  check_in_reference: string | null;
+  check_in_date: string | null;
+  check_out_date: string | null;
+  severity: WatchlistSeverity | null;
+  reason_code: WatchlistReasonCode | null;
+  source: string | null;
+  organization_name: string | null;
 }
 
 export interface AuthorityActivity {

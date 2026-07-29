@@ -120,7 +120,7 @@ export const ProfilePage = () => {
 
   // ── Back navigation per role ──────────────────────────────────────────────────
   const backHref = user?.role === 'authority_user'
-    ? '/authority/search'
+    ? '/authority/dashboard'
     : user?.role === 'platform_admin'
       ? '/admin/hotels'
       : '/hotel/dashboard';

@@ -2,9 +2,22 @@ import { api } from '@/lib/api';
 import {
   type AuthorityGuest, type AuthorityGuestProfile, type AuthorityHotel, type AuthorityCheckIn,
   type AuthorityDashboard, type AuthorityAlert, type AuthorityActivity, type AuthorityRecentCheckIn,
+  type AuthoritySecurityAlert,
   type WatchlistEntry, type WatchlistImportResult,
   type ApiList,
 } from '@/types';
+
+export interface SecurityAlertParams {
+  status?: 'new' | 'seen' | 'acknowledged' | 'active' | 'all';
+  severity?: string;
+  page?: number;
+  per_page?: number;
+}
+
+export interface SecurityAlertList {
+  data: AuthoritySecurityAlert[];
+  meta: { total: number; current_page: number; per_page: number; last_page: number; active_count: number };
+}
 
 export interface SearchParams {
   first_name?: string; last_name?: string; document_number?: string;
@@ -82,4 +95,14 @@ export const authorityApi = {
 
   downloadTemplate: () =>
     api.get('/authority/watchlist/template', { responseType: 'blob' }),
+
+  // ── Security alerts (watchlist matches at check-in) ───────────────────────
+  getSecurityAlerts: (params?: SecurityAlertParams) =>
+    api.get<SecurityAlertList>('/authority/security-alerts', { params }).then((r) => r.data),
+
+  markSecurityAlertSeen: (id: string) =>
+    api.post<{ data: AuthoritySecurityAlert }>(`/authority/security-alerts/${id}/seen`).then((r) => r.data.data),
+
+  acknowledgeSecurityAlert: (id: string) =>
+    api.post<{ data: AuthoritySecurityAlert }>(`/authority/security-alerts/${id}/acknowledge`).then((r) => r.data.data),
 };

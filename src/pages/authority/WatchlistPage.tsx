@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { authorityApi } from '@/api/authority';
+import { SecurityAlertsSection } from '@/components/authority/SecurityAlertsSection';
 import { type WatchlistEntry, type WatchlistSeverity, type WatchlistReasonCode } from '@/types';
 import { extractErrors } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
@@ -257,6 +258,9 @@ export const WatchlistPage = () => {
       {showImport && <ImportModal onClose={() => setShowImport(false)} />}
 
       <div className="flex flex-col gap-6">
+        {/* Alertes de sécurité actives (correspondances liste de surveillance) */}
+        <SecurityAlertsSection />
+
         {/* Header actions */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-gray-500">
