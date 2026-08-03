@@ -19,6 +19,8 @@ const ACCENT: Record<string, string> = {
   fiche_pending: '#E3A008',
   manager_message: '#10222E', // encre
   departure_due: '#E3A008',
+  quota_warning: '#E3A008',   // vigilance — quota 80 %
+  quota_reached: '#E3A008',   // vigilance — quota atteint
 };
 
 const timeAgo = (iso: string, locale: string) => {

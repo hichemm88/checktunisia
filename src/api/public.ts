@@ -39,11 +39,20 @@ export interface SubscriptionPlan {
   price_yearly: string | null;
   /** price_yearly if set, else 11 × monthly (one month free) — computed by the backend. */
   effective_price_yearly: string;
-  features: { max_users: number; ocr_scans_per_month: number };
+  features: {
+    max_users: number;
+    ocr_scans_per_month: number;
+    /** Quota mensuel de check-ins (-1/null = illimité). Jamais bloquant. */
+    checkins_per_month?: number | null;
+  };
   /** Établissements inclus dans le prix de base (grille par établissement). */
   included_properties: number;
   /** Prix/mois par établissement supplémentaire (null = pas d'extension). */
   extra_property_price: string | null;
+  /** Dépassement : prix par tranche entamée au-delà du quota (null = pas de facturation). */
+  overage_price: string | null;
+  /** Taille de tranche du dépassement (ex. 50 check-ins). */
+  overage_bundle_size: number | null;
   marketing: PlanMarketing | null;
 }
 

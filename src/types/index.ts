@@ -160,6 +160,13 @@ export interface DashboardData {
     days_until_expiry: number; check_in_id: string; reference: string;
   }>;
   subscription: { status: string; expires_at?: string; days_remaining?: number; plan?: string };
+  /** Quota mensuel de check-ins (grille V2) — null pour les comptes illimités (pas de bandeau). Jamais bloquant. */
+  quota?: {
+    quota: number | null; used: number; remaining: number | null; percent: number | null;
+    overage_count: number; bundle_size: number | null; bundle_count: number;
+    unit_price: number | null; overage_amount: number | null;
+    billable: boolean; legacy: boolean; unlimited: boolean;
+  } | null;
   recent_check_ins: Array<{ id: string; reference: string; room?: string; status: string; primary_guest?: string; check_in_date: string }>;
   pending_watchlist_hits?: number;
   /** Aperçu analytique du mois (Manager) — non actionnable. */

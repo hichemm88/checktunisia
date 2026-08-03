@@ -13,6 +13,8 @@ export interface FeatureValues {
   max_properties: string;
   max_users: string;
   ocr_scans_per_month: string;
+  /** Quota mensuel de check-ins — jamais bloquant (alertes + facturation du dépassement). */
+  checkins_per_month: string;
   whatsapp_relay: boolean | null; // null (overrides) = hériter du pack
 }
 
@@ -20,6 +22,7 @@ export const featureValuesFrom = (features: Record<string, unknown> | null | und
   max_properties: features?.max_properties != null ? String(features.max_properties) : '',
   max_users: features?.max_users != null ? String(features.max_users) : '',
   ocr_scans_per_month: features?.ocr_scans_per_month != null ? String(features.ocr_scans_per_month) : '',
+  checkins_per_month: features?.checkins_per_month != null ? String(features.checkins_per_month) : '',
   whatsapp_relay: features && 'whatsapp_relay' in features
     ? Boolean(features.whatsapp_relay)
     : (asOverrides ? null : true),
@@ -38,6 +41,7 @@ export const featureValuesToPayload = (v: FeatureValues, asOverrides = false): R
   num(v.max_properties, 'max_properties');
   num(v.max_users, 'max_users');
   num(v.ocr_scans_per_month, 'ocr_scans_per_month');
+  num(v.checkins_per_month, 'checkins_per_month');
   if (v.whatsapp_relay !== null) out.whatsapp_relay = v.whatsapp_relay;
   return out;
 };
@@ -67,6 +71,9 @@ export const PlanFeaturesEditor = ({ value, onChange, asOverrides = false, usage
         <Input label={t('planFeatures.ocrScans')} type="number" min={asOverrides ? '-1' : '0'} value={value.ocr_scans_per_month}
           placeholder="∞" hint={usedHint('ocr_scans_per_month')}
           onChange={(e) => set('ocr_scans_per_month', e.target.value)} />
+        <Input label={t('planFeatures.checkinsPerMonth')} type="number" min={asOverrides ? '-1' : '0'} value={value.checkins_per_month}
+          placeholder="∞" hint={usedHint('checkins_per_month')}
+          onChange={(e) => set('checkins_per_month', e.target.value)} />
       </div>
       <div className="flex items-center gap-4">
         <label className="flex items-center gap-2 text-sm text-gray-700">

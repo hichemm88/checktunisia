@@ -23,7 +23,17 @@
     "noProperty": "Aucun bien",
     "usersWithCount": "Utilisateurs ({{count}})",
     "couponCode": "Code promo",
-    "couponPlaceholder": "Optionnel"
+    "couponPlaceholder": "Optionnel",
+    "quotaTitle": "Quota check-ins",
+    "quotaUnlimited": "Check-ins illimités — {{used}} ce mois-ci.",
+    "quotaOverage": "+{{count}} au-delà du quota · {{bundles}} tranche(s)",
+    "showHistory": "Afficher l'historique 12 mois",
+    "hideHistory": "Masquer l'historique",
+    "historyOverage": "+{{count}}",
+    "noHistory": "Aucune donnée.",
+    "migrateToV2": "Migrer vers la grille V2",
+    "migrateToV2Hint": "Action explicite : le compte quitte ses conditions legacy (quota figé, prix négocié) et passe sur le plan choisi de la nouvelle grille.",
+    "migratedToV2": "Compte migré vers la nouvelle grille."
   },
   "adminSubscriptions": {
     "plans": "Packs",
@@ -78,7 +88,13 @@
     "planPriceHint": "Prix du plan : {{price}}",
     "oneMonthFree": "1 mois offert",
     "yearlyAutoHint": "(auto : 11 × prix mensuel — 1 mois offert)",
-    "mktPriceNoteYearly": "Mention sous le prix (annuel)"
+    "mktPriceNoteYearly": "Mention sous le prix (annuel)",
+    "legacyBadge": "Legacy — non souscriptible",
+    "overagePrice": "Dépassement : prix / tranche (TND)",
+    "overageBundleSize": "Taille de tranche (check-ins)",
+    "noOverage": "Pas de facturation",
+    "isPublic": "Visible et souscriptible sur la grille publique",
+    "overageSummary": "Dépassement : +{{price}} TND par tranche de {{bundle}} check-ins entamée"
   },
   "adminAuthority": {
     "title": "Autorités",
@@ -493,7 +509,17 @@
     },
     "billingCycle": "Cycle de facturation",
     "cycleMonthly": "Mensuel",
-    "cycleYearly": "Annuel"
+    "cycleYearly": "Annuel",
+    "quotaTitle": "Check-ins ce mois-ci",
+    "quotaHint": "Le compteur repart au début de chaque mois. L'enregistrement des voyageurs n'est jamais bloqué.",
+    "quotaOverage": "+{{count}} check-ins au-delà du quota",
+    "quotaOverageBilled": "{{bundles}} tranche(s) de {{size}} — {{amount}} facturés en fin de mois.",
+    "upgradeTitle": "Passer au plan supérieur",
+    "upgradeCta": "Demander l'upgrade",
+    "upgradeSent": "Demande envoyée",
+    "upgradeRequested": "Votre demande a été transmise à l'équipe Qayed.",
+    "upgradeHint": "L'équipe Qayed vous recontacte pour appliquer le changement — effet au cycle suivant.",
+    "perPropertyMonth": "/ établissement / mois"
   },
   "propertiesPage": {
     "typeHotel": "Hôtel",
@@ -1313,7 +1339,14 @@
     "personsCount": "{{count}} pers.",
     "propertiesRecap": "Vos établissements",
     "otherPropsToday": "Autres établissements aujourd'hui : {{arrivals}} arrivées · {{departures}} départs",
-    "departureNotConfirmed": "Départ non confirmé"
+    "departureNotConfirmed": "Départ non confirmé",
+    "quotaWarning": "Vous avez utilisé {{used}} de vos {{quota}} check-ins ce mois-ci.",
+    "quotaWarningHint": "Votre service continue de fonctionner normalement.",
+    "quotaReached": "Quota mensuel atteint : {{quota}} check-ins.",
+    "quotaOverage": "Quota dépassé : +{{over}} check-ins au-delà de vos {{quota}} ce mois-ci.",
+    "quotaOverageBilled": "{{bundles}} tranche(s) entamée(s) — estimation {{amount}} TND en fin de mois. Vos check-ins ne sont jamais bloqués.",
+    "quotaNeverBlocked": "Vos check-ins continuent de fonctionner — aucun blocage.",
+    "quotaUpgradeCta": "Passer au plan supérieur"
   },
   "register": {
     "step0Label": "Type de compte",
@@ -1385,7 +1418,8 @@
     "inheritHint": "Champ vide = valeur du pack. -1 = illimité. Ces overrides priment sur le pack pour ce client uniquement.",
     "inherit": "hériter du pack",
     "currentUsage": "utilisé : {{n}}",
-    "overriddenLegend": "* = surchargé pour ce client"
+    "overriddenLegend": "* = surchargé pour ce client",
+    "checkinsPerMonth": "Check-ins / mois"
   },
   "adminLayout": {
     "brand": "Admin",
@@ -1404,7 +1438,8 @@
       "menus": "Menus",
       "whatsapp": "WhatsApp",
       "aiCosts": "Coûts IA",
-      "coupons": "Codes promo"
+      "coupons": "Codes promo",
+      "quotas": "Quotas"
     },
     "searchPlaceholder": "Rechercher un hébergeur, établissement, utilisateur…",
     "palettePlaceholder": "Naviguer ou rechercher (hébergeur, facture INV-…, fiche QYD-…)",
@@ -1564,5 +1599,28 @@
     "registerDescription": "Créez votre compte Qayed et enregistrez vos voyageurs en 30 secondes : scan du passeport ou de la CIN, fiche de police automatique et conforme.",
     "loginTitle": "Connexion — Qayed",
     "loginDescription": "Accédez à votre espace Qayed pour gérer les enregistrements de voyageurs de votre établissement."
+  },
+  "adminQuotas": {
+    "title": "Quotas check-ins",
+    "subtitle": "Consommation du mois {{month}} — comptes sur plan à quota (les comptes illimités n'apparaissent pas)",
+    "filterAll": "Tous",
+    "filterWarning": "≥ 80 %",
+    "filterOverage": "En dépassement",
+    "empty": "Aucun compte à quota sur ce filtre.",
+    "legacy": "Legacy",
+    "upsellCandidate": "Candidat upsell",
+    "overageCount": "+{{count}} au-delà du quota",
+    "estimated": "≈ {{amount}} TND",
+    "notBilled": "non facturé (legacy)",
+    "closedOverages": "Dépassements clôturés",
+    "exportCsv": "Export CSV",
+    "noOverage": "Aucun dépassement sur ce mois.",
+    "overageDetail": "{{count}} au-delà de {{quota}} · {{bundles}} tranche(s) de {{size}}",
+    "status": {
+      "pending": "À facturer",
+      "invoiced": "Facturé",
+      "excluded_legacy": "Legacy — non facturé",
+      "waived": "Abandonné"
+    }
   }
 }

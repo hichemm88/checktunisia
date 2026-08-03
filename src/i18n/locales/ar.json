@@ -23,7 +23,17 @@
     "noProperty": "لا يوجد عقار",
     "usersWithCount": "المستخدمون ({{count}})",
     "couponCode": "رمز الخصم",
-    "couponPlaceholder": "اختياري"
+    "couponPlaceholder": "اختياري",
+    "quotaTitle": "حصة تسجيلات الوصول",
+    "quotaUnlimited": "تسجيلات وصول غير محدودة — {{used}} هذا الشهر.",
+    "quotaOverage": "+{{count}} فوق الحصة · {{bundles}} شريحة",
+    "showHistory": "عرض سجل 12 شهرًا",
+    "hideHistory": "إخفاء السجل",
+    "historyOverage": "+{{count}}",
+    "noHistory": "لا بيانات.",
+    "migrateToV2": "الترحيل إلى الشبكة V2",
+    "migrateToV2Hint": "إجراء صريح: يغادر الحساب شروطه القديمة (حصة مجمّدة، سعر متفاوض عليه) وينتقل إلى الباقة المختارة من الشبكة الجديدة.",
+    "migratedToV2": "تم ترحيل الحساب إلى الشبكة الجديدة."
   },
   "adminSubscriptions": {
     "plans": "الباقات",
@@ -78,7 +88,13 @@
     "planPriceHint": "سعر الباقة: {{price}}",
     "oneMonthFree": "شهر مجاني",
     "yearlyAutoHint": "(تلقائي: 11 × السعر الشهري — شهر مجاني)",
-    "mktPriceNoteYearly": "ملاحظة تحت السعر (سنوي)"
+    "mktPriceNoteYearly": "ملاحظة تحت السعر (سنوي)",
+    "legacyBadge": "قديمة — غير قابلة للاشتراك",
+    "overagePrice": "التجاوز: السعر / شريحة (د.ت)",
+    "overageBundleSize": "حجم الشريحة (تسجيلات وصول)",
+    "noOverage": "دون فوترة",
+    "isPublic": "ظاهرة وقابلة للاشتراك في الشبكة العمومية",
+    "overageSummary": "التجاوز: +{{price}} د.ت لكل شريحة من {{bundle}} تسجيل وصول يبدأ استخدامها"
   },
   "adminAuthority": {
     "title": "السلطات",
@@ -493,7 +509,17 @@
     },
     "billingCycle": "دورة الفوترة",
     "cycleMonthly": "شهري",
-    "cycleYearly": "سنوي"
+    "cycleYearly": "سنوي",
+    "quotaTitle": "تسجيلات الوصول هذا الشهر",
+    "quotaHint": "يعاد العداد في بداية كل شهر. تسجيل المسافرين لا يُحظر أبدًا.",
+    "quotaOverage": "+{{count}} تسجيل وصول فوق الحصة",
+    "quotaOverageBilled": "{{bundles}} شريحة من {{size}} — {{amount}} تُفوتر في نهاية الشهر.",
+    "upgradeTitle": "الترقية إلى باقة أعلى",
+    "upgradeCta": "طلب الترقية",
+    "upgradeSent": "تم إرسال الطلب",
+    "upgradeRequested": "أُحيل طلبكم إلى فريق قيد.",
+    "upgradeHint": "سيتواصل معكم فريق قيد لتطبيق التغيير — يسري في الدورة الموالية.",
+    "perPropertyMonth": "/ مؤسسة / شهر"
   },
   "propertiesPage": {
     "typeHotel": "فندق",
@@ -1291,7 +1317,14 @@
     "personsCount": "{{count}} أشخاص",
     "propertiesRecap": "مؤسساتك",
     "otherPropsToday": "المؤسسات الأخرى اليوم: {{arrivals}} وصول · {{departures}} مغادرة",
-    "departureNotConfirmed": "مغادرة غير مؤكدة"
+    "departureNotConfirmed": "مغادرة غير مؤكدة",
+    "quotaWarning": "لقد استخدمتم {{used}} من أصل {{quota}} تسجيل وصول هذا الشهر.",
+    "quotaWarningHint": "تستمر خدمتكم في العمل بشكل طبيعي.",
+    "quotaReached": "تم بلوغ الحصة الشهرية: {{quota}} تسجيل وصول.",
+    "quotaOverage": "تم تجاوز الحصة: +{{over}} تسجيل وصول فوق {{quota}} هذا الشهر.",
+    "quotaOverageBilled": "{{bundles}} شريحة مبدوءة — تقدير {{amount}} د.ت في نهاية الشهر. تسجيلات الوصول لديكم لا تُحظر أبدًا.",
+    "quotaNeverBlocked": "تستمر تسجيلات الوصول لديكم في العمل — دون أي حظر.",
+    "quotaUpgradeCta": "الترقية إلى باقة أعلى"
   },
   "register": {
     "step0Label": "نوع الحساب",
@@ -1363,7 +1396,8 @@
     "inheritHint": "حقل فارغ = قيمة الباقة. -1 = غير محدود. تسود هذه القيم على الباقة لهذا العميل فقط.",
     "inherit": "وراثة من الباقة",
     "currentUsage": "المستخدم: {{n}}",
-    "overriddenLegend": "* = مخصص لهذا العميل"
+    "overriddenLegend": "* = مخصص لهذا العميل",
+    "checkinsPerMonth": "تسجيلات وصول / شهر"
   },
   "adminLayout": {
     "brand": "الإدارة",
@@ -1382,7 +1416,8 @@
       "menus": "القوائم",
       "whatsapp": "واتساب",
       "aiCosts": "تكاليف الذكاء الاصطناعي",
-      "coupons": "رموز الخصم"
+      "coupons": "رموز الخصم",
+      "quotas": "الحصص"
     },
     "searchPlaceholder": "البحث عن مضيف، مؤسسة، مستخدم…",
     "palettePlaceholder": "التنقل أو البحث (مضيف، فاتورة، بطاقة)",
@@ -1542,5 +1577,28 @@
     "registerDescription": "أنشئ حسابك في قيد وسجّل نزلاءك في 30 ثانية: مسح جواز السفر أو بطاقة التعريف، واستمارة شرطة تلقائية ومطابقة.",
     "loginTitle": "تسجيل الدخول — قيد",
     "loginDescription": "ادخل إلى مساحة قيد لإدارة تسجيلات نزلاء مؤسستك."
+  },
+  "adminQuotas": {
+    "title": "حصص تسجيلات الوصول",
+    "subtitle": "استهلاك شهر {{month}} — الحسابات على باقة بحصة (الحسابات غير المحدودة لا تظهر)",
+    "filterAll": "الكل",
+    "filterWarning": "≥ 80%",
+    "filterOverage": "في تجاوز",
+    "empty": "لا يوجد حساب بحصة لهذا الفلتر.",
+    "legacy": "قديم",
+    "upsellCandidate": "مرشح للترقية",
+    "overageCount": "+{{count}} فوق الحصة",
+    "estimated": "≈ {{amount}} د.ت",
+    "notBilled": "غير مفوتر (قديم)",
+    "closedOverages": "تجاوزات مقفلة",
+    "exportCsv": "تصدير CSV",
+    "noOverage": "لا تجاوز في هذا الشهر.",
+    "overageDetail": "{{count}} فوق {{quota}} · {{bundles}} شريحة من {{size}}",
+    "status": {
+      "pending": "للفوترة",
+      "invoiced": "مفوتر",
+      "excluded_legacy": "قديم — غير مفوتر",
+      "waived": "متنازل عنه"
+    }
   }
 }

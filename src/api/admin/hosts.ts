@@ -1,4 +1,15 @@
 import { api } from '@/lib/api';
+import type { QuotaStatus } from '@/api/admin/subscriptions';
+
+/** Un point de l'historique 12 mois de consommation check-ins (fiche 360°). */
+export interface QuotaHistoryPoint {
+  month: string; // YYYY-MM
+  count: number;
+  overage_count: number | null;
+  overage_amount: string | null;
+  overage_status: 'pending' | 'invoiced' | 'excluded_legacy' | 'waived' | null;
+  invoice_number: string | null;
+}
 
 export interface AdminHost {
   id: string;
@@ -18,6 +29,7 @@ export interface AdminHostDetail extends Omit<AdminHost, 'properties_count' | 's
   active_subscription: {
     id: string; status: string; expires_at: string; plan_id: number; custom_price: string | null;
     billing_cycle?: string;
+    is_legacy_plan?: boolean;
     plan?: { id: number; name: string; price_monthly: string; price_yearly: string | null };
   } | null;
   users: { id: string; first_name: string; last_name: string; email: string; role: string; status: string }[];
@@ -26,6 +38,14 @@ export interface AdminHostDetail extends Omit<AdminHost, 'properties_count' | 's
   entitlements: Record<string, { limit?: number | null; used?: number; enabled?: boolean; label: string }>;
   /** Overrides négociés bruts de l'abonnement actif ({} si aucun). */
   feature_overrides: Record<string, number | boolean | null>;
+  /** Quota de check-ins du mois en cours (grille V2). */
+  quota: QuotaStatus | null;
+  /** Historique 12 mois : consommation + dépassements clôturés. */
+  quota_history: QuotaHistoryPoint[];
+  /** Grandfathering : le compte conserve les conditions de l'ancienne grille. */
+  is_legacy_plan: boolean;
+  /** Badge « Candidat upsell » (2 mois consécutifs de dépassement). */
+  upsell_flagged_at: string | null;
 }
 
 export const adminHostsApi = {
