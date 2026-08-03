@@ -17,12 +17,27 @@ const includedLabel = (n: number, lang: string): string => {
   return `${n} établissement${n > 1 ? 's' : ''} inclus`;
 };
 
-/** "+39 TND/mois par établissement supplémentaire" — dérivé de extra_property_price. */
+/** "Option multi-établissements : +99 TND/mois par établissement" — dérivé de extra_property_price. */
 const extraLabel = (price: number, lang: string): string => {
   const p = compactPrice(price);
-  if (lang === 'en') return `+${p} TND/month per extra property`;
-  if (lang === 'ar') return `+${p} د.ت/شهر لكل مؤسسة إضافية`;
-  return `+${p} TND/mois par établissement supplémentaire`;
+  if (lang === 'en') return `Multi-property option: +${p} TND/month per property`;
+  if (lang === 'ar') return `خيار تعدد المؤسسات: +${p} د.ت/شهر لكل مؤسسة`;
+  return `Option multi-établissements : +${p} TND/mois par établissement`;
+};
+
+/** « Au-delà du quota : +10 TND par tranche de 50 check-ins. Aucun blocage. » — dérivé des champs overage du pack. */
+const overageLabel = (price: number, bundle: number, lang: string): string => {
+  const p = compactPrice(price);
+  if (lang === 'en') return `Beyond the quota: +${p} TND per bundle of ${bundle} check-ins. Never blocking.`;
+  if (lang === 'ar') return `بعد تجاوز الحصة: +${p} د.ت لكل شريحة من ${bundle} تسجيل وصول. دون أي حظر.`;
+  return `Au-delà du quota : +${p} TND par tranche de ${bundle} check-ins. Aucun blocage.`;
+};
+
+/** Ligne « plusieurs petites structures ? » sous la grille. */
+const contactLabel = (lang: string): { text: string; cta: string } => {
+  if (lang === 'en') return { text: 'Managing several small properties?', cta: 'Contact us' };
+  if (lang === 'ar') return { text: 'تديرون عدة مؤسسات صغيرة؟', cta: 'اتصلوا بنا' };
+  return { text: 'Vous gérez plusieurs petites structures ?', cta: 'Contactez-nous' };
 };
 
 const PricingCard = ({ plan, lang, cycle }: { plan: SubscriptionPlan; lang: string; cycle: BillingCycle }) => {
@@ -41,6 +56,12 @@ const PricingCard = ({ plan, lang, cycle }: { plan: SubscriptionPlan; lang: stri
   const extraPrice = plan.extra_property_price != null ? Number(plan.extra_property_price) : null;
   const hasTieredProperties = extraPrice != null && extraPrice > 0;
 
+  // Dépassement (Essentiel/Pro) : mention discrète sous la carte, dérivée de
+  // la config du pack (quota fini + prix de tranche) — jamais codée en dur.
+  const quota = plan.features?.checkins_per_month;
+  const overagePrice = plan.overage_price != null ? Number(plan.overage_price) : null;
+  const hasOverage = quota != null && quota > 0 && overagePrice != null && overagePrice > 0 && (plan.overage_bundle_size ?? 0) > 0;
+
   return (
     <div className={`pricing-card${m?.featured ? ' featured' : ''}`}>
       {badge && <div className="pricing-pill">{badge}</div>}
@@ -54,16 +75,23 @@ const PricingCard = ({ plan, lang, cycle }: { plan: SubscriptionPlan; lang: stri
         {showWas && <span className="price-was">{compactPrice(fullYearly)} TND</span>}
       </div>
       {note && <div className="price-per">{note}</div>}
-      {hasTieredProperties && <div className="price-per" style={{ fontWeight: 600 }}>{includedLabel(included, lang)}</div>}
+      {hasTieredProperties && included > 1 && (
+        <div className="price-per" style={{ fontWeight: 600 }}>{includedLabel(included, lang)}</div>
+      )}
       <ul className="feat-list">
         {(m?.bullets ?? []).map((b, i) => (
           <li key={i} className={b.included ? undefined : 'off'}>{pickI18n(b.text, lang)}</li>
         ))}
         {hasTieredProperties && <li>{extraLabel(extraPrice!, lang)}</li>}
       </ul>
-      <Link to="/register" className={`btn ${m?.featured ? 'btn-primary' : 'btn-ghost'} btn-full`}>
+      <Link to={`/register?plan=${plan.slug}`} className={`btn ${m?.featured ? 'btn-primary' : 'btn-ghost'} btn-full`}>
         {m?.cta_label ? pickI18n(m.cta_label, lang) : 'Essayer 7 jours gratuit'}
       </Link>
+      {hasOverage && (
+        <p style={{ marginTop: 12, fontSize: 12, lineHeight: 1.5, color: 'var(--fiche)', textAlign: 'center' }}>
+          {overageLabel(overagePrice!, plan.overage_bundle_size!, lang)}
+        </p>
+      )}
     </div>
   );
 };
@@ -125,6 +153,12 @@ export const PricingSection = ({
         {footnote && (
           <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--fiche)' }}>{footnote}</p>
         )}
+        <p style={{ textAlign: 'center', marginTop: 8, fontSize: 14, color: 'var(--texte-sec)' }}>
+          {contactLabel(lang).text}{' '}
+          <a href="mailto:contact@qayed.tn" style={{ color: 'var(--cachet)', fontWeight: 600 }}>
+            {contactLabel(lang).cta}
+          </a>
+        </p>
       </div>
     </section>
   );
