@@ -5,9 +5,10 @@ import { useTranslation } from 'react-i18next';
 import {
   UserCheck, DoorOpen, ChevronRight, ChevronLeft, LogIn, LogOut,
   TrendingUp, FileWarning, AlertCircle, Plus, ShieldAlert, Building2,
-  CalendarClock, CalendarCheck, Globe, Moon,
+  CalendarClock, CalendarCheck, Globe, Moon, Gauge,
 } from 'lucide-react';
 import { dashboardApi, type OccupancyDay } from '@/api/dashboard';
+import { formatTNDAmount } from '@/lib/money';
 import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -591,6 +592,52 @@ export const DashboardPage = () => {
               </div>
             </div>
           )}
+
+          {/* Bandeau quota check-ins (grille V2) — jamais bloquant : à 80 %
+              informatif, à 100 %+ persistant (ambre vigilance) avec compteur
+              de dépassement et CTA plan supérieur. Comptes illimités : rien. */}
+          {(() => {
+            const q = d.quota;
+            if (!q || q.unlimited || q.quota == null || q.quota < 1) return null;
+            const reached = q.used >= q.quota;
+            const warn80 = !reached && q.used * 5 >= q.quota * 4;
+            if (!reached && !warn80) return null;
+            return (
+              <div
+                className="flex items-start gap-3 rounded-xl p-3"
+                style={reached
+                  ? { background: '#FBF0D7', border: '1px solid #E3A008' }
+                  : { background: '#EEEBFA', border: '1px solid #C9C1EE' }}
+              >
+                <Gauge className="mt-0.5 h-4 w-4 shrink-0" style={{ color: reached ? '#E3A008' : '#5346A8' }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold" style={{ color: reached ? '#8A6206' : '#443896' }}>
+                    {reached
+                      ? (q.used > q.quota
+                        ? t('hotelDashboard.quotaOverage', { over: q.used - q.quota, quota: q.quota })
+                        : t('hotelDashboard.quotaReached', { quota: q.quota }))
+                      : t('hotelDashboard.quotaWarning', { used: q.used, quota: q.quota })}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: reached ? '#8A6206' : '#5346A8' }}>
+                    {reached
+                      ? (q.billable && q.overage_amount != null && q.overage_amount > 0
+                        ? t('hotelDashboard.quotaOverageBilled', { bundles: q.bundle_count, amount: formatTNDAmount(q.overage_amount) })
+                        : t('hotelDashboard.quotaNeverBlocked'))
+                      : t('hotelDashboard.quotaWarningHint')}
+                  </p>
+                  {reached && (
+                    <button
+                      onClick={() => navigate('/hotel/settings?tab=abonnement')}
+                      className="mt-2 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition-all active:scale-[0.98]"
+                      style={{ background: '#5346A8' }}
+                    >
+                      {t('hotelDashboard.quotaUpgradeCta')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Récap par propriété — sélecteur unique d'établissement (chips supprimés) */}
           {(d.properties_summary?.length ?? 0) > 1 && (
