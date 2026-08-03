@@ -650,7 +650,7 @@ const AbonnementTab = () => {
               <div>
                 <p className="text-sm font-semibold text-amber-800">{t('settingsPage.renewalDue')}</p>
                 <p className="text-xs text-amber-600 mt-0.5">
-                  <Trans t={t} i18nKey="settingsPage.renewalContact" components={{ a: <a href="mailto:support@qayed.tn" className="underline font-medium" /> }} />
+                  <Trans t={t} i18nKey="settingsPage.renewalContact" components={{ a: <a href="mailto:contact@qayed.tn" className="underline font-medium" /> }} />
                 </p>
               </div>
             </div>
