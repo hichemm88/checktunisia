@@ -46,7 +46,7 @@ export const settingsApi = {
   getSubscription: () =>
     api.get<{ data: {
       status: string;
-      plan: { name: string } | string | null;
+      plan: { id?: number; name: string; slug?: string } | string | null;
       billing_cycle?: 'monthly' | 'yearly';
       expires_at: string;
       days_remaining: number;
@@ -56,8 +56,23 @@ export const settingsApi = {
         extra_count: number; extra_property_price: number | null;
         extra_total: number; monthly_total: number; cycle_total: number; negotiated: boolean;
       } | null;
+      /** Quota mensuel de check-ins (grille V2) — null/unlimited = pas d'affichage. */
+      quota?: {
+        quota: number | null; used: number; remaining: number | null; percent: number | null;
+        overage_count: number; bundle_size: number | null; bundle_count: number;
+        unit_price: number | null; overage_amount: number | null;
+        billable: boolean; legacy: boolean; unlimited: boolean;
+      } | null;
+      /** Grandfathering : le compte conserve les conditions de l'ancienne grille. */
+      is_legacy_plan?: boolean;
     } }>('/hotel/subscription')
       .then((r) => r.data.data),
+
+  /** Grille V2 : demande d'upgrade vers un plan supérieur — notifie l'admin (effet au cycle suivant). */
+  requestUpgrade: (plan_slug: string, message?: string) =>
+    api.post<{ data: { status: string; target_plan: { id: number; name: string; slug: string; price_monthly: string } } }>(
+      '/hotel/subscription/upgrade-request', { plan_slug, message },
+    ).then((r) => r.data.data),
 
   // Hotel profile (hotel_admin only)
   getHotelProfile: () =>

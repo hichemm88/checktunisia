@@ -23,7 +23,17 @@
     "noProperty": "No property",
     "usersWithCount": "Users ({{count}})",
     "couponCode": "Coupon code",
-    "couponPlaceholder": "Optional"
+    "couponPlaceholder": "Optional",
+    "quotaTitle": "Check-in quota",
+    "quotaUnlimited": "Unlimited check-ins — {{used}} this month.",
+    "quotaOverage": "+{{count}} over quota · {{bundles}} bundle(s)",
+    "showHistory": "Show 12-month history",
+    "hideHistory": "Hide history",
+    "historyOverage": "+{{count}}",
+    "noHistory": "No data.",
+    "migrateToV2": "Migrate to the V2 grid",
+    "migrateToV2Hint": "Explicit action: the account leaves its legacy terms (frozen quota, negotiated price) and moves to the chosen plan of the new grid.",
+    "migratedToV2": "Account migrated to the new grid."
   },
   "adminSubscriptions": {
     "plans": "Plans",
@@ -78,7 +88,13 @@
     "planPriceHint": "Plan price: {{price}}",
     "oneMonthFree": "1 month free",
     "yearlyAutoHint": "(auto: 11 × monthly price — 1 month free)",
-    "mktPriceNoteYearly": "Note under the price (yearly)"
+    "mktPriceNoteYearly": "Note under the price (yearly)",
+    "legacyBadge": "Legacy — not subscribable",
+    "overagePrice": "Overage: price / bundle (TND)",
+    "overageBundleSize": "Bundle size (check-ins)",
+    "noOverage": "No billing",
+    "isPublic": "Visible and subscribable on the public grid",
+    "overageSummary": "Overage: +{{price}} TND per started bundle of {{bundle}} check-ins"
   },
   "adminAuthority": {
     "title": "Authorities",
@@ -493,7 +509,17 @@
     },
     "billingCycle": "Billing cycle",
     "cycleMonthly": "Monthly",
-    "cycleYearly": "Yearly"
+    "cycleYearly": "Yearly",
+    "quotaTitle": "Check-ins this month",
+    "quotaHint": "The counter resets at the start of each month. Registering travelers is never blocked.",
+    "quotaOverage": "+{{count}} check-ins over quota",
+    "quotaOverageBilled": "{{bundles}} bundle(s) of {{size}} — {{amount}} billed at the end of the month.",
+    "upgradeTitle": "Upgrade plan",
+    "upgradeCta": "Request upgrade",
+    "upgradeSent": "Request sent",
+    "upgradeRequested": "Your request has been sent to the Qayed team.",
+    "upgradeHint": "The Qayed team will contact you to apply the change — effective next cycle.",
+    "perPropertyMonth": "/ property / month"
   },
   "propertiesPage": {
     "typeHotel": "Hotel",
@@ -1313,7 +1339,14 @@
     "personsCount": "{{count}} guests",
     "propertiesRecap": "Your properties",
     "otherPropsToday": "Other properties today: {{arrivals}} arrivals · {{departures}} departures",
-    "departureNotConfirmed": "Departure not confirmed"
+    "departureNotConfirmed": "Departure not confirmed",
+    "quotaWarning": "You have used {{used}} of your {{quota}} check-ins this month.",
+    "quotaWarningHint": "Your service keeps working normally.",
+    "quotaReached": "Monthly quota reached: {{quota}} check-ins.",
+    "quotaOverage": "Quota exceeded: +{{over}} check-ins beyond your {{quota}} this month.",
+    "quotaOverageBilled": "{{bundles}} bundle(s) started — estimated {{amount}} TND at the end of the month. Your check-ins are never blocked.",
+    "quotaNeverBlocked": "Your check-ins keep working — never blocked.",
+    "quotaUpgradeCta": "Upgrade plan"
   },
   "register": {
     "step0Label": "Account type",
@@ -1385,7 +1418,8 @@
     "inheritHint": "Empty field = plan value. -1 = unlimited. These overrides take precedence over the plan for this customer only.",
     "inherit": "inherit from plan",
     "currentUsage": "used: {{n}}",
-    "overriddenLegend": "* = overridden for this customer"
+    "overriddenLegend": "* = overridden for this customer",
+    "checkinsPerMonth": "Check-ins / month"
   },
   "adminLayout": {
     "brand": "Admin",
@@ -1404,7 +1438,8 @@
       "menus": "Menus",
       "whatsapp": "WhatsApp",
       "aiCosts": "AI costs",
-      "coupons": "Coupons"
+      "coupons": "Coupons",
+      "quotas": "Quotas"
     },
     "searchPlaceholder": "Search a host, property, user…",
     "palettePlaceholder": "Navigate or search (host, invoice INV-…, check-in QYD-…)",
@@ -1564,5 +1599,28 @@
     "registerDescription": "Create your Qayed account and register your travelers in 30 seconds: passport or ID scan, automatic and compliant police form.",
     "loginTitle": "Sign in — Qayed",
     "loginDescription": "Access your Qayed workspace to manage your property's traveler registrations."
+  },
+  "adminQuotas": {
+    "title": "Check-in quotas",
+    "subtitle": "Usage for {{month}} — accounts on a quota plan (unlimited accounts are not listed)",
+    "filterAll": "All",
+    "filterWarning": "≥ 80%",
+    "filterOverage": "Over quota",
+    "empty": "No quota account for this filter.",
+    "legacy": "Legacy",
+    "upsellCandidate": "Upsell candidate",
+    "overageCount": "+{{count}} over quota",
+    "estimated": "≈ {{amount}} TND",
+    "notBilled": "not billed (legacy)",
+    "closedOverages": "Closed overages",
+    "exportCsv": "CSV export",
+    "noOverage": "No overage for this month.",
+    "overageDetail": "{{count}} over {{quota}} · {{bundles}} bundle(s) of {{size}}",
+    "status": {
+      "pending": "To invoice",
+      "invoiced": "Invoiced",
+      "excluded_legacy": "Legacy — not billed",
+      "waived": "Waived"
+    }
   }
 }
