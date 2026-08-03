@@ -81,18 +81,22 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [form, setForm] = useState({
     price_monthly: plan.price_monthly, price_yearly: plan.price_yearly ?? '',
-    max_rooms: plan.max_rooms ?? '', is_active: plan.is_active,
+    max_rooms: plan.max_rooms ?? '', is_active: plan.is_active, is_public: plan.is_public ?? true,
     included_properties: String(plan.included_properties ?? 1),
     extra_property_price: plan.extra_property_price ?? '',
+    overage_price: plan.overage_price ?? '',
+    overage_bundle_size: plan.overage_bundle_size != null ? String(plan.overage_bundle_size) : '',
   });
   const [features, setFeatures] = useState(() => featureValuesFrom(plan.features));
 
   const updateMut = useAdminMutation({
     mutationFn: () => adminPlansApi.update(plan.id, {
       price_monthly: parseFloat(form.price_monthly), price_yearly: form.price_yearly ? parseFloat(String(form.price_yearly)) : null,
-      max_rooms: form.max_rooms ? parseInt(String(form.max_rooms)) : null, is_active: form.is_active,
+      max_rooms: form.max_rooms ? parseInt(String(form.max_rooms)) : null, is_active: form.is_active, is_public: form.is_public,
       included_properties: parseInt(String(form.included_properties)) || 1,
       extra_property_price: String(form.extra_property_price).trim() === '' ? null : parseFloat(String(form.extra_property_price)),
+      overage_price: String(form.overage_price).trim() === '' ? null : parseFloat(String(form.overage_price)),
+      overage_bundle_size: String(form.overage_bundle_size).trim() === '' ? null : parseInt(String(form.overage_bundle_size)),
       features: featureValuesToPayload(features),
     }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-plans'] }); setEditing(false); },
@@ -116,6 +120,11 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {plan.is_public === false && (
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--qayed-vigilance-fond, #FBF0D7)', color: 'var(--qayed-vigilance-texte, #8A6206)' }}>
+              {t('adminSubscriptions.legacyBadge')}
+            </span>
+          )}
           <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${plan.is_active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{plan.is_active ? t('adminDashboard.active') : t('adminSubscriptions.inactive')}</span>
           {!editing && !editingMarketing && (
             <>
@@ -143,9 +152,20 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
               placeholder={t('adminSubscriptions.noExtension')}
               onChange={(e) => setForm((f) => ({ ...f, extra_property_price: e.target.value }))} />
           </div>
+          {/* Dépassement de quota check-ins : +prix par tranche entamée (vide = pas de facturation). */}
+          <div className="grid grid-cols-2 gap-2">
+            <Input label={t('adminSubscriptions.overagePrice')} type="number" min="0" value={String(form.overage_price)}
+              placeholder={t('adminSubscriptions.noOverage')}
+              onChange={(e) => setForm((f) => ({ ...f, overage_price: e.target.value }))} />
+            <Input label={t('adminSubscriptions.overageBundleSize')} type="number" min="1" value={String(form.overage_bundle_size)}
+              onChange={(e) => setForm((f) => ({ ...f, overage_bundle_size: e.target.value }))} />
+          </div>
           <PlanFeaturesEditor value={features} onChange={setFeatures} />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} /> {t('adminDashboard.active')}
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={form.is_public} onChange={(e) => setForm((f) => ({ ...f, is_public: e.target.checked }))} /> {t('adminSubscriptions.isPublic')}
           </label>
           <div className="flex gap-2">
             <Button size="sm" loading={updateMut.isPending} onClick={() => updateMut.mutate()} className="gap-1.5"><Check className="h-3.5 w-3.5" /> {t('common.save')}</Button>
@@ -172,6 +192,7 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
               ['maxProperties', plan.features?.max_properties],
               ['maxUsers', plan.features?.max_users],
               ['ocrScans', plan.features?.ocr_scans_per_month],
+              ['checkinsPerMonth', plan.features?.checkins_per_month],
             ] as const).map(([key, v]) => (
               <span key={key} className="rounded-full bg-warm-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
                 {t(`planFeatures.${key}`)} : <span className="font-mono">{v == null || v < 0 ? '∞' : v}</span>
@@ -181,6 +202,12 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
               {t('planFeatures.whatsappRelay')} : {plan.features?.whatsapp_relay === false ? t('planFeatures.off') : t('planFeatures.on')}
             </span>
           </div>
+          {/* Dépassement de quota check-ins (grille V2). */}
+          {plan.overage_price != null && (plan.overage_bundle_size ?? 0) > 0 && (
+            <p className="text-xs text-gray-500">
+              {t('adminSubscriptions.overageSummary', { price: formatTNDAmount(plan.overage_price), bundle: plan.overage_bundle_size })}
+            </p>
+          )}
         </>
       )}
 

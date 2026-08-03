@@ -234,6 +234,111 @@ const HostMetrics = ({ host }: { host: AdminHostDetail }) => {
   );
 };
 
+// ─── Quota check-ins (grille V2) : conso vs quota, dépassements, historique ────
+
+const QuotaSection = ({ host }: { host: AdminHostDetail }) => {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const [showHistory, setShowHistory] = useState(false);
+  const [migrating, setMigrating] = useState(false);
+  const [targetPlanId, setTargetPlanId] = useState('');
+  const q = host.quota;
+  const sub = host.active_subscription;
+
+  const { data: plans } = useQuery({ queryKey: ['admin-plans'], queryFn: adminPlansApi.list });
+  const publicPlans = (plans ?? []).filter((p) => p.is_active && p.is_public !== false);
+
+  const migrateMut = useAdminMutation({
+    mutationFn: () => adminSubscriptionsApi.migrateToV2(host.id, sub!.id, parseInt(targetPlanId)),
+    successMessage: t('adminHosts.migratedToV2'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-host-detail', host.id] }); setMigrating(false); },
+  });
+
+  if (!q) return null;
+
+  const over = q.quota != null && q.used > q.quota;
+  const pct = q.quota != null ? Math.min(100, Math.floor((q.used * 100) / q.quota)) : null;
+  const history = (host.quota_history ?? []).filter((h) => h.count > 0 || h.overage_count != null);
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('adminHosts.quotaTitle')}</p>
+        <div className="flex items-center gap-1.5">
+          {host.is_legacy_plan && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">{t('adminQuotas.legacy')}</span>
+          )}
+          {host.upsell_flagged_at && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--qayed-cachet-dilue, #EEEBFA)', color: 'var(--qayed-cachet, #5346A8)' }}>
+              {t('adminQuotas.upsellCandidate')}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="rounded-xl p-3 flex flex-col gap-2 text-sm" style={{ background: 'var(--qayed-papier)' }}>
+        {q.unlimited ? (
+          <p className="text-gray-600">{t('adminHosts.quotaUnlimited', { used: q.used })}</p>
+        ) : (
+          <>
+            {/* Barre de progression conso vs quota du mois en cours. */}
+            <div className="flex items-center gap-2">
+              <div className="h-2.5 flex-1 rounded-full bg-white overflow-hidden border border-gray-100">
+                <div className="h-full rounded-full transition-all"
+                  style={{ width: `${pct}%`, background: over ? '#E3A008' : (pct ?? 0) >= 80 ? 'var(--qayed-cachet)' : 'var(--qayed-conforme, #1F9D6B)' }} />
+              </div>
+              <span className="font-mono text-xs text-gray-600">{q.used}/{q.quota}</span>
+            </div>
+            {over && (
+              <p className="text-xs font-medium" style={{ color: '#8A6206' }}>
+                {t('adminHosts.quotaOverage', { count: q.overage_count, bundles: q.bundle_count })}
+                {q.overage_amount != null && ` · ${formatTNDAmount(q.overage_amount)} TND`}
+                {!q.billable && ` · ${t('adminQuotas.notBilled')}`}
+              </p>
+            )}
+          </>
+        )}
+
+        <button onClick={() => setShowHistory((s) => !s)} className="text-xs text-[--qayed-cachet] font-medium text-start">
+          {showHistory ? t('adminHosts.hideHistory') : t('adminHosts.showHistory')}
+        </button>
+        {showHistory && (
+          <div className="flex flex-col gap-1">
+            {history.map((h) => (
+              <div key={h.month} className="flex items-center justify-between text-xs">
+                <span className="font-mono text-gray-500">{h.month}</span>
+                <span className="font-mono">{h.count}</span>
+                <span className="text-gray-400 min-w-[110px] text-end">
+                  {h.overage_count != null
+                    ? `${t('adminHosts.historyOverage', { count: h.overage_count })}${h.overage_amount != null ? ` · ${formatTNDAmount(h.overage_amount)} TND` : ''}${h.invoice_number ? ` · ${h.invoice_number}` : ''}`
+                    : '—'}
+                </span>
+              </div>
+            ))}
+            {!history.length && <p className="text-xs text-gray-400">{t('adminHosts.noHistory')}</p>}
+          </div>
+        )}
+
+        {/* Migration MANUELLE d'un compte legacy vers la grille V2 — action explicite. */}
+        {host.is_legacy_plan && sub && (
+          !migrating ? (
+            <Button size="sm" variant="secondary" onClick={() => setMigrating(true)} className="w-fit">{t('adminHosts.migrateToV2')}</Button>
+          ) : (
+            <div className="flex flex-col gap-2 p-2 rounded-lg bg-white border border-gray-100">
+              <p className="text-xs text-gray-500">{t('adminHosts.migrateToV2Hint')}</p>
+              <Select label={t('adminSubscriptions.plan')} value={targetPlanId} onChange={(e) => setTargetPlanId(e.target.value)}
+                options={[{ value: '', label: t('adminUsers.choose') }, ...publicPlans.map((p) => ({ value: String(p.id), label: `${p.name} — ${formatTNDAmount(p.price_monthly)} TND` }))]} />
+              <div className="flex gap-2">
+                <Button size="sm" loading={migrateMut.isPending} disabled={!targetPlanId} onClick={() => migrateMut.mutate()}>{t('common.confirm')}</Button>
+                <Button size="sm" variant="ghost" onClick={() => setMigrating(false)}>{t('common.cancel')}</Button>
+              </div>
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ─── Factures ───────────────────────────────────────────────────────────────────
 
 const InvoicesSection = ({ host }: { host: AdminHostDetail }) => {
@@ -457,6 +562,8 @@ export const AdminHostsPage = () => {
               {detail && (
                 <>
                   <HostMetrics host={detail} />
+
+                  <QuotaSection host={detail} />
 
                   <SubscriptionSection host={detail} />
 

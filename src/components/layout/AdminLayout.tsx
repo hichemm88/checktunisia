@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, Building2, Home, Users, Landmark,
   CreditCard, Wallet, Mail, Activity, LogOut, Search, X, FileText, Menu,
-  Globe, ListTree, MessageCircle, Cpu, Ticket,
+  Globe, ListTree, MessageCircle, Cpu, Ticket, Gauge,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
@@ -36,6 +36,7 @@ const useNavGroups = (): NavGroup[] => {
     ] },
     { title: t('adminLayout.group.billing'), items: [
       { to: '/admin/subscriptions', icon: CreditCard,      label: t('adminLayout.nav.subscriptions') },
+      { to: '/admin/quotas',        icon: Gauge,           label: t('adminLayout.nav.quotas') },
       { to: '/admin/facturation',   icon: FileText,        label: t('adminLayout.nav.facturation') },
       { to: '/admin/coupons',       icon: Ticket,          label: t('adminLayout.nav.coupons') },
       { to: '/admin/payments',      icon: Wallet,          label: t('adminLayout.nav.payments') },

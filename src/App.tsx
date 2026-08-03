@@ -41,6 +41,7 @@ import { AdminHotelsPage } from '@/pages/admin/AdminHotelsPage';
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
 import { AdminAuthorityPage } from '@/pages/admin/AdminAuthorityPage';
 import { AdminSubscriptionsPage } from '@/pages/admin/AdminSubscriptionsPage';
+import { AdminQuotasPage } from '@/pages/admin/AdminQuotasPage';
 import { AdminFacturationPage } from '@/pages/admin/AdminFacturationPage';
 import { AdminPaymentsPage } from '@/pages/admin/AdminPaymentsPage';
 import { AdminEmailsPage } from '@/pages/admin/AdminEmailsPage';
@@ -175,6 +176,7 @@ export const App = () => (
           <Route path="/admin/users"         element={<AdminUsersPage />} />
           <Route path="/admin/authority"     element={<AdminAuthorityPage />} />
           <Route path="/admin/subscriptions" element={<AdminSubscriptionsPage />} />
+          <Route path="/admin/quotas"        element={<AdminQuotasPage />} />
           <Route path="/admin/facturation"   element={<AdminFacturationPage />} />
           <Route path="/admin/coupons"       element={<AdminCouponsPage />} />
           <Route path="/admin/payments"      element={<AdminPaymentsPage />} />
