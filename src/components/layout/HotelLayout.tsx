@@ -64,6 +64,15 @@ export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
           <div className="flex items-center gap-1 shrink-0">
             <NotificationBell />
             <LanguageSwitcher />
+            {user?.role === 'hotel_admin' && user.role_org && (
+              <span
+                className="hidden sm:inline-block rounded-full px-2 py-0.5 text-[10px] font-bold whitespace-nowrap"
+                style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
+                title={t('hotelLayout.roleBadgeTitle')}
+              >
+                {user.role_org === 'owner' ? t('hotelLayout.roleOwner') : t('hotelLayout.roleAdmin')}
+              </span>
+            )}
             <Link
               to="/profile"
               className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 hover:opacity-80 transition-opacity"

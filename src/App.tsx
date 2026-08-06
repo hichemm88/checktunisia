@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore, type Role } from '@/stores/authStore';
@@ -23,6 +24,7 @@ import { SecurityPage } from '@/pages/hotel/SecurityPage';
 import { PaymentSuccessPage } from '@/pages/hotel/PaymentSuccessPage';
 import { PaymentFailedPage } from '@/pages/hotel/PaymentFailedPage';
 import { OnboardingPage } from '@/pages/hotel/OnboardingPage';
+import { PendingSetupPage } from '@/pages/hotel/PendingSetupPage';
 import { PropertiesPage } from '@/pages/hotel/PropertiesPage';
 import { AuthorityDashboardPage } from '@/pages/authority/AuthorityDashboardPage';
 import { SearchPage } from '@/pages/authority/SearchPage';
@@ -80,13 +82,10 @@ const PublicRoute = ({ element }: { element: React.ReactElement }) => {
   return isAuthenticated ? <RoleRedirect /> : element;
 };
 
-/**
- * After login, hotel_admin users who have not completed onboarding are redirected
- * to /hotel/onboarding. Receptionists are unaffected.
- */
-const HotelOnboardingGuard = () => {
+/** Statut d'onboarding partagé par les guards — état de l'ORGANISATION, jamais de l'utilisateur. */
+const useOnboardingStatus = () => {
   const role = useAuthStore((s) => s.user?.role);
-  const { data, isLoading } = useQuery({
+  return useQuery({
     // Stable key — no activePropertyId so removeQueries(['onboarding-status'])
     // in OnboardingPage.completeMut reliably clears this exact key and triggers
     // a fresh fetch when the user navigates to /hotel/dashboard.
@@ -95,12 +94,53 @@ const HotelOnboardingGuard = () => {
     enabled: role === 'hotel_admin',
     staleTime: 0, // Always re-validate; it's a cheap call and correctness matters
   });
+};
 
-  if (role === 'hotel_admin' && !isLoading && data && !data.setup_completed) {
-    return <Navigate to="/hotel/onboarding" replace />;
+/**
+ * Gate post-login, scopé organisation :
+ *   ≥ 1 établissement          → dashboard (quel que soit le rôle)
+ *   0 établissement + owner    → onboarding
+ *   0 établissement + admin    → écran « Configuration en attente »
+ * Receptionists are unaffected.
+ */
+const HotelOnboardingGuard = () => {
+  const role = useAuthStore((s) => s.user?.role);
+  const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
+  const { data, isLoading } = useOnboardingStatus();
+
+  // Propage role_org dans le store persisté : les sessions ouvertes avant la
+  // migration l'obtiennent ici sans reconnexion (badge, onglets Paramètres).
+  useEffect(() => {
+    if (user && data && data.role_org !== undefined && user.role_org !== data.role_org) {
+      setUser({ ...user, role_org: data.role_org });
+    }
+  }, [data, user, setUser]);
+
+  if (role === 'hotel_admin' && !isLoading && data && !data.has_property) {
+    // null = compte legacy pas encore migré : traité comme owner.
+    return data.role_org !== 'admin'
+      ? <Navigate to="/hotel/onboarding" replace />
+      : <Navigate to="/hotel/pending-setup" replace />;
   }
 
   return <Outlet />;
+};
+
+/**
+ * L'onboarding est réservé au propriétaire de l'organisation — un « admin »
+ * n'y accède jamais, même par URL directe (le serveur protège aussi les
+ * endpoints de création via le middleware org.owner).
+ */
+const RequireOrgOwner = () => {
+  const role = useAuthStore((s) => s.user?.role);
+  const { data, isLoading } = useOnboardingStatus();
+
+  if (role !== 'hotel_admin') return <Navigate to="/hotel/dashboard" replace />;
+  if (isLoading || !data) return null;
+
+  // null = compte legacy pas encore migré : traité comme owner (l'API reste l'autorité).
+  return data.role_org !== 'admin' ? <Outlet /> : <Navigate to="/hotel/dashboard" replace />;
 };
 
 // ─── Idle session guard ───────────────────────────────────────────────────────
@@ -131,9 +171,14 @@ export const App = () => (
 
       {/* Hotel staff — onboarding check applies only to hotel_admin */}
       <Route element={<RequireRole roles={['hotel_admin', 'receptionist']} />}>
-        {/* Onboarding wizard — reachable before setup is complete */}
-        <Route element={<RequireRole roles={['hotel_admin']} />}>
+        {/* Onboarding wizard — owner uniquement, y compris par URL directe */}
+        <Route element={<RequireOrgOwner />}>
           <Route path="/hotel/onboarding" element={<OnboardingPage />} />
+        </Route>
+
+        {/* Org sans établissement : écran d'attente pour les admins non owner */}
+        <Route element={<RequireRole roles={['hotel_admin']} />}>
+          <Route path="/hotel/pending-setup" element={<PendingSetupPage />} />
         </Route>
 
         {/* Main hotel routes — guarded by onboarding check */}

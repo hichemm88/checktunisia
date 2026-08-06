@@ -35,6 +35,12 @@ export const settingsApi = {
   resendInvite: (id: string) =>
     api.post<{ data: { id: string; email_sent: boolean } }>(`/hotel/users/${id}/resend-invite`).then((r) => r.data.data),
 
+  // Transfert d'ownership (owner uniquement) — confirmation forte par mot de passe.
+  transferOwnership: (payload: { user_id: string; password: string }) =>
+    api.post<{ data: { previous_owner: { id: string }; new_owner: { id: string } } }>(
+      '/hotel/organization/transfer-ownership', payload,
+    ).then((r) => r.data.data),
+
   // Destinataires WhatsApp des fiches (hotel_admin) — voir/cocher les agents.
   getWhatsappRecipients: () =>
     api.get<{ data: WhatsappRecipientOption[] }>('/hotel/whatsapp-recipients').then((r) => r.data.data),

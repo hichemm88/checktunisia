@@ -413,7 +413,7 @@ export interface ChangePasswordPayload { current_password: string; new_password:
 
 export interface HotelUser {
   id: string; first_name: string; last_name: string; email: string;
-  role: string; status: string; last_login_at?: string;
+  role: string; role_org?: 'owner' | 'admin' | null; status: string; last_login_at?: string;
   properties?: { id: string; name: string }[];
 }
 

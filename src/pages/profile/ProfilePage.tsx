@@ -217,6 +217,14 @@ export const ProfilePage = () => {
             <span className="mt-1 inline-block rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
               {t(`profile.role.${user?.role}`, { defaultValue: user?.role?.replace('_', ' ') })}
             </span>
+            {user?.role === 'hotel_admin' && user.role_org && (
+              <span
+                className="mt-1 ms-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
+              >
+                {user.role_org === 'owner' ? t('hotelLayout.roleOwner') : t('hotelLayout.roleAdmin')}
+              </span>
+            )}
           </div>
         </div>
 

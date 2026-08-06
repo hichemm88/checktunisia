@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building, CreditCard, Users, Plus, Trash2, Save,
   Pencil, X, MapPin, Send, Activity,
-  CheckCircle, AlertCircle, Download, Landmark, Gauge, TrendingUp,
+  CheckCircle, AlertCircle, Download, Landmark, Gauge, TrendingUp, KeyRound,
 } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -194,7 +194,9 @@ const SocieteTab = () => {
 const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
   const { t } = useTranslation();
   const qc = useQueryClient();
-  const [mode, setMode]     = useState<'view' | 'edit' | 'confirm_delete'>('view');
+  const { user: me, setUser } = useAuthStore();
+  const [mode, setMode]     = useState<'view' | 'edit' | 'confirm_delete' | 'transfer'>('view');
+  const [transferPassword, setTransferPassword] = useState('');
   const [editForm, setEditForm] = useState({
     first_name: u.first_name,
     last_name:  u.last_name,
@@ -235,6 +237,50 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
     mutationFn: () => settingsApi.resendInvite(u.id),
     onError: (err) => setError(extractErrors(err)),
   });
+
+  const transferMut = useMutation({
+    mutationFn: () => settingsApi.transferOwnership({ user_id: u.id, password: transferPassword }),
+    onSuccess: () => {
+      // L'utilisateur courant vient de céder la propriété : son role_org
+      // devient admin — le store pilote le masquage des onglets réservés.
+      if (me) setUser({ ...me, role_org: 'admin' });
+      qc.invalidateQueries({ queryKey: ['hotel-users'] });
+      qc.invalidateQueries({ queryKey: ['onboarding-status'] });
+      setMode('view');
+      setError('');
+      setTransferPassword('');
+    },
+    onError: (err) => setError(extractErrors(err)),
+  });
+
+  if (mode === 'transfer') {
+    return (
+      <div className="py-3 border-b border-gray-50 last:border-0">
+        <p className="text-sm font-semibold text-gray-900 mb-1">{t('settingsPage.transferOwnershipTitle')}</p>
+        <p className="text-sm text-gray-700 mb-2">
+          {t('settingsPage.transferOwnershipWarning', { name: `${u.first_name} ${u.last_name}` })}
+        </p>
+        <Input
+          label={t('settingsPage.transferConfirmPassword')}
+          type="password"
+          value={transferPassword}
+          onChange={e => setTransferPassword(e.target.value)}
+          autoComplete="current-password"
+        />
+        {error && <div className="mt-2"><Alert msg={error} type="error" /></div>}
+        <div className="flex gap-2 mt-3">
+          <Button size="sm" loading={transferMut.isPending} disabled={!transferPassword}
+            onClick={() => transferMut.mutate()}
+            className="!bg-red-600 hover:!bg-red-700 gap-1.5">
+            <KeyRound className="h-3.5 w-3.5" /> {t('settingsPage.transferConfirmAction')}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => { setMode('view'); setError(''); setTransferPassword(''); }}>
+            {t('common.cancel')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (mode === 'edit') {
     return (
@@ -316,8 +362,10 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0 ms-2">
-        <Badge variant={u.status === 'active' ? 'active' : 'suspended'}>
-          {u.role === 'hotel_admin' ? t('settingsPage.roleAdmin') : u.role === 'receptionist' ? t('settingsPage.roleReceptionist') : u.role}
+        <Badge variant={u.role_org === 'owner' ? 'active' : u.status === 'active' ? 'active' : 'suspended'}>
+          {u.role_org === 'owner'
+            ? t('settingsPage.roleOwner')
+            : u.role === 'hotel_admin' ? t('settingsPage.roleAdmin') : u.role === 'receptionist' ? t('settingsPage.roleReceptionist') : u.role}
         </Badge>
         {!u.last_login_at && (
           <button
@@ -329,20 +377,35 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
             <Send className="h-3.5 w-3.5" />
           </button>
         )}
-        <button
-          onClick={() => setMode('edit')}
-          className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors"
-          title={t('common.edit')}
-        >
-          <Pencil className="h-3.5 w-3.5" />
-        </button>
-        <button
-          onClick={() => setMode('confirm_delete')}
-          className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
-          title={t('common.delete')}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
+        {/* Transfert d'ownership : proposé sur les administrateurs actifs de l'org */}
+        {u.role === 'hotel_admin' && u.role_org !== 'owner' && u.status === 'active' && u.id !== me?.id && (
+          <button
+            onClick={() => setMode('transfer')}
+            className="rounded-lg p-1.5 text-gray-300 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+            title={t('settingsPage.transferOwnershipTitle')}
+          >
+            <KeyRound className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {/* Le propriétaire n'est ni modifiable ni supprimable — passer par le transfert */}
+        {u.role_org !== 'owner' && (
+          <>
+            <button
+              onClick={() => setMode('edit')}
+              className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors"
+              title={t('common.edit')}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setMode('confirm_delete')}
+              className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+              title={t('common.delete')}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </>
+        )}
       </div>
     </div>
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
@@ -986,12 +1049,23 @@ export const SettingsPage = () => {
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'hotel_admin';
-  // ?tab=abonnement — deep-link depuis le bandeau quota du dashboard.
+  // Matrice role_org : société (établissements), équipe et facturation sont
+  // réservés au propriétaire — masqués (pas grisés) pour les « admin ».
+  // role_org absent (session d'avant migration, pas encore synchronisée) est
+  // traité comme owner : l'API reste l'autorité et refuse avec ROLE_ORG_FORBIDDEN.
+  const isOwner = isAdmin && user?.role_org !== 'admin';
+  const visibleTabs = TAB_DEFS.filter(td => {
+    if (td.id === 'societe' || td.id === 'equipe') return isOwner;
+    if (td.id === 'destinataires' || td.id === 'activite') return isAdmin;
+    return isOwner || !isAdmin; // abonnement : owner + comportement réceptionniste inchangé
+  });
+  // ?tab=abonnement — deep-link depuis le bandeau quota du dashboard,
+  // honoré seulement si l'onglet est visible pour ce rôle.
   const [searchParams] = useSearchParams();
   const requestedTab = searchParams.get('tab') as Tab | null;
-  const initialTab: Tab = requestedTab && TAB_DEFS.some((td) => td.id === requestedTab)
+  const initialTab: Tab = requestedTab && visibleTabs.some((td) => td.id === requestedTab)
     ? requestedTab
-    : (isAdmin ? 'societe' : 'abonnement');
+    : (isOwner ? 'societe' : isAdmin ? 'destinataires' : 'abonnement');
   const [tab, setTab] = useState<Tab>(initialTab);
 
   return (
@@ -1003,7 +1077,7 @@ export const SettingsPage = () => {
           className="sticky top-0 z-10 flex border-b px-4 overflow-x-auto scrollbar-none"
           style={{ background: '#fff', borderColor: '#E5E7EB' }}
         >
-          {(isAdmin ? TAB_DEFS : TAB_DEFS.filter(td => td.id !== 'societe' && td.id !== 'equipe' && td.id !== 'destinataires' && td.id !== 'activite')).map(td => (
+          {visibleTabs.map(td => (
             <button
               key={td.id}
               onClick={() => setTab(td.id)}
@@ -1021,11 +1095,11 @@ export const SettingsPage = () => {
 
         {/* ── Tab content ── */}
         <div className="p-4 flex flex-col gap-4">
-          {tab === 'societe'      && isAdmin && <SocieteTab />}
-          {tab === 'equipe'       && isAdmin && <EquipeTab />}
+          {tab === 'societe'      && isOwner && <SocieteTab />}
+          {tab === 'equipe'       && isOwner && <EquipeTab />}
           {tab === 'destinataires' && isAdmin && <DestinatairesTab />}
           {tab === 'activite'     && isAdmin && <ActiviteTab />}
-          {tab === 'abonnement'   && <AbonnementTab />}
+          {tab === 'abonnement'   && (isOwner || !isAdmin) && <AbonnementTab />}
         </div>
 
       </div>

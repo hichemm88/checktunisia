@@ -3,6 +3,9 @@ import { persist } from 'zustand/middleware';
 
 export type Role = 'platform_admin' | 'hotel_admin' | 'receptionist' | 'authority_user';
 
+/** Rôle intra-organisation (hôtel) : propriétaire unique ou administrateur. */
+export type RoleOrg = 'owner' | 'admin';
+
 export interface AuthorityProfile {
   org_id: number;
   org_name: string;
@@ -20,6 +23,8 @@ export interface AuthUser {
   last_name: string;
   phone?: string | null;
   role: Role;
+  /** Renseigné pour les hotel_admin ; null pour les autres rôles plateforme. */
+  role_org?: RoleOrg | null;
   hotel?: {
     id: string;
     name: string;

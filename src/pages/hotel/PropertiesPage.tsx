@@ -562,10 +562,13 @@ const PropertyCard = ({
   property,
   isDefault,
   isOnly,
+  canManage,
 }: {
   property: Property;
   isDefault: boolean;
   isOnly: boolean;
+  /** Owner uniquement : modification / suppression de l'établissement. */
+  canManage: boolean;
 }) => {
   const { t } = useTranslation();
   const qc = useQueryClient();
@@ -650,14 +653,16 @@ const PropertyCard = ({
 
             {/* Action buttons */}
             <div className="flex items-center gap-1 flex-shrink-0">
-              <button
-                onClick={() => { setEditing((e) => !e); setExpanded(false); setConfirmDelete(false); setError(''); }}
-                className="rounded-lg p-2 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors"
-                title={t('common.edit')}
-              >
-                {editing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
-              </button>
-              {!isOnly && (
+              {canManage && (
+                <button
+                  onClick={() => { setEditing((e) => !e); setExpanded(false); setConfirmDelete(false); setError(''); }}
+                  className="rounded-lg p-2 text-gray-300 hover:bg-blue-50 hover:text-blue-500 transition-colors"
+                  title={t('common.edit')}
+                >
+                  {editing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                </button>
+              )}
+              {canManage && !isOnly && (
                 <button
                   onClick={() => { setConfirmDelete((s) => !s); setEditing(false); setExpanded(false); setError(''); }}
                   className="rounded-lg p-2 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
@@ -897,6 +902,9 @@ export const PropertiesPage = () => {
   const [showForm, setShowForm] = useState(false);
   const { user, activePropertyId, setActiveProperty } = useAuthStore();
   const isAdmin = user?.role === 'hotel_admin';
+  // Création / modification / suppression d'établissement : owner uniquement
+  // (matrice role_org) — masqué pour les « admin », l'API refuse de toute façon.
+  const isOwner = isAdmin && user?.role_org !== 'admin';
 
   const { data: org, isLoading, isError, refetch } = useQuery({
     queryKey: ['org-info'],
@@ -960,9 +968,11 @@ export const PropertiesPage = () => {
               )}
             </p>
           </div>
-          <Button size="sm" onClick={() => setShowForm(true)} className="gap-1.5 flex-shrink-0">
-            <Plus className="h-4 w-4" /> {t('propertiesPage.addProperty')}
-          </Button>
+          {isOwner && (
+            <Button size="sm" onClick={() => setShowForm(true)} className="gap-1.5 flex-shrink-0">
+              <Plus className="h-4 w-4" /> {t('propertiesPage.addProperty')}
+            </Button>
+          )}
         </div>
 
         {/* ── Add property form ── */}
@@ -981,15 +991,17 @@ export const PropertiesPage = () => {
         ) : (
           <div className="flex flex-col gap-3">
             {(org?.properties ?? []).map((p: Property, idx: number) => (
-              <PropertyCard key={p.id} property={p} isDefault={idx === 0} isOnly={(org?.properties ?? []).length === 1} />
+              <PropertyCard key={p.id} property={p} isDefault={idx === 0} isOnly={(org?.properties ?? []).length === 1} canManage={isOwner} />
             ))}
             {!isLoading && (org?.properties ?? []).length === 0 && !showForm && (
               <div className="flex flex-col items-center gap-3 py-10 text-gray-400">
                 <Building2 className="h-10 w-10 text-gray-200" />
                 <p className="text-sm font-medium">{t('propertiesPage.noPropertyRegistered')}</p>
-                <Button size="sm" onClick={() => setShowForm(true)} className="gap-1.5">
-                  <Plus className="h-4 w-4" /> {t('propertiesPage.addFirstProperty')}
-                </Button>
+                {isOwner && (
+                  <Button size="sm" onClick={() => setShowForm(true)} className="gap-1.5">
+                    <Plus className="h-4 w-4" /> {t('propertiesPage.addFirstProperty')}
+                  </Button>
+                )}
               </div>
             )}
           </div>
