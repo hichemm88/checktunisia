@@ -757,7 +757,10 @@
     "ruleNumber": "رقم",
     "ruleSymbol": "رمز خاص",
     "ruleMatch": "تطابق التأكيد",
-    "changePassword": "تغيير كلمة المرور"
+    "changePassword": "تغيير كلمة المرور",
+    "emailPasswordRequired": "أدخل كلمة المرور الحالية لتغيير البريد الإلكتروني.",
+    "currentPasswordForEmail": "كلمة المرور الحالية",
+    "currentPasswordForEmailHint": "مطلوبة لتغيير البريد الإلكتروني (معرّف الدخول)."
   },
   "common": {
     "save": "حفظ",
@@ -1439,7 +1442,8 @@
       "billing": "الفوترة",
       "content": "المحتوى",
       "supervision": "الإشراف"
-    }
+    },
+    "myProfile": "ملفي الشخصي"
   },
   "hotelLayout": {
     "nav": {

@@ -36,6 +36,9 @@ export const ProfilePage = () => {
   const [firstName, setFirstName] = useState(user?.first_name ?? '');
   const [lastName,  setLastName]  = useState(user?.last_name  ?? '');
   const [phone,     setPhone]     = useState(user?.phone ?? '');
+  // Email modifiable : exige le mot de passe actuel (identifiant de connexion).
+  const [email,     setEmail]     = useState(user?.email ?? '');
+  const [emailPwd,  setEmailPwd]  = useState('');
   const [infoLoading, setInfoLoading] = useState(false);
   const [infoError,   setInfoError]   = useState('');
   const [infoSuccess, setInfoSuccess] = useState(false);
@@ -75,6 +78,14 @@ export const ProfilePage = () => {
       return;
     }
 
+    // L'email est l'identifiant de connexion : le backend exige le mot de passe
+    // actuel pour le changer. On le demande donc AVANT d'appeler l'API.
+    const emailChanged = email.trim().toLowerCase() !== (user?.email ?? '').toLowerCase();
+    if (emailChanged && !emailPwd) {
+      setInfoError(t('profile.emailPasswordRequired'));
+      return;
+    }
+
     setInfoLoading(true);
     try {
       const updated = await authApi.updateProfile({
@@ -82,11 +93,14 @@ export const ProfilePage = () => {
         last_name:  lastName,
         // Envoi normalisé ; chaîne vide → null pour permettre l'effacement.
         phone:      normalizePhone(phone) || null,
+        ...(emailChanged ? { email: email.trim(), current_password: emailPwd } : {}),
       });
       // Sync store with the fresh values returned by the API (dont le téléphone —
       // c'était le maillon manquant : sans ça, le rechargement relisait l'ancien
       // état persisté et le numéro « disparaissait »).
-      if (user) setUser({ ...user, first_name: updated.first_name, last_name: updated.last_name, phone: updated.phone });
+      if (user) setUser({ ...user, first_name: updated.first_name, last_name: updated.last_name, phone: updated.phone, email: updated.email });
+      setEmail(updated.email);
+      setEmailPwd('');
       setInfoSuccess(true);
     } catch (err) {
       setInfoError(extractErrors(err));
@@ -283,10 +297,23 @@ export const ProfilePage = () => {
             <Input
               label={t('profile.email')}
               type="email"
-              value={user?.email ?? ''}
-              disabled
-              className="opacity-60 cursor-not-allowed"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
+
+            {/* Changement d'email = changement d'identifiant de connexion :
+                on exige le mot de passe actuel (le backend le vérifie aussi). */}
+            {email.trim().toLowerCase() !== (user?.email ?? '').toLowerCase() && (
+              <Input
+                label={t('profile.currentPasswordForEmail')}
+                type="password"
+                autoComplete="current-password"
+                value={emailPwd}
+                onChange={(e) => setEmailPwd(e.target.value)}
+                hint={t('profile.currentPasswordForEmailHint')}
+              />
+            )}
 
             <Input
               label={t('profile.phone')}
@@ -303,7 +330,13 @@ export const ProfilePage = () => {
               type="submit"
               fullWidth
               loading={infoLoading}
-              disabled={!firstName.trim() || !lastName.trim() || (!!phone.trim() && !isValidTnPhone(phone))}
+              disabled={
+                !firstName.trim() || !lastName.trim()
+                || (!!phone.trim() && !isValidTnPhone(phone))
+                || !email.trim()
+                // Nouvel email saisi mais mot de passe actuel manquant.
+                || (email.trim().toLowerCase() !== (user?.email ?? '').toLowerCase() && !emailPwd)
+              }
             >
               {t('profile.saveInfo')}
             </Button>

@@ -324,7 +324,18 @@ export const AdminLayout = () => {
               <kbd>Ctrl</kbd>+<kbd>K</kbd>
             </button>
             <LanguageSwitcher />
-            <span className="hidden sm:block text-sm text-gray-500 whitespace-nowrap">{user?.first_name} {user?.last_name}</span>
+            {/* Le nom mène au profil : c'était le seul rôle sans accès à
+                /profile (nom, prénom, e-mail, téléphone, mot de passe). */}
+            <NavLink
+              to="/profile"
+              title={t('adminLayout.myProfile')}
+              className="flex items-center gap-2 rounded-xl px-2 py-1 text-sm text-gray-500 hover:bg-warm-100 hover:text-gray-800 transition-colors"
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold" style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}>
+                {[user?.first_name?.[0], user?.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'}
+              </span>
+              <span className="hidden sm:block whitespace-nowrap">{user?.first_name} {user?.last_name}</span>
+            </NavLink>
           </div>
         </header>
         <main className="flex-1 min-w-0 p-4 md:p-6">
