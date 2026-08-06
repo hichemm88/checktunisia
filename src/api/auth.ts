@@ -58,7 +58,9 @@ export const authApi = {
       .then((r) => r.data.data),
 
   // Profile — update name/phone
-  updateProfile: (data: { first_name?: string; last_name?: string; phone?: string | null }) =>
+  // `email` + `current_password` : le changement d'adresse (identifiant de
+  // connexion) exige le mot de passe actuel côté backend.
+  updateProfile: (data: { first_name?: string; last_name?: string; phone?: string | null; email?: string; current_password?: string }) =>
     api
       .patch<{ data: { id: string; email: string; first_name: string; last_name: string; phone: string | null } }>(
         '/profile',

@@ -757,7 +757,10 @@
     "ruleNumber": "Digit",
     "ruleSymbol": "Special character",
     "ruleMatch": "Passwords match",
-    "changePassword": "Change password"
+    "changePassword": "Change password",
+    "emailPasswordRequired": "Enter your current password to change your email address.",
+    "currentPasswordForEmail": "Current password",
+    "currentPasswordForEmailHint": "Required to change your email address (your sign-in ID)."
   },
   "common": {
     "save": "Save",
@@ -1461,7 +1464,8 @@
       "billing": "Billing",
       "content": "Content",
       "supervision": "Monitoring"
-    }
+    },
+    "myProfile": "My profile"
   },
   "hotelLayout": {
     "nav": {

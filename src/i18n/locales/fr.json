@@ -757,7 +757,10 @@
     "ruleNumber": "Chiffre",
     "ruleSymbol": "Caractère spécial",
     "ruleMatch": "Confirmation identique",
-    "changePassword": "Changer le mot de passe"
+    "changePassword": "Changer le mot de passe",
+    "emailPasswordRequired": "Saisissez votre mot de passe actuel pour changer d'adresse e-mail.",
+    "currentPasswordForEmail": "Mot de passe actuel",
+    "currentPasswordForEmailHint": "Requis pour changer d'adresse e-mail (identifiant de connexion)."
   },
   "common": {
     "save": "Enregistrer",
@@ -1461,7 +1464,8 @@
       "billing": "Facturation",
       "content": "Contenu",
       "supervision": "Supervision"
-    }
+    },
+    "myProfile": "Mon profil"
   },
   "hotelLayout": {
     "nav": {
