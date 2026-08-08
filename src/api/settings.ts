@@ -62,11 +62,17 @@ export const settingsApi = {
         extra_count: number; extra_property_price: number | null;
         extra_total: number; monthly_total: number; cycle_total: number; negotiated: boolean;
       } | null;
-      /** Quota mensuel de check-ins (grille V2) — null/unlimited = pas d'affichage. */
+      /**
+       * Quota mensuel de check-ins — TOUS les montants viennent du backend
+       * (CheckinQuota::status). Le front n'en recalcule aucun : il affiche.
+       * null/unlimited = pas de carte de consommation.
+       */
       quota?: {
-        quota: number | null; used: number; remaining: number | null; percent: number | null;
+        period: string; quota: number | null; used: number; cancelled: number;
+        remaining: number | null; percent: number | null;
         overage_count: number; bundle_size: number | null; bundle_count: number;
         unit_price: number | null; overage_amount: number | null;
+        monthly_base: number | null; estimated_total: number | null;
         billable: boolean; legacy: boolean; unlimited: boolean;
       } | null;
       /** Grandfathering : le compte conserve les conditions de l'ancienne grille. */

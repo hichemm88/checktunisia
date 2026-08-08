@@ -22,6 +22,7 @@ import { type HotelUser, type CreateUserPayload } from '@/types';
 import { organizationApi, type OrgInfo } from '@/api/organization';
 import { fetchPlans, fetchPlatformSettings } from '@/api/public';
 import { paymentApi } from '@/api/payment';
+import { isPerUnitOverage, quotaLevel, quotaPercent } from '@/lib/billing';
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -533,13 +534,27 @@ const EquipeTab = () => {
 
 // ─── Tab: Abonnement ──────────────────────────────────────────────────────────
 
-/** Consommation du quota mensuel de check-ins (grille V2) — comptes à quota fini uniquement. */
+/**
+ * Consommation du quota mensuel de check-ins — comptes à quota fini
+ * uniquement.
+ *
+ * Objectif : aucune mauvaise surprise en fin de mois. Le client lit sur un
+ * seul écran ce qu'il a consommé, ce qu'il lui reste, ce que coûte un
+ * check-in supplémentaire, ce qu'il a déjà généré de dépassement et le total
+ * estimé de la période. Tous ces chiffres viennent du backend — le front ne
+ * fait AUCUN calcul de facturation, il met en forme.
+ */
 const QuotaCard = ({ quota }: { quota: NonNullable<Awaited<ReturnType<typeof settingsApi.getSubscription>>['quota']> }) => {
   const { t } = useTranslation();
   if (quota.unlimited || quota.quota == null || quota.quota < 1) return null;
 
-  const over = quota.used > quota.quota;
-  const pct = Math.min(100, Math.floor((quota.used * 100) / quota.quota));
+  const level = quotaLevel(quota);
+  const over = level === 'over';
+  const pct = quotaPercent(quota);
+  // Grille V3 : le dépassement se facture au check-in (tranche de 1). Le
+  // libellé « tranche » n'est gardé que si un pack repasse à un lot.
+  const perUnit = isPerUnitOverage(quota);
+  const showBilling = quota.billable && quota.unit_price != null;
 
   return (
     <Card>
@@ -554,24 +569,52 @@ const QuotaCard = ({ quota }: { quota: NonNullable<Awaited<ReturnType<typeof set
         <div className="flex items-center gap-3">
           <div className="h-2.5 flex-1 rounded-full bg-gray-100 overflow-hidden">
             <div className="h-full rounded-full transition-all"
-              style={{ width: `${pct}%`, background: over || pct >= 100 ? '#E3A008' : pct >= 80 ? '#5346A8' : '#1F9D6B' }} />
+              style={{ width: `${pct}%`, background: over || level === 'reached' ? '#E3A008' : level === 'warning' ? '#5346A8' : '#1F9D6B' }} />
           </div>
           <span className="font-mono text-sm font-semibold text-gray-700">{quota.used}/{quota.quota}</span>
         </div>
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+          {!over && quota.remaining != null && (
+            <span>{t('settingsPage.quotaRemaining', { count: quota.remaining })}</span>
+          )}
+          {showBilling && (
+            <span>
+              {t('settingsPage.quotaUnitPrice', { price: formatTND(quota.unit_price!) })}
+            </span>
+          )}
+        </div>
+
         <p className="text-xs text-gray-500">{t('settingsPage.quotaHint')}</p>
+
         {over && (
           <div className="rounded-xl p-3" style={{ background: '#FBF0D7' }}>
             <p className="text-sm font-semibold" style={{ color: '#8A6206' }}>
               {t('settingsPage.quotaOverage', { count: quota.overage_count })}
             </p>
-            {quota.billable && quota.overage_amount != null && quota.overage_amount > 0 && (
+            {showBilling && quota.overage_amount != null && quota.overage_amount > 0 && (
               <p className="text-xs mt-0.5" style={{ color: '#8A6206' }}>
-                {t('settingsPage.quotaOverageBilled', {
-                  bundles: quota.bundle_count, size: quota.bundle_size ?? 0,
-                  amount: formatTND(quota.overage_amount),
-                })}
+                {perUnit
+                  ? t('settingsPage.quotaOverageBilledUnit', {
+                      count: quota.bundle_count,
+                      price: formatTND(quota.unit_price!),
+                      amount: formatTND(quota.overage_amount),
+                    })
+                  : t('settingsPage.quotaOverageBilled', {
+                      bundles: quota.bundle_count, size: quota.bundle_size ?? 0,
+                      amount: formatTND(quota.overage_amount),
+                    })}
               </p>
             )}
+          </div>
+        )}
+
+        {quota.estimated_total != null && (
+          <div className="mt-1 flex items-baseline justify-between border-t border-gray-100 pt-2">
+            <span className="text-xs text-gray-500">{t('settingsPage.quotaEstimatedTotal')}</span>
+            <span className="font-mono text-sm font-semibold text-gray-800">
+              {formatTND(quota.estimated_total)}
+            </span>
           </div>
         )}
       </div>

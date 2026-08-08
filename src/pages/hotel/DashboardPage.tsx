@@ -16,6 +16,7 @@ import { statusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/stores/authStore';
 import type { DashboardData } from '@/types';
+import { isPerUnitOverage, quotaLevel } from '@/lib/billing';
 
 const localeFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 
@@ -598,10 +599,11 @@ export const DashboardPage = () => {
               de dépassement et CTA plan supérieur. Comptes illimités : rien. */}
           {(() => {
             const q = d.quota;
-            if (!q || q.unlimited || q.quota == null || q.quota < 1) return null;
-            const reached = q.used >= q.quota;
-            const warn80 = !reached && q.used * 5 >= q.quota * 4;
-            if (!reached && !warn80) return null;
+            if (!q) return null;
+            // Mêmes seuils que la carte Abonnement et que les alertes serveur.
+            const level = quotaLevel(q);
+            if (level === 'unlimited' || level === 'ok') return null;
+            const reached = level === 'reached' || level === 'over';
             return (
               <div
                 className="flex items-start gap-3 rounded-xl p-3"
@@ -621,7 +623,12 @@ export const DashboardPage = () => {
                   <p className="text-xs mt-0.5" style={{ color: reached ? '#8A6206' : '#5346A8' }}>
                     {reached
                       ? (q.billable && q.overage_amount != null && q.overage_amount > 0
-                        ? t('hotelDashboard.quotaOverageBilled', { bundles: q.bundle_count, amount: formatTNDAmount(q.overage_amount) })
+                        // Tranche de 1 (grille V3) : on annonce des check-ins,
+                        // pas des « tranches » — le libellé par lot ne sert que
+                        // si un pack repasse à un bundle > 1.
+                        ? (isPerUnitOverage(q)
+                          ? t('hotelDashboard.quotaOverageBilledUnit', { count: q.bundle_count, amount: formatTNDAmount(q.overage_amount) })
+                          : t('hotelDashboard.quotaOverageBilled', { bundles: q.bundle_count, amount: formatTNDAmount(q.overage_amount) }))
                         : t('hotelDashboard.quotaNeverBlocked'))
                       : t('hotelDashboard.quotaWarningHint')}
                   </p>

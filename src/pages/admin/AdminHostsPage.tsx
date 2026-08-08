@@ -14,7 +14,7 @@ import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { formatTND, formatTNDAmount } from '@/lib/money';
-import { type BillingCycle, cycleEndDate, priceForCycle } from '@/lib/billing';
+import { type BillingCycle, cycleEndDate, isPerUnitOverage, priceForCycle } from '@/lib/billing';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { Pagination } from '@/components/ui/Pagination';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
@@ -290,7 +290,9 @@ const QuotaSection = ({ host }: { host: AdminHostDetail }) => {
             </div>
             {over && (
               <p className="text-xs font-medium" style={{ color: '#8A6206' }}>
-                {t('adminHosts.quotaOverage', { count: q.overage_count, bundles: q.bundle_count })}
+                {isPerUnitOverage(q)
+                  ? t('adminHosts.quotaOverageUnit', { count: q.overage_count })
+                  : t('adminHosts.quotaOverage', { count: q.overage_count, bundles: q.bundle_count })}
                 {q.overage_amount != null && ` · ${formatTNDAmount(q.overage_amount)} TND`}
                 {!q.billable && ` · ${t('adminQuotas.notBilled')}`}
               </p>
