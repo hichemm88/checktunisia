@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { setSentryUser } from '@/lib/sentry';
 
 export type Role = 'platform_admin' | 'hotel_admin' | 'receptionist' | 'authority_user';
 
@@ -62,12 +63,19 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       activePropertyId: null,
       activePropertyName: null,
-      setAuth: (token, user) => set({ token, user, isAuthenticated: true }),
+      setAuth: (token, user) => {
+        // Contexte de diagnostic : identifiant opaque et rôle seulement.
+        setSentryUser({ id: user.id, role: user.role });
+        set({ token, user, isAuthenticated: true });
+      },
       setUser: (user) => set({ user }),
       setActiveProperty: (propertyId, propertyName = null) =>
         set({ activePropertyId: propertyId, activePropertyName: propertyName }),
-      logout: () =>
-        set({ token: null, user: null, isAuthenticated: false, activePropertyId: null, activePropertyName: null }),
+      logout: () => {
+        // Ne pas rattacher les erreurs suivantes au compte qui vient de partir.
+        setSentryUser(null);
+        set({ token: null, user: null, isAuthenticated: false, activePropertyId: null, activePropertyName: null });
+      },
     }),
     {
       name: 'qayed-auth',

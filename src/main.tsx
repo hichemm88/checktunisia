@@ -5,9 +5,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Analytics } from '@vercel/analytics/react';
 import { ToastProvider } from '@/components/ui/Toast';
 import { captureAttribution } from '@/lib/analytics';
+import { initSentry, captureError } from '@/lib/sentry';
 import { App } from './App';
 import './index.css';
 import './i18n';
+
+// Avant tout le reste : une erreur survenue pendant l'amorçage doit être
+// capturée elle aussi. Inerte sans VITE_SENTRY_DSN.
+initSentry();
 
 // Capture des UTM / referrer au premier chargement (attribution des signups).
 captureAttribution();
@@ -46,6 +51,11 @@ if ('serviceWorker' in navigator) {
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null };
   static getDerivedStateFromError(error: Error) { return { error }; }
+  componentDidCatch(error: Error) {
+    // Sans ceci, une casse de rendu React n'atteint jamais le suivi d'erreurs :
+    // l'ErrorBoundary l'intercepte et window.onerror ne la voit pas.
+    captureError(error, { boundary: 'root' });
+  }
   render() {
     if (this.state.error) {
       return (
