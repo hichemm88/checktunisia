@@ -14,6 +14,7 @@ import { useToast } from '@/components/ui/Toast';
 import { api, extractErrors } from '@/lib/api';
 import { scanMrz } from '@/lib/mrzScanner';
 import { downscaleForUpload } from '@/lib/uploadImagePrep';
+import { guestFormBlockers } from '@/lib/guestFormGuards';
 import { CINCapture } from '@/components/hotel/CINCapture';
 import { prepareCinImage } from '@/lib/cinImagePrep';
 import { scanCin } from '@/api/scanCin';
@@ -380,6 +381,13 @@ export const GuestScanPanel = ({
   const docRequired = waEnabled !== false && !docCaptured;
   const docBlocksSubmit = docRequired && !noDocAck;
 
+  // Règle unique, testée hors navigateur (voir lib/guestFormGuards).
+  const blockers = guestFormBlockers(guestForm, {
+    hasUnfilledLowConfidence: hasUnfilledLow,
+    documentPhotoMissing: docBlocksSubmit,
+  });
+  const docFieldsMissing = blockers.includes('document_number') || blockers.includes('issuing_country_code');
+
   const isCin = scanKind === 'cin' && !!cinScan;
   // Focus auto sur le premier champ non-`high` (ordre : numéro, nom, prénom, date).
   const focusKey =
@@ -616,7 +624,7 @@ export const GuestScanPanel = ({
             </div>
 
             <Field label={isCin ? t('cinScan.cinNumber') : t('guestScan.documentNumber')} level={conf?.cinNumber}>
-              <Input value={guestForm.document_number ?? ''} onChange={(e) => setG('document_number', e.target.value)} autoFocus={focusKey === 'document_number'} />
+              <Input value={guestForm.document_number ?? ''} onChange={(e) => setG('document_number', e.target.value)} autoFocus={focusKey === 'document_number'} required />
             </Field>
 
             {isCin && guestForm.birth_place_ar !== undefined && (
@@ -628,7 +636,7 @@ export const GuestScanPanel = ({
             {/* Pays de délivrance + expiration : masqués pour la CIN (pas d'expiration) */}
             {!isCin && (
               <div className="grid grid-cols-2 gap-3">
-                <Input label={t('guestScan.issuingCountry')} placeholder="TUN" value={guestForm.issuing_country_code ?? ''} onChange={(e) => setG('issuing_country_code', e.target.value.toUpperCase())} maxLength={3} />
+                <Input label={t('guestScan.issuingCountry')} placeholder="TUN" value={guestForm.issuing_country_code ?? ''} onChange={(e) => setG('issuing_country_code', e.target.value.toUpperCase())} maxLength={3} required />
                 <div className="flex flex-col gap-1">
                   <Input label={t('guestScan.expiry')} type="date" value={guestForm.expiry_date ?? ''} onChange={(e) => setG('expiry_date', e.target.value)} />
                   {docExpiresSoon && (
@@ -641,6 +649,10 @@ export const GuestScanPanel = ({
 
           {hasUnfilledLow && (
             <p className="text-[11px] font-medium text-red-600">{t('cinScan.lowFieldRequired')}</p>
+          )}
+
+          {docFieldsMissing && (
+            <p className="text-[11px] font-medium text-red-600">{t('guestScan.documentFieldsRequired')}</p>
           )}
 
           {docExpired && (
@@ -675,7 +687,7 @@ export const GuestScanPanel = ({
             fullWidth size="lg"
             loading={addGuestMutation.isPending}
             onClick={() => addGuestMutation.mutate()}
-            disabled={!guestForm.first_name || !guestForm.last_name || !guestForm.date_of_birth || hasUnfilledLow || docBlocksSubmit}
+            disabled={blockers.length > 0}
           >
             {t('guestScan.confirmGuest')} <ArrowRight className="h-4 w-4" />
           </Button>

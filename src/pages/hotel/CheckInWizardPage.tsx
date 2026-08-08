@@ -356,7 +356,7 @@ export const CheckInWizardPage = () => {
 
   // ?resume={id} — reprise d'une fiche brouillon depuis la liste d'arrivées du dashboard :
   // on saute l'étape réservation (déjà créée) et on ouvre directement les documents.
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const resumeId = params.get('resume');
   const { data: resumed } = useQuery({
     queryKey: ['check-in-resume', resumeId],
@@ -366,6 +366,17 @@ export const CheckInWizardPage = () => {
   useEffect(() => {
     if (resumed && !checkIn) { setCheckIn(resumed); setStep(1); }
   }, [resumed, checkIn]);
+
+  // Le brouillon est inscrit dans l'URL dès sa création. Sans ça, un simple F5
+  // (ou le retour depuis l'appareil photo natif, qui recharge l'onglet sur
+  // certains téléphones) renvoyait la réception à l'étape 1 avec un formulaire
+  // vide, alors que le séjour existait déjà en base : elle en recréait un
+  // second et laissait un brouillon fantôme derrière elle.
+  useEffect(() => {
+    if (checkIn && params.get('resume') !== checkIn.id) {
+      setParams({ resume: checkIn.id }, { replace: true });
+    }
+  }, [checkIn, params, setParams]);
 
   const STEPS = [
     { label: t('checkinWizard.stepBooking') },

@@ -1064,7 +1064,8 @@
     "confirmGuest": "تأكيد النزيل",
     "rescan": "إعادة المسح أو التصحيح",
     "docExpiredSince": "الوثيقة منتهية الصلاحية منذ {{date}}",
-    "docExpiresSoon": "تنتهي قريبًا"
+    "docExpiresSoon": "تنتهي قريبًا",
+    "documentFieldsRequired": "رقم الوثيقة وبلد الإصدار إلزاميان لبطاقة الشرطة."
   },
   "auth": {
     "tagline": "التسجيل الرقمي للنزلاء",

@@ -1080,7 +1080,8 @@
     "confirmGuest": "Confirmer le voyageur",
     "rescan": "Rescanner ou corriger",
     "docExpiredSince": "Document expiré depuis le {{date}}",
-    "docExpiresSoon": "Expire bientôt"
+    "docExpiresSoon": "Expire bientôt",
+    "documentFieldsRequired": "Le numéro de document et le pays de délivrance sont obligatoires pour la fiche de police."
   },
   "auth": {
     "tagline": "Enregistrement numérique des hôtes",

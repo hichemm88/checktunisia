@@ -1080,7 +1080,8 @@
     "confirmGuest": "Confirm guest",
     "rescan": "Rescan or correct",
     "docExpiredSince": "Document expired since {{date}}",
-    "docExpiresSoon": "Expires soon"
+    "docExpiresSoon": "Expires soon",
+    "documentFieldsRequired": "Document number and issuing country are required for the police record."
   },
   "auth": {
     "tagline": "Digital guest registration",
