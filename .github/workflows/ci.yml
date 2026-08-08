@@ -30,3 +30,17 @@ jobs:
 
       - name: Tests
         run: npm run test
+
+      # Le build échoue sur des erreurs que lint et tsc ne voient pas (imports
+      # cassés à la résolution, plugins Vite, budgets de chunk). Une PR qui ne
+      # construit pas ne doit pas être mergeable.
+      - name: Build
+        run: npm run build
+
+      # --omit=dev volontaire : les vulnérabilités de l'outillage de build ne
+      # sont pas livrées au navigateur et leur correction impose souvent des
+      # montées de version cassantes. On bloque sur ce qui atteint réellement
+      # l'utilisateur. État au 2026-08-07 : 0 high/critical en production
+      # (4 modérées via l'éditeur CMS, suivies mais non bloquantes).
+      - name: Vulnérabilités des dépendances livrées
+        run: npm audit --omit=dev --audit-level=high
