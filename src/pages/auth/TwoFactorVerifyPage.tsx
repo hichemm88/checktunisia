@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { extractErrors } from '@/lib/api';
+import { homePathForRole } from '@/lib/roleRoutes';
 
 /**
  * Step 2 of authority-user login.
@@ -46,7 +47,10 @@ export const TwoFactorVerifyPage = () => {
     try {
       const result = await authApi.verify2FA(partialToken, otp);
       setAuth(result.token, { ...result.user, _token_expires_at: result.expires_at });
-      navigate('/authority/dashboard', { replace: true });
+      // La 2FA ne concerne plus seulement les comptes autorité : un admin
+      // plateforme passe aussi par cet écran et ne doit pas atterrir sur le
+      // portail autorité.
+      navigate(homePathForRole(result.user.role), { replace: true });
     } catch (err) {
       setError(extractErrors(err));
       setCode('');

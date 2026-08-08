@@ -8,22 +8,27 @@ import { Button } from '@/components/ui/Button';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { extractErrors } from '@/lib/api';
+import { useAuthStore } from '@/stores/authStore';
+import { homePathForRole } from '@/lib/roleRoutes';
 
 type Step = 'loading' | 'show_qr' | 'confirm' | 'done';
 
 /**
- * Mandatory 2FA setup page for authority_users.
- * Shown when the backend returns 2FA_SETUP_REQUIRED (403).
+ * Page de configuration 2FA obligatoire.
+ * Affichée quand le backend renvoie 2FA_SETUP_REQUIRED (403) — ce qui concerne
+ * désormais les comptes autorité ET les administrateurs plateforme.
  *
  * Flow:
  *   1. Fetch secret + QR URI from GET /auth/2fa/setup
  *   2. User scans QR in their authenticator app
  *   3. User enters the first 6-digit code to confirm setup
- *   4. Redirect to /authority/dashboard
+ *   4. Redirection vers le tableau de bord de son rôle
  */
 export const TwoFactorSetupPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const role     = useAuthStore((s) => s.user?.role);
+  const homePath = homePathForRole(role);
 
   const [step, setStep]           = useState<Step>('loading');
   const [secret, setSecret]       = useState('');
@@ -37,7 +42,7 @@ export const TwoFactorSetupPage = () => {
     authApi.get2FASetup()
       .then(({ secret, qr_uri, already_enabled }) => {
         if (already_enabled) {
-          navigate('/authority/dashboard', { replace: true });
+          navigate(homePath, { replace: true });
           return;
         }
         setSecret(secret);
@@ -48,7 +53,7 @@ export const TwoFactorSetupPage = () => {
         setError(t('authority2fa.loadError'));
         setStep('show_qr');
       });
-  }, [navigate]);
+  }, [navigate, homePath]);
 
   const copySecret = () => {
     navigator.clipboard.writeText(secret);
@@ -92,7 +97,7 @@ export const TwoFactorSetupPage = () => {
               {t('authority2fa.enabledHint')}
             </p>
           </div>
-          <Button fullWidth size="lg" onClick={() => navigate('/authority/dashboard', { replace: true })}>
+          <Button fullWidth size="lg" onClick={() => navigate(homePath, { replace: true })}>
             {t('authority2fa.goToPlatform')}
           </Button>
         </div>

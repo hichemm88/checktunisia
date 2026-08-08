@@ -30,6 +30,37 @@ const downloadBlob = (blob: Blob, filename: string) => {
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
 };
 
+/**
+ * Ouvre une fiche HTML pour impression dans une iframe bac à sable.
+ *
+ * L'implémentation précédente faisait `window.open('')` puis `document.write()` :
+ * une fenêtre `about:blank` hérite de l'origine de l'ouvreur, donc le HTML de la
+ * fiche s'exécutait sur qayed.tn avec accès au localStorage — et ce HTML contient
+ * des données saisies par les hôtels (nom du voyageur, numéro de document). Un
+ * nom piégé volait ainsi la session de l'agent qui imprimait la fiche.
+ *
+ * Ici, l'absence de `allow-scripts` empêche toute exécution de JavaScript dans
+ * le document. `allow-same-origin` sert uniquement à ce que cette page puisse
+ * déclencher l'impression ; il n'ouvre aucune capacité au document lui-même.
+ */
+const printHtmlSandboxed = (html: string) => {
+  const iframe = document.createElement('iframe');
+  iframe.setAttribute('sandbox', 'allow-same-origin allow-modals');
+  iframe.setAttribute('aria-hidden', 'true');
+  iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+  iframe.srcdoc = html;
+  iframe.onload = () => {
+    try {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    } catch {
+      /* impression refusée par le navigateur — la fiche reste inoffensive */
+    }
+    setTimeout(() => iframe.remove(), 60_000);
+  };
+  document.body.appendChild(iframe);
+};
+
 export const GuestProfilePage = () => {
   const { t, i18n } = useTranslation();
   const locale = dateLocaleFor(i18n.language);
@@ -43,8 +74,7 @@ export const GuestProfilePage = () => {
     try {
       const res = await api.get(`/guests/${id}/export/pdf`, { responseType: 'blob' });
       const html = await res.data.text();
-      const win  = window.open('', '_blank');
-      if (win) { win.document.write(html); win.document.close(); win.print(); }
+      printHtmlSandboxed(html);
     } finally { setExporting(null); }
   };
 
