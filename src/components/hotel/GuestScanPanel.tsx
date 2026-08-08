@@ -268,6 +268,14 @@ export const GuestScanPanel = ({
       }
 
       const c = res.confidence;
+      // Extraction inexploitable (tous les champs douteux, photo sombre/floue) :
+      // proposer explicitement une nouvelle capture plutôt qu'un préremplissage
+      // quasi vide silencieux.
+      if (c.cinNumber === 'low' && c.names === 'low' && c.birthDate === 'low') {
+        setCinError(t('cinScan.extractionPoor'));
+        setScanState('error');
+        return;
+      }
       // Règle : un champ `low` est vidé (→ requis, bloque la soumission).
       setGuestForm({
         document_type: 'national_id',
