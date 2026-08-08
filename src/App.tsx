@@ -162,7 +162,10 @@ export const App = () => (
     <Route path="/forgot-password"      element={<ForgotPasswordPage />} />
     <Route path="/set-password"         element={<SetPasswordPage />} />
     <Route path="/auth/2fa/verify"      element={<TwoFactorVerifyPage />} />
+    {/* Configuration 2FA obligatoire — même écran pour les deux rôles qui y
+        sont soumis ; le chemin diffère pour rester lisible dans l'URL. */}
     <Route path="/authority/2fa/setup"  element={<TwoFactorSetupPage />} />
+    <Route path="/admin/2fa/setup"      element={<TwoFactorSetupPage />} />
 
     {/* Authenticated */}
     <Route element={<RequireAuth />}>

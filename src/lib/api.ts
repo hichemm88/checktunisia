@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/authStore';
+import { twoFactorSetupPathForRole } from '@/lib/roleRoutes';
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? '/api/v1',
@@ -65,8 +66,10 @@ api.interceptors.response.use(
       useAuthStore.getState().logout();
       window.location.href = '/login';
     } else if (status === 403 && code === '2FA_SETUP_REQUIRED') {
-      // Authority user hasn't set up 2FA yet — redirect to mandatory setup page
-      window.location.href = '/authority/2fa/setup';
+      // 2FA obligatoire non configurée — la page de setup dépend du rôle :
+      // les comptes autorité et les admins plateforme y sont tous deux soumis.
+      const role = useAuthStore.getState().user?.role;
+      window.location.href = twoFactorSetupPathForRole(role);
     }
     return Promise.reject(err);
   },
