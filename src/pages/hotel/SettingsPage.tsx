@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useTranslation, Trans } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building, CreditCard, Users, Plus, Trash2, Save,
@@ -727,14 +727,17 @@ const AbonnementTab = () => {
             )}
           </div>
 
+          {/* Renvoyer vers nous pour renouveler date d'avant le self-service :
+              tout se pilote désormais depuis « Mon abonnement », juste en
+              dessous. Le seuil de 30 jours couvrait par ailleurs la TOTALITÉ
+              du cycle d'un client mensuel — l'invitation à nous écrire était
+              donc affichée en permanence. */}
           {sub.days_remaining <= 30 && (
             <div className="mt-3 rounded-xl p-3 flex items-start gap-2" style={{ background: '#FBF0D7', border: '1px solid #FBF0D7' }}>
               <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-amber-800">{t('settingsPage.renewalDue')}</p>
-                <p className="text-xs text-amber-600 mt-0.5">
-                  <Trans t={t} i18nKey="settingsPage.renewalContact" components={{ a: <a href="mailto:contact@qayed.tn" className="underline font-medium" /> }} />
-                </p>
+                <p className="text-xs text-amber-600 mt-0.5">{t('settingsPage.renewalSelfService')}</p>
               </div>
             </div>
           )}

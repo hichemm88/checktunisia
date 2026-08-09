@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
 import { settingsApi } from '@/api/settings';
 import { paymentApi } from '@/api/payment';
+import { fetchPlatformSettings } from '@/api/public';
 import { subscriptionApi, type PlanChangePreview, type SelectablePlan } from '@/api/subscription';
 import { extractErrors } from '@/lib/api';
 import { formatTND } from '@/lib/money';
@@ -307,11 +308,14 @@ const InternalAccountCard = ({ planName }: { planName: string }) => {
 // ─── Bandeaux d'état : changement en cours, résiliation programmée ────────────
 
 const PendingChangeBanner = ({
-  change, onCancel, cancelling,
+  change, onCancel, cancelling, onlinePayment, onGoToInvoices,
 }: {
   change: NonNullable<Awaited<ReturnType<typeof settingsApi.getSubscription>>['pending_change']>;
   onCancel: () => void;
   cancelling: boolean;
+  /** Le paiement en ligne est-il réellement ouvert ? (même drapeau que l'écran Factures) */
+  onlinePayment: boolean;
+  onGoToInvoices: () => void;
 }) => {
   const { t } = useTranslation();
   const longDate = useLongDate();
@@ -350,15 +354,31 @@ const PendingChangeBanner = ({
             : t('subscriptionPage.scheduledHint')}
         </p>
 
+        {/* Le paiement en ligne n'est pas toujours ouvert. Proposer un bouton
+            qui échoue systématiquement laissait le client devant un « service
+            indisponible, réessayez » qui ne se résoudrait jamais — alors que
+            la facture est réglable par virement depuis l'écran Factures. */}
+        {awaitingPayment && !onlinePayment && (
+          <p className="mt-1 text-xs" style={{ color: '#8A6206' }}>
+            {t('subscriptionPage.payOfflineHint')}
+          </p>
+        )}
+
         <div className="mt-2 flex flex-wrap gap-2">
           {awaitingPayment && change.invoice && (
-            <Button
-              size="sm"
-              loading={payMut.isPending}
-              onClick={() => payMut.mutate(change.invoice!.id)}
-            >
-              {t('subscriptionPage.payNow')}
-            </Button>
+            onlinePayment ? (
+              <Button
+                size="sm"
+                loading={payMut.isPending}
+                onClick={() => payMut.mutate(change.invoice!.id)}
+              >
+                {t('subscriptionPage.payNow')}
+              </Button>
+            ) : (
+              <Button size="sm" onClick={onGoToInvoices}>
+                {t('subscriptionPage.payByTransfer')}
+              </Button>
+            )
           )}
           <Button size="sm" variant="secondary" loading={cancelling} onClick={onCancel}>
             {t('subscriptionPage.cancelChange')}
@@ -693,6 +713,12 @@ export const SubscriptionPage = () => {
   const [cancelDialog, setCancelDialog] = useState(false);
 
   const { data: sub, isLoading } = useQuery({ queryKey: ['subscription'], queryFn: settingsApi.getSubscription });
+  // Même source que l'écran Factures : les deux surfaces doivent proposer le
+  // paiement en ligne exactement quand il est ouvert, jamais l'une sans l'autre.
+  const { data: platformSettings } = useQuery({
+    queryKey: ['public-platform-settings'],
+    queryFn: fetchPlatformSettings,
+  });
   const { data: catalog } = useQuery({
     queryKey: ['subscription-plans'],
     queryFn: subscriptionApi.getPlans,
@@ -815,6 +841,8 @@ export const SubscriptionPage = () => {
                 change={pendingChange}
                 cancelling={cancelChangeMut.isPending}
                 onCancel={() => cancelChangeMut.mutate()}
+                onlinePayment={platformSettings?.flouci_enabled === true}
+                onGoToInvoices={() => navigate('/hotel/settings?tab=abonnement')}
               />
             )}
 
