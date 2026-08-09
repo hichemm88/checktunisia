@@ -407,6 +407,132 @@ const BusinessKpis = () => {
   );
 };
 
+/**
+ * Sante d'exploitation.
+ *
+ * Qayed peut cesser de travailler sans tomber : le serveur web repond pendant
+ * que le planificateur est mort, que la file ne se draine plus et que les
+ * fiches n'atteignent plus l'autorite. Rien de tout cela n'etait visible —
+ * l'endpoint existait, aucun ecran ne le lisait.
+ *
+ * L'observateur, ici, c'est CE navigateur : il est exterieur au systeme
+ * observe, contrairement a une tache planifiee qui ne peut pas alerter sur sa
+ * propre mort. Cela couvre les heures ouvrees ; la sonde externe qui couvre
+ * la nuit reste a brancher (backend/docs/observabilite.md).
+ */
+const HealthPanel = () => {
+  const { t, i18n } = useTranslation();
+  const locale = dateLocaleFor(i18n.language);
+  const { data, isError, dataUpdatedAt } = useQuery({
+    queryKey: ['admin-health'],
+    queryFn: adminDashboardApi.health,
+    refetchInterval: 60_000,
+  });
+
+  // Un panneau qui disparaît se lit « rien à signaler » — exactement le
+  // contre-sens qu'il doit empecher. Quand le releve ne peut plus etre
+  // rafraichi, on le DIT.
+  if (isError && !data) {
+    return (
+      <div className="card p-5">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('adminHealth.title')}</p>
+        <p className="text-sm" style={{ color: '#ef4444' }}>{t('adminHealth.unavailable')}</p>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  // Age du RELEVE lui-meme, pas des signaux qu'il porte. Sans cela, un onglet
+  // laisse ouvert pendant que le reseau tombe continuerait d'afficher des
+  // pastilles vertes vieilles d'une heure — le pire des trois etats possibles,
+  // parce qu'il rassure a tort.
+  const readingAgeMs = Date.now() - dataUpdatedAt;
+  const readingStale = isError || readingAgeMs > 3 * 60_000;
+
+  const ago = (minutes: number | null) =>
+    minutes == null ? '—' : t('adminHealth.minutesAgo', { count: Math.round(minutes) });
+
+  const session = data.whatsapp.session;
+  const waAlert = session?.needs_pairing || session?.status === 'logged_out';
+  const waWarn = !waAlert && (session?.paused || (session?.status !== 'ready' && session != null));
+
+  const Signal = ({ label, value, level, hint }: { label: string; value: string; level: 'ok' | 'warn' | 'alert'; hint?: string }) => {
+    const color = level === 'alert' ? '#ef4444' : level === 'warn' ? 'var(--qayed-vigilance)' : 'var(--qayed-conforme)';
+    return (
+      <div className="flex items-start justify-between gap-3 py-2 border-b border-gray-100 last:border-0">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-gray-700">{label}</p>
+          {hint && <p className="text-[11px] text-gray-400 truncate">{hint}</p>}
+        </div>
+        <span className="shrink-0 inline-flex items-center gap-1.5 text-xs font-mono font-semibold" style={{ color }}>
+          <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
+          {value}
+        </span>
+      </div>
+    );
+  };
+
+  return (
+    <div className="card p-5" style={readingStale ? { opacity: 0.55 } : undefined}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('adminHealth.title')}</p>
+        <Gauge className="h-4 w-4 text-gray-300" />
+      </div>
+
+      {/* Le releve lui-meme est-il frais ? Un panneau vert et perime rassure
+          a tort ; on prefere le dire que le laisser croire. */}
+      {readingStale && (
+        <p className="mb-2 rounded-lg px-2 py-1 text-[11px] font-semibold" style={{ background: '#fef3c7', color: '#92400e' }}>
+          {t('adminHealth.readingStale', { count: Math.round(readingAgeMs / 60_000) })}
+        </p>
+      )}
+
+      <Signal
+        label={t('adminHealth.scheduler')}
+        hint={t('adminHealth.schedulerHint')}
+        value={data.scheduler.stale ? t('adminHealth.silent') : ago(data.scheduler.minutes_since)}
+        level={data.scheduler.stale ? 'alert' : 'ok'}
+      />
+      <Signal
+        label={t('adminHealth.queue')}
+        hint={t('adminHealth.queuePending', { count: data.queue.pending ?? 0 })}
+        value={String(data.queue.failed_total)}
+        level={data.queue.failed_total > 0 ? 'warn' : 'ok'}
+      />
+      <Signal
+        label={t('adminHealth.whatsappSession')}
+        hint={session?.last_ready_at ? t('adminHealth.lastReady', { date: fmtDate(session.last_ready_at, locale) }) : undefined}
+        value={session?.status ?? '—'}
+        level={waAlert ? 'alert' : waWarn ? 'warn' : 'ok'}
+      />
+      <Signal
+        label={t('adminHealth.whatsappQueue')}
+        hint={t('adminHealth.queuePending', { count: data.whatsapp.pending ?? 0 })}
+        value={String(data.whatsapp.failed ?? 0)}
+        level={(data.whatsapp.failed ?? 0) > 0 ? 'warn' : 'ok'}
+      />
+      <Signal
+        label={t('adminHealth.backup')}
+        hint={data.backup.last_success_at ? fmtDate(data.backup.last_success_at, locale) : t('adminHealth.never')}
+        value={
+          !data.backup.configured
+            ? t('adminHealth.notConfigured')
+            : data.backup.hours_since_success != null
+              ? t('adminHealth.hoursAgo', { count: Math.round(data.backup.hours_since_success) })
+              : '—'
+        }
+        level={!data.backup.configured || data.backup.stale ? 'alert' : 'ok'}
+      />
+      <Signal
+        label={t('adminHealth.database')}
+        value={`${data.database.latency_ms} ms`}
+        level={data.database.reachable ? 'ok' : 'alert'}
+      />
+    </div>
+  );
+};
+
 export const AdminDashboardPage = () => {
   const { t, i18n } = useTranslation();
   const locale = dateLocaleFor(i18n.language);
@@ -429,7 +555,7 @@ export const AdminDashboardPage = () => {
             <Stat icon={XCircle}      label={t('adminDashboard.suspended')}  value={stats.hotels.suspended} color="#ef4444" />
             <Stat icon={Clock}        label={t('adminDashboard.pending')}    value={stats.hotels.pending}   color="var(--qayed-vigilance)" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Stat icon={TrendingUp} label={t('adminDashboard.checkinsToday')}     value={stats.check_ins.today}      color="var(--qayed-cachet-sombre)" />
             <Stat icon={Users}      label={t('adminDashboard.checkinsThisMonth')} value={stats.check_ins.this_month} color="var(--qayed-cachet-sombre)" />
             <div className="card p-5 group relative">
@@ -466,9 +592,27 @@ export const AdminDashboardPage = () => {
                 </div>
               )}
             </div>
+
+            {/* ARR : meme base d'abonnements que le MRR, calculee cote backend.
+                Un annuel y vaut le montant reellement facture, pas douze fois
+                sa mensualisation arrondie — aucun montant n'est recompose ici. */}
+            <div className="card p-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('adminDashboard.arrCommercial')}</p>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: 'var(--qayed-conforme)18' }}>
+                  <Landmark className="h-4 w-4" style={{ color: 'var(--qayed-conforme)' }} />
+                </div>
+              </div>
+              <p className="font-mono text-3xl font-extrabold text-gray-900">{formatTND(stats.arr)}</p>
+              <p className="mt-1 text-[11px] text-gray-400">
+                {t('adminDashboard.payingCustomers', { count: stats.paying_customers })}
+              </p>
+            </div>
           </div>
 
           <BusinessKpis />
+
+          <HealthPanel />
 
           <AiCostWidget />
 
@@ -488,7 +632,16 @@ export const AdminDashboardPage = () => {
               <AlertCard icon={CreditCard} title={t('adminDashboard.expiringSubscriptions')} color="var(--qayed-vigilance)" empty={!stats.alerts.expiring_subscriptions.length}>
                 {stats.alerts.expiring_subscriptions.map((s) => (
                   <div key={s.id} className="flex items-center justify-between text-sm">
-                    <span className="truncate font-medium text-gray-800">{s.name}</span>
+                    <span className="truncate font-medium text-gray-800">
+                      {s.name}
+                      {/* Deja en retard mais toujours servi : ce n'est pas la
+                          meme relance qu'une echeance a venir. */}
+                      {s.grace?.active && (
+                        <span className="ms-1.5 text-[10px] font-semibold uppercase" style={{ color: 'var(--qayed-vigilance)' }}>
+                          {t('adminDashboard.inGrace', { count: s.grace.days_left ?? 0 })}
+                        </span>
+                      )}
+                    </span>
                     <span className="text-xs text-gray-400 shrink-0 ms-2">{fmtDate(s.expires_at, locale)}</span>
                   </div>
                 ))}

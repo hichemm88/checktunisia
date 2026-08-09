@@ -84,6 +84,16 @@ export const settingsApi = {
         checkins_per_month?: number | null; checkins_label?: string;
         custom_price?: number; legacy_plan?: boolean;
       } | null;
+      /**
+       * Échéance dépassée, recouvrement en cours : le service continue
+       * jusqu'à `ends_at` (terme des relances), puis l'abonnement est
+       * suspendu. Le statut reste « actif » pendant cette période — sans ce
+       * bloc, le client lirait « actif » avec une date d'échéance passée et
+       * n'aurait aucun moyen de savoir quand il sera réellement coupé.
+       *
+       * Calculé par le backend : le front ne dérive aucune date de coupure.
+       */
+      grace?: { active: boolean; ends_at: string | null; days_left: number | null };
       /** Résiliation programmée : le service court jusqu'à `ends_at`. */
       cancellation?: { requested_at: string | null; scheduled: boolean; ends_at: string | null };
       /** Changement de plan en cours (attente de paiement, ou programmé). */

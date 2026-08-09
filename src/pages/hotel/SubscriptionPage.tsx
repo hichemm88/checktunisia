@@ -753,6 +753,7 @@ export const SubscriptionPage = () => {
   const pendingChange = sub?.pending_change ?? null;
   const cancellation = sub?.cancellation;
   const nextRenewal = sub?.next_renewal ?? null;
+  const longDate = useLongDate();
 
   // Un compte en essai, expiré ou suspendu n'a qu'une chose à faire : régler
   // sa formule. C'est le backend qui le dit, et le catalogue qui fournit le
@@ -792,6 +793,23 @@ export const SubscriptionPage = () => {
 
         {sub && sub.status !== 'none' && !isInternal && (
           <>
+            {/* Échéance dépassée, service maintenu : le client doit lire
+                jusqu'à quand. Un statut « actif » avec une date d'échéance
+                passée ne dit rien de la date de coupure réelle. */}
+            {sub.grace?.active && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-semibold text-amber-900">
+                  {t('subscriptionPage.graceTitle')}
+                </p>
+                <p className="mt-1 text-sm text-amber-800">
+                  {t('subscriptionPage.graceBody', {
+                    date: longDate(sub.grace.ends_at),
+                    count: sub.grace.days_left ?? 0,
+                  })}
+                </p>
+              </div>
+            )}
+
             {pendingChange && (
               <PendingChangeBanner
                 change={pendingChange}

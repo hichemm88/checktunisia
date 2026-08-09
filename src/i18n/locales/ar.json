@@ -414,7 +414,29 @@
     "topHotels": "أفضل المؤسسات (تسجيلات هذا الشهر)",
     "recentSignups": "أحدث التسجيلات",
     "mrrCommercial": "الإيراد الشهري التجاري",
-    "mrrScope": "{{commercial}} عميل — {{internal}} حساب داخلي مستثنى"
+    "mrrScope": "{{commercial}} عميل — {{internal}} حساب داخلي مستثنى",
+    "arrCommercial": "الإيراد السنوي التجاري",
+    "payingCustomers": "{{count}} عميل مدفوع",
+    "inGrace": "مهلة {{count}} يوم"
+  },
+  "adminHealth": {
+    "title": "صحة التشغيل",
+    "scheduler": "المجدول",
+    "schedulerHint": "يدير الطابور والفوترة وإرسال البطاقات",
+    "silent": "صامت",
+    "minutesAgo": "منذ {{count}} دقيقة",
+    "hoursAgo": "منذ {{count}} ساعة",
+    "queue": "المهام الفاشلة",
+    "queuePending": "{{count}} قيد الانتظار",
+    "whatsappSession": "جلسة واتساب",
+    "whatsappQueue": "البطاقات الفاشلة",
+    "lastReady": "آخر جلسة جاهزة: {{date}}",
+    "backup": "آخر نسخة احتياطية",
+    "never": "أبدًا",
+    "notConfigured": "غير مُهيّأة",
+    "database": "قاعدة البيانات",
+    "unavailable": "التقرير غير متاح — تعذّر التحقق من حالة التشغيل.",
+    "readingStale": "التقرير عمره {{count}} دقيقة — قد تكون المؤشرات أدناه قديمة."
   },
   "settingsPage": {
     "title": "الإعدادات",
@@ -1739,6 +1761,8 @@
     "internalHint": "لا فاتورة ولا دفع ولا تجديد تجاري ينطبق على هذا الحساب. يبقى الوصول إلى المنتج والاستعمال غير محدودين.",
     "internalPlan": "الباقة المستعملة",
     "internalBilling": "الفوترة",
-    "internalBillingValue": "معفاة"
+    "internalBillingValue": "معفاة",
+    "graceTitle": "فاتورة متأخرة — الخدمة مستمرة",
+    "graceBody": "يبقى وصولكم متاحًا بالكامل حتى {{date}} ({{count}} يوم). سدّدوا الفاتورة قبل هذا التاريخ لتفادي التعليق. لن يتم حظر تسجيلات الوصول."
   }
 }

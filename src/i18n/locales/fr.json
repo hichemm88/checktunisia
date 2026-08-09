@@ -414,7 +414,29 @@
     "topHotels": "Top établissements (check-ins ce mois)",
     "recentSignups": "Dernières inscriptions",
     "mrrCommercial": "MRR commercial",
-    "mrrScope": "{{commercial}} client(s) — {{internal}} compte(s) interne(s) exclu(s)"
+    "mrrScope": "{{commercial}} client(s) — {{internal}} compte(s) interne(s) exclu(s)",
+    "arrCommercial": "ARR commercial",
+    "payingCustomers": "{{count}} client(s) payant(s)",
+    "inGrace": "sursis {{count}} j"
+  },
+  "adminHealth": {
+    "title": "Santé d'exploitation",
+    "scheduler": "Planificateur",
+    "schedulerHint": "Porte la file, la facturation et l'envoi des fiches",
+    "silent": "MUET",
+    "minutesAgo": "il y a {{count}} min",
+    "hoursAgo": "il y a {{count}} h",
+    "queue": "Jobs en échec",
+    "queuePending": "{{count}} en attente",
+    "whatsappSession": "Session WhatsApp",
+    "whatsappQueue": "Fiches en échec",
+    "lastReady": "Dernière session prête : {{date}}",
+    "backup": "Dernière sauvegarde",
+    "never": "Jamais",
+    "notConfigured": "NON CONFIGURÉE",
+    "database": "Base de données",
+    "unavailable": "Relevé indisponible — l'état d'exploitation ne peut pas être vérifié.",
+    "readingStale": "Relevé vieux de {{count}} min — les indicateurs ci-dessous peuvent être périmés."
   },
   "settingsPage": {
     "title": "Paramètres",
@@ -1761,6 +1783,8 @@
     "internalHint": "Aucune facture, aucun paiement et aucun renouvellement commercial ne s'applique à ce compte. L'accès au produit et l'usage restent illimités.",
     "internalPlan": "Formule utilisée",
     "internalBilling": "Facturation",
-    "internalBillingValue": "Exemptée"
+    "internalBillingValue": "Exemptée",
+    "graceTitle": "Facture en retard — service maintenu",
+    "graceBody": "Votre accès reste entièrement utilisable jusqu'au {{date}} ({{count}} jour(s)). Réglez votre facture avant cette date pour éviter la suspension. Vos check-ins ne sont pas bloqués."
   }
 }
