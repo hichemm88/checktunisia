@@ -56,6 +56,8 @@ export const settingsApi = {
       billing_cycle?: 'monthly' | 'yearly';
       expires_at: string;
       days_remaining: number;
+      /** Reconduction : Qayed émettra la facture à l'échéance (pas un prélèvement). */
+      auto_renew?: boolean;
       /** Détail du prix : base + suppléments par établissement (formule unique serveur). */
       pricing?: {
         base: number; included_properties: number; property_count: number;
@@ -86,6 +88,23 @@ export const settingsApi = {
       cancellation?: { requested_at: string | null; scheduled: boolean; ends_at: string | null };
       /** Changement de plan en cours (attente de paiement, ou programmé). */
       pending_change?: import('./subscription').PendingPlanChange | null;
+      /**
+       * Prochaine échéance, chiffrée par le backend.
+       *
+       * `auto_invoiced` dit ce que Qayed fait réellement : émettre la
+       * facture et prévenir. Flouci ne permet aucun prélèvement récurrent —
+       * l'interface ne doit jamais laisser croire le contraire.
+       */
+      next_renewal?: {
+        due_at: string | null; amount: number; billing_cycle: 'monthly' | 'yearly';
+        plan_name: string | null; auto_invoiced: boolean; invoice_lead_days: number;
+      } | null;
+      /**
+       * La période en cours reste-t-elle à régler (essai, expiré, suspendu) ?
+       * Tranché par le backend — le front ne rejoue pas la liste des statuts,
+       * elle finirait par diverger.
+       */
+      awaiting_payment?: boolean;
     } }>('/hotel/subscription')
       .then((r) => r.data.data),
 

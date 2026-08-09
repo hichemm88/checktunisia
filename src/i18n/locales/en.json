@@ -1731,7 +1731,28 @@
       "expired": "Subscription expired",
       "trial_expired": "Trial ended",
       "overage_invoiced": "Overage invoiced",
-      "migrated_to_v2": "Grid migration"
-    }
+      "migrated_to_v2": "Grid migration",
+      "subscription_requested": "Subscription requested",
+      "subscription_activated": "Subscription activated"
+    },
+    "nextDueTitle": "Next due date",
+    "nextDueDate": "Date",
+    "nextDueAmount": "Amount ({{plan}})",
+    "renewalLabel": "Renewal",
+    "renewalOn": "On",
+    "renewalOff": "Off",
+    "renewalOnHint": "We will send your invoice {{days}} days before the due date.",
+    "renewalOffHint": "No invoice will be issued at the due date. Your access ends on that date.",
+    "resumeRenewal": "Restore renewal",
+    "noAutoDebit": "No automatic charge: we issue the invoice and notify you, paying it stays your decision.",
+    "activateTrialTitle": "Your trial is running",
+    "activateTrialHint": "Pay for your plan now to continue without interruption once the trial ends.",
+    "activateBlockedTitle": "Your access is interrupted",
+    "activateBlockedHint": "Pay for your plan to immediately restore traveller registration.",
+    "activateCta": "Activate {{plan}}",
+    "activateCtaWithAmount": "Activate {{plan}} — {{amount}}",
+    "confirmPlan": "Plan",
+    "confirmSubscribeTitle": "Confirm your subscription",
+    "toastSubscribeInvoiceIssued": "Invoice issued — pay it to activate your subscription."
   }
 }

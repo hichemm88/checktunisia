@@ -11,7 +11,8 @@ import { api } from '@/lib/api';
 
 /** Simulation d'un changement de plan pour CE client — le contenu de l'écran de confirmation. */
 export interface PlanChangePreview {
-  kind: 'upgrade' | 'downgrade';
+  /** `subscribe` : premier règlement (fin d'essai) ou reprise d'un compte retombé. */
+  kind: 'upgrade' | 'downgrade' | 'subscribe';
   allowed: boolean;
   reason: string | null;
   /** `on_payment` : effet dès le paiement confirmé · `next_cycle` : à la fin de la période payée. */
@@ -53,7 +54,8 @@ export interface SelectablePlan {
 
 export interface PendingPlanChange {
   id: string;
-  kind: 'upgrade' | 'downgrade';
+  /** `subscribe` : premier règlement (fin d'essai) ou reprise d'un compte retombé. */
+  kind: 'upgrade' | 'downgrade' | 'subscribe';
   status: 'pending_payment' | 'scheduled';
   to_plan: { id: number; slug: string; name: string; price_monthly: string } | null;
   from_plan: { id: number; slug: string; name: string; price_monthly: string } | null;
@@ -97,7 +99,7 @@ export const subscriptionApi = {
    */
   changePlan: (payload: { plan_id: number; idempotency_key: string; accept_conditions_change?: boolean }) =>
     api.post<{ data: {
-      id: string; kind: 'upgrade' | 'downgrade'; status: string;
+      id: string; kind: 'upgrade' | 'downgrade' | 'subscribe'; status: string;
       effective_at: string | null; amount_due: number; credit_applied: number; applied_at: string | null;
       invoice: { id: string; invoice_number: string; total_amount: string; status: string } | null;
     } }>('/hotel/subscription/change', payload).then((r) => r.data.data),

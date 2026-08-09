@@ -139,6 +139,126 @@ const CurrentPlanCard = ({ sub }: { sub: NonNullable<Awaited<ReturnType<typeof s
   );
 };
 
+/**
+ * Prochaine échéance + pilotage de la reconduction.
+ *
+ * Le mot « prélèvement » est banni de cet écran : Flouci ne fait que des
+ * paiements ponctuels. Ce que Qayed automatise, c'est l'émission de la
+ * facture et la notification — le règlement reste une action du client, et
+ * l'interface le dit noir sur blanc plutôt que de laisser croire à un débit
+ * de carte qui n'aura jamais lieu.
+ */
+const NextRenewalCard = ({
+  renewal, autoRenew, cancellationScheduled, onStop, onResume, working,
+}: {
+  renewal: NonNullable<NonNullable<Awaited<ReturnType<typeof settingsApi.getSubscription>>>['next_renewal']>;
+  autoRenew: boolean;
+  cancellationScheduled: boolean;
+  onStop: () => void;
+  onResume: () => void;
+  working: boolean;
+}) => {
+  const { t } = useTranslation();
+  const longDate = useLongDate();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <div className="flex items-center gap-2">
+            <CalendarClock className="h-4 w-4 text-gray-400" /> {t('subscriptionPage.nextDueTitle')}
+          </div>
+        </CardTitle>
+      </CardHeader>
+
+      <div className="mt-3 flex flex-col gap-2">
+        <div className="flex items-baseline justify-between gap-3 border-b border-gray-50 py-1.5">
+          <span className="text-sm text-gray-500">{t('subscriptionPage.nextDueDate')}</span>
+          <span className="text-sm font-medium text-gray-900">{longDate(renewal.due_at)}</span>
+        </div>
+        <div className="flex items-baseline justify-between gap-3 border-b border-gray-50 py-1.5">
+          <span className="text-sm text-gray-500">
+            {t('subscriptionPage.nextDueAmount', { plan: renewal.plan_name ?? '—' })}
+          </span>
+          <span className="font-mono text-sm font-bold text-gray-900">{formatTND(renewal.amount)}</span>
+        </div>
+
+        <div className="mt-1 flex flex-wrap items-center justify-between gap-2 pt-1">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-900">{t('subscriptionPage.renewalLabel')}</p>
+            <p className="mt-0.5 text-xs text-gray-500">
+              {autoRenew && !cancellationScheduled
+                ? t('subscriptionPage.renewalOnHint', { days: renewal.invoice_lead_days })
+                : t('subscriptionPage.renewalOffHint')}
+            </p>
+          </div>
+          <Badge variant={autoRenew && !cancellationScheduled ? 'active' : 'suspended'}>
+            {autoRenew && !cancellationScheduled
+              ? t('subscriptionPage.renewalOn')
+              : t('subscriptionPage.renewalOff')}
+          </Badge>
+        </div>
+
+        <Button
+          size="sm"
+          variant={autoRenew && !cancellationScheduled ? 'ghost' : 'primary'}
+          className="mt-1 self-start"
+          loading={working}
+          onClick={autoRenew && !cancellationScheduled ? onStop : onResume}
+        >
+          {autoRenew && !cancellationScheduled
+            ? t('subscriptionPage.cancelRenewal')
+            : t('subscriptionPage.resumeRenewal')}
+        </Button>
+
+        {/* Ce que Qayed fait — et ne fait pas — à l'échéance. */}
+        <p className="mt-1 text-xs text-gray-400">{t('subscriptionPage.noAutoDebit')}</p>
+      </div>
+    </Card>
+  );
+};
+
+/**
+ * Compte en essai, expiré ou suspendu : la seule chose à faire est de payer
+ * sa formule. On met cet appel à l'action au-dessus de tout le reste plutôt
+ * que de le noyer dans une comparaison d'offres.
+ */
+const ActivateBanner = ({
+  status, planName, amount, onActivate, working,
+}: {
+  status: string; planName: string; amount: number | null;
+  onActivate: () => void; working: boolean;
+}) => {
+  const { t } = useTranslation();
+  const blocked = status !== 'trial';
+
+  return (
+    <div
+      className="flex items-start gap-3 rounded-2xl p-4"
+      style={blocked
+        ? { background: '#FEF2F2', border: '1px solid #FECACA' }
+        : { background: '#EEEBFA', border: '1px solid #C9C1EE' }}
+    >
+      {blocked
+        ? <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+        : <CheckCircle className="mt-0.5 h-4 w-4 shrink-0" style={{ color: '#5346A8' }} />}
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold" style={{ color: blocked ? '#991B1B' : '#443896' }}>
+          {blocked ? t('subscriptionPage.activateBlockedTitle') : t('subscriptionPage.activateTrialTitle')}
+        </p>
+        <p className="mt-0.5 text-xs" style={{ color: blocked ? '#991B1B' : '#5346A8' }}>
+          {blocked ? t('subscriptionPage.activateBlockedHint') : t('subscriptionPage.activateTrialHint')}
+        </p>
+        <Button size="sm" className="mt-2" loading={working} onClick={onActivate}>
+          {amount != null
+            ? t('subscriptionPage.activateCtaWithAmount', { plan: planName, amount: formatTND(amount) })
+            : t('subscriptionPage.activateCta', { plan: planName })}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 // ─── Bandeaux d'état : changement en cours, résiliation programmée ────────────
 
 const PendingChangeBanner = ({
@@ -318,14 +438,19 @@ const ConfirmChange = ({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true">
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-5 sm:rounded-3xl">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-lg font-bold text-gray-900">{t('subscriptionPage.confirmTitle')}</h2>
+            <h2 className="text-lg font-bold text-gray-900">
+            {t(preview.kind === 'subscribe' ? 'subscriptionPage.confirmSubscribeTitle' : 'subscriptionPage.confirmTitle')}
+          </h2>
           <button type="button" onClick={onClose} aria-label={t('common.close')} className="rounded-lg p-1 text-gray-400 hover:bg-gray-50">
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <div className="mt-4 flex flex-col divide-y divide-gray-50">
-          <Row label={t('subscriptionPage.confirmNewPlan')} value={displayName} />
+          <Row
+            label={t(preview.kind === 'subscribe' ? 'subscriptionPage.confirmPlan' : 'subscriptionPage.confirmNewPlan')}
+            value={displayName}
+          />
           <Row
             label={t('subscriptionPage.confirmEffect')}
             value={isImmediate(preview) ? t('subscriptionPage.effectImmediate') : t('subscriptionPage.effectScheduled')}
@@ -547,7 +672,9 @@ export const SubscriptionPage = () => {
         result.kind === 'downgrade'
           ? t('subscriptionPage.toastScheduled')
           : result.invoice
-            ? t('subscriptionPage.toastInvoiceIssued')
+            ? t(result.kind === 'subscribe'
+                ? 'subscriptionPage.toastSubscribeInvoiceIssued'
+                : 'subscriptionPage.toastInvoiceIssued')
             : t('subscriptionPage.toastApplied'),
         'success',
       );
@@ -580,6 +707,18 @@ export const SubscriptionPage = () => {
 
   const pendingChange = sub?.pending_change ?? null;
   const cancellation = sub?.cancellation;
+  const nextRenewal = sub?.next_renewal ?? null;
+
+  // Un compte en essai, expiré ou suspendu n'a qu'une chose à faire : régler
+  // sa formule. C'est le backend qui le dit, et le catalogue qui fournit le
+  // montant exact — l'écran ne décide ni de l'un ni de l'autre.
+  const awaitsPayment = sub?.awaiting_payment === true;
+  const { data: activationCatalog } = useQuery({
+    queryKey: ['subscription-plans'],
+    queryFn: subscriptionApi.getPlans,
+    enabled: awaitsPayment && !pendingChange,
+  });
+  const currentPlanOffer = (activationCatalog?.plans ?? []).find((p) => p.is_current) ?? null;
 
   return (
     <HotelLayout>
@@ -601,7 +740,17 @@ export const SubscriptionPage = () => {
               />
             )}
 
-            {!pendingChange && cancellation?.scheduled && (
+            {!pendingChange && awaitsPayment && currentPlanOffer && (
+              <ActivateBanner
+                status={sub.status}
+                planName={currentPlanOffer.name}
+                amount={currentPlanOffer.change?.amount_due_now ?? null}
+                working={changeMut.isPending}
+                onActivate={() => setConfirming({ plan: currentPlanOffer, key: newIdempotencyKey() })}
+              />
+            )}
+
+            {!pendingChange && !awaitsPayment && cancellation?.scheduled && (
               <CancellationBanner
                 endsAt={cancellation.ends_at}
                 working={reactivateMut.isPending}
@@ -611,6 +760,20 @@ export const SubscriptionPage = () => {
 
             <CurrentPlanCard sub={sub} />
 
+            {/* Prochaine échéance + reconduction — uniquement quand il y a
+                réellement une échéance à venir (un compte à activer n'en a
+                pas encore). */}
+            {!awaitsPayment && nextRenewal && (
+              <NextRenewalCard
+                renewal={nextRenewal}
+                autoRenew={!!sub.auto_renew}
+                cancellationScheduled={!!cancellation?.scheduled}
+                working={cancelSubMut.isPending || reactivateMut.isPending}
+                onStop={() => setCancelDialog(true)}
+                onResume={() => reactivateMut.mutate()}
+              />
+            )}
+
             {/* Actions principales — tout est self-service, aucun contact requis. */}
             <div className="flex flex-wrap gap-2">
               <Button onClick={() => setChoosing((v) => !v)} disabled={!!pendingChange}>
@@ -619,11 +782,6 @@ export const SubscriptionPage = () => {
               <Button variant="secondary" onClick={() => navigate('/hotel/settings?tab=abonnement')}>
                 <Landmark className="mr-1.5 h-4 w-4" /> {t('subscriptionPage.viewInvoices')}
               </Button>
-              {!cancellation?.scheduled && (
-                <Button variant="ghost" onClick={() => setCancelDialog(true)}>
-                  {t('subscriptionPage.cancelRenewal')}
-                </Button>
-              )}
             </div>
 
             {pendingChange && (

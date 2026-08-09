@@ -1731,7 +1731,28 @@
       "expired": "Abonnement expiré",
       "trial_expired": "Essai terminé",
       "overage_invoiced": "Dépassement facturé",
-      "migrated_to_v2": "Migration de grille"
-    }
+      "migrated_to_v2": "Migration de grille",
+      "subscription_requested": "Souscription demandée",
+      "subscription_activated": "Abonnement activé"
+    },
+    "nextDueTitle": "Prochaine échéance",
+    "nextDueDate": "Date",
+    "nextDueAmount": "Montant ({{plan}})",
+    "renewalLabel": "Reconduction",
+    "renewalOn": "Activée",
+    "renewalOff": "Désactivée",
+    "renewalOnHint": "Nous vous enverrons votre facture {{days}} jours avant l'échéance.",
+    "renewalOffHint": "Aucune facture ne sera émise à l'échéance. Votre accès s'arrêtera à cette date.",
+    "resumeRenewal": "Rétablir la reconduction",
+    "noAutoDebit": "Aucun prélèvement automatique : nous émettons la facture et vous prévenons, le règlement reste à votre initiative.",
+    "activateTrialTitle": "Votre essai est en cours",
+    "activateTrialHint": "Réglez votre formule dès maintenant pour continuer sans interruption à la fin de l'essai.",
+    "activateBlockedTitle": "Votre accès est interrompu",
+    "activateBlockedHint": "Réglez votre formule pour réactiver immédiatement l'enregistrement de vos voyageurs.",
+    "activateCta": "Activer {{plan}}",
+    "activateCtaWithAmount": "Activer {{plan}} — {{amount}}",
+    "confirmPlan": "Formule",
+    "confirmSubscribeTitle": "Confirmer votre abonnement",
+    "toastSubscribeInvoiceIssued": "Facture émise — réglez-la pour activer votre abonnement."
   }
 }

@@ -1709,7 +1709,28 @@
       "expired": "انتهى الاشتراك",
       "trial_expired": "انتهت التجربة",
       "overage_invoiced": "فُوتر التجاوز",
-      "migrated_to_v2": "ترحيل الشبكة"
-    }
+      "migrated_to_v2": "ترحيل الشبكة",
+      "subscription_requested": "طُلب الاشتراك",
+      "subscription_activated": "تم تفعيل الاشتراك"
+    },
+    "nextDueTitle": "الاستحقاق القادم",
+    "nextDueDate": "التاريخ",
+    "nextDueAmount": "المبلغ ({{plan}})",
+    "renewalLabel": "التجديد",
+    "renewalOn": "مفعّل",
+    "renewalOff": "معطّل",
+    "renewalOnHint": "سنرسل لكم فاتورتكم قبل {{days}} أيام من موعد الاستحقاق.",
+    "renewalOffHint": "لن تصدر أي فاتورة عند الاستحقاق. ينتهي وصولكم في ذلك التاريخ.",
+    "resumeRenewal": "استعادة التجديد",
+    "noAutoDebit": "لا خصم تلقائي: نصدر الفاتورة ونعلمكم، ويبقى السداد بمبادرة منكم.",
+    "activateTrialTitle": "فترتكم التجريبية جارية",
+    "activateTrialHint": "سدّدوا باقتكم الآن لمواصلة العمل دون انقطاع عند انتهاء التجربة.",
+    "activateBlockedTitle": "وصولكم متوقف",
+    "activateBlockedHint": "سدّدوا باقتكم لاستعادة تسجيل المسافرين فورًا.",
+    "activateCta": "تفعيل {{plan}}",
+    "activateCtaWithAmount": "تفعيل {{plan}} — {{amount}}",
+    "confirmPlan": "الباقة",
+    "confirmSubscribeTitle": "تأكيد اشتراككم",
+    "toastSubscribeInvoiceIssued": "صدرت الفاتورة — سدّدوها لتفعيل اشتراككم."
   }
 }
