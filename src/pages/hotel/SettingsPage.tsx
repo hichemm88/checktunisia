@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useTranslation, Trans } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building, CreditCard, Users, Plus, Trash2, Save,
@@ -23,6 +23,7 @@ import { organizationApi, type OrgInfo } from '@/api/organization';
 import { fetchPlatformSettings } from '@/api/public';
 import { paymentApi } from '@/api/payment';
 import { isPerUnitOverage, quotaLevel, quotaPercent } from '@/lib/billing';
+import { invoiceStatusLabelKey, invoiceStatusTone, isInvoiceOpen } from '@/lib/invoiceStatus';
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -727,14 +728,17 @@ const AbonnementTab = () => {
             )}
           </div>
 
+          {/* Renvoyer vers nous pour renouveler date d'avant le self-service :
+              tout se pilote désormais depuis « Mon abonnement », juste en
+              dessous. Le seuil de 30 jours couvrait par ailleurs la TOTALITÉ
+              du cycle d'un client mensuel — l'invitation à nous écrire était
+              donc affichée en permanence. */}
           {sub.days_remaining <= 30 && (
             <div className="mt-3 rounded-xl p-3 flex items-start gap-2" style={{ background: '#FBF0D7', border: '1px solid #FBF0D7' }}>
               <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-amber-800">{t('settingsPage.renewalDue')}</p>
-                <p className="text-xs text-amber-600 mt-0.5">
-                  <Trans t={t} i18nKey="settingsPage.renewalContact" components={{ a: <a href="mailto:contact@qayed.tn" className="underline font-medium" /> }} />
-                </p>
+                <p className="text-xs text-amber-600 mt-0.5">{t('settingsPage.renewalSelfService')}</p>
               </div>
             </div>
           )}
@@ -755,10 +759,6 @@ const AbonnementTab = () => {
 };
 
 // ─── Invoice history + manual bank-transfer declaration ────────────────────────
-
-const INVOICE_STATUS_VARIANT: Record<string, 'active' | 'draft' | 'suspended' | 'expired'> = {
-  paid: 'active', sent: 'draft', draft: 'draft', overdue: 'expired', void: 'suspended',
-};
 
 const InvoicesSection = () => {
   const { t, i18n } = useTranslation();
@@ -815,7 +815,12 @@ const InvoicesSection = () => {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="font-mono text-xs text-gray-600">{formatTND(inv.total_amount)}</span>
-                <Badge variant={INVOICE_STATUS_VARIANT[inv.status] ?? 'suspended'}>{inv.status}</Badge>
+                <Badge variant={invoiceStatusTone(inv.status)}>
+                  {/* Statut inconnu : on montre la valeur brute plutôt qu'un
+                      libellé vide — le client doit voir qu'il se passe
+                      quelque chose. */}
+                  {invoiceStatusLabelKey(inv.status) ? t(invoiceStatusLabelKey(inv.status)!) : inv.status}
+                </Badge>
                 <button
                   onClick={() => settingsApi.downloadInvoicePdf(inv.id, `facture-${inv.invoice_number}.pdf`)}
                   className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500"
@@ -825,7 +830,7 @@ const InvoicesSection = () => {
               </div>
             </div>
 
-            {inv.status !== 'paid' && inv.status !== 'void' && (
+            {isInvoiceOpen(inv.status) && (
               <div className="flex items-center gap-3">
                 {platformSettings?.flouci_enabled && (
                   <Button size="sm" loading={payMut.isPending && payMut.variables === inv.id} onClick={() => payMut.mutate(inv.id)}>
@@ -835,7 +840,7 @@ const InvoicesSection = () => {
               </div>
             )}
 
-            {inv.status !== 'paid' && inv.status !== 'void' && (
+            {isInvoiceOpen(inv.status) && (
               declaringFor === inv.id ? (
                 <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F6F5F1' }}>
                   {platformSettings?.virement_iban && (

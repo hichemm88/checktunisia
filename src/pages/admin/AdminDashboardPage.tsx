@@ -453,6 +453,16 @@ const HealthPanel = () => {
   const ago = (minutes: number | null) =>
     minutes == null ? '—' : t('adminHealth.minutesAgo', { count: Math.round(minutes) });
 
+  // Un compteur qui n'a PAS PU être lu (null côté API, ou -1 pour « table
+  // absente ») ne vaut pas zéro. Le rendre comme un zéro transformait une
+  // panne de mesure en pastille verte — précisément ce que ce panneau existe
+  // pour empêcher.
+  const countable = (n: number | null | undefined): n is number => typeof n === 'number' && n >= 0;
+  const queueDepth = (pending: number | null | undefined) =>
+    countable(pending)
+      ? t('adminHealth.queuePending', { count: pending })
+      : t('adminHealth.queuePendingUnknown');
+
   const session = data.whatsapp.session;
   const waAlert = session?.needs_pairing || session?.status === 'logged_out';
   const waWarn = !waAlert && (session?.paused || (session?.status !== 'ready' && session != null));
@@ -496,9 +506,13 @@ const HealthPanel = () => {
       />
       <Signal
         label={t('adminHealth.queue')}
-        hint={t('adminHealth.queuePending', { count: data.queue.pending ?? 0 })}
-        value={String(data.queue.failed_total)}
-        level={data.queue.failed_total > 0 ? 'warn' : 'ok'}
+        hint={queueDepth(data.queue.pending)}
+        // `failed_total = -1` veut dire « la table des échecs est absente » :
+        // aucun échec n'est enregistré NULLE PART. Le rendre tel quel donnait
+        // « -1 » en vert — un compteur qu'on ne peut pas lire n'est pas un
+        // compteur à zéro.
+        value={countable(data.queue.failed_total) ? String(data.queue.failed_total) : t('adminHealth.unknownValue')}
+        level={!countable(data.queue.failed_total) ? 'warn' : data.queue.failed_total > 0 ? 'warn' : 'ok'}
       />
       <Signal
         label={t('adminHealth.whatsappSession')}
@@ -508,9 +522,9 @@ const HealthPanel = () => {
       />
       <Signal
         label={t('adminHealth.whatsappQueue')}
-        hint={t('adminHealth.queuePending', { count: data.whatsapp.pending ?? 0 })}
-        value={String(data.whatsapp.failed ?? 0)}
-        level={(data.whatsapp.failed ?? 0) > 0 ? 'warn' : 'ok'}
+        hint={queueDepth(data.whatsapp.pending)}
+        value={countable(data.whatsapp.failed) ? String(data.whatsapp.failed) : t('adminHealth.unknownValue')}
+        level={!countable(data.whatsapp.failed) ? 'warn' : data.whatsapp.failed! > 0 ? 'warn' : 'ok'}
       />
       <Signal
         label={t('adminHealth.backup')}

@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/admin/EmptyState';
 import { ListSkeleton } from '@/components/admin/ListSkeleton';
 import { ErrorState } from '@/components/admin/ErrorState';
 import { Pagination } from '@/components/ui/Pagination';
+import { invoiceStatusLabelKey } from '@/lib/invoiceStatus';
 import { formatTND } from '@/lib/money';
 
 const STATUS_OPTIONS = [
@@ -96,7 +97,9 @@ export const AdminFacturationPage = () => {
                 <p className="text-xs text-gray-400 truncate">{inv.hotel_name ?? '—'}</p>
               </div>
               <span className="font-mono text-xs text-gray-500 me-3">{formatTND(inv.total_amount)}</span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">{inv.status}</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                {invoiceStatusLabelKey(inv.status) ? t(invoiceStatusLabelKey(inv.status)!) : inv.status}
+              </span>
             </div>
           )
         ))}
