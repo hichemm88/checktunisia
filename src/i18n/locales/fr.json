@@ -1789,6 +1789,20 @@
     "graceTitle": "Facture en retard — service maintenu",
     "graceBody": "Votre accès reste entièrement utilisable jusqu'au {{date}} ({{count}} jour(s)). Réglez votre facture avant cette date pour éviter la suspension. Vos check-ins ne sont pas bloqués.",
     "payOfflineHint": "Le paiement en ligne n'est pas disponible pour le moment : réglez cette facture par virement depuis l'écran Factures.",
-    "payByTransfer": "Régler par virement"
+    "payByTransfer": "Régler par virement",
+    "confirmCtaSubscribe": "Confirmer mon abonnement",
+    "confirmCtaUpgrade": "Confirmer le changement",
+    "confirmCtaDowngrade": "Programmer le changement",
+    "confirmTitleUpgrade": "Passer au plan supérieur",
+    "confirmTitleDowngrade": "Passer au plan inférieur",
+    "pendingPaymentTitleSubscribe": "Abonnement à {{plan}} en attente de paiement",
+    "pendingPaymentTitleUpgrade": "Passage à {{plan}} en attente de paiement",
+    "pendingPaymentTitleDowngrade": "Passage à {{plan}} en attente de paiement",
+    "pendingPaymentHintSubscribe": "Votre abonnement démarrera dès réception de {{amount}}. Rien ne vous est encore facturé.",
+    "pendingPaymentHintUpgrade": "Votre plan changera dès réception de {{amount}}. Rien n'a encore été modifié.",
+    "pendingPaymentHintDowngrade": "Votre plan changera dès réception de {{amount}}. Rien n'a encore été modifié.",
+    "cancelChangeSubscribe": "Annuler cette souscription",
+    "cancelChangeUpgrade": "Annuler ce changement",
+    "cancelChangeDowngrade": "Annuler ce changement"
   }
 }

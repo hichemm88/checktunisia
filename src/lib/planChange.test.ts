@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { PlanChangePreview } from '@/api/subscription';
 import {
-  isImmediate, isSelectable, newIdempotencyKey, quotaLabel,
-  requiresHistoricConfirmation, requiresPayment,
+  isImmediate, isSelectable, newIdempotencyKey, planChangeKind, planChangeLabelKey,
+  quotaLabel, requiresHistoricConfirmation, requiresPayment,
 } from './planChange';
 
 /**
@@ -120,5 +120,39 @@ describe('cohérence de l’exemple de référence (Essentiel → Professionnel)
     expect(requiresPayment(p)).toBe(true);
     // 119 (plein tarif) − 39,6 (reliquat) = 79,4 dus maintenant.
     expect(p.amount_due_now + p.credit_applied).toBeCloseTo(p.next_renewal_amount, 3);
+  });
+});
+
+describe('nommer l’opération telle que le client la vit', () => {
+  it('reconnaît les trois natures produites par le backend', () => {
+    expect(planChangeKind('subscribe')).toBe('subscribe');
+    expect(planChangeKind('upgrade')).toBe('upgrade');
+    expect(planChangeKind('downgrade')).toBe('downgrade');
+  });
+
+  it('retombe sur le générique pour tout le reste, sans jamais rendre un vide', () => {
+    for (const unknown of ['', 'migration', null, undefined]) {
+      expect(planChangeKind(unknown)).toBeNull();
+      expect(planChangeLabelKey('confirmCta', unknown)).toBe('subscriptionPage.confirmCta');
+    }
+  });
+
+  it('spécialise le libellé par nature d’opération', () => {
+    expect(planChangeLabelKey('confirmCta', 'subscribe')).toBe('subscriptionPage.confirmCtaSubscribe');
+    expect(planChangeLabelKey('confirmCta', 'upgrade')).toBe('subscriptionPage.confirmCtaUpgrade');
+    expect(planChangeLabelKey('confirmCta', 'downgrade')).toBe('subscriptionPage.confirmCtaDowngrade');
+  });
+
+  it('donne une clé distincte à chaque nature, pour un même libellé', () => {
+    const keys = ['subscribe', 'upgrade', 'downgrade'].map((k) => planChangeLabelKey('pendingPaymentTitle', k));
+
+    expect(new Set(keys).size).toBe(3);
+  });
+
+  it('activer son abonnement ne s’appelle jamais « changement »', () => {
+    // La régression exacte constatée : un essai qui règle sa formule lisait
+    // « Confirmer le changement » alors qu'il ne change de rien.
+    expect(planChangeLabelKey('confirmCta', 'subscribe'))
+      .not.toBe(planChangeLabelKey('confirmCta', 'upgrade'));
   });
 });

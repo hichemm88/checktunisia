@@ -46,6 +46,43 @@ export const newIdempotencyKey = (): string =>
     ? crypto.randomUUID()
     : `k-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
+// ─── Nommer l'opération telle que le client la vit ───────────────────────────
+//
+// Activer son abonnement, monter de gamme et redescendre sont trois gestes
+// différents. L'interface les appelait tous « changement » : un hôtelier en
+// essai qui réglait sa formule lisait « Confirmer le changement », puis
+// « Passage à Essentiel » — alors qu'il ne changeait précisément de rien.
+//
+// Le backend distingue déjà ces trois cas (`kind`) ; il suffit de ne pas
+// perdre l'information à l'affichage.
+
+export type PlanChangeKind = 'subscribe' | 'upgrade' | 'downgrade';
+
+const KINDS: readonly PlanChangeKind[] = ['subscribe', 'upgrade', 'downgrade'] as const;
+
+/**
+ * Nature de l'opération, ramenée aux trois cas connus. Un `kind` inattendu
+ * retombe sur la formulation générique « changement de plan » : neutre et
+ * toujours vraie, jamais un libellé vide.
+ */
+export const planChangeKind = (kind: string | null | undefined): PlanChangeKind | null =>
+  KINDS.includes(kind as PlanChangeKind) ? (kind as PlanChangeKind) : null;
+
+/**
+ * Clé de traduction d'un libellé du parcours, spécialisée par nature
+ * d'opération. `base` est la clé générique ; la variante par nature s'appelle
+ * `base` + `Subscribe|Upgrade|Downgrade`.
+ */
+export const planChangeLabelKey = (base: string, kind: string | null | undefined): string => {
+  const resolved = planChangeKind(kind);
+
+  if (resolved === null) {
+    return `subscriptionPage.${base}`;
+  }
+
+  return `subscriptionPage.${base}${resolved.charAt(0).toUpperCase()}${resolved.slice(1)}`;
+};
+
 /** Quota d'un pack en libellé court : `null` = illimité. */
 export const quotaLabel = (quota: number | null | undefined, unlimitedLabel: string): string =>
   quota === null || quota === undefined ? unlimitedLabel : String(quota);

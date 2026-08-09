@@ -1767,6 +1767,20 @@
     "graceTitle": "فاتورة متأخرة — الخدمة مستمرة",
     "graceBody": "يبقى وصولكم متاحًا بالكامل حتى {{date}} ({{count}} يوم). سدّدوا الفاتورة قبل هذا التاريخ لتفادي التعليق. لن يتم حظر تسجيلات الوصول.",
     "payOfflineHint": "الدفع الإلكتروني غير متاح حاليًا: سدّد هذه الفاتورة بتحويل بنكي من شاشة الفواتير.",
-    "payByTransfer": "الدفع بتحويل بنكي"
+    "payByTransfer": "الدفع بتحويل بنكي",
+    "confirmCtaSubscribe": "تأكيد اشتراكي",
+    "confirmCtaUpgrade": "تأكيد التغيير",
+    "confirmCtaDowngrade": "جدولة التغيير",
+    "confirmTitleUpgrade": "الانتقال إلى باقة أعلى",
+    "confirmTitleDowngrade": "الانتقال إلى باقة أدنى",
+    "pendingPaymentTitleSubscribe": "الاشتراك في {{plan}} في انتظار الدفع",
+    "pendingPaymentTitleUpgrade": "الانتقال إلى {{plan}} في انتظار الدفع",
+    "pendingPaymentTitleDowngrade": "الانتقال إلى {{plan}} في انتظار الدفع",
+    "pendingPaymentHintSubscribe": "يبدأ اشتراكك فور استلام {{amount}}. لم يُفرض عليك أي مبلغ بعد.",
+    "pendingPaymentHintUpgrade": "تتغيّر باقتك فور استلام {{amount}}. لم يتغيّر شيء بعد.",
+    "pendingPaymentHintDowngrade": "تتغيّر باقتك فور استلام {{amount}}. لم يتغيّر شيء بعد.",
+    "cancelChangeSubscribe": "إلغاء هذا الاشتراك",
+    "cancelChangeUpgrade": "إلغاء هذا التغيير",
+    "cancelChangeDowngrade": "إلغاء هذا التغيير"
   }
 }

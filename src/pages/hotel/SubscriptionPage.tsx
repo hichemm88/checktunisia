@@ -20,7 +20,7 @@ import { extractErrors } from '@/lib/api';
 import { formatTND } from '@/lib/money';
 import { isPerUnitOverage, quotaLevel, quotaPercent } from '@/lib/billing';
 import {
-  isImmediate, newIdempotencyKey, requiresHistoricConfirmation, requiresPayment,
+  isImmediate, newIdempotencyKey, planChangeLabelKey, requiresHistoricConfirmation, requiresPayment,
 } from '@/lib/planChange';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-TN');
@@ -343,14 +343,14 @@ const PendingChangeBanner = ({
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold" style={{ color: awaitingPayment ? '#8A6206' : '#443896' }}>
           {awaitingPayment
-            ? t('subscriptionPage.pendingPaymentTitle', { plan: change.to_plan?.name ?? '—' })
+            ? t(planChangeLabelKey('pendingPaymentTitle', change.kind), { plan: change.to_plan?.name ?? '—' })
             : t('subscriptionPage.scheduledTitle', {
                 plan: change.to_plan?.name ?? '—', date: longDate(change.effective_at),
               })}
         </p>
         <p className="mt-0.5 text-xs" style={{ color: awaitingPayment ? '#8A6206' : '#5346A8' }}>
           {awaitingPayment
-            ? t('subscriptionPage.pendingPaymentHint', { amount: formatTND(change.amount_due) })
+            ? t(planChangeLabelKey('pendingPaymentHint', change.kind), { amount: formatTND(change.amount_due) })
             : t('subscriptionPage.scheduledHint')}
         </p>
 
@@ -381,7 +381,7 @@ const PendingChangeBanner = ({
             )
           )}
           <Button size="sm" variant="secondary" loading={cancelling} onClick={onCancel}>
-            {t('subscriptionPage.cancelChange')}
+            {t(planChangeLabelKey('cancelChange', change.kind))}
           </Button>
         </div>
       </div>
@@ -504,7 +504,9 @@ const ConfirmChange = ({
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-5 sm:rounded-3xl">
         <div className="flex items-start justify-between gap-3">
             <h2 className="text-lg font-bold text-gray-900">
-            {t(preview.kind === 'subscribe' ? 'subscriptionPage.confirmSubscribeTitle' : 'subscriptionPage.confirmTitle')}
+            {t(preview.kind === 'subscribe'
+              ? 'subscriptionPage.confirmSubscribeTitle'
+              : planChangeLabelKey('confirmTitle', preview.kind))}
           </h2>
           <button type="button" onClick={onClose} aria-label={t('common.close')} className="rounded-lg p-1 text-gray-400 hover:bg-gray-50">
             <X className="h-4 w-4" />
@@ -594,7 +596,7 @@ const ConfirmChange = ({
             disabled={needsHistoric && !accepted}
             onClick={() => onConfirm(accepted)}
           >
-            {t('subscriptionPage.confirmCta')}
+            {t(planChangeLabelKey('confirmCta', preview.kind))}
           </Button>
           <Button className="sm:flex-1" variant="secondary" onClick={onClose}>{t('common.cancel')}</Button>
         </div>
