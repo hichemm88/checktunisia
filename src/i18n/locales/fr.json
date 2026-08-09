@@ -434,7 +434,9 @@
     "backup": "Dernière sauvegarde",
     "never": "Jamais",
     "notConfigured": "NON CONFIGURÉE",
-    "database": "Base de données"
+    "database": "Base de données",
+    "unavailable": "Relevé indisponible — l'état d'exploitation ne peut pas être vérifié.",
+    "readingStale": "Relevé vieux de {{count}} min — les indicateurs ci-dessous peuvent être périmés."
   },
   "settingsPage": {
     "title": "Paramètres",

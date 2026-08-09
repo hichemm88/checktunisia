@@ -434,7 +434,9 @@
     "backup": "Last backup",
     "never": "Never",
     "notConfigured": "NOT CONFIGURED",
-    "database": "Database"
+    "database": "Database",
+    "unavailable": "Reading unavailable — operational health cannot be verified.",
+    "readingStale": "Reading is {{count}} min old — the signals below may be stale."
   },
   "settingsPage": {
     "title": "Settings",

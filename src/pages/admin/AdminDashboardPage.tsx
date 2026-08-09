@@ -423,13 +423,32 @@ const BusinessKpis = () => {
 const HealthPanel = () => {
   const { t, i18n } = useTranslation();
   const locale = dateLocaleFor(i18n.language);
-  const { data, isError } = useQuery({
+  const { data, isError, dataUpdatedAt } = useQuery({
     queryKey: ['admin-health'],
     queryFn: adminDashboardApi.health,
     refetchInterval: 60_000,
   });
 
-  if (isError || !data) return null;
+  // Un panneau qui disparaît se lit « rien à signaler » — exactement le
+  // contre-sens qu'il doit empecher. Quand le releve ne peut plus etre
+  // rafraichi, on le DIT.
+  if (isError && !data) {
+    return (
+      <div className="card p-5">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('adminHealth.title')}</p>
+        <p className="text-sm" style={{ color: '#ef4444' }}>{t('adminHealth.unavailable')}</p>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  // Age du RELEVE lui-meme, pas des signaux qu'il porte. Sans cela, un onglet
+  // laisse ouvert pendant que le reseau tombe continuerait d'afficher des
+  // pastilles vertes vieilles d'une heure — le pire des trois etats possibles,
+  // parce qu'il rassure a tort.
+  const readingAgeMs = Date.now() - dataUpdatedAt;
+  const readingStale = isError || readingAgeMs > 3 * 60_000;
 
   const ago = (minutes: number | null) =>
     minutes == null ? '—' : t('adminHealth.minutesAgo', { count: Math.round(minutes) });
@@ -455,11 +474,19 @@ const HealthPanel = () => {
   };
 
   return (
-    <div className="card p-5">
+    <div className="card p-5" style={readingStale ? { opacity: 0.55 } : undefined}>
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('adminHealth.title')}</p>
         <Gauge className="h-4 w-4 text-gray-300" />
       </div>
+
+      {/* Le releve lui-meme est-il frais ? Un panneau vert et perime rassure
+          a tort ; on prefere le dire que le laisser croire. */}
+      {readingStale && (
+        <p className="mb-2 rounded-lg px-2 py-1 text-[11px] font-semibold" style={{ background: '#fef3c7', color: '#92400e' }}>
+          {t('adminHealth.readingStale', { count: Math.round(readingAgeMs / 60_000) })}
+        </p>
+      )}
 
       <Signal
         label={t('adminHealth.scheduler')}
