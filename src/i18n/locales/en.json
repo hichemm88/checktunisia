@@ -414,7 +414,27 @@
     "topHotels": "Top properties (check-ins this month)",
     "recentSignups": "Recent signups",
     "mrrCommercial": "Commercial MRR",
-    "mrrScope": "{{commercial}} customer(s) — {{internal}} internal account(s) excluded"
+    "mrrScope": "{{commercial}} customer(s) — {{internal}} internal account(s) excluded",
+    "arrCommercial": "Commercial ARR",
+    "payingCustomers": "{{count}} paying customer(s)",
+    "inGrace": "grace {{count}}d"
+  },
+  "adminHealth": {
+    "title": "Operational health",
+    "scheduler": "Scheduler",
+    "schedulerHint": "Drives the queue, billing and fiche delivery",
+    "silent": "SILENT",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}} h ago",
+    "queue": "Failed jobs",
+    "queuePending": "{{count}} pending",
+    "whatsappSession": "WhatsApp session",
+    "whatsappQueue": "Failed fiches",
+    "lastReady": "Last ready session: {{date}}",
+    "backup": "Last backup",
+    "never": "Never",
+    "notConfigured": "NOT CONFIGURED",
+    "database": "Database"
   },
   "settingsPage": {
     "title": "Settings",
@@ -1761,6 +1781,8 @@
     "internalHint": "No invoice, no payment and no commercial renewal applies to this account. Product access and usage stay unlimited.",
     "internalPlan": "Plan in use",
     "internalBilling": "Billing",
-    "internalBillingValue": "Exempt"
+    "internalBillingValue": "Exempt",
+    "graceTitle": "Invoice overdue — service maintained",
+    "graceBody": "Your access stays fully usable until {{date}} ({{count}} day(s)). Settle your invoice before then to avoid suspension. Your check-ins are not blocked."
   }
 }
