@@ -634,7 +634,7 @@ export const DashboardPage = () => {
                   </p>
                   {reached && (
                     <button
-                      onClick={() => navigate('/hotel/settings?tab=abonnement')}
+                      onClick={() => navigate('/hotel/subscription')}
                       className="mt-2 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition-all active:scale-[0.98]"
                       style={{ background: '#5346A8' }}
                     >

@@ -20,6 +20,7 @@ import { CheckInWizardPage } from '@/pages/hotel/CheckInWizardPage';
 import { HistoryPage } from '@/pages/hotel/HistoryPage';
 import { HistoryDetailPage } from '@/pages/hotel/HistoryDetailPage';
 import { SettingsPage } from '@/pages/hotel/SettingsPage';
+import { SubscriptionPage } from '@/pages/hotel/SubscriptionPage';
 import { SecurityPage } from '@/pages/hotel/SecurityPage';
 import { PaymentSuccessPage } from '@/pages/hotel/PaymentSuccessPage';
 import { PaymentFailedPage } from '@/pages/hotel/PaymentFailedPage';
@@ -193,6 +194,11 @@ export const App = () => (
           <Route path="/hotel/history/:id"      element={<HistoryDetailPage />} />
           <Route element={<RequireRole roles={['hotel_admin']} />}>
             <Route path="/hotel/settings"       element={<SettingsPage />} />
+            {/* Gestion de l'abonnement en self-service. Les écritures sont
+                de toute façon réservées au propriétaire côté API : la page
+                reste lisible par un hotel_admin non-owner, qui verra son
+                abonnement sans pouvoir le modifier. */}
+            <Route path="/hotel/subscription"   element={<SubscriptionPage />} />
           </Route>
           <Route path="/hotel/security"         element={<SecurityPage />} />
           <Route path="/hotel/payment/success"  element={<PaymentSuccessPage />} />

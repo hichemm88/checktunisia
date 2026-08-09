@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -20,7 +20,7 @@ import { extractErrors } from '@/lib/api';
 import { formatTND } from '@/lib/money';
 import { type HotelUser, type CreateUserPayload } from '@/types';
 import { organizationApi, type OrgInfo } from '@/api/organization';
-import { fetchPlans, fetchPlatformSettings } from '@/api/public';
+import { fetchPlatformSettings } from '@/api/public';
 import { paymentApi } from '@/api/payment';
 import { isPerUnitOverage, quotaLevel, quotaPercent } from '@/lib/billing';
 
@@ -622,53 +622,30 @@ const QuotaCard = ({ quota }: { quota: NonNullable<Awaited<ReturnType<typeof set
   );
 };
 
-/** Demande d'upgrade vers un plan supérieur de la grille publique — notifie l'admin Qayed (effet au cycle suivant). */
-const UpgradeSection = ({ currentSlug }: { currentSlug: string | null }) => {
+/**
+ * Renvoi vers la gestion de l'abonnement.
+ *
+ * Le changement de plan n'est plus une demande envoyée à l'administrateur :
+ * il se fait tout seul depuis /hotel/subscription (comparaison chiffrée,
+ * confirmation, paiement, résiliation, historique). Cet onglet reste la vue
+ * de synthèse et les factures.
+ */
+const ManageSubscriptionCard = () => {
   const { t } = useTranslation();
-  const { toast } = useToast();
-  const [requested, setRequested] = useState<string | null>(null);
-  const { data: plans } = useQuery({ queryKey: ['public-plans'], queryFn: fetchPlans, staleTime: 5 * 60 * 1000 });
-
-  const upgradeMut = useMutation({
-    mutationFn: (slug: string) => settingsApi.requestUpgrade(slug),
-    onSuccess: (_, slug) => { setRequested(slug); toast(t('settingsPage.upgradeRequested'), 'success'); },
-    onError: (err) => toast(extractErrors(err), 'error'),
-  });
-
-  const currentIdx = (plans ?? []).findIndex((p) => p.slug === currentSlug);
-  const upgradable = (plans ?? []).filter((_, i) => currentIdx === -1 || i > currentIdx);
-  if (!upgradable.length) return null;
+  const navigate = useNavigate();
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-gray-400" /> {t('settingsPage.upgradeTitle')}
+            <TrendingUp className="h-4 w-4 text-gray-400" /> {t('settingsPage.manageTitle')}
           </div>
         </CardTitle>
       </CardHeader>
-      <div className="mt-3 flex flex-col gap-2">
-        {upgradable.map((p) => (
-          <div key={p.slug} className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 p-3">
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-gray-900">{p.marketing?.display_name?.fr ?? p.name}</p>
-              <p className="text-xs text-gray-500">
-                <span className="font-mono font-semibold" style={{ color: '#5346A8' }}>{formatTND(p.price_monthly)}</span> {t('settingsPage.perPropertyMonth')}
-              </p>
-            </div>
-            <Button
-              size="sm"
-              variant="secondary"
-              loading={upgradeMut.isPending && upgradeMut.variables === p.slug}
-              disabled={requested === p.slug}
-              onClick={() => upgradeMut.mutate(p.slug)}
-            >
-              {requested === p.slug ? t('settingsPage.upgradeSent') : t('settingsPage.upgradeCta')}
-            </Button>
-          </div>
-        ))}
-        <p className="text-xs text-gray-400">{t('settingsPage.upgradeHint')}</p>
+      <div className="mt-3 flex flex-col gap-3">
+        <p className="text-sm text-gray-600">{t('settingsPage.manageHint')}</p>
+        <Button onClick={() => navigate('/hotel/subscription')}>{t('settingsPage.manageCta')}</Button>
       </div>
     </Card>
   );
@@ -769,10 +746,8 @@ const AbonnementTab = () => {
       {/* Quota mensuel de check-ins (grille V2) — comptes à quota fini uniquement. */}
       {sub?.quota && <QuotaCard quota={sub.quota} />}
 
-      {/* Demande d'upgrade — hotel_admin uniquement (endpoint role-gated). */}
-      {isAdmin && sub && (
-        <UpgradeSection currentSlug={typeof sub.plan === 'object' ? (sub.plan?.slug ?? null) : null} />
-      )}
+      {/* Gestion self-service (changement de plan, résiliation, historique). */}
+      {isAdmin && sub && <ManageSubscriptionCard />}
 
       <InvoicesSection />
     </div>

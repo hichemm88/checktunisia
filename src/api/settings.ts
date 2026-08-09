@@ -77,6 +77,15 @@ export const settingsApi = {
       } | null;
       /** Grandfathering : le compte conserve les conditions de l'ancienne grille. */
       is_legacy_plan?: boolean;
+      /** Conditions négociées que le client perdrait en changeant de plan. */
+      historic_conditions?: {
+        checkins_per_month?: number | null; checkins_label?: string;
+        custom_price?: number; legacy_plan?: boolean;
+      } | null;
+      /** Résiliation programmée : le service court jusqu'à `ends_at`. */
+      cancellation?: { requested_at: string | null; scheduled: boolean; ends_at: string | null };
+      /** Changement de plan en cours (attente de paiement, ou programmé). */
+      pending_change?: import('./subscription').PendingPlanChange | null;
     } }>('/hotel/subscription')
       .then((r) => r.data.data),
 
