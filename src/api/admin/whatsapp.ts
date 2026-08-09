@@ -8,7 +8,14 @@ import { api } from '@/lib/api';
  * filtrable, renvoi, message test, pause d'urgence.
  */
 
-export type WhatsappSession = 'initializing' | 'ready' | 'disconnected' | 'auth_failure';
+/**
+ * `logged_out` manquait ici, et le repli de l'écran de santé affichait donc en
+ * pastille ambre « Initialisation… » l'état le plus grave de tous : WhatsApp a
+ * révoqué l'appareil, plus une seule fiche ne partira tant qu'un QR n'aura pas
+ * été scanné. La panne la plus alarmante se présentait sous les traits de la
+ * plus rassurante.
+ */
+export type WhatsappSession = 'initializing' | 'ready' | 'disconnected' | 'logged_out' | 'auth_failure';
 export type WhatsappStatus = 'pending' | 'sent' | 'failed' | 'cancelled';
 
 export interface WhatsappHealth {

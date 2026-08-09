@@ -353,6 +353,7 @@
       "ready": "الجلسة متصلة",
       "initializing": "جارٍ التهيئة…",
       "disconnected": "الجلسة منقطعة",
+      "loggedOut": "يلزم إعادة الاقتران (رمز QR)",
       "authFailure": "فشل المصادقة"
     },
     "status": {

@@ -353,6 +353,7 @@
       "ready": "Session connected",
       "initializing": "Initializing…",
       "disconnected": "Session disconnected",
+      "loggedOut": "Re-pairing required (QR)",
       "authFailure": "Authentication failure"
     },
     "status": {
