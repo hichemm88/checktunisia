@@ -5,6 +5,9 @@ import { Download, Trash2 } from 'lucide-react';
 import { adminSubscriptionsApi, type AdminInvoice } from '@/api/admin/subscriptions';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { formatTND } from '@/lib/money';
+// Libellés partagés avec l'onglet Factures du client : deux tables
+// identiques finiraient par diverger.
+import { INVOICE_STATUSES, invoiceStatusLabelKey } from '@/lib/invoiceStatus';
 
 const STATUS_STYLE: Record<string, string> = {
   paid: 'bg-green-50 text-green-700',
@@ -13,13 +16,6 @@ const STATUS_STYLE: Record<string, string> = {
 };
 const DEFAULT_STYLE = 'bg-amber-50 text-amber-700';
 
-const STATUS_LABEL_KEY: Record<string, string> = {
-  draft: 'adminFacturation.statusDraft',
-  sent: 'adminFacturation.statusSent',
-  paid: 'adminFacturation.statusPaid',
-  overdue: 'adminFacturation.statusOverdue',
-  void: 'adminFacturation.statusVoid',
-};
 
 interface InvoiceRowProps {
   invoice: AdminInvoice;
@@ -72,8 +68,8 @@ export const InvoiceRow = ({ invoice, hostId, subtitle, invalidateKey }: Invoice
         title={t('adminShared.changeStatus')}
         className={`text-xs font-bold px-2 py-0.5 rounded-full me-2 shrink-0 border-0 cursor-pointer appearance-none disabled:opacity-50 ${STATUS_STYLE[pendingStatus ?? invoice.status] ?? DEFAULT_STYLE}`}
       >
-        {Object.entries(STATUS_LABEL_KEY).map(([value, labelKey]) => (
-          <option key={value} value={value}>{t(labelKey)}</option>
+        {INVOICE_STATUSES.map((value) => (
+          <option key={value} value={value}>{t(invoiceStatusLabelKey(value)!)}</option>
         ))}
       </select>
       {pendingStatus && (

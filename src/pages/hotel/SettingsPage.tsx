@@ -23,6 +23,7 @@ import { organizationApi, type OrgInfo } from '@/api/organization';
 import { fetchPlatformSettings } from '@/api/public';
 import { paymentApi } from '@/api/payment';
 import { isPerUnitOverage, quotaLevel, quotaPercent } from '@/lib/billing';
+import { invoiceStatusLabelKey, invoiceStatusTone, isInvoiceOpen } from '@/lib/invoiceStatus';
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
 
@@ -759,10 +760,6 @@ const AbonnementTab = () => {
 
 // ─── Invoice history + manual bank-transfer declaration ────────────────────────
 
-const INVOICE_STATUS_VARIANT: Record<string, 'active' | 'draft' | 'suspended' | 'expired'> = {
-  paid: 'active', sent: 'draft', draft: 'draft', overdue: 'expired', void: 'suspended',
-};
-
 const InvoicesSection = () => {
   const { t, i18n } = useTranslation();
   const { toast } = useToast();
@@ -818,7 +815,12 @@ const InvoicesSection = () => {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className="font-mono text-xs text-gray-600">{formatTND(inv.total_amount)}</span>
-                <Badge variant={INVOICE_STATUS_VARIANT[inv.status] ?? 'suspended'}>{inv.status}</Badge>
+                <Badge variant={invoiceStatusTone(inv.status)}>
+                  {/* Statut inconnu : on montre la valeur brute plutôt qu'un
+                      libellé vide — le client doit voir qu'il se passe
+                      quelque chose. */}
+                  {invoiceStatusLabelKey(inv.status) ? t(invoiceStatusLabelKey(inv.status)!) : inv.status}
+                </Badge>
                 <button
                   onClick={() => settingsApi.downloadInvoicePdf(inv.id, `facture-${inv.invoice_number}.pdf`)}
                   className="rounded-lg p-1.5 text-gray-300 hover:bg-blue-50 hover:text-blue-500"
@@ -828,7 +830,7 @@ const InvoicesSection = () => {
               </div>
             </div>
 
-            {inv.status !== 'paid' && inv.status !== 'void' && (
+            {isInvoiceOpen(inv.status) && (
               <div className="flex items-center gap-3">
                 {platformSettings?.flouci_enabled && (
                   <Button size="sm" loading={payMut.isPending && payMut.variables === inv.id} onClick={() => payMut.mutate(inv.id)}>
@@ -838,7 +840,7 @@ const InvoicesSection = () => {
               </div>
             )}
 
-            {inv.status !== 'paid' && inv.status !== 'void' && (
+            {isInvoiceOpen(inv.status) && (
               declaringFor === inv.id ? (
                 <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F6F5F1' }}>
                   {platformSettings?.virement_iban && (
