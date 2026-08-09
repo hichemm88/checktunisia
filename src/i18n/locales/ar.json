@@ -412,7 +412,9 @@
     "negotiatedPrice": "سعر متفاوض عليه",
     "checkInsLast30Days": "تسجيلات النزلاء خلال 30 يومًا",
     "topHotels": "أفضل المؤسسات (تسجيلات هذا الشهر)",
-    "recentSignups": "أحدث التسجيلات"
+    "recentSignups": "أحدث التسجيلات",
+    "mrrCommercial": "الإيراد الشهري التجاري",
+    "mrrScope": "{{commercial}} عميل — {{internal}} حساب داخلي مستثنى"
   },
   "settingsPage": {
     "title": "الإعدادات",
@@ -1731,6 +1733,12 @@
     "activateCtaWithAmount": "تفعيل {{plan}} — {{amount}}",
     "confirmPlan": "الباقة",
     "confirmSubscribeTitle": "تأكيد اشتراككم",
-    "toastSubscribeInvoiceIssued": "صدرت الفاتورة — سدّدوها لتفعيل اشتراككم."
+    "toastSubscribeInvoiceIssued": "صدرت الفاتورة — سدّدوها لتفعيل اشتراككم.",
+    "internalTitle": "حساب داخلي",
+    "internalSubtitle": "يستخدم هذا الحساب قيد دون فوترة تجارية.",
+    "internalHint": "لا فاتورة ولا دفع ولا تجديد تجاري ينطبق على هذا الحساب. يبقى الوصول إلى المنتج والاستعمال غير محدودين.",
+    "internalPlan": "الباقة المستعملة",
+    "internalBilling": "الفوترة",
+    "internalBillingValue": "معفاة"
   }
 }

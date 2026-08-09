@@ -21,7 +21,10 @@ export interface AdminDashboardStats {
       declared_at: string | null;
     }[];
   };
+  /** MRR COMMERCIAL : les comptes internes en sont exclus a la source. */
   mrr: string;
+  /** Repartition du parc — un compte interne existe, il ne genere juste aucun revenu. */
+  organizations: { total: number; commercial: number; internal: number };
   mrr_breakdown: {
     customer: string;
     plan: string;

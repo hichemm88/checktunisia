@@ -412,7 +412,9 @@
     "negotiatedPrice": "negotiated price",
     "checkInsLast30Days": "Check-ins over 30 days",
     "topHotels": "Top properties (check-ins this month)",
-    "recentSignups": "Recent signups"
+    "recentSignups": "Recent signups",
+    "mrrCommercial": "Commercial MRR",
+    "mrrScope": "{{commercial}} customer(s) — {{internal}} internal account(s) excluded"
   },
   "settingsPage": {
     "title": "Settings",
@@ -1753,6 +1755,12 @@
     "activateCtaWithAmount": "Activate {{plan}} — {{amount}}",
     "confirmPlan": "Plan",
     "confirmSubscribeTitle": "Confirm your subscription",
-    "toastSubscribeInvoiceIssued": "Invoice issued — pay it to activate your subscription."
+    "toastSubscribeInvoiceIssued": "Invoice issued — pay it to activate your subscription.",
+    "internalTitle": "Internal account",
+    "internalSubtitle": "This account uses Qayed without commercial billing.",
+    "internalHint": "No invoice, no payment and no commercial renewal applies to this account. Product access and usage stay unlimited.",
+    "internalPlan": "Plan in use",
+    "internalBilling": "Billing",
+    "internalBillingValue": "Exempt"
   }
 }

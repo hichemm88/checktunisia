@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  AlertCircle, ArrowRight, CalendarClock, CheckCircle, CreditCard,
+  AlertCircle, ArrowRight, Building2, CalendarClock, CheckCircle, CreditCard,
   Gauge, History, Landmark, ShieldAlert, X,
 } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
@@ -37,7 +37,13 @@ const useLongDate = () => {
 
 // ─── Plan actuel : prix, quota, usage, dépassement, total estimé ──────────────
 
-const CurrentPlanCard = ({ sub }: { sub: NonNullable<Awaited<ReturnType<typeof settingsApi.getSubscription>>> }) => {
+const CurrentPlanCard = ({
+  sub, hideMoney = false,
+}: {
+  sub: NonNullable<Awaited<ReturnType<typeof settingsApi.getSubscription>>>;
+  /** Compte interne : la consommation reste utile, son coût n'existe pas. */
+  hideMoney?: boolean;
+}) => {
   const { t } = useTranslation();
   const longDate = useLongDate();
   const quota = sub.quota;
@@ -60,19 +66,23 @@ const CurrentPlanCard = ({ sub }: { sub: NonNullable<Awaited<ReturnType<typeof s
 
       <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-xl font-bold" style={{ color: '#5346A8' }}>{planName}</p>
-        <p className="font-mono text-lg font-semibold text-gray-900">
-          {formatTND(quota?.monthly_base ?? sub.pricing?.monthly_total ?? 0)}
-          <span className="ml-1 text-xs font-normal text-gray-500">{t('subscriptionPage.perMonth')}</span>
-        </p>
+        {!hideMoney && (
+          <p className="font-mono text-lg font-semibold text-gray-900">
+            {formatTND(quota?.monthly_base ?? sub.pricing?.monthly_total ?? 0)}
+            <span className="ml-1 text-xs font-normal text-gray-500">{t('subscriptionPage.perMonth')}</span>
+          </p>
+        )}
       </div>
 
       <div className="mt-1 flex flex-wrap items-center gap-2">
         <Badge variant={sub.status === 'active' ? 'active' : 'suspended'}>
           {t(`settingsPage.subscriptionStatus.${sub.status}`, sub.status)}
         </Badge>
-        <span className="text-xs text-gray-500">
-          {t('subscriptionPage.periodUntil', { date: longDate(sub.expires_at) })}
-        </span>
+        {!hideMoney && (
+          <span className="text-xs text-gray-500">
+            {t('subscriptionPage.periodUntil', { date: longDate(sub.expires_at) })}
+          </span>
+        )}
       </div>
 
       {quota && !quota.unlimited && quota.quota != null && (
@@ -96,12 +106,12 @@ const CurrentPlanCard = ({ sub }: { sub: NonNullable<Awaited<ReturnType<typeof s
             {!over && quota.remaining != null && (
               <span>{t('settingsPage.quotaRemaining', { count: quota.remaining })}</span>
             )}
-            {quota.billable && quota.unit_price != null && (
+            {!hideMoney && quota.billable && quota.unit_price != null && (
               <span>{t('settingsPage.quotaUnitPrice', { price: formatTND(quota.unit_price) })}</span>
             )}
           </div>
 
-          {over && quota.billable && quota.overage_amount != null && quota.overage_amount > 0 && (
+          {!hideMoney && over && quota.billable && quota.overage_amount != null && quota.overage_amount > 0 && (
             <div className="rounded-xl p-3" style={{ background: '#FBF0D7' }}>
               <p className="text-sm font-semibold" style={{ color: '#8A6206' }}>
                 {t('settingsPage.quotaOverage', { count: quota.overage_count })}
@@ -121,7 +131,7 @@ const CurrentPlanCard = ({ sub }: { sub: NonNullable<Awaited<ReturnType<typeof s
             </div>
           )}
 
-          {quota.estimated_total != null && (
+          {!hideMoney && quota.estimated_total != null && (
             <div className="mt-1 flex items-baseline justify-between border-t border-gray-100 pt-2">
               <span className="text-xs text-gray-500">{t('settingsPage.quotaEstimatedTotal')}</span>
               <span className="font-mono text-sm font-semibold text-gray-800">{formatTND(quota.estimated_total)}</span>
@@ -256,6 +266,41 @@ const ActivateBanner = ({
         </Button>
       </div>
     </div>
+  );
+};
+
+/**
+ * Compte interne : le produit sans le commerce.
+ *
+ * Tout ce qui parle d'argent disparaît — prix à payer, facture à régler,
+ * changement de plan, dépassement facturable. Ce qui reste est
+ * opérationnel : la formule en cours et la consommation, qui restent utiles
+ * à qui exploite le compte.
+ */
+const InternalAccountCard = ({ planName }: { planName: string }) => {
+  const { t } = useTranslation();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <div className="flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-gray-400" /> {t('subscriptionPage.internalTitle')}
+          </div>
+        </CardTitle>
+      </CardHeader>
+      <div className="mt-3 flex flex-col gap-2">
+        <p className="text-sm text-gray-600">{t('subscriptionPage.internalHint')}</p>
+        <div className="flex items-baseline justify-between gap-3 border-t border-gray-50 pt-2">
+          <span className="text-sm text-gray-500">{t('subscriptionPage.internalPlan')}</span>
+          <span className="text-sm font-bold" style={{ color: '#5346A8' }}>{planName}</span>
+        </div>
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-sm text-gray-500">{t('subscriptionPage.internalBilling')}</span>
+          <Badge variant="active">{t('subscriptionPage.internalBillingValue')}</Badge>
+        </div>
+      </div>
+    </Card>
   );
 };
 
@@ -713,10 +758,13 @@ export const SubscriptionPage = () => {
   // sa formule. C'est le backend qui le dit, et le catalogue qui fournit le
   // montant exact — l'écran ne décide ni de l'un ni de l'autre.
   const awaitsPayment = sub?.awaiting_payment === true;
+  // Compte interne : il exploite Qayed sans l'acheter. Aucune surface
+  // commerciale ne le concerne — c'est le backend qui le dit.
+  const isInternal = sub?.is_internal === true;
   const { data: activationCatalog } = useQuery({
     queryKey: ['subscription-plans'],
     queryFn: subscriptionApi.getPlans,
-    enabled: awaitsPayment && !pendingChange,
+    enabled: awaitsPayment && !pendingChange && !isInternal,
   });
   const currentPlanOffer = (activationCatalog?.plans ?? []).find((p) => p.is_current) ?? null;
 
@@ -725,12 +773,24 @@ export const SubscriptionPage = () => {
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 pb-8">
         <div>
           <h1 className="text-xl font-bold text-gray-900">{t('subscriptionPage.title')}</h1>
-          <p className="mt-0.5 text-sm text-gray-500">{t('subscriptionPage.subtitle')}</p>
+          <p className="mt-0.5 text-sm text-gray-500">
+            {t(isInternal ? 'subscriptionPage.internalSubtitle' : 'subscriptionPage.subtitle')}
+          </p>
         </div>
 
         {isLoading && <div className="h-40 animate-pulse rounded-2xl bg-gray-100" />}
 
-        {sub && sub.status !== 'none' && (
+        {/* Compte interne : la formule et la consommation, rien de commercial. */}
+        {sub && sub.status !== 'none' && isInternal && (
+          <>
+            <InternalAccountCard
+              planName={typeof sub.plan === 'string' ? sub.plan : (sub.plan?.name ?? '—')}
+            />
+            <CurrentPlanCard sub={sub} hideMoney />
+          </>
+        )}
+
+        {sub && sub.status !== 'none' && !isInternal && (
           <>
             {pendingChange && (
               <PendingChangeBanner

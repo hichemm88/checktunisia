@@ -105,6 +105,14 @@ export const settingsApi = {
        * elle finirait par diverger.
        */
       awaiting_payment?: boolean;
+      /**
+       * Compte interne : utilise Qayed sans facturation commerciale. L'écran
+       * masque alors tout ce qui relève du commerce (prix à payer, factures à
+       * régler, changement de plan, dépassement facturable) et ne garde que
+       * l'opérationnel. Ce n'est ni un rôle ni un privilège.
+       */
+      is_internal?: boolean;
+      billing_mode?: 'commercial' | 'internal';
     } }>('/hotel/subscription')
       .then((r) => r.data.data),
 

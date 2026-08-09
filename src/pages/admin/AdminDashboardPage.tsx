@@ -434,12 +434,23 @@ export const AdminDashboardPage = () => {
             <Stat icon={Users}      label={t('adminDashboard.checkinsThisMonth')} value={stats.check_ins.this_month} color="var(--qayed-cachet-sombre)" />
             <div className="card p-5 group relative">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">MRR</p>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('adminDashboard.mrrCommercial')}</p>
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: 'var(--qayed-conforme)18' }}>
                   <Wallet className="h-4 w-4" style={{ color: 'var(--qayed-conforme)' }} />
                 </div>
               </div>
               <p className="font-mono text-3xl font-extrabold text-gray-900">{formatTND(stats.mrr)}</p>
+              {/* Les comptes internes utilisent Qayed sans l'acheter : ils
+                  existent dans le parc mais jamais dans le revenu. L'afficher
+                  evite de lire une perte de clients la ou il n'y en a pas. */}
+              {(stats.organizations?.internal ?? 0) > 0 && (
+                <p className="mt-1 text-[11px] text-gray-400">
+                  {t('adminDashboard.mrrScope', {
+                    commercial: stats.organizations.commercial,
+                    internal: stats.organizations.internal,
+                  })}
+                </p>
+              )}
               {(stats.mrr_breakdown?.length ?? 0) > 0 && (
                 <div className="pointer-events-none absolute top-full left-0 mt-1 hidden group-hover:block w-72 rounded-xl bg-gray-900 p-3 text-white shadow-xl z-20">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-2">{t('adminDashboard.mrrBreakdown')}</p>
