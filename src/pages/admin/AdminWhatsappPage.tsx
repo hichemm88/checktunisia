@@ -36,6 +36,10 @@ const SESSION_STYLE: Record<WhatsappSession, { dot: string; key: string }> = {
   ready:        { dot: 'bg-green-500', key: 'ready' },
   initializing: { dot: 'bg-amber-400', key: 'initializing' },
   disconnected: { dot: 'bg-red-500',   key: 'disconnected' },
+  // Révocation WhatsApp : rien ne repartira sans un QR scanné sur place. Sans
+  // cette entrée, le repli affichait « Initialisation… » en ambre — la panne la
+  // plus grave sous les traits de la plus rassurante.
+  logged_out:   { dot: 'bg-red-500',   key: 'loggedOut' },
   auth_failure: { dot: 'bg-red-500',   key: 'authFailure' },
 };
 

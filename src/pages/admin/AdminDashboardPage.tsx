@@ -83,12 +83,16 @@ const WhatsappStatusStrip = () => {
   });
   if (!health) return null;
 
+  // `logged_out` manquait aux deux endroits : la session révoquée — celle où
+  // plus rien ne part tant qu'un QR n'est pas scanné — s'affichait en pastille
+  // ambre, et son libellé retombait sur une clé i18n inexistante.
+  const sessionKey = { auth_failure: 'authFailure', logged_out: 'loggedOut' }[health.session] ?? health.session;
   const ok = health.session === 'ready' && !health.paused;
-  const down = health.session === 'disconnected' || health.session === 'auth_failure';
+  const down = health.session === 'disconnected' || health.session === 'auth_failure' || health.session === 'logged_out';
   const dot = ok ? 'bg-green-500' : down ? 'bg-red-500' : 'bg-amber-400';
   const label = health.paused
     ? t('adminWhatsapp.pausedTag')
-    : t(`adminWhatsapp.session.${health.session === 'auth_failure' ? 'authFailure' : health.session}`);
+    : t(`adminWhatsapp.session.${sessionKey}`);
 
   return (
     <Link
