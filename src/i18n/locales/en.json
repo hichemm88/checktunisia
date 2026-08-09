@@ -436,7 +436,9 @@
     "notConfigured": "NOT CONFIGURED",
     "database": "Database",
     "unavailable": "Reading unavailable — operational health cannot be verified.",
-    "readingStale": "Reading is {{count}} min old — the signals below may be stale."
+    "readingStale": "Reading is {{count}} min old — the signals below may be stale.",
+    "unknownValue": "UNREADABLE",
+    "queuePendingUnknown": "queue depth unreadable"
   },
   "settingsPage": {
     "title": "Settings",
@@ -501,7 +503,6 @@
     "daysCount_one": "{{count}} day",
     "daysCount_other": "{{count}} days",
     "renewalDue": "Renewal due soon",
-    "renewalContact": "Contact <a>contact@qayed.tn</a> to renew your subscription.",
     "invoices": "Invoices",
     "noInvoice": "No invoices yet.",
     "payOnline": "Pay online",
@@ -556,7 +557,8 @@
     "perPropertyMonth": "/ property / month",
     "manageTitle": "Manage my subscription",
     "manageHint": "Change plan, cancel or restore your subscription, and review the history — without contacting us.",
-    "manageCta": "Manage my subscription"
+    "manageCta": "Manage my subscription",
+    "renewalSelfService": "Renew, change plan or cancel from \"My subscription\" below."
   },
   "propertiesPage": {
     "typeHotel": "Hotel",
@@ -1785,6 +1787,8 @@
     "internalBilling": "Billing",
     "internalBillingValue": "Exempt",
     "graceTitle": "Invoice overdue — service maintained",
-    "graceBody": "Your access stays fully usable until {{date}} ({{count}} day(s)). Settle your invoice before then to avoid suspension. Your check-ins are not blocked."
+    "graceBody": "Your access stays fully usable until {{date}} ({{count}} day(s)). Settle your invoice before then to avoid suspension. Your check-ins are not blocked.",
+    "payOfflineHint": "Online payment is currently unavailable: settle this invoice by bank transfer from the Invoices screen.",
+    "payByTransfer": "Pay by bank transfer"
   }
 }

@@ -436,7 +436,9 @@
     "notConfigured": "NON CONFIGURÉE",
     "database": "Base de données",
     "unavailable": "Relevé indisponible — l'état d'exploitation ne peut pas être vérifié.",
-    "readingStale": "Relevé vieux de {{count}} min — les indicateurs ci-dessous peuvent être périmés."
+    "readingStale": "Relevé vieux de {{count}} min — les indicateurs ci-dessous peuvent être périmés.",
+    "unknownValue": "ILLISIBLE",
+    "queuePendingUnknown": "file d'attente illisible"
   },
   "settingsPage": {
     "title": "Paramètres",
@@ -501,7 +503,6 @@
     "daysCount_one": "{{count}} jour",
     "daysCount_other": "{{count}} jours",
     "renewalDue": "Renouvellement à prévoir",
-    "renewalContact": "Contactez <a>contact@qayed.tn</a> pour renouveler votre abonnement.",
     "invoices": "Factures",
     "noInvoice": "Aucune facture pour le moment.",
     "payOnline": "Payer en ligne",
@@ -556,7 +557,8 @@
     "perPropertyMonth": "/ établissement / mois",
     "manageTitle": "Gérer mon abonnement",
     "manageHint": "Changez de formule, résiliez ou reprenez votre abonnement, et consultez l'historique — sans nous contacter.",
-    "manageCta": "Gérer mon abonnement"
+    "manageCta": "Gérer mon abonnement",
+    "renewalSelfService": "Renouvelez, changez de formule ou résiliez depuis « Mon abonnement », ci-dessous."
   },
   "propertiesPage": {
     "typeHotel": "Hôtel",
@@ -1785,6 +1787,8 @@
     "internalBilling": "Facturation",
     "internalBillingValue": "Exemptée",
     "graceTitle": "Facture en retard — service maintenu",
-    "graceBody": "Votre accès reste entièrement utilisable jusqu'au {{date}} ({{count}} jour(s)). Réglez votre facture avant cette date pour éviter la suspension. Vos check-ins ne sont pas bloqués."
+    "graceBody": "Votre accès reste entièrement utilisable jusqu'au {{date}} ({{count}} jour(s)). Réglez votre facture avant cette date pour éviter la suspension. Vos check-ins ne sont pas bloqués.",
+    "payOfflineHint": "Le paiement en ligne n'est pas disponible pour le moment : réglez cette facture par virement depuis l'écran Factures.",
+    "payByTransfer": "Régler par virement"
   }
 }
