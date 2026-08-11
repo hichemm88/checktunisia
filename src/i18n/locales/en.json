@@ -209,6 +209,7 @@
     "konnectApiKeyHint": "Konnect dashboard → organization profile. It is shown only once, when created.",
     "konnectWalletId": "Wallet ID",
     "konnectWalletIdHint": "The wallet that receives the payments (Dashboard → Wallets).",
+    "settingsNotApplied": "The server did not apply the Konnect settings: the deployed API version does not know them yet. Check that the backend is deployed, then try again.",
     "konnectWebhookHint": "The server callback records a payment even when the customer never returns to the site. Enable it server-side with KONNECT_WEBHOOK_TOKEN.",
     "flouciTitle": "Flouci (legacy — replaced by Konnect)",
     "flouciLegacyHint": "Kept so payments already collected through Flouci remain verifiable. Leave it disabled.",

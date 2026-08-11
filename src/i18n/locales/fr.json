@@ -209,6 +209,7 @@
     "konnectApiKeyHint": "Tableau de bord Konnect → profil de l'organisation. Elle n'est affichée qu'une seule fois à sa création.",
     "konnectWalletId": "Identifiant de portefeuille",
     "konnectWalletIdHint": "Portefeuille qui reçoit les règlements (Dashboard → Wallets).",
+    "settingsNotApplied": "Le serveur n'a pas appliqué les réglages Konnect : la version déployée de l'API ne les connaît pas encore. Vérifiez que le backend est bien déployé, puis réessayez.",
     "konnectWebhookHint": "Le rappel serveur permet de constater un règlement même si le client ne revient pas sur le site. Il s'active côté serveur avec KONNECT_WEBHOOK_TOKEN.",
     "flouciTitle": "Flouci (historique — remplacé par Konnect)",
     "flouciLegacyHint": "Canal conservé pour que les paiements déjà encaissés par Flouci restent vérifiables. À laisser désactivé.",
