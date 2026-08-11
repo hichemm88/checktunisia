@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PricingSection } from '@/components/landing/PricingSection';
 import { MOCKUPS } from './mockups';
@@ -223,28 +224,54 @@ export interface StepsProps {
   background: 'default' | 'alt';
 }
 
-export const StepsBlock = (p: StepsProps) => (
-  <section className={sectionClass(p.background)} style={{ paddingTop: 40 }}>
-    <div className="wrap">
-      <div className="flow-grid">
-        <div className="flow-steps">
-          {p.items.map((it, i) => (
-            <div key={i} className={cx('flow-step', i === 0 && 'active')} data-flow-step={i + 1}>
-              <div className="fs-num">{i + 1}</div>
-              <div className="fs-body">
-                <div className="fs-title">{it.title}</div>
-                <div className="fs-desc">{it.text}</div>
-              </div>
-            </div>
-          ))}
+/**
+ * Cliquer une étape affiche l'écran produit correspondant.
+ *
+ * L'état vit dans le bloc, et non plus dans un écouteur posé sur le DOM depuis
+ * SiteChrome : c'est ce montage-là qui avait disparu et rendu les étapes
+ * inertes. Les étapes sont des <button> — donc atteignables au clavier, ce que
+ * les <div> d'origine n'étaient pas.
+ */
+export const StepsBlock = (p: StepsProps) => {
+  const [active, setActive] = useState(0);
+  const visualRef = useRef<HTMLDivElement>(null);
+
+  // Les écrans sont du HTML figé injecté : on ne peut pas les monter
+  // conditionnellement, on bascule leur classe .active.
+  useEffect(() => {
+    const screens = visualRef.current?.querySelectorAll('.flow-screen');
+    screens?.forEach((el, i) => el.classList.toggle('active', i === active));
+  }, [active, p.showScreens]);
+
+  return (
+    <section className={sectionClass(p.background)} style={{ paddingTop: 40 }}>
+      <div className="wrap">
+        <div className="flow-grid">
+          <div className="flow-steps">
+            {p.items.map((it, i) => (
+              <button
+                key={i}
+                type="button"
+                className={cx('flow-step', i === active && 'active')}
+                aria-pressed={i === active}
+                onClick={() => setActive(i)}
+              >
+                <span className="fs-num">{i + 1}</span>
+                <span className="fs-body">
+                  <span className="fs-title">{it.title}</span>
+                  <span className="fs-desc">{it.text}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+          {p.showScreens && MOCKUPS['flow-screens'] && (
+            <div ref={visualRef} aria-hidden="true" dangerouslySetInnerHTML={{ __html: MOCKUPS['flow-screens'] }} />
+          )}
         </div>
-        {p.showScreens && MOCKUPS['flow-screens'] && (
-          <div aria-hidden="true" dangerouslySetInnerHTML={{ __html: MOCKUPS['flow-screens'] }} />
-        )}
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 // ── Vitrine fiche (texte + visuel figé) ────────────────────────────────────────
 
