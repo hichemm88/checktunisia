@@ -215,6 +215,7 @@
     "flouciLegacyHint": "أُبقيت لتظل المدفوعات المحصّلة سابقًا عبر Flouci قابلة للتحقق. اتركها معطّلة.",
     "enableFlouci": "تفعيل Flouci",
     "leaveEmptyHint": "اترك فارغًا لعدم التغيير",
+    "noCredentialStored": "لا توجد بيانات اعتماد محفوظة",
     "credentialsSecurityHint": "لأسباب أمنية، لا يتم إعادة عرض بيانات الاعتماد المحفوظة مسبقًا — اترك هذه الحقول فارغة إذا كنت لا تريد تغييرها.",
     "bankTransferTitle": "التحويل البنكي",
     "enableBankTransfer": "تفعيل التحويل البنكي",

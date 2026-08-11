@@ -215,6 +215,7 @@
     "flouciLegacyHint": "Kept so payments already collected through Flouci remain verifiable. Leave it disabled.",
     "enableFlouci": "Enable Flouci",
     "leaveEmptyHint": "Leave empty to keep unchanged",
+    "noCredentialStored": "No credential saved",
     "credentialsSecurityHint": "For security, previously saved credentials are never redisplayed — leave these fields empty if you don't want to change them.",
     "bankTransferTitle": "Bank transfer",
     "enableBankTransfer": "Enable bank transfer",

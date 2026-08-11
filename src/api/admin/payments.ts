@@ -7,6 +7,16 @@ export interface PlatformSettings {
   company_address: string | null;
   konnect_enabled: boolean;
   konnect_environment: 'sandbox' | 'production' | null;
+  /**
+   * Aperçu masqué des identifiants enregistrés : extrémités visibles, milieu
+   * jamais. `null` signifie réellement « rien d'enregistré » — c'est ce qui
+   * distingue un champ vide d'un secret simplement caché. Réservé à l'écran
+   * d'administration ; la route publique n'en livre aucun.
+   */
+  konnect_api_key_hint: string | null;
+  konnect_wallet_id_hint: string | null;
+  flouci_app_token_hint: string | null;
+  flouci_app_secret_hint: string | null;
   /** Canal historique, remplacé par Konnect. */
   flouci_enabled: boolean;
   /**
