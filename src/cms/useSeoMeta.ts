@@ -69,8 +69,10 @@ export const useSeoMeta = ({
     // Description standard.
     meta('name', 'description', desc);
 
-    // Canonical.
-    upsert('link[rel="canonical"][data-cms-seo]', () => {
+    // Canonical — on réutilise celui d'index.html au lieu d'en ajouter un
+    // second : deux balises canoniques dans le <head> sont traitées comme
+    // contradictoires (Google les ignore alors toutes les deux).
+    upsert('link[rel="canonical"]', () => {
       const l = document.createElement('link');
       l.setAttribute('rel', 'canonical');
       return l;

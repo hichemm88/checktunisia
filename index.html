@@ -33,6 +33,11 @@
          (latin-ext, arabe) restent à la charge de leur unicode-range. -->
     <link rel="preload" href="/fonts/archivo-400-900-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="/fonts/plex-sans-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <!-- Le contenu de la page vient de l'API sur une autre origine : ouvrir la
+         connexion (DNS + TLS) pendant le chargement du bundle économise un
+         aller-retour sur le chemin du premier rendu utile. -->
+    <link rel="preconnect" href="https://checktunisia-backend-production.up.railway.app" crossorigin>
+    <link rel="preconnect" href="https://api.qayed.tn" crossorigin>
   </head>
   <body>
     <div id="root"></div>

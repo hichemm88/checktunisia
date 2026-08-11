@@ -56,7 +56,7 @@ export const SITE_CSS = `
 /* nowrap + libellés compacts : à 1440 px, « Comment ça marche » repassait à la
    ligne et la barre se chevauchait. */
 .qayed-landing .nav-links{display:flex;align-items:center;gap:22px;list-style:none;flex-wrap:nowrap}
-.qayed-landing .nav-links a{font-size:14px;font-weight:500;color:var(--texte-sec);text-decoration:none;white-space:nowrap;transition:color .2s}
+.qayed-landing .nav-links a{font-size:14px;font-weight:600;color:var(--texte-sec);text-decoration:none;white-space:nowrap;transition:color .2s}
 .qayed-landing .nav-links a:hover{color:var(--cachet)}
 .qayed-landing .nav-login{background:transparent;color:var(--cachet)!important;padding:9px 15px;border-radius:var(--r-sm);font-weight:600!important;border:1.5px solid var(--cachet-dilue)!important;transition:border-color .2s!important,background .2s!important}
 .qayed-landing .nav-login:hover{background:var(--cachet-dilue)!important;border-color:var(--cachet)!important}
@@ -74,7 +74,7 @@ export const SITE_CSS = `
 /* :not(.btn) — sinon cette règle l'emportait sur .btn-primary et le bouton
    « Essayer gratuitement » du menu mobile s'affichait en encre sur violet
    (2,2:1). */
-.qayed-landing .mobile-menu a:not(.btn){padding:14px 4px;font-size:16px;font-weight:500;color:var(--encre);text-decoration:none;border-bottom:1px solid var(--ligne)}
+.qayed-landing .mobile-menu a:not(.btn){padding:14px 4px;font-size:16px;font-weight:600;color:var(--encre);text-decoration:none;border-bottom:1px solid var(--ligne)}
 .qayed-landing .mobile-menu a:not(.btn):last-of-type{border-bottom:none}
 .qayed-landing .mobile-menu-actions{display:flex;flex-direction:column;gap:10px;margin-top:16px}
 .qayed-landing .mobile-menu-actions a{border-bottom:none!important;padding:12px!important}
@@ -88,7 +88,7 @@ export const SITE_CSS = `
 .qayed-landing .hero-h1 em{font-style:normal;color:var(--cachet-sombre)}
 /* dir=rtl porté par l'élément : sans cette règle, text-align:start le
    plaquerait à droite au milieu d'une page française. */
-.qayed-landing .hero-ar{font-family:var(--font-ar);font-weight:500;font-size:18px;text-align:left;color:var(--sur-encre-bas);margin-bottom:26px}
+.qayed-landing .hero-ar{font-family:var(--font-ar);font-weight:400;font-size:18px;text-align:left;color:var(--sur-encre-bas);margin-bottom:26px}
 [dir='rtl'] .qayed-landing .hero-ar{text-align:right}
 .qayed-landing .hero-desc{font-size:17px;color:var(--sur-encre);max-width:46ch;line-height:1.7;margin-bottom:38px}
 .qayed-landing .hero-actions{display:flex;gap:14px;flex-wrap:wrap}
@@ -131,7 +131,7 @@ export const SITE_CSS = `
 /* LISTE NUMÉROTÉE — « comment ça marche » : 01 / 02 / 03 au filet. */
 .qayed-landing .num-list{border-top:1px solid var(--ligne)}
 .qayed-landing .num-item{display:grid;grid-template-columns:auto 1fr;gap:28px;padding:26px 0;border-bottom:1px solid var(--ligne)}
-.qayed-landing .num-idx{font-family:var(--font-m);font-size:12px;font-weight:500;letter-spacing:.14em;color:var(--cachet);padding-top:5px}
+.qayed-landing .num-idx{font-family:var(--font-m);font-size:12px;font-weight:400;letter-spacing:.14em;color:var(--cachet);padding-top:5px}
 .qayed-landing .num-title{font-family:var(--font-d);font-variation-settings:'wdth' 115;font-weight:800;font-size:18px;line-height:1.3;margin-bottom:7px}
 .qayed-landing .num-text{font-size:15px;color:var(--texte-sec);line-height:1.7;max-width:56ch}
 .qayed-landing .flow-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:72px;align-items:start}
@@ -151,7 +151,7 @@ export const SITE_CSS = `
 .qayed-landing .conf-lead{font-size:16px;color:var(--sur-encre);line-height:1.7;max-width:44ch}
 .qayed-landing .conf-list{border-top:1px solid var(--filet-encre)}
 .qayed-landing .conf-item{display:grid;grid-template-columns:auto 1fr;gap:26px;padding:28px 0;border-bottom:1px solid var(--filet-encre)}
-.qayed-landing .conf-idx{font-family:var(--font-m);font-size:12px;font-weight:500;letter-spacing:.14em;color:var(--cachet-sombre);padding-top:4px}
+.qayed-landing .conf-idx{font-family:var(--font-m);font-size:12px;font-weight:400;letter-spacing:.14em;color:var(--cachet-sombre);padding-top:4px}
 .qayed-landing .conf-title{font-family:var(--font-d);font-variation-settings:'wdth' 115;font-weight:800;font-size:18px;color:var(--papier);margin-bottom:8px}
 .qayed-landing .conf-text{font-size:15px;color:var(--sur-encre);line-height:1.75}
 .qayed-landing .conf-note{margin-top:28px;font-size:14px;color:var(--sur-encre-bas);line-height:1.7;border-inline-start:2px solid var(--cachet-sombre);padding-inline-start:16px}
@@ -165,9 +165,9 @@ export const SITE_CSS = `
 .qayed-landing .fiche-row{display:flex;border-bottom:1px solid var(--ligne);font-size:14px}
 .qayed-landing .fiche-row:last-child{border-bottom:none}
 .qayed-landing .fiche-k{width:150px;flex-shrink:0;padding:11px 18px;color:var(--fiche);font-family:var(--font-m);font-size:11px;letter-spacing:.06em;text-transform:uppercase;border-inline-end:1px solid var(--ligne)}
-.qayed-landing .fiche-v{padding:11px 18px;color:var(--encre);font-weight:500;flex:1}
+.qayed-landing .fiche-v{padding:11px 18px;color:var(--encre);font-weight:600;flex:1}
 .qayed-landing .fiche-v.mono{font-family:var(--font-m);font-size:12px}
-.qayed-landing .badge{display:inline-flex;align-items:center;gap:7px;padding:3px 10px;font-family:var(--font-m);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;border:1px solid currentColor}
+.qayed-landing .badge{display:inline-flex;align-items:center;gap:7px;padding:3px 10px;font-family:var(--font-m);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:400;border:1px solid currentColor}
 .qayed-landing .badge .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
 .qayed-landing .b-ok{color:var(--conforme-txt)}
 .qayed-landing .b-wait{color:var(--cachet)}
@@ -189,7 +189,7 @@ export const SITE_CSS = `
 .qayed-landing .phone-steps span.done{background:var(--cachet)}
 .qayed-landing .phone-label{font-family:var(--font-m);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--fiche);margin-bottom:4px}
 .qayed-landing .phone-value{background:var(--blanc);border:1px solid var(--ligne);padding:7px 10px;font-size:12px;font-weight:600;color:var(--encre);margin-bottom:10px}
-.qayed-landing .phone-value.mono{font-family:var(--font-m);font-weight:500}
+.qayed-landing .phone-value.mono{font-family:var(--font-m);font-weight:400}
 .qayed-landing .phone-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .qayed-landing .phone-read{font-family:var(--font-m);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--conforme-txt);border-top:1px solid var(--ligne);border-bottom:1px solid var(--ligne);padding:8px 0;margin-bottom:14px}
 .qayed-landing .phone-cta{background:var(--cachet);color:#fff;padding:10px;text-align:center;font-size:12px;font-weight:600}
@@ -229,7 +229,7 @@ export const SITE_CSS = `
 .qayed-landing .pricing-toggle{display:flex;justify-content:center;gap:0;margin:0 auto 44px;border:1px solid var(--ligne);width:fit-content}
 .qayed-landing .pt-btn{border:0;background:transparent;font-family:var(--font-b);font-size:14px;font-weight:600;color:var(--texte-sec);padding:10px 22px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .2s,color .2s}
 .qayed-landing .pt-btn.active{background:var(--encre);color:var(--papier)}
-.qayed-landing .pt-badge{font-family:var(--font-m);font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--conforme-txt)}
+.qayed-landing .pt-badge{font-family:var(--font-m);font-size:10px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--conforme-txt)}
 .qayed-landing .pt-btn.active .pt-badge{color:var(--cachet-sombre)}
 /* Puce « inclus » : filet fin, jamais un glyphe. */
 .qayed-landing .feat-list{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:26px;flex:1}
@@ -261,7 +261,7 @@ export const SITE_CSS = `
 .qayed-landing .footer-tagline{font-family:var(--font-ar);font-size:13px;direction:rtl;text-align:left;color:var(--sur-encre-bas);margin-bottom:16px}
 [dir='rtl'] .qayed-landing .footer-tagline{text-align:right}
 .qayed-landing .footer-desc{font-size:14px;color:var(--sur-encre);line-height:1.7;max-width:34ch}
-.qayed-landing .footer-col h4{font-family:var(--font-m);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sur-encre-bas);margin-bottom:16px}
+.qayed-landing .footer-col h3{font-family:var(--font-m);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--sur-encre-bas);margin-bottom:16px}
 .qayed-landing .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px}
 .qayed-landing .footer-col ul a{font-size:14px;color:var(--sur-encre);text-decoration:none;transition:color .2s}
 .qayed-landing .footer-col ul a:hover{color:var(--papier)}
@@ -334,7 +334,7 @@ export const SITE_CSS = `
 .qayed-landing .lang-btn:hover{background:var(--cachet-dilue);border-color:var(--cachet)}
 .qayed-landing .lang-btn svg{display:block}
 .qayed-landing .lang-menu{position:absolute;top:calc(100% + 10px);inset-inline-end:0;background:var(--blanc);border:1px solid var(--ligne);box-shadow:0 12px 40px rgba(16,34,46,.14);padding:6px;min-width:168px;z-index:300}
-.qayed-landing .lang-opt{display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%;background:transparent;border:0;padding:9px 12px;font-family:var(--font-b);font-size:14px;font-weight:500;color:var(--texte-sec);cursor:pointer;text-align:start;transition:background .15s}
+.qayed-landing .lang-opt{display:flex;align-items:center;justify-content:space-between;gap:18px;width:100%;background:transparent;border:0;padding:9px 12px;font-family:var(--font-b);font-size:14px;font-weight:600;color:var(--texte-sec);cursor:pointer;text-align:start;transition:background .15s}
 .qayed-landing .lang-opt:hover{background:var(--papier)}
 .qayed-landing .lang-opt.active{color:var(--cachet);font-weight:700;background:var(--cachet-dilue)}
 .qayed-landing .lang-code{font-family:var(--font-m);font-size:10px;color:var(--fiche);letter-spacing:.1em}

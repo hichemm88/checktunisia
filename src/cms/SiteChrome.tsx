@@ -163,7 +163,9 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
         </div>
       </nav>
 
-      {children}
+      {/* Repère de navigation : un lecteur d'écran doit pouvoir sauter la
+          navigation pour atteindre le contenu de la page. */}
+      <main>{children}</main>
 
       <footer className="on-encre">
         <div className="footer-inner">
@@ -177,13 +179,13 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
               <p className="footer-desc">{FOOTER_T.desc[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.desc.fr}</p>
             </div>
             <div className="footer-col">
-              <h4>{FOOTER_T.product[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.product.fr}</h4>
+              <h3>{FOOTER_T.product[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.product.fr}</h3>
               <ul>
                 {(menus?.footer ?? []).map((item) => <li key={item.id}><NavLink item={item} /></li>)}
               </ul>
             </div>
             <div className="footer-col">
-              <h4>{FOOTER_T.legal[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.legal.fr}</h4>
+              <h3>{FOOTER_T.legal[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.legal.fr}</h3>
               <ul>
                 <li><Link to={`/${lang}/mentions-legales`}>{FOOTER_T.mentions[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.mentions.fr}</Link></li>
                 <li><Link to={`/${lang}/cgv`}>{FOOTER_T.cgv[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.cgv.fr}</Link></li>

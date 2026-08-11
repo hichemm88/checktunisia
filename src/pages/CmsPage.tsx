@@ -100,7 +100,10 @@ export const CmsPage = ({ slugOverride, localeOverride }: { slugOverride?: strin
       {!validLocale || isError ? (
         <NotFoundView />
       ) : isLoading ? (
-        <div style={{ minHeight: '60vh' }} />
+        // Hauteur d'un écran : sans cela, le pied de page s'affiche haut puis
+        // redescend brutalement quand le contenu arrive de l'API (0,4 de
+        // décalage cumulé mesuré, et un saut bien visible à l'œil).
+        <div style={{ minHeight: '100vh' }} />
       ) : data ? (
         <RenderContent data={data} />
       ) : (
