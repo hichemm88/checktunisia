@@ -99,32 +99,29 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
     const onScroll = () => nav?.classList.toggle('scrolled', window.scrollY > 30);
     window.addEventListener('scroll', onScroll);
 
-    const obs = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.isIntersecting && e.target.classList.add('visible')),
-      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' },
-    );
-    root.querySelectorAll('.fade-in').forEach((el) => obs.observe(el));
+    // L'état masqué du fade-in n'est armé qu'ici : si ce code ne s'exécute pas
+    // (JS en échec, navigateur sans IntersectionObserver), le contenu reste
+    // visible plutôt que de rester à opacity:0.
+    const observer = 'IntersectionObserver' in window
+      ? new IntersectionObserver(
+        (entries) => entries.forEach((e) => e.isIntersecting && e.target.classList.add('visible')),
+        { threshold: 0.08, rootMargin: '0px 0px -40px 0px' },
+      )
+      : null;
 
-    // Bloc Steps : clic sur une étape → écran produit correspondant (mockup figé)
-    const flowSteps = root.querySelectorAll<HTMLElement>('[data-flow-step]');
-    const onFlowStepClick = (el: HTMLElement) => {
-      const n = el.dataset.flowStep;
-      root.querySelectorAll('.flow-step').forEach((s) => s.classList.remove('active'));
-      root.querySelectorAll('.flow-screen').forEach((s) => s.classList.remove('active'));
-      el.classList.add('active');
-      root.querySelector(`#screen-${n}`)?.classList.add('active');
-    };
-    const flowHandlers = new Map<HTMLElement, () => void>();
-    flowSteps.forEach((el) => {
-      const h = () => onFlowStepClick(el);
-      flowHandlers.set(el, h);
-      el.addEventListener('click', h);
-    });
+    if (observer) {
+      root.classList.add('anim-ready');
+      root.querySelectorAll('.fade-in').forEach((el) => {
+        // Ce qui est déjà passé (arrivée sur une ancre, retour dans l'historique)
+        // ne doit jamais attendre un croisement qui n'aura pas lieu.
+        if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add('visible');
+        observer.observe(el);
+      });
+    }
 
     return () => {
       window.removeEventListener('scroll', onScroll);
-      obs.disconnect();
-      flowHandlers.forEach((h, el) => el.removeEventListener('click', h));
+      observer?.disconnect();
     };
   }, [children]);
 
@@ -168,7 +165,7 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
 
       {children}
 
-      <footer>
+      <footer className="on-encre">
         <div className="footer-inner">
           <div className="footer-top">
             <div>
@@ -196,7 +193,10 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
           <div className="footer-bottom">
-            <span className="footer-legal">© {new Date().getFullYear()} QAYED · UW AGENCY SUARL · TUNIS, TUNISIE</span>
+            {/* L'entité juridique (UW AGENCY SUARL) reste dans les Mentions
+                légales et les CGV, où elle est requise — pas dans l'habillage
+                marketing du site. */}
+            <span className="footer-legal">© {new Date().getFullYear()} QAYED · TUNIS, TUNISIE</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <span className="footer-legal" style={{ marginInlineEnd: 6 }}>{FOOTER_T.securePay[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.securePay.fr}</span>
               <svg width="42" height="26" viewBox="0 0 42 26" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.45 }}>
