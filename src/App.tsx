@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore, type Role } from '@/stores/authStore';
@@ -52,11 +52,17 @@ import { AdminActivityPage } from '@/pages/admin/AdminActivityPage';
 import { AdminWhatsappPage } from '@/pages/admin/AdminWhatsappPage';
 import { AdminPagesPage } from '@/pages/admin/AdminPagesPage';
 import { AdminMenusPage } from '@/pages/admin/AdminMenusPage';
-// Import STATIQUE volontaire (pas de lazy) : le chargement différé de ce
-// chunk échouait en production chez l'admin (« Unable to preload CSS for
-// /AdminPageEditorPage-*.css ») — l'éditeur est intégré au bundle principal,
-// plus aucun fichier à récupérer au clic, l'erreur ne peut plus se produire.
-import AdminPageEditorPage from '@/pages/admin/AdminPageEditorPage';
+// Chargement différé de l'éditeur de pages (et des ~290 Ko de @measured/puck
+// qu'il entraîne) : il ne concerne que l'admin, alors que le bundle principal
+// est servi à chaque visiteur de la landing.
+//
+// Ce lazy avait été retiré parce qu'il échouait en production (« Unable to
+// preload CSS for /AdminPageEditorPage-*.css ») : Vite émettait un fichier CSS
+// par chunk différé et le préchargement de celui-ci échouait au clic. La cause
+// est traitée à la racine dans vite.config.ts (`cssCodeSplit: false`) — il n'y
+// a plus qu'une seule feuille de style pour toute l'application, donc plus
+// aucun CSS à précharger à l'ouverture de l'éditeur.
+const AdminPageEditorPage = lazy(() => import('@/pages/admin/AdminPageEditorPage'));
 import { ProfilePage } from '@/pages/profile/ProfilePage';
 
 // ─── Guards ─────────────────────────────────────────────────────────────────
@@ -243,7 +249,14 @@ export const App = () => (
           <Route path="/admin/settings"      element={<Navigate to="/admin/payments" replace />} />
         </Route>
         {/* Éditeur Puck — plein écran, hors AdminLayout */}
-        <Route path="/admin/pages/:id/edit" element={<AdminPageEditorPage />} />
+        <Route
+          path="/admin/pages/:id/edit"
+          element={(
+            <Suspense fallback={<div style={{ padding: 48, color: 'var(--qayed-fiche)' }}>Chargement de l'éditeur…</div>}>
+              <AdminPageEditorPage />
+            </Suspense>
+          )}
+        />
       </Route>
     </Route>
 

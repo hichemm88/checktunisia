@@ -13,11 +13,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Qayed" />
     <title>Qayed — Enregistrez vos voyageurs en 30 secondes</title>
-    <meta name="description" content="Qayed remplace la fiche de police papier. Scannez le passeport ou la CIN, les données sont extraites automatiquement, la fiche est prête et transmise aux autorités en temps réel." />
+    <meta name="description" content="Qayed remplace la fiche de police papier. Scannez le passeport ou la CIN, les données sont extraites automatiquement, la fiche est prête, imprimable et envoyée par WhatsApp au destinataire configuré par l'établissement." />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Qayed" />
     <meta property="og:title" content="Qayed — Enregistrez vos voyageurs en 30 secondes" />
-    <meta property="og:description" content="La fiche de police digitale pour hébergements tunisiens — scan MRZ automatique, conforme, sans papier." />
+    <meta property="og:description" content="La fiche de police digitale pour hébergements tunisiens — scan MRZ du passeport et de la CIN, impression en un clic, envoi WhatsApp automatique." />
     <meta property="og:image" content="https://qayed.tn/og-image.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
@@ -28,8 +28,11 @@
     <meta name="twitter:description" content="La fiche de police digitale pour hébergements tunisiens." />
     <meta name="twitter:image" content="https://qayed.tn/og-image.png" />
     <link rel="canonical" href="https://qayed.tn" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Polices auto-hébergées (voir src/styles/fonts.css) : on précharge les
+         deux seuls sous-ensembles utilisés dès le premier écran. Les autres
+         (latin-ext, arabe) restent à la charge de leur unicode-range. -->
+    <link rel="preload" href="/fonts/archivo-400-900-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/plex-sans-400-latin.woff2" as="font" type="font/woff2" crossorigin>
   </head>
   <body>
     <div id="root"></div>
