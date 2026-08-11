@@ -38,7 +38,7 @@ const HOME_STRUCTURED_DATA: Record<string, unknown> = {
       operatingSystem: 'Web, iOS, Android',
       offers: { '@type': 'Offer', priceCurrency: 'TND' },
       description:
-        "Qayed remplace la fiche de police papier : scan du passeport ou de la CIN, extraction automatique des données et transmission aux autorités en temps réel.",
+        "Qayed remplace la fiche de police papier : scan du passeport ou de la CIN, extraction automatique des données, fiche imprimable et envoi WhatsApp automatique au destinataire configuré par l'établissement.",
     },
   ],
 };
