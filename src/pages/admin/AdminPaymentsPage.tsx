@@ -33,6 +33,19 @@ const ConfigTab = () => {
   const { data: settings, isLoading } = useQuery({ queryKey: ['admin-platform-settings'], queryFn: adminPaymentsApi.getSettings });
 
   const [company, setCompany] = useState({ name: '', mf: '', rc: '', address: '', tax_rate: '', timbre_fiscal: '' });
+  /**
+   * Ce qu'affiche un champ d'identifiant vide.
+   *
+   * Vide tout court, il ne dit pas s'il l'est parce que rien n'est enregistré
+   * ou parce que le secret est simplement caché — et ce doute fait ressaisir,
+   * douter d'un enregistrement réussi, chercher une panne inexistante.
+   * L'aperçu masqué du serveur tranche : on reconnaît sa propre clé, on
+   * distingue celle de simulation de celle de production, et le milieu ne
+   * sort jamais.
+   */
+  const storedHint = (hint: string | null | undefined) =>
+    hint ? `${hint} — ${t('adminPayments.leaveEmptyHint')}` : t('adminPayments.noCredentialStored');
+
   const [konnect, setKonnect] = useState({ enabled: false, environment: 'sandbox', api_key: '', wallet_id: '' });
   const [flouci, setFlouci] = useState({ enabled: false, app_token: '', app_secret: '' });
   const [virement, setVirement] = useState({ enabled: true, rib: '', iban: '', bank_name: '', beneficiary: '', details: '' });
@@ -144,8 +157,8 @@ const ConfigTab = () => {
             ]}
             hint={t('adminPayments.konnectEnvironmentHint')}
           />
-          <Input label={t('adminPayments.konnectApiKey')} placeholder={t('adminPayments.leaveEmptyHint')} type="password" value={konnect.api_key} onChange={(e) => setKonnect((f) => ({ ...f, api_key: e.target.value }))} hint={t('adminPayments.konnectApiKeyHint')} />
-          <Input label={t('adminPayments.konnectWalletId')} placeholder={t('adminPayments.leaveEmptyHint')} type="password" value={konnect.wallet_id} onChange={(e) => setKonnect((f) => ({ ...f, wallet_id: e.target.value }))} hint={t('adminPayments.konnectWalletIdHint')} />
+          <Input label={t('adminPayments.konnectApiKey')} placeholder={storedHint(settings?.konnect_api_key_hint)} type="password" value={konnect.api_key} onChange={(e) => setKonnect((f) => ({ ...f, api_key: e.target.value }))} hint={t('adminPayments.konnectApiKeyHint')} />
+          <Input label={t('adminPayments.konnectWalletId')} placeholder={storedHint(settings?.konnect_wallet_id_hint)} type="password" value={konnect.wallet_id} onChange={(e) => setKonnect((f) => ({ ...f, wallet_id: e.target.value }))} hint={t('adminPayments.konnectWalletIdHint')} />
           <p className="text-xs text-gray-400">{t('adminPayments.konnectWebhookHint')}</p>
           <p className="text-xs text-gray-400">{t('adminPayments.credentialsSecurityHint')}</p>
         </div>
@@ -159,8 +172,8 @@ const ConfigTab = () => {
         <div className="flex flex-col gap-3">
           <p className="text-xs text-gray-500">{t('adminPayments.flouciLegacyHint')}</p>
           <Toggle checked={flouci.enabled} onChange={(v) => setFlouci((f) => ({ ...f, enabled: v }))} label={t('adminPayments.enableFlouci')} />
-          <Input label="App Token" placeholder={t('adminPayments.leaveEmptyHint')} type="password" value={flouci.app_token} onChange={(e) => setFlouci((f) => ({ ...f, app_token: e.target.value }))} />
-          <Input label="App Secret" placeholder={t('adminPayments.leaveEmptyHint')} type="password" value={flouci.app_secret} onChange={(e) => setFlouci((f) => ({ ...f, app_secret: e.target.value }))} />
+          <Input label="App Token" placeholder={storedHint(settings?.flouci_app_token_hint)} type="password" value={flouci.app_token} onChange={(e) => setFlouci((f) => ({ ...f, app_token: e.target.value }))} />
+          <Input label="App Secret" placeholder={storedHint(settings?.flouci_app_secret_hint)} type="password" value={flouci.app_secret} onChange={(e) => setFlouci((f) => ({ ...f, app_secret: e.target.value }))} />
           <p className="text-xs text-gray-400">{t('adminPayments.credentialsSecurityHint')}</p>
         </div>
       </Card>

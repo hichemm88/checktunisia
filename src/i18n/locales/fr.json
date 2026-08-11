@@ -215,6 +215,7 @@
     "flouciLegacyHint": "Canal conservé pour que les paiements déjà encaissés par Flouci restent vérifiables. À laisser désactivé.",
     "enableFlouci": "Activer Flouci",
     "leaveEmptyHint": "Laisser vide pour ne pas changer",
+    "noCredentialStored": "Aucun identifiant enregistré",
     "credentialsSecurityHint": "Par sécurité, les identifiants déjà enregistrés ne sont jamais réaffichés — laissez ces champs vides si vous ne voulez pas les changer.",
     "bankTransferTitle": "Virement bancaire",
     "enableBankTransfer": "Activer le virement",
