@@ -5,6 +5,7 @@ import { Building2, CheckCircle2, CreditCard, Landmark, Save, Wallet } from 'luc
 import { adminPaymentsApi } from '@/api/admin/payments';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
@@ -32,6 +33,7 @@ const ConfigTab = () => {
   const { data: settings, isLoading } = useQuery({ queryKey: ['admin-platform-settings'], queryFn: adminPaymentsApi.getSettings });
 
   const [company, setCompany] = useState({ name: '', mf: '', rc: '', address: '', tax_rate: '', timbre_fiscal: '' });
+  const [konnect, setKonnect] = useState({ enabled: false, environment: 'sandbox', api_key: '', wallet_id: '' });
   const [flouci, setFlouci] = useState({ enabled: false, app_token: '', app_secret: '' });
   const [virement, setVirement] = useState({ enabled: true, rib: '', iban: '', bank_name: '', beneficiary: '', details: '' });
   const [initialized, setInitialized] = useState(false);
@@ -41,6 +43,12 @@ const ConfigTab = () => {
       name: settings.company_name ?? '', mf: settings.company_mf ?? '',
       rc: settings.company_rc ?? '', address: settings.company_address ?? '',
       tax_rate: settings.tax_rate ?? '0', timbre_fiscal: settings.timbre_fiscal ?? '0',
+    });
+    setKonnect({
+      enabled: settings.konnect_enabled,
+      environment: settings.konnect_environment ?? 'sandbox',
+      // Jamais préremplis : le serveur ne renvoie pas les identifiants.
+      api_key: '', wallet_id: '',
     });
     setFlouci({ enabled: settings.flouci_enabled, app_token: '', app_secret: '' });
     setVirement({
@@ -55,6 +63,12 @@ const ConfigTab = () => {
       company_name: company.name, company_mf: company.mf, company_rc: company.rc, company_address: company.address,
       tax_rate: company.tax_rate === '' ? 0 : Number(company.tax_rate),
       timbre_fiscal: company.timbre_fiscal === '' ? 0 : Number(company.timbre_fiscal),
+      konnect_enabled: konnect.enabled,
+      konnect_environment: konnect.environment,
+      // Un champ laissé vide ne doit pas EFFACER l'identifiant en place : on ne
+      // transmet que ce qui a été effectivement ressaisi.
+      ...(konnect.api_key ? { konnect_api_key: konnect.api_key } : {}),
+      ...(konnect.wallet_id ? { konnect_wallet_id: konnect.wallet_id } : {}),
       flouci_enabled: flouci.enabled,
       ...(flouci.app_token ? { flouci_app_token: flouci.app_token } : {}),
       ...(flouci.app_secret ? { flouci_app_secret: flouci.app_secret } : {}),
@@ -92,9 +106,34 @@ const ConfigTab = () => {
       <Card>
         <div className="flex items-center gap-2 mb-3">
           <CreditCard className="h-4 w-4 text-gray-400" />
+          <p className="font-bold text-gray-900">{t('adminPayments.konnectTitle')}</p>
+        </div>
+        <div className="flex flex-col gap-3">
+          <Toggle checked={konnect.enabled} onChange={(v) => setKonnect((f) => ({ ...f, enabled: v }))} label={t('adminPayments.enableKonnect')} />
+          <Select
+            label={t('adminPayments.konnectEnvironment')}
+            value={konnect.environment}
+            onChange={(e) => setKonnect((f) => ({ ...f, environment: e.target.value }))}
+            options={[
+              { value: 'sandbox', label: t('adminPayments.konnectEnvSandbox') },
+              { value: 'production', label: t('adminPayments.konnectEnvProduction') },
+            ]}
+            hint={t('adminPayments.konnectEnvironmentHint')}
+          />
+          <Input label={t('adminPayments.konnectApiKey')} placeholder={t('adminPayments.leaveEmptyHint')} type="password" value={konnect.api_key} onChange={(e) => setKonnect((f) => ({ ...f, api_key: e.target.value }))} hint={t('adminPayments.konnectApiKeyHint')} />
+          <Input label={t('adminPayments.konnectWalletId')} placeholder={t('adminPayments.leaveEmptyHint')} type="password" value={konnect.wallet_id} onChange={(e) => setKonnect((f) => ({ ...f, wallet_id: e.target.value }))} hint={t('adminPayments.konnectWalletIdHint')} />
+          <p className="text-xs text-gray-400">{t('adminPayments.konnectWebhookHint')}</p>
+          <p className="text-xs text-gray-400">{t('adminPayments.credentialsSecurityHint')}</p>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="flex items-center gap-2 mb-3">
+          <CreditCard className="h-4 w-4 text-gray-400" />
           <p className="font-bold text-gray-900">{t('adminPayments.flouciTitle')}</p>
         </div>
         <div className="flex flex-col gap-3">
+          <p className="text-xs text-gray-500">{t('adminPayments.flouciLegacyHint')}</p>
           <Toggle checked={flouci.enabled} onChange={(v) => setFlouci((f) => ({ ...f, enabled: v }))} label={t('adminPayments.enableFlouci')} />
           <Input label="App Token" placeholder={t('adminPayments.leaveEmptyHint')} type="password" value={flouci.app_token} onChange={(e) => setFlouci((f) => ({ ...f, app_token: e.target.value }))} />
           <Input label="App Secret" placeholder={t('adminPayments.leaveEmptyHint')} type="password" value={flouci.app_secret} onChange={(e) => setFlouci((f) => ({ ...f, app_secret: e.target.value }))} />

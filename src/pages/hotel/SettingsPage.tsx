@@ -832,7 +832,7 @@ const InvoicesSection = () => {
 
             {isInvoiceOpen(inv.status) && (
               <div className="flex items-center gap-3">
-                {platformSettings?.flouci_enabled && (
+                {platformSettings?.online_payment_enabled && (
                   <Button size="sm" loading={payMut.isPending && payMut.variables === inv.id} onClick={() => payMut.mutate(inv.id)}>
                     {t('settingsPage.payOnline')}
                   </Button>

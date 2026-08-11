@@ -5,7 +5,15 @@ export interface PlatformSettings {
   company_mf: string | null;
   company_rc: string | null;
   company_address: string | null;
+  konnect_enabled: boolean;
+  konnect_environment: 'sandbox' | 'production' | null;
+  /** Canal historique, remplacé par Konnect. */
   flouci_enabled: boolean;
+  /**
+   * Le règlement en ligne peut-il RÉELLEMENT aboutir ? Calculé par le serveur
+   * (drapeau levé ET identifiants complets), sans nommer le prestataire.
+   */
+  online_payment_enabled: boolean;
   virement_enabled: boolean;
   virement_rib: string | null;
   virement_iban: string | null;
