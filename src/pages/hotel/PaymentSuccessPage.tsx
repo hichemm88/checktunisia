@@ -1,22 +1,28 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle, Loader2, AlertCircle, Clock } from 'lucide-react';
 import { paymentApi } from '@/api/payment';
 import { Button } from '@/components/ui/Button';
 
 /**
- * Landing page after a successful Flouci payment redirect.
- * Flouci sends the user here with ?payment_id=xxx
- * We verify server-side before showing confirmation.
+ * Page d'atterrissage au retour d'un paiement en ligne.
+ *
+ * Le prestataire ne connaît que SA propre référence et nous la rend en
+ * paramètre : Konnect envoie `?payment_ref=`, Flouci envoyait `?payment_id=`.
+ * Accepter les deux n'est pas de la prudence décorative — lire le mauvais nom
+ * renvoie le client au tableau de bord sans rien vérifier, juste après qu'il a
+ * payé. Le serveur, lui, reconnaît la référence du prestataire comme la nôtre.
+ *
+ * On vérifie côté serveur avant d'afficher la moindre confirmation.
  */
 export const PaymentSuccessPage = () => {
   const { t } = useTranslation();
   const navigate      = useNavigate();
   const [params]      = useSearchParams();
-  const paymentId     = params.get('payment_id') ?? '';
+  const paymentId     = params.get('payment_ref') ?? params.get('payment_id') ?? '';
 
-  const [status, setStatus] = useState<'loading' | 'completed' | 'failed' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'completed' | 'pending' | 'failed' | 'error'>('loading');
 
   useEffect(() => {
     if (!paymentId) {
@@ -24,11 +30,35 @@ export const PaymentSuccessPage = () => {
       return;
     }
 
-    paymentApi.verify(paymentId)
-      .then((result) => {
-        setStatus(result.status === 'completed' ? 'completed' : 'failed');
-      })
-      .catch(() => setStatus('error'));
+    // Le client revient parfois avant que la passerelle n'ait tranché : elle
+    // répond alors « en attente », ce qui n'est PAS un échec. Annoncer
+    // « paiement non abouti » à quelqu'un qui vient de payer l'enverrait
+    // payer une seconde fois. On laisse quelques secondes au verdict, puis on
+    // dit honnêtement « en cours de confirmation » — le rappel serveur de
+    // Konnect, lui, encaissera de son côté quoi qu'il arrive.
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    let attempt = 0;
+    const MAX_ATTEMPTS = 5;
+
+    const check = () => {
+      paymentApi.verify(paymentId)
+        .then((result) => {
+          if (cancelled) return;
+
+          if (result.status === 'completed') return setStatus('completed');
+          if (result.status !== 'pending')   return setStatus('failed');
+
+          attempt += 1;
+          if (attempt >= MAX_ATTEMPTS) return setStatus('pending');
+          timer = setTimeout(check, 2000);
+        })
+        .catch(() => { if (!cancelled) setStatus('error'); });
+    };
+
+    check();
+
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [paymentId, navigate]);
 
   if (status === 'loading') {
@@ -54,6 +84,25 @@ export const PaymentSuccessPage = () => {
             <p className="mt-1 text-sm text-gray-500">
               {t('paymentResult.confirmedHint')}
             </p>
+          </div>
+          <Button fullWidth size="lg" onClick={() => navigate('/hotel/dashboard', { replace: true })}>
+            {t('paymentResult.backToDashboard')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'pending') {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
+        <div className="card w-full max-w-sm p-8 flex flex-col items-center gap-5 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+            <Clock className="h-8 w-8 text-amber-600" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">{t('paymentResult.pendingTitle')}</h2>
+            <p className="mt-1 text-sm text-gray-500">{t('paymentResult.pendingHint')}</p>
           </div>
           <Button fullWidth size="lg" onClick={() => navigate('/hotel/dashboard', { replace: true })}>
             {t('paymentResult.backToDashboard')}

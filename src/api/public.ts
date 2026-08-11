@@ -77,7 +77,15 @@ export interface PlatformSettings {
   company_mf:           string | null;
   company_rc:           string | null;
   company_address:      string | null;
+  konnect_enabled:      boolean;
+  /** Canal historique, remplacé par Konnect. */
   flouci_enabled:       boolean;
+  /**
+   * Le seul drapeau que les écrans doivent lire : il dit si le règlement en
+   * ligne peut RÉELLEMENT aboutir, sans nommer le prestataire. Un bouton
+   * « Payer en ligne » ne doit jamais s'afficher au-dessus d'un canal muet.
+   */
+  online_payment_enabled: boolean;
   virement_enabled:     boolean;
   virement_rib:         string | null;
   virement_iban:        string | null;

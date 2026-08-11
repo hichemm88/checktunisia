@@ -102,8 +102,9 @@ export const settingsApi = {
        * Prochaine échéance, chiffrée par le backend.
        *
        * `auto_invoiced` dit ce que Qayed fait réellement : émettre la
-       * facture et prévenir. Flouci ne permet aucun prélèvement récurrent —
-       * l'interface ne doit jamais laisser croire le contraire.
+       * facture et prévenir. La passerelle en ligne (Konnect) ne permet aucun
+       * prélèvement récurrent — l'interface ne doit jamais laisser croire le
+       * contraire.
        */
       next_renewal?: {
         due_at: string | null; amount: number; billing_cycle: 'monthly' | 'yearly';

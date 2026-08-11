@@ -153,8 +153,9 @@ const CurrentPlanCard = ({
 /**
  * Prochaine échéance + pilotage de la reconduction.
  *
- * Le mot « prélèvement » est banni de cet écran : Flouci ne fait que des
- * paiements ponctuels. Ce que Qayed automatise, c'est l'émission de la
+ * Le mot « prélèvement » est banni de cet écran : la passerelle en ligne
+ * (Konnect) ne fait que des paiements ponctuels, sans carte enregistrée ni
+ * mandat récurrent. Ce que Qayed automatise, c'est l'émission de la
  * facture et la notification — le règlement reste une action du client, et
  * l'interface le dit noir sur blanc plutôt que de laisser croire à un débit
  * de carte qui n'aura jamais lieu.
@@ -843,7 +844,7 @@ export const SubscriptionPage = () => {
                 change={pendingChange}
                 cancelling={cancelChangeMut.isPending}
                 onCancel={() => cancelChangeMut.mutate()}
-                onlinePayment={platformSettings?.flouci_enabled === true}
+                onlinePayment={platformSettings?.online_payment_enabled === true}
                 onGoToInvoices={() => navigate('/hotel/settings?tab=abonnement')}
               />
             )}

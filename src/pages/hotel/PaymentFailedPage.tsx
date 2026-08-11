@@ -4,9 +4,10 @@ import { XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 /**
- * Landing page when Flouci redirects after a cancelled / failed payment.
- * Flouci sends the user here (fail_url) — no payment_id verification needed,
- * since the user abandoned the flow.
+ * Page d'atterrissage quand le prestataire renvoie le client après un paiement
+ * annulé ou refusé (failUrl) — aucune vérification à faire, le parcours a été
+ * abandonné. Si un règlement avait malgré tout abouti, le rappel serveur de
+ * Konnect le constaterait de son côté.
  */
 export const PaymentFailedPage = () => {
   const { t } = useTranslation();
