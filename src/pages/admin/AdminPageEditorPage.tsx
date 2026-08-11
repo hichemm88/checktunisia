@@ -3,7 +3,12 @@ import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Puck, type Data } from '@measured/puck';
-import '@measured/puck/puck.css';
+// no-external.css et non puck.css : la feuille par défaut commence par
+// `@import "https://rsms.me/inter/inter.css"`, un chargement tiers refusé par
+// la CSP et tenté par chaque visiteur, puisque le CSS de l'application est
+// servi en un seul fichier. Cette variante est fournie par Puck pour ce cas ;
+// l'éditeur utilise la police système.
+import '@measured/puck/no-external.css';
 import { ArrowLeft, Copy, Eye, Save, Settings2 } from 'lucide-react';
 import { adminPagesApi } from '@/api/admin/cms';
 import type { CmsLang, CmsPageMeta } from '@/api/cms';

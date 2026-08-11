@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore, type Role } from '@/stores/authStore';
@@ -8,56 +8,59 @@ import { IdleWarningModal } from '@/components/IdleWarningModal';
 import { api } from '@/lib/api';
 
 // Pages
-import { LoginPage } from '@/pages/auth/LoginPage';
-import { SetPasswordPage } from '@/pages/auth/SetPasswordPage';
-import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
-import { TwoFactorVerifyPage } from '@/pages/auth/TwoFactorVerifyPage';
-import { TwoFactorSetupPage } from '@/pages/authority/TwoFactorSetupPage';
+// Seule la page publique (landing + pages CMS) est dans le bundle d'entrée :
+// c'est tout ce dont un visiteur a besoin. Les trois
+// portails (hôtel, autorité, admin) et l'inscription sont chargés à la
+// demande — ils représentaient l'essentiel des 1 Mo servis à chaque visite de
+// qayed.tn. Le CSS n'est plus découpé par chunk (vite.config.ts), donc le
+// préchargement d'un CSS de chunk ne peut plus échouer.
 import { CmsPage } from '@/pages/CmsPage';
-import { RegisterPage } from '@/pages/RegisterPage';
-import { DashboardPage } from '@/pages/hotel/DashboardPage';
-import { CheckInWizardPage } from '@/pages/hotel/CheckInWizardPage';
-import { HistoryPage } from '@/pages/hotel/HistoryPage';
-import { HistoryDetailPage } from '@/pages/hotel/HistoryDetailPage';
-import { SettingsPage } from '@/pages/hotel/SettingsPage';
-import { SubscriptionPage } from '@/pages/hotel/SubscriptionPage';
-import { SecurityPage } from '@/pages/hotel/SecurityPage';
-import { PaymentSuccessPage } from '@/pages/hotel/PaymentSuccessPage';
-import { PaymentFailedPage } from '@/pages/hotel/PaymentFailedPage';
-import { OnboardingPage } from '@/pages/hotel/OnboardingPage';
-import { PendingSetupPage } from '@/pages/hotel/PendingSetupPage';
-import { PropertiesPage } from '@/pages/hotel/PropertiesPage';
-import { AuthorityDashboardPage } from '@/pages/authority/AuthorityDashboardPage';
-import { SearchPage } from '@/pages/authority/SearchPage';
-import { GuestProfilePage } from '@/pages/authority/GuestProfilePage';
-import { HotelsPage } from '@/pages/authority/HotelsPage';
-import { HotelDetailPage } from '@/pages/authority/HotelDetailPage';
-import { AlertsPage } from '@/pages/authority/AlertsPage';
-import { ActivityPage } from '@/pages/authority/ActivityPage';
-import { WatchlistPage } from '@/pages/authority/WatchlistPage';
-import { AdminLayout } from '@/components/layout/AdminLayout';
-import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
-import { AdminAiCostsPage } from '@/pages/admin/AdminAiCostsPage';
-import { AdminCouponsPage } from '@/pages/admin/AdminCouponsPage';
-import { AdminHostsPage } from '@/pages/admin/AdminHostsPage';
-import { AdminHotelsPage } from '@/pages/admin/AdminHotelsPage';
-import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
-import { AdminAuthorityPage } from '@/pages/admin/AdminAuthorityPage';
-import { AdminSubscriptionsPage } from '@/pages/admin/AdminSubscriptionsPage';
-import { AdminQuotasPage } from '@/pages/admin/AdminQuotasPage';
-import { AdminFacturationPage } from '@/pages/admin/AdminFacturationPage';
-import { AdminPaymentsPage } from '@/pages/admin/AdminPaymentsPage';
-import { AdminEmailsPage } from '@/pages/admin/AdminEmailsPage';
-import { AdminActivityPage } from '@/pages/admin/AdminActivityPage';
-import { AdminWhatsappPage } from '@/pages/admin/AdminWhatsappPage';
-import { AdminPagesPage } from '@/pages/admin/AdminPagesPage';
-import { AdminMenusPage } from '@/pages/admin/AdminMenusPage';
-// Import STATIQUE volontaire (pas de lazy) : le chargement différé de ce
-// chunk échouait en production chez l'admin (« Unable to preload CSS for
-// /AdminPageEditorPage-*.css ») — l'éditeur est intégré au bundle principal,
-// plus aucun fichier à récupérer au clic, l'erreur ne peut plus se produire.
-import AdminPageEditorPage from '@/pages/admin/AdminPageEditorPage';
-import { ProfilePage } from '@/pages/profile/ProfilePage';
+
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then((m) => ({ default: m.LoginPage })));
+const ActivityPage = lazy(() => import('@/pages/authority/ActivityPage').then((m) => ({ default: m.ActivityPage })));
+const AdminActivityPage = lazy(() => import('@/pages/admin/AdminActivityPage').then((m) => ({ default: m.AdminActivityPage })));
+const AdminAiCostsPage = lazy(() => import('@/pages/admin/AdminAiCostsPage').then((m) => ({ default: m.AdminAiCostsPage })));
+const AdminAuthorityPage = lazy(() => import('@/pages/admin/AdminAuthorityPage').then((m) => ({ default: m.AdminAuthorityPage })));
+const AdminCouponsPage = lazy(() => import('@/pages/admin/AdminCouponsPage').then((m) => ({ default: m.AdminCouponsPage })));
+const AdminDashboardPage = lazy(() => import('@/pages/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })));
+const AdminEmailsPage = lazy(() => import('@/pages/admin/AdminEmailsPage').then((m) => ({ default: m.AdminEmailsPage })));
+const AdminFacturationPage = lazy(() => import('@/pages/admin/AdminFacturationPage').then((m) => ({ default: m.AdminFacturationPage })));
+const AdminHostsPage = lazy(() => import('@/pages/admin/AdminHostsPage').then((m) => ({ default: m.AdminHostsPage })));
+const AdminHotelsPage = lazy(() => import('@/pages/admin/AdminHotelsPage').then((m) => ({ default: m.AdminHotelsPage })));
+const AdminLayout = lazy(() => import('@/components/layout/AdminLayout').then((m) => ({ default: m.AdminLayout })));
+const AdminMenusPage = lazy(() => import('@/pages/admin/AdminMenusPage').then((m) => ({ default: m.AdminMenusPage })));
+const AdminPageEditorPage = lazy(() => import('@/pages/admin/AdminPageEditorPage'));
+const AdminPagesPage = lazy(() => import('@/pages/admin/AdminPagesPage').then((m) => ({ default: m.AdminPagesPage })));
+const AdminPaymentsPage = lazy(() => import('@/pages/admin/AdminPaymentsPage').then((m) => ({ default: m.AdminPaymentsPage })));
+const AdminQuotasPage = lazy(() => import('@/pages/admin/AdminQuotasPage').then((m) => ({ default: m.AdminQuotasPage })));
+const AdminSubscriptionsPage = lazy(() => import('@/pages/admin/AdminSubscriptionsPage').then((m) => ({ default: m.AdminSubscriptionsPage })));
+const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })));
+const AdminWhatsappPage = lazy(() => import('@/pages/admin/AdminWhatsappPage').then((m) => ({ default: m.AdminWhatsappPage })));
+const AlertsPage = lazy(() => import('@/pages/authority/AlertsPage').then((m) => ({ default: m.AlertsPage })));
+const AuthorityDashboardPage = lazy(() => import('@/pages/authority/AuthorityDashboardPage').then((m) => ({ default: m.AuthorityDashboardPage })));
+const CheckInWizardPage = lazy(() => import('@/pages/hotel/CheckInWizardPage').then((m) => ({ default: m.CheckInWizardPage })));
+const DashboardPage = lazy(() => import('@/pages/hotel/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })));
+const GuestProfilePage = lazy(() => import('@/pages/authority/GuestProfilePage').then((m) => ({ default: m.GuestProfilePage })));
+const HistoryDetailPage = lazy(() => import('@/pages/hotel/HistoryDetailPage').then((m) => ({ default: m.HistoryDetailPage })));
+const HistoryPage = lazy(() => import('@/pages/hotel/HistoryPage').then((m) => ({ default: m.HistoryPage })));
+const HotelDetailPage = lazy(() => import('@/pages/authority/HotelDetailPage').then((m) => ({ default: m.HotelDetailPage })));
+const HotelsPage = lazy(() => import('@/pages/authority/HotelsPage').then((m) => ({ default: m.HotelsPage })));
+const OnboardingPage = lazy(() => import('@/pages/hotel/OnboardingPage').then((m) => ({ default: m.OnboardingPage })));
+const PaymentFailedPage = lazy(() => import('@/pages/hotel/PaymentFailedPage').then((m) => ({ default: m.PaymentFailedPage })));
+const PaymentSuccessPage = lazy(() => import('@/pages/hotel/PaymentSuccessPage').then((m) => ({ default: m.PaymentSuccessPage })));
+const PendingSetupPage = lazy(() => import('@/pages/hotel/PendingSetupPage').then((m) => ({ default: m.PendingSetupPage })));
+const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })));
+const PropertiesPage = lazy(() => import('@/pages/hotel/PropertiesPage').then((m) => ({ default: m.PropertiesPage })));
+const RegisterPage = lazy(() => import('@/pages/RegisterPage').then((m) => ({ default: m.RegisterPage })));
+const SearchPage = lazy(() => import('@/pages/authority/SearchPage').then((m) => ({ default: m.SearchPage })));
+const SecurityPage = lazy(() => import('@/pages/hotel/SecurityPage').then((m) => ({ default: m.SecurityPage })));
+const SetPasswordPage = lazy(() => import('@/pages/auth/SetPasswordPage').then((m) => ({ default: m.SetPasswordPage })));
+const SettingsPage = lazy(() => import('@/pages/hotel/SettingsPage').then((m) => ({ default: m.SettingsPage })));
+const SubscriptionPage = lazy(() => import('@/pages/hotel/SubscriptionPage').then((m) => ({ default: m.SubscriptionPage })));
+const TwoFactorSetupPage = lazy(() => import('@/pages/authority/TwoFactorSetupPage').then((m) => ({ default: m.TwoFactorSetupPage })));
+const TwoFactorVerifyPage = lazy(() => import('@/pages/auth/TwoFactorVerifyPage').then((m) => ({ default: m.TwoFactorVerifyPage })));
+const WatchlistPage = lazy(() => import('@/pages/authority/WatchlistPage').then((m) => ({ default: m.WatchlistPage })));
 
 // ─── Guards ─────────────────────────────────────────────────────────────────
 const RequireAuth = () => {
@@ -150,10 +153,16 @@ const IdleGuard = () => {
   return showWarning ? <IdleWarningModal onStay={stayActive} onLogout={logout} /> : null;
 };
 
+/** Écran d'attente d'un chunk de route — neutre, sans saut de mise en page. */
+const RouteFallback = () => <div style={{ minHeight: '100vh' }} aria-busy="true" />;
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 export const App = () => (
   <>
   <IdleGuard />
+  {/* Frontière unique pour toutes les routes différées : les portails ne sont
+      téléchargés qu'au moment où l'on y entre. */}
+  <Suspense fallback={<RouteFallback />}>
   <Routes>
     {/* Public — redirect to role home if already authenticated.
         La homepage est la page CMS `home` (langue active), gérée dans l'admin. */}
@@ -258,5 +267,6 @@ export const App = () => (
     {/* Fallback */}
     <Route path="*" element={<Navigate to="/" replace />} />
   </Routes>
+  </Suspense>
   </>
 );

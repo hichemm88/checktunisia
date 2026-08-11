@@ -6,12 +6,11 @@ import {
   SectionHeadingBlock, type SectionHeadingProps,
   RichTextBlock, type RichTextProps,
   ImageBlock, type ImageProps,
-  FeaturesGridBlock, type FeaturesGridProps,
+  DefinitionListBlock, type DefinitionListProps,
   StepsBlock, type StepsProps,
   FicheShowcaseBlock, type FicheShowcaseProps,
-  SecurityBlock, type SecurityProps,
+  ComplianceBlock, type ComplianceProps,
   PricingBlock, type PricingBlockProps,
-  TestimonialsBlock, type TestimonialsProps,
   FaqBlock, type FaqProps,
   CtaBandBlock, type CtaBandProps,
   MockupBlock, type MockupProps,
@@ -35,12 +34,11 @@ type Props = {
   SectionHeading: SectionHeadingProps;
   RichText: RichTextProps;
   Image: ImageProps;
-  FeaturesGrid: FeaturesGridProps;
+  DefinitionList: DefinitionListProps;
   Steps: StepsProps;
   FicheShowcase: FicheShowcaseProps;
-  Security: SecurityProps;
+  Compliance: ComplianceProps;
   Pricing: PricingBlockProps;
-  Testimonials: TestimonialsProps;
   Faq: FaqProps;
   CtaBand: CtaBandProps;
   Mockup: MockupProps;
@@ -52,6 +50,12 @@ type Props = {
  * Catalogue de blocs du builder Puck — les libellés de champs sont en
  * français (l'admin est francophone) ; le CONTENU saisi est par langue,
  * géré au niveau de la page (un arbre Puck par langue).
+ *
+ * Aucun champ « icône » : la refonte d'août 2026 a retiré les emojis du site
+ * et la hiérarchie repose sur la typographie. Les blocs `FeaturesGrid`
+ * (cartes à emoji), `Security` (plateforme autorité) et `Testimonials` ont été
+ * supprimés du catalogue ; un contenu qui les référencerait encore est
+ * simplement ignoré au rendu (voir RenderContent).
  */
 export const puckConfig: Config<Props> = {
   components: {
@@ -63,7 +67,7 @@ export const puckConfig: Config<Props> = {
           type: 'array', label: 'Lignes du titre',
           arrayFields: {
             text: { type: 'text', label: 'Texte' },
-            accent: { type: 'radio', label: 'Style', options: [{ label: 'Normal', value: false }, { label: 'Accentué (italique)', value: true }] },
+            accent: { type: 'radio', label: 'Style', options: [{ label: 'Normal', value: false }, { label: 'Accentué (violet)', value: true }] },
           },
           defaultItemProps: { text: '', accent: false },
         },
@@ -77,15 +81,11 @@ export const puckConfig: Config<Props> = {
           type: 'select', label: 'Visuel',
           options: [{ label: 'Aucun', value: 'none' }, ...MOCKUP_CHOICES.map((m) => ({ label: m.label, value: m.value }))],
         },
-        showWave: {
-          type: 'radio', label: 'Vague décorative',
-          options: [{ label: 'Masquée', value: false }, { label: 'Affichée', value: true }],
-        },
       },
       defaultProps: {
         eyebrow: '', titleLines: [{ text: 'Titre', accent: false }], description: '',
         primaryLabel: 'Essayer gratuitement', primaryHref: '/register',
-        secondaryLabel: '', secondaryHref: '', mockup: 'none', showWave: false,
+        secondaryLabel: '', secondaryHref: '', mockup: 'none',
       },
       render: HeroBlock,
     },
@@ -93,10 +93,10 @@ export const puckConfig: Config<Props> = {
       label: 'Bande de confiance',
       fields: {
         items: {
-          type: 'array', label: 'Éléments',
-          arrayFields: { text: { type: 'text', label: 'Texte' } },
+          type: 'array', label: 'Mentions',
+          arrayFields: { text: { type: 'text', label: 'Texte (court)' } },
           defaultItemProps: { text: '' },
-          getItemSummary: (item) => item.text || 'Élément',
+          getItemSummary: (item) => item.text || 'Mention',
         },
       },
       defaultProps: { items: [] },
@@ -154,28 +154,45 @@ export const puckConfig: Config<Props> = {
       defaultProps: { url: '', alt: '', maxWidth: 800, background: 'default' },
       render: ImageBlock,
     },
-    FeaturesGrid: {
-      label: 'Grille de cartes',
+    DefinitionList: {
+      label: 'Liste (titre + description)',
       fields: {
         items: {
-          type: 'array', label: 'Cartes',
+          type: 'array', label: 'Entrées',
           arrayFields: {
-            emoji: { type: 'text', label: 'Icône (texte court)' },
             title: { type: 'text', label: 'Titre' },
             text: { type: 'textarea', label: 'Texte' },
           },
-          defaultItemProps: { emoji: '', title: '', text: '' },
-          getItemSummary: (item) => item.title || 'Carte',
+          defaultItemProps: { title: '', text: '' },
+          getItemSummary: (item) => item.title || 'Entrée',
         },
-        variant: {
-          type: 'radio', label: 'Style',
-          options: [{ label: 'Fonctionnalités (6 compactes)', value: 'feature' }, { label: 'Audience (3 grandes)', value: 'audience' }],
+        columns: {
+          type: 'radio', label: 'Colonnes',
+          options: [{ label: 'Deux', value: 'two' }, { label: 'Une', value: 'one' }],
         },
-        note: { type: 'textarea', label: 'Note en bas (avec bouclier, optionnel)' },
+        note: { type: 'textarea', label: 'Note en bas (optionnel)' },
         background: { ...backgroundField, label: 'Fond' },
       },
-      defaultProps: { items: [], variant: 'feature', note: '', background: 'default' },
-      render: FeaturesGridBlock,
+      defaultProps: { items: [], columns: 'two', note: '', background: 'default' },
+      render: DefinitionListBlock,
+    },
+    Steps: {
+      label: 'Étapes numérotées',
+      fields: {
+        items: {
+          type: 'array', label: 'Étapes',
+          arrayFields: {
+            title: { type: 'text', label: 'Titre' },
+            text: { type: 'textarea', label: 'Texte' },
+          },
+          defaultItemProps: { title: '', text: '' },
+          getItemSummary: (item) => item.title || 'Étape',
+        },
+        showScreens: { type: 'radio', label: 'Écran produit', options: [{ label: 'Afficher', value: true }, { label: 'Masquer', value: false }] },
+        background: { ...backgroundField, label: 'Fond' },
+      },
+      defaultProps: { items: [], showScreens: true, background: 'default' },
+      render: StepsBlock,
     },
     FicheShowcase: {
       label: 'Vitrine fiche (texte + visuel)',
@@ -188,45 +205,26 @@ export const puckConfig: Config<Props> = {
       defaultProps: { eyebrow: '', title: '', text: '', background: 'default' },
       render: FicheShowcaseBlock,
     },
-    Security: {
-      label: 'Conformité & sécurité (sombre)',
+    Compliance: {
+      label: 'Conformité (section encre)',
       fields: {
-        anchor: { type: 'text', label: 'Ancre (ex. securite)' },
+        anchor: { type: 'text', label: 'Ancre (ex. conformite)' },
         eyebrow: { type: 'text', label: 'Sur-titre' },
         title: { type: 'textarea', label: 'Titre (retour ligne possible)' },
         lead: { type: 'textarea', label: 'Chapeau' },
         items: {
           type: 'array', label: 'Points',
           arrayFields: {
-            emoji: { type: 'text', label: 'Icône (texte court)' },
-            title: { type: 'text', label: 'Titre' },
-            text: { type: 'textarea', label: 'Texte' },
-          },
-          defaultItemProps: { emoji: '', title: '', text: '' },
-          getItemSummary: (item) => item.title || 'Point',
-        },
-        showMockup: { type: 'radio', label: 'Dashboard autorités', options: [{ label: 'Afficher', value: true }, { label: 'Masquer', value: false }] },
-      },
-      defaultProps: { anchor: '', eyebrow: '', title: '', lead: '', items: [], showMockup: true },
-      render: SecurityBlock,
-    },
-    Steps: {
-      label: 'Étapes (comment ça marche)',
-      fields: {
-        items: {
-          type: 'array', label: 'Étapes',
-          arrayFields: {
             title: { type: 'text', label: 'Titre' },
             text: { type: 'textarea', label: 'Texte' },
           },
           defaultItemProps: { title: '', text: '' },
-          getItemSummary: (item) => item.title || 'Étape',
+          getItemSummary: (item) => item.title || 'Point',
         },
-        showScreens: { type: 'radio', label: 'Écrans produit', options: [{ label: 'Afficher', value: true }, { label: 'Masquer', value: false }] },
-        background: { ...backgroundField, label: 'Fond' },
+        note: { type: 'textarea', label: 'Note de responsabilité (optionnel)' },
       },
-      defaultProps: { items: [], showScreens: true, background: 'default' },
-      render: StepsBlock,
+      defaultProps: { anchor: '', eyebrow: '', title: '', lead: '', items: [], note: '' },
+      render: ComplianceBlock,
     },
     Pricing: {
       label: 'Tarifs (packs — données admin)',
@@ -246,25 +244,6 @@ export const puckConfig: Config<Props> = {
         footnote: "Aucune carte bancaire requise pour démarrer l'essai · Résiliable à tout moment",
       },
       render: PricingBlock,
-    },
-    Testimonials: {
-      label: 'Témoignages',
-      fields: {
-        items: {
-          type: 'array', label: 'Témoignages',
-          arrayFields: {
-            quote: { type: 'textarea', label: 'Citation' },
-            name: { type: 'text', label: 'Nom' },
-            role: { type: 'text', label: 'Fonction · Établissement' },
-            initials: { type: 'text', label: 'Initiales (avatar)' },
-          },
-          defaultItemProps: { quote: '', name: '', role: '', initials: '' },
-          getItemSummary: (item) => item.name || 'Témoignage',
-        },
-        background: { ...backgroundField, label: 'Fond' },
-      },
-      defaultProps: { items: [], background: 'default' },
-      render: TestimonialsBlock,
     },
     Faq: {
       label: 'FAQ',
@@ -309,7 +288,7 @@ export const puckConfig: Config<Props> = {
           ],
         },
       },
-      defaultProps: { mockup: 'fiche-police', background: 'default' },
+      defaultProps: { mockup: 'fiche-visual', background: 'default' },
       render: MockupBlock,
     },
     Prose: {

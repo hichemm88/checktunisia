@@ -22,6 +22,12 @@ export default defineConfig({
     // Output assets at root (no /assets/ subfolder) for simpler Vercel deployment
     assetsDir: '',
     chunkSizeWarningLimit: 1200,
+    // Une seule feuille de style pour toute l'application. Le découpage par
+    // chunk faisait échouer en production le préchargement du CSS d'un chunk
+    // différé (« Unable to preload CSS for … ») ; sans CSS par chunk, l'erreur
+    // ne peut plus se produire et l'éditeur de pages redevient chargeable à la
+    // demande (cf. App.tsx). Le CSS de l'app tenait déjà dans un seul fichier.
+    cssCodeSplit: false,
     rollupOptions: {
       output: {
         assetFileNames: '[name]-[hash][extname]',
@@ -34,7 +40,10 @@ export default defineConfig({
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router', 'react-router-dom'],
           'i18n-vendor': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
-          puck: ['@measured/puck'],
+          // @measured/puck n'est volontairement PAS un chunk manuel : nommé
+          // ici, il redevenait un import statique de l'entrée (donc
+          // modulepreload dans index.html, donc téléchargé par tout visiteur).
+          // Laissé à Rollup, il part dans le chunk différé de l'éditeur.
           anthropic: ['@anthropic-ai/sdk'],
           tesseract: ['tesseract.js'],
           mrz: ['mrz'],
