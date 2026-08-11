@@ -75,7 +75,31 @@ const ConfigTab = () => {
       virement_enabled: virement.enabled, virement_rib: virement.rib, virement_iban: virement.iban,
       virement_bank_name: virement.bank_name, virement_beneficiary: virement.beneficiary, virement_details: virement.details,
     }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-platform-settings'] }); toast(t('adminPayments.settingsSaved'), 'success'); },
+    onSuccess: (saved) => {
+      qc.invalidateQueries({ queryKey: ['admin-platform-settings'] });
+
+      // Le serveur fait foi. Un 200 disait « enregistré » sans qu'on vérifie
+      // jamais qu'il avait appliqué la demande — or une version de l'API qui
+      // ignore un réglage qu'elle ne connaît pas répond 200 et n'enregistre
+      // rien. L'exploitant voyait alors un message de succès, puis son
+      // interrupteur revenir éteint, sans la moindre explication.
+      if (konnect.enabled && saved.konnect_enabled !== true) {
+        toast(t('adminPayments.settingsNotApplied'), 'error');
+        return;
+      }
+
+      // Re-synchronisation sur l'état réel, et vidage des champs de secret :
+      // vides APRÈS un enregistrement réussi, cela veut dire « acceptés », et
+      // non « perdus ».
+      setKonnect({
+        enabled: saved.konnect_enabled,
+        environment: saved.konnect_environment ?? 'sandbox',
+        api_key: '', wallet_id: '',
+      });
+      setFlouci({ enabled: saved.flouci_enabled, app_token: '', app_secret: '' });
+
+      toast(t('adminPayments.settingsSaved'), 'success');
+    },
     onError: (err) => toast(extractErrors(err), 'error'),
   });
 

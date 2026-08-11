@@ -209,6 +209,7 @@
     "konnectApiKeyHint": "لوحة تحكم Konnect ← ملف المؤسسة. يُعرض مرة واحدة فقط عند إنشائه.",
     "konnectWalletId": "معرّف المحفظة",
     "konnectWalletIdHint": "المحفظة التي تتلقى المدفوعات (Dashboard ← Wallets).",
+    "settingsNotApplied": "لم يطبّق الخادم إعدادات Konnect: النسخة المنشورة من الواجهة البرمجية لا تعرفها بعد. تحقّق من نشر الخادم ثم أعد المحاولة.",
     "konnectWebhookHint": "يسمح الإشعار الخادمي بتسجيل الدفع حتى إن لم يعد العميل إلى الموقع. يُفعَّل من جانب الخادم عبر KONNECT_WEBHOOK_TOKEN.",
     "flouciTitle": "Flouci (قناة سابقة — استُبدلت بـ Konnect)",
     "flouciLegacyHint": "أُبقيت لتظل المدفوعات المحصّلة سابقًا عبر Flouci قابلة للتحقق. اتركها معطّلة.",
