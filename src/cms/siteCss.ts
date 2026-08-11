@@ -121,7 +121,12 @@ export const SITE_CSS = `
 /* SECTIONS */
 .qayed-landing .section{padding:96px 40px}
 .qayed-landing .section-alt{background:var(--blanc)}
-.qayed-landing .wrap{max-width:1100px;margin:0 auto}
+/* flow-root : sans lui, la marge basse du chapeau (.section-lead, 48px)
+   s'échappe des sections dont le padding-bottom vaut 0 — les titres de
+   section. La section s'arrêtait donc à la dernière ligne de texte et ces
+   48px laissaient voir le fond beige de la page, en bande, entre deux
+   sections blanches. L'espacement, lui, ne change pas. */
+.qayed-landing .wrap{max-width:1100px;margin:0 auto;display:flow-root}
 .qayed-landing .eyebrow{font-family:var(--font-m);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--cachet);margin-bottom:14px;display:flex;align-items:center;gap:12px}
 .qayed-landing .eyebrow::before{content:'';width:26px;height:1px;background:var(--cachet)}
 .qayed-landing .section-h2{font-family:var(--font-d);font-variation-settings:'wdth' 118;font-weight:800;font-size:clamp(28px,4vw,44px);line-height:1.05;letter-spacing:-.015em;margin-bottom:14px}
