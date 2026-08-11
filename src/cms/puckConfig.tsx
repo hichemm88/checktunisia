@@ -6,10 +6,10 @@ import {
   SectionHeadingBlock, type SectionHeadingProps,
   RichTextBlock, type RichTextProps,
   ImageBlock, type ImageProps,
-  DefinitionListBlock, type DefinitionListProps,
+  FeaturesGridBlock, type FeaturesGridProps,
   StepsBlock, type StepsProps,
   FicheShowcaseBlock, type FicheShowcaseProps,
-  ComplianceBlock, type ComplianceProps,
+  SecurityBlock, type SecurityProps,
   PricingBlock, type PricingBlockProps,
   FaqBlock, type FaqProps,
   CtaBandBlock, type CtaBandProps,
@@ -34,10 +34,10 @@ type Props = {
   SectionHeading: SectionHeadingProps;
   RichText: RichTextProps;
   Image: ImageProps;
-  DefinitionList: DefinitionListProps;
+  FeaturesGrid: FeaturesGridProps;
   Steps: StepsProps;
   FicheShowcase: FicheShowcaseProps;
-  Compliance: ComplianceProps;
+  Security: SecurityProps;
   Pricing: PricingBlockProps;
   Faq: FaqProps;
   CtaBand: CtaBandProps;
@@ -51,11 +51,9 @@ type Props = {
  * français (l'admin est francophone) ; le CONTENU saisi est par langue,
  * géré au niveau de la page (un arbre Puck par langue).
  *
- * Aucun champ « icône » : la refonte d'août 2026 a retiré les emojis du site
- * et la hiérarchie repose sur la typographie. Les blocs `FeaturesGrid`
- * (cartes à emoji), `Security` (plateforme autorité) et `Testimonials` ont été
- * supprimés du catalogue ; un contenu qui les référencerait encore est
- * simplement ignoré au rendu (voir RenderContent).
+ * Pas de champ « icône » : les pastilles des cartes portent le rang de
+ * l'élément (01, 02, 03…), posé au rendu. Le bloc Témoignages a été retiré du
+ * catalogue — il n'y a pas de témoignage réel à publier.
  */
 export const puckConfig: Config<Props> = {
   components: {
@@ -67,7 +65,7 @@ export const puckConfig: Config<Props> = {
           type: 'array', label: 'Lignes du titre',
           arrayFields: {
             text: { type: 'text', label: 'Texte' },
-            accent: { type: 'radio', label: 'Style', options: [{ label: 'Normal', value: false }, { label: 'Accentué (violet)', value: true }] },
+            accent: { type: 'radio', label: 'Style', options: [{ label: 'Normal', value: false }, { label: 'Accentué (italique)', value: true }] },
           },
           defaultItemProps: { text: '', accent: false },
         },
@@ -81,11 +79,15 @@ export const puckConfig: Config<Props> = {
           type: 'select', label: 'Visuel',
           options: [{ label: 'Aucun', value: 'none' }, ...MOCKUP_CHOICES.map((m) => ({ label: m.label, value: m.value }))],
         },
+        showWave: {
+          type: 'radio', label: 'Vague décorative',
+          options: [{ label: 'Masquée', value: false }, { label: 'Affichée', value: true }],
+        },
       },
       defaultProps: {
         eyebrow: '', titleLines: [{ text: 'Titre', accent: false }], description: '',
         primaryLabel: 'Essayer gratuitement', primaryHref: '/register',
-        secondaryLabel: '', secondaryHref: '', mockup: 'none',
+        secondaryLabel: '', secondaryHref: '', mockup: 'none', showWave: false,
       },
       render: HeroBlock,
     },
@@ -93,10 +95,10 @@ export const puckConfig: Config<Props> = {
       label: 'Bande de confiance',
       fields: {
         items: {
-          type: 'array', label: 'Mentions',
-          arrayFields: { text: { type: 'text', label: 'Texte (court)' } },
+          type: 'array', label: 'Éléments',
+          arrayFields: { text: { type: 'text', label: 'Texte' } },
           defaultItemProps: { text: '' },
-          getItemSummary: (item) => item.text || 'Mention',
+          getItemSummary: (item) => item.text || 'Élément',
         },
       },
       defaultProps: { items: [] },
@@ -154,45 +156,27 @@ export const puckConfig: Config<Props> = {
       defaultProps: { url: '', alt: '', maxWidth: 800, background: 'default' },
       render: ImageBlock,
     },
-    DefinitionList: {
-      label: 'Liste (titre + description)',
+    FeaturesGrid: {
+      label: 'Grille de cartes',
       fields: {
         items: {
-          type: 'array', label: 'Entrées',
+          type: 'array', label: 'Cartes',
           arrayFields: {
             title: { type: 'text', label: 'Titre' },
             text: { type: 'textarea', label: 'Texte' },
           },
           defaultItemProps: { title: '', text: '' },
-          getItemSummary: (item) => item.title || 'Entrée',
+          getItemSummary: (item) => item.title || 'Carte',
         },
-        columns: {
-          type: 'radio', label: 'Colonnes',
-          options: [{ label: 'Deux', value: 'two' }, { label: 'Une', value: 'one' }],
+        variant: {
+          type: 'radio', label: 'Style',
+          options: [{ label: 'Fonctionnalités (6 compactes)', value: 'feature' }, { label: 'Audience (3 grandes)', value: 'audience' }],
         },
-        note: { type: 'textarea', label: 'Note en bas (optionnel)' },
+        note: { type: 'textarea', label: 'Note en bas (avec bouclier, optionnel)' },
         background: { ...backgroundField, label: 'Fond' },
       },
-      defaultProps: { items: [], columns: 'two', note: '', background: 'default' },
-      render: DefinitionListBlock,
-    },
-    Steps: {
-      label: 'Étapes numérotées',
-      fields: {
-        items: {
-          type: 'array', label: 'Étapes',
-          arrayFields: {
-            title: { type: 'text', label: 'Titre' },
-            text: { type: 'textarea', label: 'Texte' },
-          },
-          defaultItemProps: { title: '', text: '' },
-          getItemSummary: (item) => item.title || 'Étape',
-        },
-        showScreens: { type: 'radio', label: 'Écran produit', options: [{ label: 'Afficher', value: true }, { label: 'Masquer', value: false }] },
-        background: { ...backgroundField, label: 'Fond' },
-      },
-      defaultProps: { items: [], showScreens: true, background: 'default' },
-      render: StepsBlock,
+      defaultProps: { items: [], variant: 'feature', note: '', background: 'default' },
+      render: FeaturesGridBlock,
     },
     FicheShowcase: {
       label: 'Vitrine fiche (texte + visuel)',
@@ -205,10 +189,10 @@ export const puckConfig: Config<Props> = {
       defaultProps: { eyebrow: '', title: '', text: '', background: 'default' },
       render: FicheShowcaseBlock,
     },
-    Compliance: {
-      label: 'Conformité (section encre)',
+    Security: {
+      label: 'Conformité & sécurité (sombre)',
       fields: {
-        anchor: { type: 'text', label: 'Ancre (ex. conformite)' },
+        anchor: { type: 'text', label: 'Ancre (ex. securite)' },
         eyebrow: { type: 'text', label: 'Sur-titre' },
         title: { type: 'textarea', label: 'Titre (retour ligne possible)' },
         lead: { type: 'textarea', label: 'Chapeau' },
@@ -221,10 +205,28 @@ export const puckConfig: Config<Props> = {
           defaultItemProps: { title: '', text: '' },
           getItemSummary: (item) => item.title || 'Point',
         },
-        note: { type: 'textarea', label: 'Note de responsabilité (optionnel)' },
+        showMockup: { type: 'radio', label: 'Dashboard autorités', options: [{ label: 'Afficher', value: true }, { label: 'Masquer', value: false }] },
       },
-      defaultProps: { anchor: '', eyebrow: '', title: '', lead: '', items: [], note: '' },
-      render: ComplianceBlock,
+      defaultProps: { anchor: '', eyebrow: '', title: '', lead: '', items: [], showMockup: true },
+      render: SecurityBlock,
+    },
+    Steps: {
+      label: 'Étapes (comment ça marche)',
+      fields: {
+        items: {
+          type: 'array', label: 'Étapes',
+          arrayFields: {
+            title: { type: 'text', label: 'Titre' },
+            text: { type: 'textarea', label: 'Texte' },
+          },
+          defaultItemProps: { title: '', text: '' },
+          getItemSummary: (item) => item.title || 'Étape',
+        },
+        showScreens: { type: 'radio', label: 'Écrans produit', options: [{ label: 'Afficher', value: true }, { label: 'Masquer', value: false }] },
+        background: { ...backgroundField, label: 'Fond' },
+      },
+      defaultProps: { items: [], showScreens: true, background: 'default' },
+      render: StepsBlock,
     },
     Pricing: {
       label: 'Tarifs (packs — données admin)',
@@ -288,7 +290,7 @@ export const puckConfig: Config<Props> = {
           ],
         },
       },
-      defaultProps: { mockup: 'fiche-visual', background: 'default' },
+      defaultProps: { mockup: 'fiche-police', background: 'default' },
       render: MockupBlock,
     },
     Prose: {
