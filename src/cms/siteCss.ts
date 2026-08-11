@@ -145,14 +145,16 @@ export const SITE_CSS = `
 /* FLOW */
 .qayed-landing .flow-grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
 .qayed-landing .flow-steps{display:flex;flex-direction:column;gap:0}
-.qayed-landing .flow-step{display:flex;gap:20px;cursor:pointer;padding:20px 0;border-bottom:1px solid var(--ligne);transition:opacity .2s}
+/* Les étapes sont des <button> : on neutralise l'habillage natif, on garde
+   le filet de séparation. */
+.qayed-landing .flow-step{display:flex;gap:20px;cursor:pointer;padding:20px 0;width:100%;text-align:start;background:transparent;border:0;border-bottom:1px solid var(--ligne);font-family:inherit;color:inherit;transition:opacity .2s}
 .qayed-landing .flow-step:last-child{border-bottom:none}
 .qayed-landing .flow-step.active .fs-num{background:var(--cachet);color:#fff;border-color:var(--cachet)}
 .qayed-landing .flow-step.active .fs-title{color:var(--cachet)}
 .qayed-landing .fs-num{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--ligne);display:flex;align-items:center;justify-content:center;font-family:var(--font-m);font-size:13px;font-weight:500;color:var(--fiche);flex-shrink:0;transition:background .2s,color .2s,border-color .2s}
-.qayed-landing .fs-body{flex:1}
-.qayed-landing .fs-title{font-family:var(--font-d);font-variation-settings:'wdth' 115;font-weight:800;font-size:17px;margin-bottom:6px;transition:color .2s}
-.qayed-landing .fs-desc{font-size:14px;color:var(--texte-sec);line-height:1.6}
+.qayed-landing .fs-body{flex:1;display:block}
+.qayed-landing .fs-title{display:block;font-family:var(--font-d);font-variation-settings:'wdth' 115;font-weight:800;font-size:17px;margin-bottom:6px;transition:color .2s}
+.qayed-landing .fs-desc{display:block;font-size:14px;color:var(--texte-sec);line-height:1.6}
 
 .qayed-landing .flow-visual{position:relative}
 .qayed-landing .flow-screen{display:none;background:var(--blanc);border:1px solid var(--ligne);border-radius:var(--r-lg);overflow:hidden;box-shadow:0 8px 32px rgba(16,34,46,.08)}
