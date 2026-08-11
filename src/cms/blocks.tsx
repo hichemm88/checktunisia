@@ -3,13 +3,9 @@ import { PricingSection } from '@/components/landing/PricingSection';
 import { MOCKUPS } from './mockups';
 
 /**
- * Composants des blocs Puck — rendus avec les classes du CSS scopé
- * .qayed-landing (src/cms/siteCss.ts). Le RTL est géré par le dir global posé
- * sur <html> par i18n.
- *
- * Règle de la refonte : aucun emoji, aucun pictogramme par défaut. La
- * hiérarchie passe par la typographie (numérotation 01/02/03, petites
- * capitales monospace) et par des filets de 1px.
+ * Composants des blocs Puck — rendus avec les classes exactes du CSS scopé
+ * .qayed-landing (src/cms/siteCss.ts) pour une fidélité 1:1 avec la landing
+ * d'origine. Le RTL est géré par le dir global posé sur <html> par i18n.
  */
 
 const cx = (...parts: (string | false | undefined)[]) => parts.filter(Boolean).join(' ');
@@ -45,35 +41,48 @@ export interface HeroProps {
   secondaryLabel?: string;
   secondaryHref?: string;
   mockup: string; // clé MOCKUPS ou 'none'
+  showWave: boolean;
 }
 
 export const HeroBlock = (p: HeroProps) => (
-  <section className="hero on-encre">
-    <div className="hero-inner">
-      <div>
-        {p.eyebrow && <p className="hero-eyebrow">{p.eyebrow}</p>}
-        <h1 className="hero-h1">
-          {p.titleLines.map((l, i) => (
-            <span key={i}>
-              {l.accent ? <em>{l.text}</em> : l.text}
-              {i < p.titleLines.length - 1 && <br />}
-            </span>
-          ))}
-        </h1>
-        {p.arabicLine && <p className="hero-ar" lang="ar" dir="rtl">{p.arabicLine}</p>}
-        <p className="hero-desc">{p.description}</p>
-        <div className="hero-actions">
-          <SmartLink href={p.primaryHref} className="btn btn-primary">{p.primaryLabel}</SmartLink>
-          {p.secondaryLabel && p.secondaryHref && (
-            <SmartLink href={p.secondaryHref} className="btn btn-ghost-dark">{p.secondaryLabel}</SmartLink>
-          )}
+  <>
+    <section className="hero">
+      <div className="reg-lines"></div>
+      <div className="hero-glow"></div>
+      <div className="hero-inner">
+        <div>
+          {p.eyebrow && <p className="hero-eyebrow">{p.eyebrow}</p>}
+          <h1 className="hero-h1">
+            {p.titleLines.map((l, i) => (
+              <span key={i}>
+                {l.accent ? <em>{l.text}</em> : l.text}
+                {i < p.titleLines.length - 1 && <br />}
+              </span>
+            ))}
+          </h1>
+          {p.arabicLine && <p className="hero-ar">{p.arabicLine}</p>}
+          <p className="hero-desc">{p.description}</p>
+          <div className="hero-actions">
+            <SmartLink href={p.primaryHref} className="btn btn-primary">
+              {p.primaryLabel}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            </SmartLink>
+            {p.secondaryLabel && p.secondaryHref && (
+              <SmartLink href={p.secondaryHref} className="btn btn-ghost-dark">{p.secondaryLabel}</SmartLink>
+            )}
+          </div>
         </div>
+        {p.mockup !== 'none' && MOCKUPS[p.mockup] && (
+          <div aria-hidden="true" dangerouslySetInnerHTML={{ __html: MOCKUPS[p.mockup] }} />
+        )}
       </div>
-      {p.mockup !== 'none' && MOCKUPS[p.mockup] && (
-        <div aria-hidden="true" dangerouslySetInnerHTML={{ __html: MOCKUPS[p.mockup] }} />
-      )}
-    </div>
-  </section>
+    </section>
+    {p.showWave && (
+      <div className="wave">
+        <svg viewBox="0 0 1440 56" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 C480 56 960 0 1440 56 L1440 0 Z" fill="#10222E" /></svg>
+      </div>
+    )}
+  </>
 );
 
 // ── Bande de confiance ──────────────────────────────────────────────────────────
@@ -86,14 +95,14 @@ export const TrustBarBlock = (p: TrustBarProps) => (
   <div className="trust-bar">
     {p.items.map((it, i) => (
       <span key={i} style={{ display: 'contents' }}>
-        <div className="trust-item">{it.text}</div>
+        <div className="trust-item"><div className="trust-dot"></div>{it.text}</div>
         {i < p.items.length - 1 && <div className="trust-divider"></div>}
       </span>
     ))}
   </div>
 );
 
-// ── Bandeau de chiffres ─────────────────────────────────────────────────────────
+// ── Bandeau de stats ────────────────────────────────────────────────────────────
 
 export interface StatsBarProps {
   items: { num: string; sup?: string; label: string }[];
@@ -101,7 +110,7 @@ export interface StatsBarProps {
 }
 
 export const StatsBarBlock = (p: StatsBarProps) => (
-  <section className={sectionClass(p.background)} style={{ paddingTop: 56, paddingBottom: 56 }}>
+  <section className={sectionClass(p.background)} style={{ paddingTop: 64, paddingBottom: 64 }}>
     <div className="wrap">
       <div className="stats-bar fade-in">
         {p.items.map((it, i) => (
@@ -130,7 +139,7 @@ export const SectionHeadingBlock = (p: SectionHeadingProps) => (
   <section className={sectionClass(p.background)} id={p.anchor || undefined} style={{ paddingBottom: 0 }}>
     <div className="wrap">
       {p.eyebrow && <div className="eyebrow fade-in" style={p.centered ? { justifyContent: 'center' } : undefined}>{p.eyebrow}</div>}
-      <h2 className="section-h2 fade-in" style={p.centered ? { textAlign: 'center', marginInline: 'auto' } : undefined}>{withBreaks(p.title)}</h2>
+      <h2 className="section-h2 fade-in" style={p.centered ? { textAlign: 'center' } : undefined}>{withBreaks(p.title)}</h2>
       {p.lead && (
         <p className="section-lead fade-in" style={p.centered ? { textAlign: 'center', margin: '0 auto', maxWidth: 560 } : undefined}>{p.lead}</p>
       )}
@@ -148,7 +157,7 @@ export interface RichTextProps {
 
 export const RichTextBlock = (p: RichTextProps) => (
   <section className={sectionClass(p.background)} style={{ paddingTop: 32, paddingBottom: 32 }}>
-    <div className="wrap wrap-text">
+    <div className="wrap" style={{ maxWidth: 760 }}>
       {p.text.split(/\n{2,}/).map((para, i) => (
         <p key={i} className="section-lead" style={{ textAlign: p.centered ? 'center' : 'start', marginBottom: 16 }}>{para}</p>
       ))}
@@ -169,33 +178,39 @@ export const ImageBlock = (p: ImageProps) => (
   <section className={sectionClass(p.background)} style={{ paddingTop: 32, paddingBottom: 32 }}>
     <div className="wrap" style={{ textAlign: 'center' }}>
       {p.url
-        ? <img src={p.url} alt={p.alt} style={{ maxWidth: Math.min(p.maxWidth || 800, 1100), width: '100%' }} loading="lazy" />
-        : <div style={{ padding: 40, border: '1px dashed var(--ligne)', color: 'var(--fiche)' }}>Image — renseignez une URL (bibliothèque de médias)</div>}
+        ? <img src={p.url} alt={p.alt} style={{ maxWidth: Math.min(p.maxWidth || 800, 1100), width: '100%', borderRadius: 'var(--r-lg)' }} loading="lazy" />
+        : <div style={{ padding: 40, border: '2px dashed var(--ligne)', borderRadius: 'var(--r-lg)', color: 'var(--fiche)' }}>Image — renseignez une URL (bibliothèque de médias)</div>}
     </div>
   </section>
 );
 
-// ── Liste de définitions (fonctionnalités / cibles) ─────────────────────────────
+// ── Grille de cartes (fonctionnalités / pour qui) ───────────────────────────────
 
-export interface DefinitionListProps {
+export interface FeaturesGridProps {
   items: { title: string; text: string }[];
-  columns: 'one' | 'two';
+  variant: 'feature' | 'audience';
   note?: string;
   background: 'default' | 'alt';
 }
 
-export const DefinitionListBlock = (p: DefinitionListProps) => (
-  <section className={sectionClass(p.background)} style={{ paddingTop: 24 }}>
+export const FeaturesGridBlock = (p: FeaturesGridProps) => (
+  <section className={sectionClass(p.background)} style={{ paddingTop: 40 }}>
     <div className="wrap">
-      <dl className={cx('def-grid fade-in', p.columns === 'one' && 'one-col')}>
+      <div className={cx('fade-in', p.variant === 'audience' ? 'forqui-grid' : 'feat-grid')}>
         {p.items.map((it, i) => (
-          <div key={i} className="def-item">
-            <dt className="def-title">{it.title}</dt>
-            <dd className="def-text">{it.text}</dd>
+          <div key={i} className={p.variant === 'audience' ? 'forqui-card' : 'feat-card'}>
+            <div className={p.variant === 'audience' ? 'forqui-icon' : 'feat-icon'} aria-hidden="true">{ordinal(i)}</div>
+            <h3>{it.title}</h3>
+            <p>{it.text}</p>
           </div>
         ))}
-      </dl>
-      {p.note && <p className="def-note fade-in">{p.note}</p>}
+      </div>
+      {p.note && (
+        <div className="forqui-note fade-in">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, color: 'var(--cachet)' }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+          <span>{p.note}</span>
+        </div>
+      )}
     </div>
   </section>
 );
@@ -209,22 +224,22 @@ export interface StepsProps {
 }
 
 export const StepsBlock = (p: StepsProps) => (
-  <section className={sectionClass(p.background)} style={{ paddingTop: 24 }}>
+  <section className={sectionClass(p.background)} style={{ paddingTop: 40 }}>
     <div className="wrap">
-      <div className={cx(p.showScreens && 'flow-grid')}>
-        <ol className="num-list fade-in">
+      <div className="flow-grid">
+        <div className="flow-steps">
           {p.items.map((it, i) => (
-            <li key={i} className="num-item">
-              <span className="num-idx" aria-hidden="true">{ordinal(i)}</span>
-              <div>
-                <div className="num-title">{it.title}</div>
-                <p className="num-text">{it.text}</p>
+            <div key={i} className={cx('flow-step', i === 0 && 'active')} data-flow-step={i + 1}>
+              <div className="fs-num">{i + 1}</div>
+              <div className="fs-body">
+                <div className="fs-title">{it.title}</div>
+                <div className="fs-desc">{it.text}</div>
               </div>
-            </li>
+            </div>
           ))}
-        </ol>
-        {p.showScreens && MOCKUPS['flow-validation'] && (
-          <div className="fade-in" aria-hidden="true" dangerouslySetInnerHTML={{ __html: MOCKUPS['flow-validation'] }} />
+        </div>
+        {p.showScreens && MOCKUPS['flow-screens'] && (
+          <div aria-hidden="true" dangerouslySetInnerHTML={{ __html: MOCKUPS['flow-screens'] }} />
         )}
       </div>
     </div>
@@ -248,11 +263,11 @@ export const FicheShowcaseBlock = (p: FicheShowcaseProps) => (
           <div className="eyebrow">{p.eyebrow}</div>
           <h2 className="section-h2">{p.title}</h2>
           {p.text.split(/\n{2,}/).map((para, i) => (
-            <p key={i} style={{ fontSize: 16, color: 'var(--texte-sec)', lineHeight: 1.7, marginBottom: 20 }}>{para}</p>
+            <p key={i} style={{ fontSize: 16, color: 'var(--texte-sec)', lineHeight: 1.65, marginBottom: 24 }}>{para}</p>
           ))}
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <span className="badge b-ok"><span className="dot"></span>Actif</span>
-            <span className="badge b-done"><span className="dot"></span>Terminé</span>
+            <span className="badge" style={{ background: '#F3F4F6', color: '#374151' }}><span className="dot" style={{ background: '#9CA3AF' }}></span>Terminé</span>
           </div>
         </div>
         <div aria-hidden="true" dangerouslySetInnerHTML={{ __html: MOCKUPS['fiche-visual'] ?? '' }} />
@@ -261,40 +276,41 @@ export const FicheShowcaseBlock = (p: FicheShowcaseProps) => (
   </section>
 );
 
-// ── Conformité (section encre, points numérotés) ───────────────────────────────
+// ── Sécurité / conformité (section sombre) ─────────────────────────────────────
 
-export interface ComplianceProps {
+export interface SecurityProps {
   anchor?: string;
   eyebrow: string;
   title: string;
   lead: string;
   items: { title: string; text: string }[];
-  note?: string;
+  showMockup: boolean;
 }
 
-export const ComplianceBlock = (p: ComplianceProps) => (
-  <section className="conf on-encre" id={p.anchor || undefined}>
-    <div className="wrap">
-      <div className="conf-grid">
+export const SecurityBlock = (p: SecurityProps) => (
+  <section className="section" id={p.anchor || undefined} style={{ background: 'var(--encre)', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 70% 50%,rgba(83,70,168,.18) 0%,transparent 65%)', pointerEvents: 'none' }}></div>
+    <div className="wrap" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="sec-grid">
         <div>
           <div className="eyebrow fade-in" style={{ color: 'var(--cachet-sombre)' }}>{p.eyebrow}</div>
-          <h2 className="section-h2 fade-in">{withBreaks(p.title)}</h2>
-          {p.lead && <p className="conf-lead fade-in">{p.lead}</p>}
-        </div>
-        <div>
-          <ol className="conf-list fade-in">
+          <h2 className="section-h2 fade-in" style={{ color: 'var(--papier)' }}>{withBreaks(p.title)}</h2>
+          <p className="fade-in" style={{ fontSize: 17, color: '#9BA8B3', lineHeight: 1.65, marginBottom: 32 }}>{p.lead}</p>
+          <ul className="sec-list fade-in">
             {p.items.map((it, i) => (
-              <li key={i} className="conf-item">
-                <span className="conf-idx" aria-hidden="true">{ordinal(i)}</span>
+              <li key={i}>
+                <div className="sec-icon" aria-hidden="true">{ordinal(i)}</div>
                 <div>
-                  <div className="conf-title">{it.title}</div>
-                  <p className="conf-text">{it.text}</p>
+                  <strong>{it.title}</strong>
+                  <p>{it.text}</p>
                 </div>
               </li>
             ))}
-          </ol>
-          {p.note && <p className="conf-note fade-in">{p.note}</p>}
+          </ul>
         </div>
+        {p.showMockup && MOCKUPS['authority-dashboard'] && (
+          <div className="fade-in" aria-hidden="true" dangerouslySetInnerHTML={{ __html: MOCKUPS['authority-dashboard'] }} />
+        )}
       </div>
     </div>
   </section>
@@ -322,12 +338,12 @@ export interface FaqProps {
 }
 
 export const FaqBlock = (p: FaqProps) => (
-  <section className={sectionClass(p.background)} style={{ paddingTop: 24 }}>
-    <div className="wrap wrap-text">
+  <section className={sectionClass(p.background)} style={{ paddingTop: 40 }}>
+    <div className="wrap" style={{ maxWidth: 760 }}>
       {p.items.map((it, i) => (
-        <details key={i} className="faq-item">
-          <summary>{it.question}</summary>
-          <p>{it.answer}</p>
+        <details key={i} style={{ borderBottom: '1px solid var(--ligne)', padding: '18px 4px' }}>
+          <summary style={{ cursor: 'pointer', fontFamily: 'var(--font-d)', fontWeight: 700, fontSize: 16 }}>{it.question}</summary>
+          <p style={{ marginTop: 10, fontSize: 14, color: 'var(--texte-sec)', lineHeight: 1.7 }}>{it.answer}</p>
         </details>
       ))}
     </div>
@@ -346,11 +362,14 @@ export interface CtaBandProps {
 }
 
 export const CtaBandBlock = (p: CtaBandProps) => (
-  <div className="cta-band on-encre" id={p.anchor || undefined}>
+  <div className="cta-band" id={p.anchor || undefined}>
     <div className="wrap">
       <h2 className="cta-h2">{withBreaks(p.title)}</h2>
       {p.text && <p className="cta-sub">{p.text}</p>}
-      <SmartLink href={p.buttonHref} className="btn btn-white">{p.buttonLabel}</SmartLink>
+      <SmartLink href={p.buttonHref} className="btn btn-white">
+        {p.buttonLabel}
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+      </SmartLink>
       {p.note && <p className="cta-meta">{p.note}</p>}
     </div>
   </div>
@@ -365,7 +384,7 @@ export interface MockupProps {
 
 export const MockupBlock = (p: MockupProps) => (
   <section
-    className={cx('section', p.background === 'alt' && 'section-alt', p.background === 'dark' && 'on-encre')}
+    className={cx('section', p.background === 'alt' && 'section-alt')}
     style={p.background === 'dark' ? { background: 'var(--encre)', paddingTop: 48, paddingBottom: 48 } : { paddingTop: 40, paddingBottom: 40 }}
   >
     <div className="wrap fade-in" aria-hidden="true" dangerouslySetInnerHTML={{ __html: MOCKUPS[p.mockup] ?? '' }} />
@@ -382,7 +401,7 @@ export interface ProseProps {
 
 export const ProseBlock = (p: ProseProps) => (
   <section className={sectionClass(p.background)} style={{ paddingTop: 18, paddingBottom: 18 }}>
-    <div className="wrap wrap-text">
+    <div className="wrap" style={{ maxWidth: 760 }}>
       {p.title && (
         <h3 style={{ fontFamily: 'var(--font-d)', fontVariationSettings: "'wdth' 112", fontWeight: 800, fontSize: 20, color: 'var(--encre)', marginBottom: 10 }}>
           {p.title}
