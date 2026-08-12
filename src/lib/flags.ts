@@ -57,14 +57,22 @@ export const getFlag = (alpha3?: string | null): string => {
 };
 
 /**
- * Returns a flagcdn.com image URL for an ISO 3166-1 alpha-3 country code.
- * Returns null if unmapped.
+ * Renvoie l'URL locale du drapeau pour un code ISO 3166-1 alpha-3.
+ * `null` si le code n'est pas connu — l'appelant retombe alors sur une icône.
  *
- * @example getFlagUrl('TUN') → 'https://flagcdn.com/w20/tn.png'
- * @example getFlagUrl('FRA') → 'https://flagcdn.com/w20/fr.png'
+ * Les images sont servies depuis notre propre origine (`public/flags/`) et non
+ * plus depuis flagcdn.com. Ces drapeaux s'affichent aussi dans le portail
+ * autorité : chaque ligne de résultat annonçait à un tiers qu'une adresse IP
+ * policière consultait à cet instant un ressortissant de tel pays. Le coût
+ * n'était pas le problème (400 octets), l'origine tierce l'était.
+ *
+ * Pour ajouter ou rafraîchir un drapeau : `npm run flags:fetch`.
+ *
+ * @example getFlagUrl('TUN') → '/flags/tn.png'
+ * @example getFlagUrl('FRA') → '/flags/fr.png'
  */
 export const getFlagUrl = (alpha3?: string | null): string | null => {
   if (!alpha3) return null;
   const a2 = A3_TO_A2[alpha3.toUpperCase()];
-  return a2 ? `https://flagcdn.com/w20/${a2.toLowerCase()}.png` : null;
+  return a2 ? `/flags/${a2.toLowerCase()}.png` : null;
 };

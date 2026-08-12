@@ -10,6 +10,7 @@
     "test": "vitest run",
     "lint": "oxlint",
     "check:design": "node scripts/check-design-tokens.mjs",
+    "flags:fetch": "node scripts/fetch-flags.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.app.json"
   },
   "dependencies": {
