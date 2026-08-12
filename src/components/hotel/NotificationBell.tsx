@@ -99,11 +99,23 @@ export const NotificationBell = () => {
         <>
           {/* Backdrop — ferme au clic extérieur */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          {/* fixed par rapport au viewport (pas au bouton) : sur mobile la cloche est
-              près du bord droit et un panneau ancré `absolute end-0` déborde hors écran. */}
+          {/* `fixed` et non `absolute` : sur mobile la cloche est près du bord
+              droit, et un panneau ancré `absolute end-0` déborderait hors écran.
+              Mais depuis que le portail est borné à 1120px, se coller au bord du
+              VIEWPORT décrochait le panneau de sa cloche sur grand écran — un
+              panneau flottant seul dans la marge, à 380px de ce qui l'a ouvert.
+              Il s'aligne donc sur le bord du conteneur, et retombe sur le bord
+              de l'écran dès que celui-ci est plus étroit que le conteneur.
+              `top` suit la hauteur réelle de l'en-tête (61px) plus 8px d'air. */}
           <div
-            className="fixed end-3 top-[72px] z-50 w-[340px] max-w-[calc(100vw-24px)] rounded-2xl bg-white shadow-lg overflow-hidden"
-            style={{ border: '1px solid var(--qayed-ligne)' }}
+            className="fixed top-[69px] z-50 w-[340px] max-w-[calc(100vw-24px)] rounded-2xl bg-white shadow-float overflow-hidden"
+            style={{
+              border: '1px solid var(--qayed-ligne)',
+              // 1rem = la marge interne de l'en-tête, pour tomber pile sous les
+              // boutons. Sous 1120px le calcul devient négatif et `max` retient
+              // les 0.75rem du bord d'écran.
+              insetInlineEnd: 'max(0.75rem, calc((100vw - 1120px) / 2 + 1rem))',
+            }}
           >
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--qayed-gris-100)' }}>
               <p className="text-sm font-bold text-gray-900">{t('notifications.title')}</p>
