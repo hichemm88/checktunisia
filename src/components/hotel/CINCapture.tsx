@@ -21,6 +21,13 @@ import { Button } from '@/components/ui/Button';
  *
  * Flux secondaires : import fichier, glisser-déposer, collage Ctrl+V.
  *
+ * DÉPENDANCE D'INFRASTRUCTURE — `vercel.json` doit servir
+ * `Permissions-Policy: camera=(self)`. Avec `camera=()`, valeur remise en place
+ * quand getUserMedia avait disparu, le navigateur refuse la caméra sans erreur
+ * visible : le scan retombe sur le repli natif et le cadre ne s'affiche jamais.
+ * JSON n'acceptant pas de commentaire et Vercel validant son schéma
+ * strictement, la contrainte est notée ici.
+ *
  * Ne fait aucun traitement lourd : produit un `Blob` brut via `onCapture` ; la
  * conversion HEIC / compression / envoi est gérée par l'appelant. L'image reste
  * en mémoire uniquement (pas de localStorage/IndexedDB — conformité INPDP).
