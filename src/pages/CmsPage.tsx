@@ -43,11 +43,33 @@ const HOME_STRUCTURED_DATA: Record<string, unknown> = {
   ],
 };
 
-const NotFoundView = () => (
-  <div style={{ padding: '120px 24px', textAlign: 'center' }}>
-    <p style={{ fontFamily: 'var(--font-d)', fontSize: 40, fontWeight: 900 }}>404</p>
-    <p style={{ color: 'var(--fiche)', marginTop: 8 }}>Cette page n'existe pas ou n'est plus publiée.</p>
-    <Link to="/" className="btn btn-primary" style={{ marginTop: 24, display: 'inline-flex' }}>Retour à l'accueil</Link>
+const NotFoundView = () => {
+  const { t } = useTranslation();
+  return (
+    <div style={{ padding: '120px 24px', textAlign: 'center' }}>
+      <h1 style={{ fontFamily: 'var(--font-d)', fontSize: 40, fontWeight: 900 }}>404</h1>
+      <p style={{ color: 'var(--fiche)', marginTop: 8 }}>{t('site.notFound')}</p>
+      <Link to="/" className="btn btn-primary" style={{ marginTop: 24, display: 'inline-flex' }}>
+        {t('site.backHome')}
+      </Link>
+    </div>
+  );
+};
+
+/**
+ * Squelette de chargement du contenu CMS.
+ *
+ * L'attente etait un <div> vide de 60vh : sur une connexion moyenne, le
+ * visiteur voyait du blanc sans savoir si la page chargeait ou avait echoue.
+ */
+const PageSkeleton = () => (
+  <div className="section" aria-hidden="true">
+    <div className="wrap" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <div style={{ height: 14, width: 120, borderRadius: 7, background: 'var(--qayed-gris-200)' }} />
+      <div style={{ height: 44, width: '70%', borderRadius: 10, background: 'var(--qayed-gris-200)' }} />
+      <div style={{ height: 14, width: '55%', borderRadius: 7, background: 'var(--qayed-gris-100)' }} />
+      <div style={{ height: 220, borderRadius: 18, background: 'var(--qayed-gris-100)', marginTop: 16 }} />
+    </div>
   </div>
 );
 
@@ -103,7 +125,8 @@ export const CmsPage = ({ slugOverride, localeOverride }: { slugOverride?: strin
         // Hauteur d'un écran : sans cela, le pied de page s'affiche haut puis
         // redescend brutalement quand le contenu arrive de l'API (0,4 de
         // décalage cumulé mesuré, et un saut bien visible à l'œil).
-        <div style={{ minHeight: '100vh' }} />
+        // Le squelette occupe cette hauteur en montrant que la page charge.
+        <div style={{ minHeight: '100vh' }}><PageSkeleton /></div>
       ) : data ? (
         <RenderContent data={data} />
       ) : (

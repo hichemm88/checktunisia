@@ -850,7 +850,8 @@
     "other": "Other",
     "sex": "Sex",
     "retry": "Retry",
-    "saved": "Saved"
+    "saved": "Saved",
+    "pagination": "Pagination"
   },
   "authorityWatchlist": {
     "title": "Watched persons",
@@ -1821,5 +1822,22 @@
     "cancelChangeSubscribe": "Cancel this subscription",
     "cancelChangeUpgrade": "Cancel this change",
     "cancelChangeDowngrade": "Cancel this change"
+  },
+  "site": {
+    "login": "Log in",
+    "tryFree": "Try it free",
+    "menu": "Menu",
+    "notFound": "This page does not exist or is no longer published.",
+    "backHome": "Back to home"
+  },
+  "pricingSection": {
+    "eyebrow": "Subscription",
+    "title": "Simple and transparent.",
+    "lead": "No commitment. No hidden fees. Change plan at any time.",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "yearlyBadge": "1 month free",
+    "footnote": "No card required to start the trial · Cancel at any time",
+    "ctaFallback": "Start a 7-day free trial"
   }
 }

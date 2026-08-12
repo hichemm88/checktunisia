@@ -10,6 +10,7 @@ import {
 } from './pricingLabels';
 
 const PricingCard = ({ plan, lang, cycle }: { plan: SubscriptionPlan; lang: string; cycle: BillingCycle }) => {
+  const { t } = useTranslation();
   const m = plan.marketing;
   const badge = m?.badge ? pickI18n(m.badge, lang) : '';
   const price = priceForCycle(plan, cycle);
@@ -54,7 +55,7 @@ const PricingCard = ({ plan, lang, cycle }: { plan: SubscriptionPlan; lang: stri
         {hasTieredProperties && <li>{extraLabel(extraPrice!, lang)}</li>}
       </ul>
       <Link to={`/register?plan=${plan.slug}`} className={`btn ${m?.featured ? 'btn-primary' : 'btn-ghost'} btn-full`}>
-        {m?.cta_label ? pickI18n(m.cta_label, lang) : 'Essayer 7 jours gratuit'}
+        {m?.cta_label ? pickI18n(m.cta_label, lang) : t('pricingSection.ctaFallback')}
       </Link>
       {hasOverage && (
         <p style={{ marginTop: 12, fontSize: 12, lineHeight: 1.5, color: 'var(--fiche)', textAlign: 'center' }}>
@@ -82,17 +83,18 @@ export interface PricingSectionProps {
   footnote?: string;
 }
 
-export const PricingSection = ({
-  eyebrow = 'Abonnement',
-  title = 'Simple et transparent.',
-  lead = 'Sans engagement. Sans frais cachés. Changez de plan à tout moment.',
-  monthlyLabel = 'Mensuel',
-  yearlyLabel = 'Annuel',
-  yearlyBadge = '1 mois offert',
-  footnote = "Aucune carte bancaire requise pour démarrer l'essai · Résiliable à tout moment",
-}: PricingSectionProps) => {
-  const { i18n } = useTranslation();
+export const PricingSection = (props: PricingSectionProps) => {
+  const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage ?? 'fr';
+  // Les valeurs par defaut passent par i18n : en dur, elles affichaient du
+  // francais sur /en et /ar des que le CMS ne fournissait pas la prop.
+  const eyebrow      = props.eyebrow      ?? t('pricingSection.eyebrow');
+  const title        = props.title        ?? t('pricingSection.title');
+  const lead         = props.lead         ?? t('pricingSection.lead');
+  const monthlyLabel = props.monthlyLabel ?? t('pricingSection.monthly');
+  const yearlyLabel  = props.yearlyLabel  ?? t('pricingSection.yearly');
+  const yearlyBadge  = props.yearlyBadge  ?? t('pricingSection.yearlyBadge');
+  const footnote     = props.footnote     ?? t('pricingSection.footnote');
   const [cycle, setCycle] = useState<BillingCycle>('monthly');
   const { data: plans } = useQuery({
     queryKey: ['public-plans'],
