@@ -61,7 +61,7 @@ const StaffCard = ({ s }: { s: AuthorityHotelStaff }) => {
     >
       <div
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold"
-        style={{ background: isManager ? '#5346A8' : '#EEEBFA', color: isManager ? '#fff' : '#5346A8' }}
+        style={{ background: isManager ? 'var(--qayed-cachet)' : 'var(--qayed-cachet-dilue)', color: isManager ? '#fff' : 'var(--qayed-cachet)' }}
       >
         {s.first_name?.[0]}{s.last_name?.[0]}
       </div>
@@ -71,8 +71,8 @@ const StaffCard = ({ s }: { s: AuthorityHotelStaff }) => {
             {s.first_name} {s.last_name}
           </span>
           <span
-            className="text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full"
-            style={{ background: isManager ? '#EEEBFA' : '#F3F4F6', color: isManager ? '#5346A8' : '#6B7280' }}
+            className="text-xs font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full"
+            style={{ background: isManager ? 'var(--qayed-cachet-dilue)' : 'var(--qayed-gris-100)', color: isManager ? 'var(--qayed-cachet)' : 'var(--qayed-fiche)' }}
           >
             {ROLE_LABELS[s.role] ?? s.role}
           </span>
@@ -102,11 +102,11 @@ export const HotelDetailPage = () => {
   const { t, i18n } = useTranslation();
   const locale = dateLocaleFor(i18n.language);
   const STATUS_STYLE: Record<string, { color: string; label: string }> = {
-    active:    { color: '#1F9D6B', label: t('checkinStatus.active') },
-    draft:     { color: '#5346A8', label: t('checkinStatus.draft') },
-    completed: { color: '#9ca3af', label: t('checkinStatus.completed') },
-    cancelled: { color: '#9ca3af', label: t('checkinStatus.cancelled') },
-    no_show:   { color: '#E3A008', label: t('checkinStatus.noShow') },
+    active:    { color: 'var(--qayed-conforme)', label: t('checkinStatus.active') },
+    draft:     { color: 'var(--qayed-cachet)', label: t('checkinStatus.draft') },
+    completed: { color: 'var(--qayed-fiche-faible)', label: t('checkinStatus.completed') },
+    cancelled: { color: 'var(--qayed-fiche-faible)', label: t('checkinStatus.cancelled') },
+    no_show:   { color: 'var(--qayed-vigilance)', label: t('checkinStatus.noShow') },
   };
   const STATUS_LABELS: Record<string, string> = {
     all: t('common.all'), active: t('checkinStatus.active'), completed: t('checkinStatus.completed'), draft: t('checkinStatus.draft'),
@@ -166,7 +166,7 @@ export const HotelDetailPage = () => {
           <div className="flex items-start gap-4">
             <div
               className="flex h-14 w-14 items-center justify-center rounded-2xl shrink-0"
-              style={{ background: '#5346A8' }}
+              style={{ background: 'var(--qayed-cachet)' }}
             >
               <Building2 className="h-7 w-7 text-white" />
             </div>
@@ -271,7 +271,7 @@ export const HotelDetailPage = () => {
             {reception.length > 0 && (
               <>
                 {managers.length > 0 && <div className="mt-1" />}
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">
                   {t('authorityHotelDetail.reception')}
                 </p>
                 {reception.map(s => <StaffCard key={s.id} s={s} />)}
@@ -283,12 +283,12 @@ export const HotelDetailPage = () => {
         {/* ── Stats ── */}
         <div className="grid grid-cols-2 gap-3">
           <Card className="text-center py-4">
-            <Users className="h-5 w-5 mx-auto mb-1" style={{ color: '#5346A8' }} />
+            <Users className="h-5 w-5 mx-auto mb-1" style={{ color: 'var(--qayed-cachet)' }} />
             <p className="text-2xl font-bold text-gray-900">{hotel.active_guests_count ?? 0}</p>
             <p className="text-xs text-gray-500 mt-0.5">{t('authorityDashboard.activeGuests')}</p>
           </Card>
           <Card className="text-center py-4">
-            <Calendar className="h-5 w-5 mx-auto mb-1" style={{ color: '#5346A8' }} />
+            <Calendar className="h-5 w-5 mx-auto mb-1" style={{ color: 'var(--qayed-cachet)' }} />
             <p className="text-2xl font-bold text-gray-900">{hotel.total_check_ins ?? 0}</p>
             <p className="text-xs text-gray-500 mt-0.5">{t('authorityHotelDetail.totalCheckins')}</p>
           </Card>
@@ -323,8 +323,8 @@ export const HotelDetailPage = () => {
                 onClick={() => { setStatus(s); setPage(1); }}
                 className="whitespace-nowrap rounded-full px-3 py-1 text-xs font-bold transition-all"
                 style={status === s
-                  ? { background: '#5346A8', color: '#fff' }
-                  : { background: '#fff', color: '#6B7280', border: '1px solid #E5E7EB' }
+                  ? { background: 'var(--qayed-cachet)', color: '#fff' }
+                  : { background: '#fff', color: 'var(--qayed-fiche)', border: '1px solid var(--qayed-gris-200)' }
                 }
               >
                 {STATUS_LABELS[s]}
@@ -345,7 +345,7 @@ export const HotelDetailPage = () => {
           ) : (
             <div className="flex flex-col gap-2">
               {checkIns?.data.map(row => {
-                const st       = STATUS_STYLE[row.status] ?? { color: '#9ca3af', label: row.status };
+                const st       = STATUS_STYLE[row.status] ?? { color: 'var(--qayed-fiche-faible)', label: row.status };
                 const g        = row.guest;
                 const name     = `${g.last_name} ${g.first_name}`;
                 const initials = `${g.first_name?.[0] ?? ''}${g.last_name?.[0] ?? ''}`.toUpperCase() || '?';
@@ -362,7 +362,7 @@ export const HotelDetailPage = () => {
                       <div className="relative shrink-0 mt-0.5">
                         <div
                           className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-bold"
-                          style={{ background: '#EEEBFA', color: '#5346A8' }}
+                          style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
                         >
                           {initials}
                         </div>
@@ -381,7 +381,7 @@ export const HotelDetailPage = () => {
                       <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                         <span className="text-sm font-semibold text-gray-900 truncate">
                           {name}
-                          {!g.is_primary && <span className="ms-1.5 text-[10px] font-medium text-gray-400">{t('authorityHotelDetail.companionTag')}</span>}
+                          {!g.is_primary && <span className="ms-1.5 text-xs font-medium text-gray-400">{t('authorityHotelDetail.companionTag')}</span>}
                         </span>
 
                         <span className="text-xs text-gray-500 truncate">
@@ -404,7 +404,7 @@ export const HotelDetailPage = () => {
                       </div>
 
                       {/* Status */}
-                      <span className="text-[11px] font-bold shrink-0 mt-1" style={{ color: st.color }}>
+                      <span className="text-xs font-bold shrink-0 mt-1" style={{ color: st.color }}>
                         {st.label}
                       </span>
                     </div>

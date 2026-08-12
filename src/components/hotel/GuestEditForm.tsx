@@ -95,7 +95,7 @@ export const GuestEditForm = ({
   });
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl p-4" style={{ background: '#F6F5F1', border: '1.5px solid #DDD9CF' }}>
+    <div className="flex flex-col gap-3 rounded-2xl p-4" style={{ background: 'var(--qayed-papier)', border: '1.5px solid var(--qayed-ligne)' }}>
       <div className="flex items-center justify-between">
         <p className="text-sm font-bold text-gray-800">{t('hotelHistoryDetail.editGuest')}</p>
         <button className="text-xs text-gray-400 hover:text-gray-600 font-medium" onClick={onCancel}>
@@ -113,14 +113,14 @@ export const GuestEditForm = ({
         onChange={(e) => set('document_type', e.target.value)}
       />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input label={t('guestScan.firstName')} value={form.first_name ?? ''} onChange={(e) => set('first_name', e.target.value)} required />
         <Input label={t('guestScan.lastName')} value={form.last_name ?? ''} onChange={(e) => set('last_name', e.target.value)} required />
       </div>
 
       <Input label={t('guestScan.dateOfBirth')} type="date" value={form.date_of_birth ?? ''} onChange={(e) => set('date_of_birth', e.target.value)} required />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Select label={t('common.sex')} options={SEX_OPTIONS} value={form.sex ?? ''} onChange={(e) => set('sex', e.target.value)} />
         <Input label={t('guestScan.nationality')} placeholder="TUN" value={form.nationality_code ?? ''} onChange={(e) => set('nationality_code', e.target.value.toUpperCase())} maxLength={3} />
       </div>
@@ -133,7 +133,7 @@ export const GuestEditForm = ({
 
       {/* Pays de délivrance + expiration : masqués pour la CIN (pas d'expiration). */}
       {!isNationalId && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input label={t('guestScan.issuingCountry')} placeholder="TUN" value={form.issuing_country_code ?? ''} onChange={(e) => set('issuing_country_code', e.target.value.toUpperCase())} maxLength={3} />
           <Input label={t('guestScan.expiry')} type="date" value={form.expiry_date ?? ''} onChange={(e) => set('expiry_date', e.target.value)} />
         </div>

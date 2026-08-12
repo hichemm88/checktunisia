@@ -2,15 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import {
-  CheckCircle, UserPlus,
-  ArrowLeft, ArrowRight, Minus, Plus,
-} from 'lucide-react';
+import { CheckCircle, UserPlus, Minus, Plus } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
+import { ArrowNext, ArrowPrev } from '@/components/ui/DirectionalIcon';
+import { cn } from '@/lib/cn';
 import { checkInsApi, type CreateCheckInPayload } from '@/api/checkIns';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
@@ -40,30 +39,27 @@ const Stepper = ({
 }) => (
   <div className="flex flex-col gap-1.5">
     <label className="label">{label}</label>
-    <div
-      className="flex items-center rounded-xl overflow-hidden h-[52px] bg-white"
-      style={{ border: '1.5px solid #DDD9CF' }}
-    >
+    <div className="flex items-center rounded-xl overflow-hidden h-[52px] bg-white border-[1.5px] border-qayed-ligne">
       <button
         type="button"
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={value <= min}
-        className="flex items-center justify-center w-[52px] h-full text-gray-500 hover:bg-warm-100 active:bg-warm-200 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors shrink-0"
-        style={{ borderRight: '1.5px solid #DDD9CF' }}
+        aria-label={label + ' \u2212 1'}
+        className="flex items-center justify-center w-[52px] h-full border-e-[1.5px] border-qayed-ligne text-qayed-gris-600 hover:bg-qayed-papier active:bg-qayed-gris-100 disabled:text-qayed-gris-300 disabled:cursor-not-allowed transition-colors shrink-0"
       >
-        <Minus className="h-4 w-4" />
+        <Minus className="h-4 w-4" aria-hidden="true" />
       </button>
-      <span className="flex-1 text-center text-base font-black text-gray-900 tabular-nums select-none">
+      <span className="flex-1 text-center text-base font-black text-qayed-encre tabular-nums select-none" aria-live="polite">
         {value}
       </span>
       <button
         type="button"
         onClick={() => onChange(Math.min(max, value + 1))}
         disabled={value >= max}
-        className="flex items-center justify-center w-[52px] h-full text-gray-500 hover:bg-warm-100 active:bg-warm-200 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors shrink-0"
-        style={{ borderLeft: '1.5px solid #DDD9CF' }}
+        aria-label={label + ' + 1'}
+        className="flex items-center justify-center w-[52px] h-full border-s-[1.5px] border-qayed-ligne text-qayed-gris-600 hover:bg-qayed-papier active:bg-qayed-gris-100 disabled:text-qayed-gris-300 disabled:cursor-not-allowed transition-colors shrink-0"
       >
-        <Plus className="h-4 w-4" />
+        <Plus className="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
   </div>
@@ -109,7 +105,7 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Input
           label={t('checkinWizard.arrivalLabel')}
           type="date"
@@ -141,16 +137,13 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
         {(() => {
           const ota = detectOta(form.booking_reference ?? '');
           return ota ? (
-            <span
-              className="self-start rounded-full px-2.5 py-1 text-[11px] font-bold"
-              style={{ background: '#EEEBFA', color: '#5346A8' }}
-            >
+            <span className="self-start rounded-full bg-qayed-cachet-dilue px-3 py-1 text-xs font-semibold text-qayed-cachet">
               {t('checkinWizard.otaDetected', { platform: ota.label })}
             </span>
           ) : null;
         })()}
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stepper label={t('checkinWizard.adults')} value={form.adults_count ?? 1} min={1} max={20} onChange={(v) => set('adults_count', v)} />
         <Stepper label={t('checkinWizard.children')} value={form.children_count ?? 0} min={0} max={20} onChange={(v) => set('children_count', v)} />
       </div>
@@ -163,10 +156,10 @@ const BookingStep = ({ onNext }: { onNext: (ci: CheckIn) => void }) => {
         } as CreateCheckInPayload)}
         disabled={!form.check_in_date || !form.expected_check_out_date || !roomChoice}
       >
-        {t('common.next')} <ArrowRight className="h-4 w-4" />
+        {t('common.next')} <ArrowNext className="h-4 w-4" />
       </Button>
       {!roomChoice && form.check_in_date && form.expected_check_out_date && (
-        <p className="text-xs text-gray-400 text-center -mt-2">{t('checkinWizard.roomChoiceRequired')}</p>
+        <p className="text-xs text-qayed-fiche text-center -mt-2">{t('checkinWizard.roomChoiceRequired')}</p>
       )}
     </div>
   );
@@ -251,7 +244,7 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
           {t('checkinWizard.guests')} ({fetching ? '…' : guests.length}/{totalN})
         </p>
 
-        {fetching && <div className="h-14 animate-pulse rounded-2xl bg-gray-100" />}
+        {fetching && <div className="h-14 animate-pulse rounded-2xl bg-qayed-gris-100" aria-hidden="true" />}
 
         {!fetching && slots.map((slot) => {
           // Slot rempli
@@ -262,21 +255,18 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
                 key={slot.index}
                 className="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-card"
               >
-                <div
-                  className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center text-sm font-bold"
-                  style={{ background: '#5346A8', color: '#fff' }}
-                >
+                <div className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center bg-qayed-cachet text-sm font-bold text-white" aria-hidden="true">
                   {gInitials}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">
+                  <p className="text-sm font-semibold text-qayed-encre truncate">
                     {slot.guest.first_name} {slot.guest.last_name}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-qayed-fiche">
                     {slot.labelBase} · {slot.guest.nationality_code} · {fmtDate(slot.guest.date_of_birth, locale)}
                   </p>
                 </div>
-                <CheckCircle className="h-5 w-5 shrink-0 text-emerald-500" />
+                <CheckCircle className="h-5 w-5 shrink-0 text-qayed-conforme-texte" aria-hidden="true" />
               </div>
             );
           }
@@ -298,28 +288,32 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
           // Slot vide — bouton
           return (
             <button
+              type="button"
               key={slot.index}
               onClick={() => setAddingSlot(slot.index)}
-              className="flex items-center gap-3 rounded-2xl p-3.5 text-start transition-all"
-              style={{
-                border: `2px dashed ${slot.isRequired ? '#fca5a5' : '#EEEBFA'}`,
-                background: slot.isRequired ? '#FFF5F5' : '#F6F5F1',
-              }}
+              className={cn(
+                'flex items-center gap-3 rounded-2xl border-2 border-dashed p-3.5 text-start transition-colors',
+                slot.isRequired
+                  ? 'border-red-200 bg-qayed-erreur-fond/50 hover:bg-qayed-erreur-fond'
+                  : 'border-qayed-cachet-dilue bg-qayed-papier hover:bg-qayed-cachet-dilue/40',
+              )}
             >
               <div
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                style={{
-                  background: slot.isRequired ? '#fee2e2' : '#EEEBFA',
-                  color: slot.isRequired ? '#ef4444' : '#5346A8',
-                }}
+                className={cn(
+                  'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+                  slot.isRequired
+                    ? 'bg-qayed-erreur-fond text-qayed-erreur'
+                    : 'bg-qayed-cachet-dilue text-qayed-cachet',
+                )}
+                aria-hidden="true"
               >
                 <UserPlus className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-sm font-semibold" style={{ color: slot.isRequired ? '#b91c1c' : '#374151' }}>
+                <p className={cn('text-sm font-semibold', slot.isRequired ? 'text-qayed-erreur-texte' : 'text-qayed-gris-700')}>
                   {slot.labelBase}
                 </p>
-                <p className="text-xs" style={{ color: slot.isRequired ? '#f87171' : '#9CA3AF' }}>
+                <p className={cn('text-xs', slot.isRequired ? 'text-qayed-erreur' : 'text-qayed-fiche')}>
                   {slot.isRequired ? t('checkinWizard.documentRequiredHint') : t('checkinWizard.documentOptionalHint')}
                 </p>
               </div>
@@ -329,7 +323,7 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
       </div>
 
       {!fetching && !allAdultsFilled && (
-        <p className="text-xs text-red-500 text-center font-medium">
+        <p className="text-xs text-qayed-erreur-texte text-center font-medium" role="alert">
           {t('checkinWizard.adultDocsRequired')}
         </p>
       )}
@@ -340,7 +334,7 @@ const ValidationStep = ({ checkIn, onDone }: { checkIn: CheckIn; onDone: () => v
         disabled={fetching || !allAdultsFilled}
         onClick={() => completeMutation.mutate()}
       >
-        <CheckCircle className="h-5 w-5" />
+        <CheckCircle className="h-5 w-5" aria-hidden="true" />
         {t('checkinWizard.finalize')}
       </Button>
     </div>
@@ -387,6 +381,7 @@ export const CheckInWizardPage = () => {
   return (
     <HotelLayout title={t('checkinWizard.title')}>
       <div className="p-4 flex flex-col gap-6">
+        <h1 className="sr-only">{t('checkinWizard.title')}</h1>
         <StepIndicator steps={STEPS} currentStep={step} />
 
         {step === 0 && (
@@ -396,13 +391,9 @@ export const CheckInWizardPage = () => {
         {step === 1 && checkIn && (
           <>
             <DocumentStep checkIn={checkIn} onNext={() => setStep(2)} />
-            <button
-              className="flex items-center justify-center gap-1.5 text-sm font-medium"
-              style={{ color: '#5346A8' }}
-              onClick={() => setStep(2)}
-            >
-              {t('checkinWizard.skip')} <ArrowRight className="h-4 w-4" />
-            </button>
+            <Button variant="link" className="self-center" onClick={() => setStep(2)}>
+              {t('checkinWizard.skip')} <ArrowNext className="h-4 w-4" />
+            </Button>
           </>
         )}
 
@@ -411,15 +402,16 @@ export const CheckInWizardPage = () => {
         )}
 
         {step > 0 && (
-          <button
-            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          <Button
+            variant="link"
+            className="self-start text-qayed-fiche hover:text-qayed-encre hover:no-underline"
             onClick={() => {
               if (step === 1) navigate(-1);
               else setStep((s) => s - 1);
             }}
           >
-            <ArrowLeft className="h-4 w-4" /> {t('common.back')}
-          </button>
+            <ArrowPrev className="h-4 w-4" /> {t('common.back')}
+          </Button>
         )}
       </div>
     </HotelLayout>

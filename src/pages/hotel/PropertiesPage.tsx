@@ -72,10 +72,10 @@ const GOVERNORATES = [
 ];
 
 const STATUS_COLOR: Record<string, string> = {
-  active:    '#1F9D6B',
-  pending:   '#E3A008',
-  suspended: '#ef4444',
-  closed:    '#9ca3af',
+  active:    'var(--qayed-conforme)',
+  pending:   'var(--qayed-vigilance)',
+  suspended: 'var(--qayed-erreur)',
+  closed:    'var(--qayed-fiche-faible)',
 };
 
 const PROP_INIT = {
@@ -101,11 +101,11 @@ const RoomForm = ({
 
   return (
     <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-3">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input label={t('propertiesPage.numberOrNameRequired')} value={form.number} onChange={(e) => set('number', e.target.value)} placeholder="101" />
         <Input label={t('onboarding.floor')} type="number" value={form.floor} onChange={(e) => set('floor', e.target.value)} placeholder="1" />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('onboarding.typeRequired')}</label>
           <select className="input w-full" value={form.type} onChange={(e) => set('type', e.target.value)}>
@@ -177,14 +177,14 @@ const BulkRoomForm = ({
         <Rows3 className="h-3.5 w-3.5" /> {t('propertiesPage.bulkTitle')}
       </p>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input label={t('propertiesPage.bulkStart')} type="number" inputMode="numeric" value={form.start}
           onChange={(e) => set('start', e.target.value)} placeholder="100" />
         <Input label={t('propertiesPage.bulkEnd')} type="number" inputMode="numeric" value={form.end}
           onChange={(e) => set('end', e.target.value)} placeholder="145" />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input label={t('propertiesPage.bulkPrefix')} value={form.prefix}
           onChange={(e) => set('prefix', e.target.value)} placeholder="A-" maxLength={10} />
         <Input label={t('propertiesPage.bulkSuffix')} value={form.suffix}
@@ -196,14 +196,14 @@ const BulkRoomForm = ({
         {t('propertiesPage.bulkZeroPad')}
       </label>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input label={t('onboarding.floor')} type="number" value={form.floor}
           onChange={(e) => set('floor', e.target.value)} placeholder="1" />
         <Input label={t('propertiesPage.bulkBuilding')} value={form.building}
           onChange={(e) => set('building', e.target.value)} placeholder="" maxLength={50} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('onboarding.typeRequired')}</label>
           <select className="input w-full" value={form.type} onChange={(e) => set('type', e.target.value)}>
@@ -235,13 +235,13 @@ const BulkRoomForm = ({
               const dup = duplicates.includes(n);
               return (
                 <span key={n}
-                  className={`text-[11px] font-mono px-1.5 py-0.5 rounded ${dup ? 'bg-orange-50 text-orange-400 line-through' : 'bg-violet-50 text-violet-600'}`}>
+                  className={`text-xs font-mono px-1.5 py-0.5 rounded ${dup ? 'bg-orange-50 text-orange-400 line-through' : 'bg-violet-50 text-violet-600'}`}>
                   {n}
                 </span>
               );
             })}
             {numbers.length > previewSample.length && (
-              <span className="text-[11px] text-gray-400 px-1.5 py-0.5">
+              <span className="text-xs text-gray-400 px-1.5 py-0.5">
                 +{numbers.length - previewSample.length}…
               </span>
             )}
@@ -360,14 +360,14 @@ const RoomsPanel = ({ property }: { property: Property }) => {
           <button
             onClick={() => { setShowBulk((s) => !s); setShowAdd(false); setEditingId(null); setError(''); setBulkMsg(''); }}
             className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity"
-            style={{ color: '#5346A8' }}
+            style={{ color: 'var(--qayed-cachet)' }}
           >
             <Rows3 className="h-3.5 w-3.5" /> {t('propertiesPage.bulkAdd')}
           </button>
           <button
             onClick={() => { setShowAdd((s) => !s); setShowBulk(false); setEditingId(null); setError(''); setBulkMsg(''); }}
             className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity"
-            style={{ color: '#5346A8' }}
+            style={{ color: 'var(--qayed-cachet)' }}
           >
             <Plus className="h-3.5 w-3.5" /> {t('onboarding.addUnit')}
           </button>
@@ -414,7 +414,7 @@ const RoomsPanel = ({ property }: { property: Property }) => {
       {floors.map((floor) => (
         <div key={floor} className="mb-2">
           {floors.length > 1 && (
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
               {floor === '—' ? t('propertiesPage.floorUnspecified') : t('propertiesPage.floorN', { floor })}
             </p>
           )}
@@ -511,7 +511,7 @@ const EditPropertyForm = ({
   return (
     <div className="flex flex-col gap-3 mt-3 border-t border-gray-100 pt-3">
       <Input label={t('onboarding.nameRequired')} value={form.name} onChange={(e) => set('name', e.target.value)} />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('onboarding.type')}</label>
           <select className="input w-full" value={form.type} onChange={(e) => set('type', e.target.value)}>
@@ -521,14 +521,14 @@ const EditPropertyForm = ({
         <Input label={t('propertiesPage.units')} type="number" min={1} value={form.room_count}
           onChange={(e) => set('room_count', e.target.value)} />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input label={t('propertiesPage.stars')} type="number" min={1} max={5} value={form.stars}
           onChange={(e) => set('stars', e.target.value)} />
         <Input label={t('propertiesPage.rcNumber')} value={form.registration_number}
           onChange={(e) => set('registration_number', e.target.value)} />
       </div>
       <Input label={t('onboarding.address')} value={form.address.line1} onChange={(e) => setAddr('line1', e.target.value)} />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Input label={t('propertiesPage.city')} value={form.address.city} onChange={(e) => setAddr('city', e.target.value)} />
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('propertiesPage.governorate')}</label>
@@ -603,14 +603,14 @@ const PropertyCard = ({
   return (
     <div
       className="card overflow-hidden transition-all duration-200"
-      style={{ outline: isActive ? '2px solid #5346A8' : 'none' }}
+      style={{ outline: isActive ? '2px solid var(--qayed-cachet)' : 'none' }}
     >
       {/* ── Header ── */}
       <div className="p-4 flex items-start gap-3">
         {/* Icon */}
         <div
           className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0 mt-0.5 transition-colors"
-          style={{ background: isActive ? '#5346A8' : '#F6F5F1' }}
+          style={{ background: isActive ? 'var(--qayed-cachet)' : 'var(--qayed-papier)' }}
         >
           <Building2 className={`h-5 w-5 transition-colors ${isActive ? 'text-white' : 'text-gray-400'}`} />
         </div>
@@ -624,15 +624,15 @@ const PropertyCard = ({
               <div className="flex items-center gap-1.5 flex-wrap">
                 <p className="font-bold text-gray-900 leading-snug break-words">{property.name}</p>
                 {isActive && (
-                  <span className="inline-flex shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                    style={{ background: '#5346A818', color: '#5346A8' }}>
+                  <span className="inline-flex shrink-0 text-xs font-bold px-1.5 py-0.5 rounded-full"
+                    style={{ background: 'rgba(83,70,168,0.09)', color: 'var(--qayed-cachet)' }}>
                     {t('propertiesPage.activeBadge')}
                   </span>
                 )}
               </div>
               {/* Infos secondaires */}
               <p className="text-xs text-gray-400 mt-0.5">
-                <span className="font-medium" style={{ color: STATUS_COLOR[property.status] ?? '#9ca3af' }}>
+                <span className="font-medium" style={{ color: STATUS_COLOR[property.status] ?? 'var(--qayed-fiche-faible)' }}>
                   ●
                 </span>
                 {' '}
@@ -690,13 +690,13 @@ const PropertyCard = ({
                 qc.invalidateQueries({ queryKey: ['onboarding-status'] });
               }}
               className="mt-3 w-full flex items-center justify-center gap-2 text-sm font-semibold py-2 rounded-xl border transition-all hover:bg-blue-50 active:scale-[0.98]"
-              style={{ borderColor: '#5346A8', color: '#5346A8' }}
+              style={{ borderColor: 'var(--qayed-cachet)', color: 'var(--qayed-cachet)' }}
             >
               <CheckCircle2 className="h-4 w-4" />
               {t('propertiesPage.setAsActive')}
             </button>
           ) : (
-            <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#5346A8' }}>
+            <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--qayed-cachet)' }}>
               <CheckCircle2 className="h-3.5 w-3.5" />
               {t('propertiesPage.propertySelected')}
             </div>
@@ -787,7 +787,7 @@ const AddPropertyForm = ({
       <h3 className="font-bold text-gray-900 mb-4">{t('propertiesPage.newProperty')}</h3>
       <div className="flex flex-col gap-4">
         <Input label={t('onboarding.nameRequired')} value={form.name} onChange={(e) => set('name', e.target.value)} />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{t('onboarding.typeRequired')}</label>
             <select className="input w-full" value={form.type} onChange={(e) => set('type', e.target.value)}>
@@ -797,7 +797,7 @@ const AddPropertyForm = ({
           <Input label={t('onboarding.roomsCountRequired')} type="number" min={1}
             value={form.room_count} onChange={(e) => set('room_count', e.target.value)} />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input label={t('onboarding.starsOptional')} type="number" min={1} max={5}
             value={form.stars} onChange={(e) => set('stars', e.target.value)} />
           <Input label={t('propertiesPage.rcNumberOptional')} value={form.registration_number}
@@ -807,7 +807,7 @@ const AddPropertyForm = ({
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('onboarding.address')}</p>
         <Input label={t('onboarding.addressRequired')} value={form.address.line1}
           onChange={(e) => setAddr('line1', e.target.value)} />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Input label={t('onboarding.cityRequired')} value={form.address.city}
             onChange={(e) => setAddr('city', e.target.value)} />
           <div>
@@ -861,16 +861,16 @@ const ReceptionistPropertiesView = () => {
           const isActive = activePropertyId ? activePropertyId === p.id : properties?.[0]?.id === p.id;
           return (
             <div key={p.id} className="card p-4 flex items-center justify-between"
-              style={{ outline: isActive ? '2px solid #5346A8' : 'none' }}>
+              style={{ outline: isActive ? '2px solid var(--qayed-cachet)' : 'none' }}>
               <div className="flex items-center gap-3 min-w-0">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl flex-shrink-0"
-                  style={{ background: isActive ? '#5346A8' : '#F6F5F1' }}>
+                  style={{ background: isActive ? 'var(--qayed-cachet)' : 'var(--qayed-papier)' }}>
                   <Building2 className={`h-4 w-4 ${isActive ? 'text-white' : 'text-gray-400'}`} />
                 </div>
                 <p className="font-semibold text-gray-900 truncate">{p.name}</p>
               </div>
               {isActive ? (
-                <span className="flex items-center gap-1.5 text-xs font-semibold shrink-0" style={{ color: '#5346A8' }}>
+                <span className="flex items-center gap-1.5 text-xs font-semibold shrink-0" style={{ color: 'var(--qayed-cachet)' }}>
                   <CheckCircle2 className="h-3.5 w-3.5" /> {t('propertiesPage.activeBadge')}
                 </span>
               ) : (
@@ -939,8 +939,8 @@ export const PropertiesPage = () => {
         {/* ── Org header ── */}
         <div className="card p-5 flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl flex-shrink-0"
-            style={{ background: '#5346A818' }}>
-            <Layers className="h-6 w-6" style={{ color: '#5346A8' }} />
+            style={{ background: 'rgba(83,70,168,0.09)' }}>
+            <Layers className="h-6 w-6" style={{ color: 'var(--qayed-cachet)' }} />
           </div>
           <div className="flex-1 min-w-0">
             {isLoading ? (
@@ -1008,7 +1008,7 @@ export const PropertiesPage = () => {
         )}
 
         {/* ── Info notice ── */}
-        <div className="flex items-start gap-3 rounded-xl p-4 text-sm text-gray-500" style={{ background: '#F6F5F1' }}>
+        <div className="flex items-start gap-3 rounded-xl p-4 text-sm text-gray-500" style={{ background: 'var(--qayed-papier)' }}>
           <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5 text-gray-400" />
           <p>
             <Trans t={t} i18nKey="propertiesPage.infoNotice" components={{ strong: <strong /> }} />

@@ -32,7 +32,7 @@ export const SecurityPage = () => {
         {/* Header banner */}
         <div
           className="rounded-2xl px-5 py-4"
-          style={{ background: '#991B1B' }}
+          style={{ background: 'var(--qayed-erreur-texte)' }}
         >
           <div className="flex items-center gap-3">
             <ShieldAlert className="h-7 w-7 text-red-200 shrink-0" />
@@ -90,7 +90,7 @@ export const SecurityPage = () => {
         {/* Disclaimer */}
         <div
           className="flex items-start gap-3 rounded-xl p-3"
-          style={{ background: '#FFF7ED', border: '1px solid #FED7AA' }}
+          style={{ background: 'var(--qayed-vigilance-fond)', border: '1px solid var(--qayed-vigilance-fond)' }}
         >
           <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0 mt-0.5" />
           <p className="text-xs text-orange-700">
@@ -110,17 +110,17 @@ const HitCard = ({
   return (
     <div
       className="rounded-2xl p-4 flex items-start justify-between gap-4"
-      style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}
+      style={{ background: 'var(--qayed-erreur-fond)', border: '1px solid var(--qayed-erreur)' }}
     >
       <div className="flex items-start gap-3">
         <div
           className="h-10 w-10 shrink-0 rounded-xl flex items-center justify-center"
-          style={{ background: '#FEE2E2' }}
+          style={{ background: 'var(--qayed-erreur-fond)' }}
         >
-          <ShieldAlert className="h-5 w-5" style={{ color: '#DC2626' }} />
+          <ShieldAlert className="h-5 w-5" style={{ color: 'var(--qayed-erreur)' }} />
         </div>
         <div>
-          <p className="text-sm font-bold" style={{ color: '#7F1D1D' }}>{t('hotelSecurity.securityAlert')}</p>
+          <p className="text-sm font-bold" style={{ color: 'var(--qayed-erreur-texte)' }}>{t('hotelSecurity.securityAlert')}</p>
           <div className="flex flex-col gap-0.5 mt-1">
             {hit.check_in_reference && (
               <p className="text-xs text-gray-600">
@@ -146,7 +146,7 @@ const HitCard = ({
         onClick={onAcknowledge}
         loading={loading}
         className="shrink-0"
-        style={{ background: '#DC2626', color: '#fff', border: 'none' } as React.CSSProperties}
+        style={{ background: 'var(--qayed-erreur)', color: '#fff', border: 'none' } as React.CSSProperties}
       >
         {t('hotelSecurity.acknowledged')}
       </Button>

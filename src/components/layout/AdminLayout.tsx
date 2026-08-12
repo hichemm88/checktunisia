@@ -118,7 +118,7 @@ const CommandPalette = ({ open, onClose }: { open: boolean; onClose: () => void 
           <Search className="h-4 w-4 text-gray-400 shrink-0" />
           <input
             ref={inputRef}
-            className="h-12 w-full bg-transparent text-sm outline-none"
+            className="h-12 w-full bg-transparent text-sm outline-none focus:ring-0"
             placeholder={t('adminLayout.palettePlaceholder')}
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -129,7 +129,7 @@ const CommandPalette = ({ open, onClose }: { open: boolean; onClose: () => void 
               if (e.key === 'Enter' && items[selected]) go(items[selected].to);
             }}
           />
-          <kbd className="hidden sm:block shrink-0 rounded border border-gray-200 px-1.5 py-0.5 text-[10px] text-gray-400">Esc</kbd>
+          <kbd className="hidden sm:block shrink-0 rounded border border-gray-200 px-1.5 py-0.5 text-xs text-gray-400">Esc</kbd>
         </div>
         <div className="max-h-72 overflow-y-auto py-1.5">
           {items.length === 0 && <p className="px-4 py-6 text-center text-sm text-gray-400">{t('common.noResults')}</p>}
@@ -220,7 +220,7 @@ const SidebarContent = ({ onNavigate, onLogout }: { onNavigate?: () => void; onL
         {navGroups.map((group, gi) => (
           <div key={group.title ?? `group-${gi}`} className={gi > 0 ? 'mt-4' : ''}>
             {group.title && (
-              <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-white/35">{group.title}</p>
+              <p className="px-3 pb-1.5 text-xs font-bold uppercase tracking-wider text-white/35">{group.title}</p>
             )}
             <div className="flex flex-col gap-0.5">
               {group.items.map(({ to, icon: Icon, label }) => (
@@ -318,7 +318,7 @@ export const AdminLayout = () => {
             <GlobalSearch />
             <button
               onClick={() => setPaletteOpen(true)}
-              className="hidden md:flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1 text-[11px] text-gray-400 hover:text-gray-600 hover:border-gray-300"
+              className="hidden md:flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-400 hover:text-gray-600 hover:border-gray-300"
               title={t('adminLayout.palettePlaceholder')}
             >
               <kbd>Ctrl</kbd>+<kbd>K</kbd>
@@ -331,7 +331,7 @@ export const AdminLayout = () => {
               title={t('adminLayout.myProfile')}
               className="flex items-center gap-2 rounded-xl px-2 py-1 text-sm text-gray-500 hover:bg-warm-100 hover:text-gray-800 transition-colors"
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold" style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}>
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}>
                 {[user?.first_name?.[0], user?.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'}
               </span>
               <span className="hidden sm:block whitespace-nowrap">{user?.first_name} {user?.last_name}</span>

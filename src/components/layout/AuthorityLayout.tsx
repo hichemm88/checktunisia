@@ -72,7 +72,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
                 {profile?.org_name ?? 'Qayed'}
               </span>
               {isPolice && profile?.governorate && (
-                <span className="flex items-center gap-1 text-[10px] text-white/50">
+                <span className="flex items-center gap-1 text-xs text-white/50">
                   <MapPin className="h-2.5 w-2.5" /> {profile.governorate}
                 </span>
               )}
@@ -81,7 +81,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
             {/* Role badge */}
             {isMinistry && (
               <span
-                className="hidden sm:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                className="hidden sm:inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide"
                 style={{ background: 'var(--qayed-cachet-sombre)22', color: 'var(--qayed-cachet-sombre)', border: '1px solid var(--qayed-cachet-sombre)55' }}
               >
                 {t('authorityLayout.ministry')}
@@ -89,7 +89,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
             )}
             {isPolice && (
               <span
-                className="hidden sm:inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                className="hidden sm:inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide"
                 style={{ background: 'var(--qayed-cachet-sombre)22', color: 'var(--qayed-cachet-sombre)', border: '1px solid var(--qayed-cachet-sombre)55' }}
               >
                 {t('authorityLayout.police')}
@@ -105,7 +105,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
                 {user?.first_name} {user?.last_name}
               </span>
               {profile?.rank && (
-                <span className="text-[10px] text-white/40">{profile.rank}</span>
+                <span className="text-xs text-white/40">{profile.rank}</span>
               )}
             </div>
 

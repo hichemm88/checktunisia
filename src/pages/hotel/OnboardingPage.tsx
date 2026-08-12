@@ -207,7 +207,7 @@ export const OnboardingPage = () => {
 
   if (statusLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#F6F5F1' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--qayed-papier)' }}>
         <div className="text-sm text-gray-400">{t('common.loading')}</div>
       </div>
     );
@@ -216,13 +216,13 @@ export const OnboardingPage = () => {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-10" style={{ background: '#F6F5F1' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-10" style={{ background: 'var(--qayed-papier)' }}>
       {/* Logo */}
       <div className="flex items-center gap-2 mb-8">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: '#5346A8' }}>
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: 'var(--qayed-cachet)' }}>
           <ShieldCheck className="h-5 w-5 text-white" />
         </div>
-        <span className="font-bold text-lg" style={{ color: '#5346A8' }}>Qayed</span>
+        <span className="font-bold text-lg" style={{ color: 'var(--qayed-cachet)' }}>Qayed</span>
       </div>
 
       {/* Step indicator */}
@@ -232,7 +232,7 @@ export const OnboardingPage = () => {
             <div className="flex items-center gap-1.5">
               <div
                 className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all"
-                style={{ background: i <= step ? '#5346A8' : '#DDD9CF', color: i <= step ? '#fff' : '#9ca3af' }}
+                style={{ background: i <= step ? 'var(--qayed-cachet)' : 'var(--qayed-ligne)', color: i <= step ? '#fff' : 'var(--qayed-fiche-faible)' }}
               >
                 {i < step ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
               </div>
@@ -264,7 +264,7 @@ export const OnboardingPage = () => {
                 {hasProperty ? t('onboarding.welcomeBodyExisting') : t('onboarding.welcomeBodyNew')}
               </p>
             </div>
-            <div className="w-full flex flex-col gap-2 text-start p-4 rounded-xl" style={{ background: '#F6F5F1' }}>
+            <div className="w-full flex flex-col gap-2 text-start p-4 rounded-xl" style={{ background: 'var(--qayed-papier)' }}>
               {(hasProperty
                 ? [t('onboarding.checklistAddRooms'), t('onboarding.checklistScanPassport'), t('onboarding.checklistManageCheckins')]
                 : [t('onboarding.checklistCreateProperty'), t('onboarding.checklistAddRooms'), t('onboarding.checklistManageCheckins')]
@@ -272,7 +272,7 @@ export const OnboardingPage = () => {
                 <div key={item} className="flex items-center gap-3 text-sm">
                   <div
                     className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
-                    style={{ background: '#5346A8' }}
+                    style={{ background: 'var(--qayed-cachet)' }}
                   >
                     {i + 1}
                   </div>
@@ -350,7 +350,7 @@ export const OnboardingPage = () => {
               error={propErrors['address.line1']}
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 label={t('onboarding.cityRequired')}
                 placeholder={t('onboarding.cityPlaceholder')}
@@ -400,7 +400,7 @@ export const OnboardingPage = () => {
 
             <div className="flex flex-col gap-3 max-h-72 overflow-y-auto pe-1">
               {rooms.map((room, i) => (
-                <div key={i} className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F6F5F1' }}>
+                <div key={i} className="rounded-xl p-3 flex flex-col gap-2" style={{ background: 'var(--qayed-papier)' }}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold text-gray-500">{t('onboarding.unitLabel', { number: i + 1 })}</span>
                     {rooms.length > 1 && (
@@ -409,7 +409,7 @@ export const OnboardingPage = () => {
                       </button>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Input
                       label={t('onboarding.numberOrName')}
                       value={room.room_number}
@@ -421,7 +421,7 @@ export const OnboardingPage = () => {
                       onChange={(e) => updateRoom(i, 'floor', e.target.value)}
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
                         {t('onboarding.type')}
@@ -450,7 +450,7 @@ export const OnboardingPage = () => {
             <button
               onClick={addRoom}
               className="flex items-center gap-2 text-sm font-semibold"
-              style={{ color: '#5346A8' }}
+              style={{ color: 'var(--qayed-cachet)' }}
             >
               <Plus className="h-4 w-4" /> {t('onboarding.addUnit')}
             </button>

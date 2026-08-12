@@ -11,9 +11,9 @@ import { type AuthoritySecurityAlert, type WatchlistSeverity, type SecurityAlert
 const useSeverityConfig = () => {
   const { t } = useTranslation();
   const map: Record<WatchlistSeverity, { label: string; color: string; bg: string }> = {
-    critique: { label: t('authorityWatchlist.severityCriticalShort'), color: '#991B1B', bg: '#FEF2F2' },
-    eleve:    { label: t('authorityWatchlist.severityHighShort'),     color: '#8A6206', bg: '#FBF0D7' },
-    moyen:    { label: t('authorityWatchlist.severityMedium'),        color: '#10222E', bg: '#EEEBFA' },
+    critique: { label: t('authorityWatchlist.severityCriticalShort'), color: 'var(--qayed-erreur-texte)', bg: 'var(--qayed-erreur-fond)' },
+    eleve:    { label: t('authorityWatchlist.severityHighShort'),     color: 'var(--qayed-vigilance-texte)', bg: 'var(--qayed-vigilance-fond)' },
+    moyen:    { label: t('authorityWatchlist.severityMedium'),        color: 'var(--qayed-encre)', bg: 'var(--qayed-cachet-dilue)' },
   };
   return (s: WatchlistSeverity | null) => map[s ?? 'moyen'];
 };
@@ -21,9 +21,9 @@ const useSeverityConfig = () => {
 const useStatusConfig = () => {
   const { t } = useTranslation();
   const map: Record<SecurityAlertStatus, { label: string; color: string; bg: string }> = {
-    new:          { label: t('authoritySecurityAlerts.statusNew'),  color: '#991B1B', bg: '#FEF2F2' },
-    seen:         { label: t('authoritySecurityAlerts.statusSeen'), color: '#8A6206', bg: '#FBF0D7' },
-    acknowledged: { label: t('authoritySecurityAlerts.statusAcknowledged'), color: '#137453', bg: '#E4F5EC' },
+    new:          { label: t('authoritySecurityAlerts.statusNew'),  color: 'var(--qayed-erreur-texte)', bg: 'var(--qayed-erreur-fond)' },
+    seen:         { label: t('authoritySecurityAlerts.statusSeen'), color: 'var(--qayed-vigilance-texte)', bg: 'var(--qayed-vigilance-fond)' },
+    acknowledged: { label: t('authoritySecurityAlerts.statusAcknowledged'), color: 'var(--qayed-conforme-texte)', bg: 'var(--qayed-conforme-fond)' },
   };
   return (s: SecurityAlertStatus) => map[s];
 };
@@ -78,19 +78,19 @@ const AlertRow = ({ alert }: { alert: AuthoritySecurityAlert }) => {
   return (
     <div
       className="rounded-xl bg-white shadow-sm border overflow-hidden"
-      style={{ borderColor: '#E5E7EB', borderLeftWidth: 4, borderLeftColor: sev.color }}
+      style={{ borderColor: 'var(--qayed-gris-200)', borderLeftWidth: 4, borderLeftColor: sev.color }}
     >
       <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start">
         {/* Severity + status chips */}
         <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-start">
           <span
-            className="rounded-md px-2 py-0.5 text-[10px] font-black tracking-widest uppercase"
+            className="rounded-md px-2 py-0.5 text-xs font-black tracking-widest uppercase"
             style={{ color: sev.color, background: sev.bg }}
           >
             {sev.label}
           </span>
           <span
-            className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+            className="rounded-full px-2 py-0.5 text-xs font-semibold"
             style={{ color: st.color, background: st.bg }}
           >
             {st.label}
@@ -102,7 +102,7 @@ const AlertRow = ({ alert }: { alert: AuthoritySecurityAlert }) => {
           <div className="flex items-baseline gap-2 flex-wrap">
             <span className="text-sm font-bold text-gray-900">{fullName}</span>
             {alert.guest.nationality_code && (
-              <span className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase bg-gray-100 px-1.5 py-0.5 rounded">
+              <span className="text-xs font-semibold tracking-widest text-gray-400 uppercase bg-gray-100 px-1.5 py-0.5 rounded">
                 {alert.guest.nationality_code}
               </span>
             )}
@@ -139,7 +139,7 @@ const AlertRow = ({ alert }: { alert: AuthoritySecurityAlert }) => {
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[11px] text-gray-400">
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1 text-xs text-gray-400">
             {alert.check_in_reference && <span className="font-mono">{alert.check_in_reference}</span>}
             <span>· {fmtDateTime(alert.occurred_at)}</span>
             {alert.organization_name && <span>· {alert.organization_name}</span>}
@@ -151,7 +151,7 @@ const AlertRow = ({ alert }: { alert: AuthoritySecurityAlert }) => {
           <button
             onClick={openProfile}
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
-            style={{ background: '#EEEBFA', color: '#5346A8' }}
+            style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
           >
             <ExternalLink className="h-3.5 w-3.5" /> {t('authoritySecurityAlerts.viewProfile')}
           </button>
@@ -160,7 +160,7 @@ const AlertRow = ({ alert }: { alert: AuthoritySecurityAlert }) => {
               onClick={() => ackMutation.mutate()}
               disabled={ackMutation.isPending}
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-colors disabled:opacity-50"
-              style={{ background: '#137453' }}
+              style={{ background: 'var(--qayed-conforme-texte)' }}
             >
               <Check className="h-3.5 w-3.5" /> {t('authoritySecurityAlerts.acknowledge')}
             </button>
@@ -198,15 +198,15 @@ export const SecurityAlertsSection = () => {
   if (isLoading || alerts.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border p-4" style={{ borderColor: '#FECACA', background: '#FFF7F7' }}>
+    <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--qayed-erreur)', background: 'var(--qayed-erreur-fond)' }}>
       <div className="flex items-center gap-2 mb-3">
-        <ShieldAlert className="h-4 w-4" style={{ color: '#991B1B' }} />
-        <h3 className="text-sm font-bold" style={{ color: '#991B1B' }}>
+        <ShieldAlert className="h-4 w-4" style={{ color: 'var(--qayed-erreur-texte)' }} />
+        <h3 className="text-sm font-bold" style={{ color: 'var(--qayed-erreur-texte)' }}>
           {t('authoritySecurityAlerts.activeTitle')}
         </h3>
         <span
-          className="rounded-full px-2 py-0.5 text-[11px] font-bold text-white"
-          style={{ background: '#DC2626' }}
+          className="rounded-full px-2 py-0.5 text-xs font-bold text-white"
+          style={{ background: 'var(--qayed-erreur)' }}
         >
           {data?.meta.active_count ?? alerts.length}
         </span>

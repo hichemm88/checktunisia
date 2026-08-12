@@ -171,7 +171,7 @@ export const HistoryDetailPage = () => {
               <div key={label} className="flex flex-col gap-1 rounded-xl p-2.5" style={{ background: 'rgba(255,255,255,0.1)' }}>
                 <div className="flex items-center gap-1">
                   <Icon className="h-3 w-3 text-blue-300" />
-                  <span className="text-[10px] text-blue-300 font-semibold uppercase tracking-widest">{label}</span>
+                  <span className="text-xs text-blue-300 font-semibold uppercase tracking-widest">{label}</span>
                 </div>
                 <span className="text-sm font-bold text-white">{val}</span>
               </div>
@@ -184,9 +184,9 @@ export const HistoryDetailPage = () => {
 
           {/* Flag séjour : un document expirait déjà à l'arrivée (même flag backend que le mobile) */}
           {ci.document_expired && (
-            <div className="flex items-center gap-2 rounded-xl px-3 py-2.5" style={{ background: '#FBF0D7', border: '1px solid #E3A008' }}>
-              <FileText className="h-4 w-4 shrink-0" style={{ color: '#8A6206' }} />
-              <p className="text-xs font-semibold" style={{ color: '#8A6206' }}>{t('hotelHistory.docExpired')}</p>
+            <div className="flex items-center gap-2 rounded-xl px-3 py-2.5" style={{ background: 'var(--qayed-vigilance-fond)', border: '1px solid var(--qayed-vigilance)' }}>
+              <FileText className="h-4 w-4 shrink-0" style={{ color: 'var(--qayed-vigilance-texte)' }} />
+              <p className="text-xs font-semibold" style={{ color: 'var(--qayed-vigilance-texte)' }}>{t('hotelHistory.docExpired')}</p>
             </div>
           )}
 
@@ -198,7 +198,7 @@ export const HistoryDetailPage = () => {
                 <button
                   onClick={() => setShowEditModal(true)}
                   className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-colors"
-                  style={{ background: '#EEEBFA', color: '#5346A8' }}
+                  style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
                 >
                   <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
                 </button>
@@ -242,7 +242,7 @@ export const HistoryDetailPage = () => {
                   <div className="relative shrink-0">
                     <div
                       className="h-11 w-11 rounded-xl flex items-center justify-center text-sm font-bold"
-                      style={{ background: g.is_primary ? '#5346A8' : '#EEEBFA', color: g.is_primary ? '#fff' : '#5346A8' }}
+                      style={{ background: g.is_primary ? 'var(--qayed-cachet)' : 'var(--qayed-cachet-dilue)', color: g.is_primary ? '#fff' : 'var(--qayed-cachet)' }}
                     >
                       {gInitials}
                     </div>
@@ -253,6 +253,9 @@ export const HistoryDetailPage = () => {
                         width={16}
                         className="absolute -bottom-1 -end-1 rounded-sm shadow-sm"
                         style={{ border: '1px solid rgba(0,0,0,0.1)' }}
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
                       />
                     )}
                   </div>
@@ -261,8 +264,8 @@ export const HistoryDetailPage = () => {
                       <span className="text-sm font-bold text-gray-900">{g.first_name} {g.last_name}</span>
                       {g.is_primary && (
                         <span
-                          className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
-                          style={{ background: '#EEEBFA', color: '#5346A8' }}
+                          className="text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
+                          style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
                         >
                           {t('hotelHistoryDetail.primary')}
                         </span>
@@ -278,7 +281,7 @@ export const HistoryDetailPage = () => {
                           {g.document.type} <span className="font-mono">{g.document.document_number}</span>
                           {g.document.expiry_date && ` · ${t('hotelHistoryDetail.expires')} ${fmtDate(g.document.expiry_date, locale)}`}
                           {g.document.expiry_date && g.document.expiry_date < ci.check_in_date && (
-                            <span className="ms-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold" style={{ background: '#FBF0D7', color: '#8A6206' }}>
+                            <span className="ms-1.5 rounded-full px-1.5 py-0.5 text-xs font-bold" style={{ background: 'var(--qayed-vigilance-fond)', color: 'var(--qayed-vigilance-texte)' }}>
                               {t('hotelHistoryDetail.expiredTag')}
                             </span>
                           )}
@@ -293,7 +296,7 @@ export const HistoryDetailPage = () => {
                       <button
                         onClick={() => setEditingGuestId(g.id)}
                         className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
-                        style={{ background: '#EEEBFA', color: '#5346A8' }}
+                        style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
                         aria-label={t('common.edit')}
                       >
                         <Pencil className="h-3.5 w-3.5" />
@@ -304,7 +307,7 @@ export const HistoryDetailPage = () => {
                         }}
                         disabled={removeGuestMutation.isPending && removeGuestMutation.variables === g.id}
                         className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors disabled:opacity-50"
-                        style={{ background: '#FEE2E2', color: '#DC2626' }}
+                        style={{ background: 'var(--qayed-erreur-fond)', color: 'var(--qayed-erreur)' }}
                         aria-label={t('common.delete')}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -332,24 +335,24 @@ export const HistoryDetailPage = () => {
                   onClick={() => setAddingSlot(slot.index)}
                   className="flex items-center gap-3 rounded-2xl p-3.5 text-start transition-all"
                   style={{
-                    border: `2px dashed ${slot.isRequired ? '#fca5a5' : '#EEEBFA'}`,
-                    background: slot.isRequired ? '#FFF5F5' : '#F6F5F1',
+                    border: `2px dashed ${slot.isRequired ? 'var(--qayed-erreur)' : 'var(--qayed-cachet-dilue)'}`,
+                    background: slot.isRequired ? 'var(--qayed-erreur-fond)' : 'var(--qayed-papier)',
                   }}
                 >
                   <div
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
                     style={{
-                      background: slot.isRequired ? '#fee2e2' : '#EEEBFA',
-                      color: slot.isRequired ? '#ef4444' : '#5346A8',
+                      background: slot.isRequired ? 'var(--qayed-erreur-fond)' : 'var(--qayed-cachet-dilue)',
+                      color: slot.isRequired ? 'var(--qayed-erreur)' : 'var(--qayed-cachet)',
                     }}
                   >
                     <UserPlus className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: slot.isRequired ? '#b91c1c' : '#374151' }}>
+                    <p className="text-sm font-semibold" style={{ color: slot.isRequired ? 'var(--qayed-erreur-texte)' : 'var(--qayed-gris-700)' }}>
                       {slot.labelBase}
                     </p>
-                    <p className="text-xs" style={{ color: slot.isRequired ? '#f87171' : '#9CA3AF' }}>
+                    <p className="text-xs" style={{ color: slot.isRequired ? 'var(--qayed-erreur)' : 'var(--qayed-fiche-faible)' }}>
                       {slot.isRequired ? t('checkinWizard.documentRequiredHint') : t('checkinWizard.documentOptionalHint')}
                     </p>
                   </div>
@@ -381,19 +384,19 @@ export const HistoryDetailPage = () => {
                 <button
                   onClick={() => setAddingExtra(true)}
                   className="flex items-center gap-3 rounded-2xl p-3.5 text-start transition-all"
-                  style={{ border: '2px dashed #EEEBFA', background: '#F6F5F1' }}
+                  style={{ border: '2px dashed var(--qayed-cachet-dilue)', background: 'var(--qayed-papier)' }}
                 >
                   <div
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                    style={{ background: '#EEEBFA', color: '#5346A8' }}
+                    style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
                   >
                     <UserPlus className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: '#374151' }}>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--qayed-gris-700)' }}>
                       {t('checkinWizard.addExtraGuest')}
                     </p>
-                    <p className="text-xs" style={{ color: '#9CA3AF' }}>
+                    <p className="text-xs" style={{ color: 'var(--qayed-fiche-faible)' }}>
                       {t('checkinWizard.extraGuestHint')}
                     </p>
                   </div>

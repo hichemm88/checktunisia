@@ -139,7 +139,7 @@ export const RegisterPage = () => {
             <div className="flex items-center gap-1">
               <div
                 className="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-all"
-                style={{ background: i <= step ? '#5346A8' : '#DDD9CF', color: i <= step ? '#fff' : '#9ca3af' }}
+                style={{ background: i <= step ? 'var(--qayed-cachet)' : 'var(--qayed-ligne)', color: i <= step ? '#fff' : 'var(--qayed-fiche-faible)' }}
               >
                 {i < step ? <CheckCircle2 className="h-3.5 w-3.5" /> : i + 1}
               </div>
@@ -173,13 +173,13 @@ export const RegisterPage = () => {
                   onClick={() => set('entity_type', val)}
                   className="flex flex-col items-center gap-3 rounded-2xl p-5 text-center transition-all"
                   style={{
-                    border: form.entity_type === val ? '2px solid #5346A8' : '1.5px solid #DDD9CF',
+                    border: form.entity_type === val ? '2px solid var(--qayed-cachet)' : '1.5px solid var(--qayed-ligne)',
                     background: form.entity_type === val ? 'rgba(83,70,168,0.05)' : '#fff',
                   }}
                 >
                   <div
                     className="flex h-12 w-12 items-center justify-center rounded-xl"
-                    style={{ background: form.entity_type === val ? '#5346A8' : '#F6F5F1' }}
+                    style={{ background: form.entity_type === val ? 'var(--qayed-cachet)' : 'var(--qayed-papier)' }}
                   >
                     <Icon className={`h-6 w-6 ${form.entity_type === val ? 'text-white' : 'text-gray-400'}`} />
                   </div>
@@ -187,7 +187,7 @@ export const RegisterPage = () => {
                     <p className="font-bold text-gray-900">{label}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
                   </div>
-                  {form.entity_type === val && <CheckCircle2 className="h-4 w-4" style={{ color: '#5346A8' }} />}
+                  {form.entity_type === val && <CheckCircle2 className="h-4 w-4" style={{ color: 'var(--qayed-cachet)' }} />}
                 </button>
               ))}
             </div>
@@ -215,7 +215,7 @@ export const RegisterPage = () => {
               value={form.org_phone ?? ''}
               onChange={(e) => set('org_phone', e.target.value)}
             />
-            <div className="rounded-xl p-4 text-sm text-gray-500" style={{ background: '#F6F5F1' }}>
+            <div className="rounded-xl p-4 text-sm text-gray-500" style={{ background: 'var(--qayed-papier)' }}>
               {t('register.orgHint')}
             </div>
           </div>
@@ -224,7 +224,7 @@ export const RegisterPage = () => {
         {/* ── Étape 2 : Compte admin ── */}
         {step === 2 && (
           <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 label={t('register.firstNameLabel')}
                 value={form.first_name}
@@ -276,7 +276,7 @@ export const RegisterPage = () => {
             </p>
 
             {/* Cycle de facturation */}
-            <div className="flex items-center gap-2 rounded-xl p-1 w-fit mx-auto" style={{ background: '#F6F5F1' }}>
+            <div className="flex items-center gap-2 rounded-xl p-1 w-fit mx-auto" style={{ background: 'var(--qayed-papier)' }}>
               {(['monthly', 'yearly'] as const).map((cycle) => (
                 <button
                   key={cycle}
@@ -284,12 +284,12 @@ export const RegisterPage = () => {
                   onClick={() => set('billing_cycle', cycle)}
                   className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
                   style={form.billing_cycle === cycle
-                    ? { background: '#fff', color: '#5346A8', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
-                    : { color: '#9ca3af' }}
+                    ? { background: '#fff', color: 'var(--qayed-cachet)', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
+                    : { color: 'var(--qayed-fiche-faible)' }}
                 >
                   {t(cycle === 'monthly' ? 'register.billingMonthly' : 'register.billingYearly')}
                   {cycle === 'yearly' && (
-                    <span className="ms-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(22,163,74,0.1)', color: '#16a34a' }}>
+                    <span className="ms-2 text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--qayed-conforme-fond)', color: 'var(--qayed-conforme-texte)' }}>
                       {t('register.oneMonthFree')}
                     </span>
                   )}
@@ -304,13 +304,13 @@ export const RegisterPage = () => {
                 onClick={() => set('plan_slug', p.slug)}
                 className="flex items-start gap-4 rounded-2xl p-4 text-start transition-all"
                 style={{
-                  border: form.plan_slug === p.slug ? '2px solid #5346A8' : '1.5px solid #DDD9CF',
+                  border: form.plan_slug === p.slug ? '2px solid var(--qayed-cachet)' : '1.5px solid var(--qayed-ligne)',
                   background: form.plan_slug === p.slug ? 'rgba(83,70,168,0.05)' : '#fff',
                 }}
               >
                 <div
                   className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0"
-                  style={{ background: form.plan_slug === p.slug ? '#5346A8' : '#F6F5F1' }}
+                  style={{ background: form.plan_slug === p.slug ? 'var(--qayed-cachet)' : 'var(--qayed-papier)' }}
                 >
                   <Building2 className={`h-5 w-5 ${form.plan_slug === p.slug ? 'text-white' : 'text-gray-400'}`} />
                 </div>
@@ -319,15 +319,15 @@ export const RegisterPage = () => {
                     <span className="font-bold text-gray-900">{p.name}</span>
                     {form.billing_cycle === 'yearly' ? (
                       <span className="text-end">
-                        <span className="block text-lg font-extrabold" style={{ color: '#5346A8' }}>
+                        <span className="block text-lg font-extrabold" style={{ color: 'var(--qayed-cachet)' }}>
                           {formatTNDAmount(effectiveYearlyPrice(p))} TND<span className="text-xs font-normal text-gray-400">/{t('register.perYear')}</span>
                         </span>
-                        <span className="block text-[11px] text-gray-400 line-through">
+                        <span className="block text-xs text-gray-400 line-through">
                           {formatTNDAmount(Number(p.price_monthly) * 12)} TND
                         </span>
                       </span>
                     ) : (
-                      <span className="text-lg font-extrabold" style={{ color: '#5346A8' }}>
+                      <span className="text-lg font-extrabold" style={{ color: 'var(--qayed-cachet)' }}>
                         {p.price_monthly} TND<span className="text-xs font-normal text-gray-400">/{t('register.perMonth')}</span>
                       </span>
                     )}
@@ -339,7 +339,7 @@ export const RegisterPage = () => {
                   </p>
                 </div>
                 {form.plan_slug === p.slug && (
-                  <CheckCircle2 className="h-5 w-5 flex-shrink-0" style={{ color: '#5346A8' }} />
+                  <CheckCircle2 className="h-5 w-5 flex-shrink-0" style={{ color: 'var(--qayed-cachet)' }} />
                 )}
               </button>
             ))}
@@ -372,7 +372,7 @@ export const RegisterPage = () => {
 
         <p className="mt-5 text-center text-xs text-gray-400">
           {t('register.alreadyHaveAccount')}{' '}
-          <Link to="/login" className="font-semibold" style={{ color: '#5346A8' }}>{t('auth.loginButton')}</Link>
+          <Link to="/login" className="font-semibold" style={{ color: 'var(--qayed-cachet)' }}>{t('auth.loginButton')}</Link>
         </p>
       </div>
     </div>

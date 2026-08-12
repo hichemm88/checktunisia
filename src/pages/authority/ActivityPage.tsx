@@ -16,10 +16,10 @@ const actionIcon = (action: string) => {
 };
 
 const actionColor = (action: string): string => {
-  if (action.includes('security_alert')) return '#DC2626';
-  if (action.includes('search'))       return '#5346A8';
-  if (action.includes('hotel_viewed')) return '#5346A8';
-  return '#8B7FE0';
+  if (action.includes('security_alert')) return 'var(--qayed-erreur)';
+  if (action.includes('search'))       return 'var(--qayed-cachet)';
+  if (action.includes('hotel_viewed')) return 'var(--qayed-cachet)';
+  return 'var(--qayed-cachet-sombre)';
 };
 
 const LogRow = ({ log }: { log: AuthorityActivity }) => {
@@ -67,7 +67,7 @@ const LogRow = ({ log }: { log: AuthorityActivity }) => {
           )}
           {typeof resultCount === 'number' && (
             <span
-              className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+              className="rounded-full px-2 py-0.5 text-xs font-semibold"
               style={{ background: `${color}15`, color }}
             >
               {t('authorityActivity.resultCount', { count: resultCount })}
@@ -83,8 +83,8 @@ const LogRow = ({ log }: { log: AuthorityActivity }) => {
               .map(([k, v]) => (
                 <span
                   key={k}
-                  className="rounded-md px-2 py-0.5 text-[10px] font-medium text-gray-600"
-                  style={{ background: '#F3F4F6' }}
+                  className="rounded-md px-2 py-0.5 text-xs font-medium text-gray-600"
+                  style={{ background: 'var(--qayed-gris-100)' }}
                 >
                   {k.replace(/_/g, ' ')}: <span className="font-semibold text-gray-800">{v}</span>
                 </span>
@@ -125,9 +125,9 @@ export const ActivityPage = () => {
         {!isLoading && isNational !== undefined && (
           <div
             className="flex items-center gap-3 rounded-xl px-4 py-3"
-            style={{ background: '#EEEBFA', border: '1px solid #EEEBFA' }}
+            style={{ background: 'var(--qayed-cachet-dilue)', border: '1px solid var(--qayed-cachet-dilue)' }}
           >
-            <Activity className="h-4 w-4 shrink-0" style={{ color: '#5346A8' }} />
+            <Activity className="h-4 w-4 shrink-0" style={{ color: 'var(--qayed-cachet)' }} />
             <p className="text-sm text-gray-700">
               {isNational
                 ? t('authorityActivity.nationalScopeHint')

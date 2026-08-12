@@ -196,7 +196,7 @@ export const MOCKUPS: Record<string, string> = {
         <p style="font-size:16px;color:var(--texte-sec);line-height:1.65;margin-bottom:24px">À tout moment, vous pouvez consulter l'historique, imprimer la fiche ou enregistrer le départ.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <span class="badge b-ok"><span class="dot"></span>Actif</span>
-          <span class="badge" style="background:#F3F4F6;color:#374151"><span class="dot" style="background:#9CA3AF"></span>Terminé</span>
+          <span class="badge" style="background:var(--qayed-gris-100);color:var(--qayed-gris-700)"><span class="dot" style="background:var(--qayed-fiche-faible)"></span>Terminé</span>
         </div>
       </div>
       <div>
@@ -301,13 +301,13 @@ export const MOCKUPS: Record<string, string> = {
             <div style="display:flex;flex-direction:column;gap:8px">
               <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:var(--r-sm)">
                 <div style="display:flex;align-items:center;gap:10px">
-                  <div style="width:8px;height:8px;border-radius:50%;background:#EF4444;flex-shrink:0"></div>
+                  <div style="width:8px;height:8px;border-radius:50%;background:var(--qayed-erreur);flex-shrink:0"></div>
                   <div>
                     <div style="font-size:12px;font-weight:600;color:var(--papier)">Alerte Interpol — Red Notice</div>
                     <div style="font-size:11px;color:rgba(246,245,241,.4);font-family:var(--font-m)">Correspondance passeport détectée</div>
                   </div>
                 </div>
-                <div style="font-size:10px;font-weight:700;color:#F87171;font-family:var(--font-m);text-transform:uppercase;letter-spacing:.08em">Critique</div>
+                <div style="font-size:10px;font-weight:700;color:var(--qayed-erreur);font-family:var(--font-m);text-transform:uppercase;letter-spacing:.08em">Critique</div>
               </div>
               <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(232,184,75,.06);border:1px solid rgba(232,184,75,.18);border-radius:var(--r-sm)">
                 <div style="display:flex;align-items:center;gap:10px">

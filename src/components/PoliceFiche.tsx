@@ -57,13 +57,13 @@ const TYPE_LABEL_KEYS: Record<string, string> = {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const C = '#5346A8'; // bleu principal
+const C = 'var(--qayed-cachet)'; // bleu principal
 
 const cell = (extra?: CSSProperties): CSSProperties => ({
   padding: '3px 7px',
   fontSize: '8pt',
-  borderBottom: '1px solid #e5e7eb',
-  borderRight: '1px solid #e5e7eb',
+  borderBottom: '1px solid var(--qayed-gris-200)',
+  borderRight: '1px solid var(--qayed-gris-200)',
   verticalAlign: 'middle',
   ...extra,
 });
@@ -72,10 +72,10 @@ const lbl = (extra?: CSSProperties): CSSProperties => ({
   ...cell(),
   fontSize: '7.5pt',
   fontWeight: 'bold',
-  color: '#6b7280',
+  color: 'var(--qayed-fiche)',
   textTransform: 'uppercase' as const,
   letterSpacing: '0.4px',
-  background: '#f9fafb',
+  background: 'var(--qayed-gris-50)',
   whiteSpace: 'nowrap' as const,
   ...extra,
 });
@@ -85,10 +85,10 @@ const th = (extra?: CSSProperties): CSSProperties => ({
   fontSize: '7.5pt',
   fontWeight: 'bold',
   textAlign: 'left' as const,
-  background: '#f0f4fb',
+  background: 'var(--qayed-cachet-dilue)',
   color: C,
   borderBottom: `1.5px solid ${C}`,
-  borderRight: '1px solid #dde4f0',
+  borderRight: '1px solid var(--qayed-gris-200)',
   whiteSpace: 'nowrap' as const,
   ...extra,
 });
@@ -96,8 +96,8 @@ const th = (extra?: CSSProperties): CSSProperties => ({
 const td = (extra?: CSSProperties): CSSProperties => ({
   padding: '3px 7px',
   fontSize: '8pt',
-  borderBottom: '1px solid #f0f0f0',
-  borderRight: '1px solid #f0f0f0',
+  borderBottom: '1px solid var(--qayed-gris-100)',
+  borderRight: '1px solid var(--qayed-gris-100)',
   verticalAlign: 'middle' as const,
   ...extra,
 });
@@ -192,18 +192,18 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
                   {hotel.name}
                 </div>
                 {(typeLabel || stars) && (
-                  <div style={{ fontSize: '8pt', color: '#6b7280', marginTop: '1px' }}>
+                  <div style={{ fontSize: '8pt', color: 'var(--qayed-fiche)', marginTop: '1px' }}>
                     {typeLabel}{stars ? ` · ${stars}` : ''}
                   </div>
                 )}
                 {addr && (
-                  <div style={{ fontSize: '7.5pt', color: '#374151', marginTop: '2px' }}>{addr}</div>
+                  <div style={{ fontSize: '7.5pt', color: 'var(--qayed-gris-700)', marginTop: '2px' }}>{addr}</div>
                 )}
                 {contacts && (
-                  <div style={{ fontSize: '7.5pt', color: '#374151' }}>{contacts}</div>
+                  <div style={{ fontSize: '7.5pt', color: 'var(--qayed-gris-700)' }}>{contacts}</div>
                 )}
                 {hotel.registration_number && (
-                  <div style={{ fontSize: '7pt', color: '#9ca3af' }}>
+                  <div style={{ fontSize: '7pt', color: 'var(--qayed-fiche-faible)' }}>
                     {t('policeFiche.rcMatricule')} : {hotel.registration_number}
                   </div>
                 )}
@@ -212,20 +212,20 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
               <td style={{ textAlign: 'right', verticalAlign: 'top', paddingTop: '2px' }}>
                 {org ? (
                   <>
-                    <div style={{ fontSize: '7.5pt', color: '#6b7280', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>
+                    <div style={{ fontSize: '7.5pt', color: 'var(--qayed-fiche)', textTransform: 'uppercase' as const, letterSpacing: '0.5px' }}>
                       {org.entity_type === 'individual' ? t('policeFiche.individual') : t('policeFiche.company')}
                     </div>
                     <div style={{ fontSize: '10.5pt', fontWeight: '700', color: C, marginTop: '1px' }}>
                       {org.name}
                     </div>
                     {orgAddr && (
-                      <div style={{ fontSize: '7.5pt', color: '#374151', marginTop: '2px' }}>{orgAddr}</div>
+                      <div style={{ fontSize: '7.5pt', color: 'var(--qayed-gris-700)', marginTop: '2px' }}>{orgAddr}</div>
                     )}
                     {orgContacts && (
-                      <div style={{ fontSize: '7.5pt', color: '#374151' }}>{orgContacts}</div>
+                      <div style={{ fontSize: '7.5pt', color: 'var(--qayed-gris-700)' }}>{orgContacts}</div>
                     )}
                     {org.registration_number && (
-                      <div style={{ fontSize: '7pt', color: '#9ca3af' }}>
+                      <div style={{ fontSize: '7pt', color: 'var(--qayed-fiche-faible)' }}>
                         {org.entity_type === 'individual' ? t('policeFiche.cin') : t('policeFiche.rcMatricule')} : {org.registration_number}
                       </div>
                     )}
@@ -244,7 +244,7 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
                     QAYED
                   </div>
                 )}
-                <div style={{ fontSize: '7pt', color: '#9ca3af', marginTop: '4px' }}>{t('policeFiche.printedOn', { date: now })}</div>
+                <div style={{ fontSize: '7pt', color: 'var(--qayed-fiche-faible)', marginTop: '4px' }}>{t('policeFiche.printedOn', { date: now })}</div>
               </td>
             </tr>
           </tbody>
@@ -268,17 +268,17 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
 
         {/* ══ SÉJOUR ═════════════════════════════════════════════════ */}
         <table width="100%" cellPadding={0} cellSpacing={0}
-          style={{ border: '1px solid #e5e7eb', borderCollapse: 'collapse', marginBottom: '9px', borderRadius: '3px', overflow: 'hidden' }}>
+          style={{ border: '1px solid var(--qayed-gris-200)', borderCollapse: 'collapse', marginBottom: '9px', borderRadius: '3px', overflow: 'hidden' }}>
           <thead>
             <tr>
               <th colSpan={6} style={{
                 padding: '4px 8px',
-                background: '#f9fafb',
+                background: 'var(--qayed-gris-50)',
                 color: C,
                 fontSize: '7.5pt',
                 fontWeight: '700',
                 textAlign: 'left',
-                borderBottom: '1px solid #e5e7eb',
+                borderBottom: '1px solid var(--qayed-gris-200)',
                 letterSpacing: '1px',
                 textTransform: 'uppercase' as const,
               }}>
@@ -320,17 +320,17 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
 
         {/* ══ VOYAGEURS ══════════════════════════════════════════════ */}
         <table width="100%" cellPadding={0} cellSpacing={0}
-          style={{ border: '1px solid #e5e7eb', borderCollapse: 'collapse', marginBottom: '10px', borderRadius: '3px', overflow: 'hidden' }}>
+          style={{ border: '1px solid var(--qayed-gris-200)', borderCollapse: 'collapse', marginBottom: '10px', borderRadius: '3px', overflow: 'hidden' }}>
           <thead>
             <tr>
               <th colSpan={8} style={{
                 padding: '4px 8px',
-                background: '#f9fafb',
+                background: 'var(--qayed-gris-50)',
                 color: C,
                 fontSize: '7.5pt',
                 fontWeight: '700',
                 textAlign: 'left',
-                borderBottom: '1px solid #e5e7eb',
+                borderBottom: '1px solid var(--qayed-gris-200)',
                 letterSpacing: '1px',
                 textTransform: 'uppercase' as const,
               }}>
@@ -351,7 +351,7 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
           </thead>
           <tbody>
             {guests.length > 0 ? guests.map((g, i) => (
-              <tr key={g.id} style={{ background: i % 2 === 0 ? '#fff' : '#f9fafb' }}>
+              <tr key={g.id} style={{ background: i % 2 === 0 ? '#fff' : 'var(--qayed-gris-50)' }}>
                 <td style={td({ fontWeight: g.is_primary ? '700' : '400' })}>
                   {g.last_name.toUpperCase()} {g.first_name}
                   {g.is_primary && (
@@ -372,7 +372,7 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
               </tr>
             )) : (
               <tr>
-                <td colSpan={8} style={{ padding: '10px', textAlign: 'center', color: '#9ca3af', fontStyle: 'italic', fontSize: '8pt' }}>
+                <td colSpan={8} style={{ padding: '10px', textAlign: 'center', color: 'var(--qayed-fiche-faible)', fontStyle: 'italic', fontSize: '8pt' }}>
                   {t('policeFiche.noGuests')}
                 </td>
               </tr>
@@ -385,16 +385,16 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
           <tbody>
             <tr>
               <td style={{ width: '47%', verticalAlign: 'top' }}>
-                <div style={{ borderTop: `1px solid #d1d5db`, paddingTop: '4px' }}>
-                  <div style={{ fontSize: '7.5pt', color: '#6b7280', marginBottom: '22px' }}>
+                <div style={{ borderTop: `1px solid var(--qayed-gris-300)`, paddingTop: '4px' }}>
+                  <div style={{ fontSize: '7.5pt', color: 'var(--qayed-fiche)', marginBottom: '22px' }}>
                     {t('policeFiche.establishmentSignature')}
                   </div>
                 </div>
               </td>
               <td style={{ width: '6%' }} />
               <td style={{ width: '47%', verticalAlign: 'top' }}>
-                <div style={{ borderTop: `1px solid #d1d5db`, paddingTop: '4px' }}>
-                  <div style={{ fontSize: '7.5pt', color: '#6b7280', marginBottom: '22px' }}>
+                <div style={{ borderTop: `1px solid var(--qayed-gris-300)`, paddingTop: '4px' }}>
+                  <div style={{ fontSize: '7.5pt', color: 'var(--qayed-fiche)', marginBottom: '22px' }}>
                     {t('policeFiche.primaryGuestSignature')}
                   </div>
                 </div>
@@ -406,11 +406,11 @@ export const PoliceFiche = ({ id = 'police-fiche-root', checkIn: ci, hotel }: Pr
         {/* ══ PIED DE PAGE ═══════════════════════════════════════════ */}
         <div style={{
           marginTop: '5px',
-          borderTop: '1px solid #f3f4f6',
+          borderTop: '1px solid var(--qayed-gris-100)',
           paddingTop: '3px',
           textAlign: 'center',
           fontSize: '6.5pt',
-          color: '#d1d5db',
+          color: 'var(--qayed-gris-300)',
           letterSpacing: '0.5px',
         }}>
           Qayed · {hotel.name} · {ci.reference}

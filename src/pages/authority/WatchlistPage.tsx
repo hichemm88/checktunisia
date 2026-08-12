@@ -52,7 +52,7 @@ const AddEntryModal = ({ onClose, isMinistry }: { onClose: () => void; isMinistr
       <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
           <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-            <Shield className="h-4 w-4" style={{ color: '#5346A8' }} /> {t('authorityWatchlist.addPerson')}
+            <Shield className="h-4 w-4" style={{ color: 'var(--qayed-cachet)' }} /> {t('authorityWatchlist.addPerson')}
           </h2>
           <button onClick={onClose}><X className="h-5 w-5 text-gray-400" /></button>
         </div>
@@ -118,7 +118,7 @@ const AddEntryModal = ({ onClose, isMinistry }: { onClose: () => void; isMinistr
 
         <div className="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
           <Button variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button onClick={() => mutation.mutate()} loading={mutation.isPending} style={{ background: '#5346A8', color: '#fff' }}>
+          <Button onClick={() => mutation.mutate()} loading={mutation.isPending} style={{ background: 'var(--qayed-cachet)', color: '#fff' }}>
             {t('common.add')}
           </Button>
         </div>
@@ -163,7 +163,7 @@ const ImportModal = ({ onClose }: { onClose: () => void }) => {
         <div className="px-6 py-5 space-y-4">
           {!result ? (
             <>
-              <button onClick={downloadTemplate} className="flex items-center gap-2 text-sm underline" style={{ color: '#5346A8' }}>
+              <button onClick={downloadTemplate} className="flex items-center gap-2 text-sm underline" style={{ color: 'var(--qayed-cachet)' }}>
                 <Download className="h-4 w-4" /> {t('authorityWatchlist.downloadTemplate')}
               </button>
               <div className="rounded-xl border-2 border-dashed border-gray-200 p-6 text-center">
@@ -173,19 +173,19 @@ const ImportModal = ({ onClose }: { onClose: () => void }) => {
                 }
                 <input type="file" accept=".csv,.txt" className="hidden" id="csv-upload"
                   onChange={e => setFile(e.target.files?.[0] ?? null)} />
-                <label htmlFor="csv-upload" className="mt-3 inline-block cursor-pointer rounded-lg px-4 py-2 text-sm font-medium" style={{ background: '#EEEBFA', color: '#5346A8' }}>
+                <label htmlFor="csv-upload" className="mt-3 inline-block cursor-pointer rounded-lg px-4 py-2 text-sm font-medium" style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}>
                   {t('authorityWatchlist.chooseFile')}
                 </label>
               </div>
             </>
           ) : (
             <div className="space-y-3">
-              <div className="rounded-xl p-4" style={{ background: '#E4F5EC' }}>
+              <div className="rounded-xl p-4" style={{ background: 'var(--qayed-conforme-fond)' }}>
                 <p className="text-sm font-semibold text-green-800">{t('authorityWatchlist.recordsImported', { count: result.created })}</p>
                 {result.skipped > 0 && <p className="text-xs text-green-700 mt-1">{t('authorityWatchlist.linesSkipped', { count: result.skipped })}</p>}
               </div>
               {result.errors.length > 0 && (
-                <div className="rounded-xl p-4" style={{ background: '#FEF2F2' }}>
+                <div className="rounded-xl p-4" style={{ background: 'var(--qayed-erreur-fond)' }}>
                   <p className="text-xs font-semibold text-red-800 mb-1">{t('authorityWatchlist.errors')} :</p>
                   {result.errors.map((e, i) => <p key={i} className="text-xs text-red-700">{e}</p>)}
                 </div>
@@ -197,7 +197,7 @@ const ImportModal = ({ onClose }: { onClose: () => void }) => {
         <div className="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
           <Button variant="ghost" onClick={onClose}>{result ? t('common.close') : t('common.cancel')}</Button>
           {!result && (
-            <Button onClick={() => mutation.mutate()} loading={mutation.isPending} disabled={!file} style={{ background: '#5346A8', color: '#fff' }}>
+            <Button onClick={() => mutation.mutate()} loading={mutation.isPending} disabled={!file} style={{ background: 'var(--qayed-cachet)', color: '#fff' }}>
               {t('authorityWatchlist.import')}
             </Button>
           )}
@@ -212,9 +212,9 @@ export const WatchlistPage = () => {
   const { t, i18n } = useTranslation();
   const locale = i18n.language === 'ar' ? 'ar-TN' : i18n.language === 'en' ? 'en-GB' : 'fr-TN';
   const SEVERITY_CONFIG: Record<WatchlistSeverity, { label: string; color: string; bg: string; border: string }> = {
-    critique: { label: t('authorityWatchlist.severityCriticalShort'), color: '#991B1B', bg: '#FEF2F2', border: '#FECACA' },
-    eleve:    { label: t('authorityWatchlist.severityHighShort'),    color: '#8A6206', bg: '#FBF0D7', border: '#FBF0D7' },
-    moyen:    { label: t('authorityWatchlist.severityMedium'),    color: '#10222E', bg: '#EEEBFA', border: '#5346A8' },
+    critique: { label: t('authorityWatchlist.severityCriticalShort'), color: 'var(--qayed-erreur-texte)', bg: 'var(--qayed-erreur-fond)', border: 'var(--qayed-erreur)' },
+    eleve:    { label: t('authorityWatchlist.severityHighShort'),    color: 'var(--qayed-vigilance-texte)', bg: 'var(--qayed-vigilance-fond)', border: 'var(--qayed-vigilance-fond)' },
+    moyen:    { label: t('authorityWatchlist.severityMedium'),    color: 'var(--qayed-encre)', bg: 'var(--qayed-cachet-dilue)', border: 'var(--qayed-cachet)' },
   };
   const REASON_LABELS: Record<WatchlistReasonCode, string> = {
     MANDAT_ARRET: t('authorityWatchlist.reasonWarrant'),
@@ -270,7 +270,7 @@ export const WatchlistPage = () => {
             <Button variant="ghost" className="gap-2" onClick={() => setShowImport(true)}>
               <Upload className="h-4 w-4" /> {t('authorityWatchlist.importCsv')}
             </Button>
-            <Button className="gap-2" onClick={() => setShowAdd(true)} style={{ background: '#5346A8', color: '#fff' }}>
+            <Button className="gap-2" onClick={() => setShowAdd(true)} style={{ background: 'var(--qayed-cachet)', color: '#fff' }}>
               <Plus className="h-4 w-4" /> {t('common.add')}
             </Button>
           </div>
@@ -290,7 +290,7 @@ export const WatchlistPage = () => {
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-gray-600">{t('authorityWatchlist.degree')}</label>
-              <select className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none" value={severity} onChange={e => handleSeverity(e.target.value)}>
+              <select className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800" value={severity} onChange={e => handleSeverity(e.target.value)}>
                 <option value="">{t('common.all')}</option>
                 <option value="critique">{t('authoritySearch.severityCritical')}</option>
                 <option value="eleve">{t('authoritySearch.severityHigh')}</option>
@@ -322,13 +322,13 @@ export const WatchlistPage = () => {
                 <div
                   key={entry.id}
                   className="rounded-xl bg-white shadow-sm border overflow-hidden"
-                  style={{ borderColor: '#E5E7EB', borderLeftWidth: 4, borderLeftColor: cfg.color }}
+                  style={{ borderColor: 'var(--qayed-gris-200)', borderLeftWidth: 4, borderLeftColor: cfg.color }}
                 >
                   <div className="flex items-start gap-3 px-4 py-3">
 
                     {/* Severity chip */}
                     <span
-                      className="shrink-0 mt-0.5 rounded-md px-2 py-0.5 text-[10px] font-black tracking-widest uppercase"
+                      className="shrink-0 mt-0.5 rounded-md px-2 py-0.5 text-xs font-black tracking-widest uppercase"
                       style={{ color: cfg.color, background: cfg.bg }}
                     >
                       {cfg.label}
@@ -343,7 +343,7 @@ export const WatchlistPage = () => {
                           {entry.first_name && <span className="font-normal text-gray-600">, {entry.first_name}</span>}
                         </span>
                         {entry.nationality_code && (
-                          <span className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase bg-gray-100 px-1.5 py-0.5 rounded">
+                          <span className="text-xs font-semibold tracking-widest text-gray-400 uppercase bg-gray-100 px-1.5 py-0.5 rounded">
                             {entry.nationality_code}
                           </span>
                         )}
@@ -380,10 +380,10 @@ export const WatchlistPage = () => {
                     <div className="flex flex-col items-end gap-2 shrink-0">
                       {/* Source badge */}
                       <span
-                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
                         style={isGlobal
-                          ? { background: '#FEF2F2', color: '#991B1B' }
-                          : { background: '#F3F4F6', color: '#9CA3AF' }
+                          ? { background: 'var(--qayed-erreur-fond)', color: 'var(--qayed-erreur-texte)' }
+                          : { background: 'var(--qayed-gris-100)', color: 'var(--qayed-fiche-faible)' }
                         }
                       >
                         {isGlobal ? t('authorityWatchlist.sourceInterpolUn') : entry.source === 'import' ? t('authorityWatchlist.sourceCsvImport') : t('authorityWatchlist.sourceManual')}
@@ -452,8 +452,8 @@ export const WatchlistPage = () => {
                         onClick={() => setPage(p as number)}
                         className="h-8 w-8 rounded-lg text-sm font-medium border transition-colors"
                         style={page === p
-                          ? { background: '#5346A8', color: '#fff', borderColor: '#5346A8' }
-                          : { borderColor: '#E5E7EB', color: '#6B7280' }
+                          ? { background: 'var(--qayed-cachet)', color: '#fff', borderColor: 'var(--qayed-cachet)' }
+                          : { borderColor: 'var(--qayed-gris-200)', color: 'var(--qayed-fiche)' }
                         }
                       >
                         {p}

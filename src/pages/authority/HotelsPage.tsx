@@ -40,12 +40,12 @@ export const HotelsPage = () => {
         {isPolice && zone && (
           <div
             className="flex items-center gap-3 rounded-xl px-4 py-3"
-            style={{ background: '#EEEBFA', border: '1px solid #EEEBFA' }}
+            style={{ background: 'var(--qayed-cachet-dilue)', border: '1px solid var(--qayed-cachet-dilue)' }}
           >
-            <MapPin className="h-4 w-4 shrink-0" style={{ color: '#5346A8' }} />
+            <MapPin className="h-4 w-4 shrink-0" style={{ color: 'var(--qayed-cachet)' }} />
             <p className="text-sm text-gray-700">
               {t('authorityHotels.zoneLimited')}{' '}
-              <span className="font-semibold" style={{ color: '#5346A8' }}>{zone}</span>
+              <span className="font-semibold" style={{ color: 'var(--qayed-cachet)' }}>{zone}</span>
             </p>
           </div>
         )}
@@ -73,7 +73,7 @@ export const HotelsPage = () => {
           <p className="text-sm text-gray-500">
             {t('authorityHotels.propertiesCount', { count: data.meta.total })}
             {isPolice && zone && (
-              <span className="ms-1 text-xs" style={{ color: '#5346A8' }}>· {t('authoritySearch.zone')} {zone}</span>
+              <span className="ms-1 text-xs" style={{ color: 'var(--qayed-cachet)' }}>· {t('authoritySearch.zone')} {zone}</span>
             )}
           </p>
         )}
@@ -93,9 +93,9 @@ export const HotelsPage = () => {
               <div className="flex items-start gap-3">
                 <div
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                  style={{ background: '#EEEBFA' }}
+                  style={{ background: 'var(--qayed-cachet-dilue)' }}
                 >
-                  <Building2 className="h-5 w-5" style={{ color: '#5346A8' }} />
+                  <Building2 className="h-5 w-5" style={{ color: 'var(--qayed-cachet)' }} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
