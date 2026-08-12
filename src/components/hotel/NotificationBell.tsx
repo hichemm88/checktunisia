@@ -12,15 +12,15 @@ import { useAuthStore } from '@/stores/authStore';
  * la structure du texte et la couleur d'accent (tokens Qayed).
  */
 const ACCENT: Record<string, string> = {
-  check_in: '#5346A8',        // cachet
-  check_out: '#1F9D6B',       // conforme
-  fiche_updated: '#8B7FE0',   // cachet sombre/clair
-  fiche_cancelled: '#E3A008', // vigilance
-  fiche_pending: '#E3A008',
-  manager_message: '#10222E', // encre
-  departure_due: '#E3A008',
-  quota_warning: '#E3A008',   // vigilance — quota 80 %
-  quota_reached: '#E3A008',   // vigilance — quota atteint
+  check_in: 'var(--qayed-cachet)',        // cachet
+  check_out: 'var(--qayed-conforme)',       // conforme
+  fiche_updated: 'var(--qayed-cachet-sombre)',   // cachet sombre/clair
+  fiche_cancelled: 'var(--qayed-vigilance)', // vigilance
+  fiche_pending: 'var(--qayed-vigilance)',
+  manager_message: 'var(--qayed-encre)', // encre
+  departure_due: 'var(--qayed-vigilance)',
+  quota_warning: 'var(--qayed-vigilance)',   // vigilance — quota 80 %
+  quota_reached: 'var(--qayed-vigilance)',   // vigilance — quota atteint
 };
 
 const timeAgo = (iso: string, locale: string) => {
@@ -76,15 +76,19 @@ export const NotificationBell = () => {
   return (
     <div className="relative">
       <button
+        type="button"
         onClick={() => setOpen((o) => !o)}
-        className="relative h-9 w-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+        className="relative h-11 w-11 rounded-btn flex items-center justify-center text-qayed-fiche hover:text-qayed-encre hover:bg-qayed-papier transition-colors"
         title={t('notifications.title')}
+        aria-label={unread > 0 ? `${t('notifications.title')} (${unread})` : t('notifications.title')}
+        aria-haspopup="dialog"
+        aria-expanded={open}
       >
-        <Bell className="h-[18px] w-[18px]" />
+        <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
         {unread > 0 && (
           <span
-            className="absolute top-0.5 end-0.5 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold text-white flex items-center justify-center"
-            style={{ background: '#E3A008' }}
+            aria-hidden="true"
+            className="absolute top-1.5 end-1.5 min-w-[16px] h-4 px-1 rounded-full text-xs font-bold text-white flex items-center justify-center bg-qayed-vigilance-texte"
           >
             {unread > 99 ? '99+' : unread}
           </span>
@@ -99,15 +103,15 @@ export const NotificationBell = () => {
               près du bord droit et un panneau ancré `absolute end-0` déborde hors écran. */}
           <div
             className="fixed end-3 top-[72px] z-50 w-[340px] max-w-[calc(100vw-24px)] rounded-2xl bg-white shadow-lg overflow-hidden"
-            style={{ border: '1px solid #DDD9CF' }}
+            style={{ border: '1px solid var(--qayed-ligne)' }}
           >
-            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid #F3F4F6' }}>
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--qayed-gris-100)' }}>
               <p className="text-sm font-bold text-gray-900">{t('notifications.title')}</p>
               {unread > 0 && (
                 <button
                   onClick={() => readAllMut.mutate()}
                   className="text-xs font-semibold hover:underline"
-                  style={{ color: '#5346A8' }}
+                  style={{ color: 'var(--qayed-cachet)' }}
                 >
                   {t('notifications.markAllRead')}
                 </button>
@@ -127,21 +131,21 @@ export const NotificationBell = () => {
                   onClick={() => openNotification(n)}
                   className="flex w-full items-start gap-2.5 px-4 py-3 text-start hover:bg-warm-100 transition-colors"
                   style={{
-                    borderBottom: '1px solid #F9FAFB',
+                    borderBottom: '1px solid var(--qayed-gris-50)',
                     background: n.read_at ? '#fff' : 'rgba(83,70,168,0.03)',
                   }}
                 >
                   {/* Pastille d'accent — véhicule le type sans emoji ni icône décorative */}
                   <span
                     className="mt-1.5 h-2 w-2 rounded-full shrink-0"
-                    style={{ background: ACCENT[n.type] ?? '#9CA3AF', opacity: n.read_at ? 0.35 : 1 }}
+                    style={{ background: ACCENT[n.type] ?? 'var(--qayed-fiche-faible)', opacity: n.read_at ? 0.35 : 1 }}
                   />
                   <span className="min-w-0 flex-1">
                     <span className={`block text-[13px] leading-snug ${n.read_at ? 'font-medium text-gray-600' : 'font-bold text-gray-900'}`}>
                       {n.title}
                     </span>
                     <span className="block text-xs text-gray-500 leading-snug mt-0.5">{n.body}</span>
-                    <span className="block text-[11px] text-gray-400 mt-1">
+                    <span className="block text-xs text-gray-400 mt-1">
                       {timeAgo(n.created_at, locale)}
                       {n.property_name ? ` · ${n.property_name}` : ''}
                     </span>

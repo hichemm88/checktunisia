@@ -13,16 +13,16 @@ import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { Pagination } from '@/components/ui/Pagination';
-import { ListSkeleton } from '@/components/admin/ListSkeleton';
-import { ErrorState } from '@/components/admin/ErrorState';
+import { ListSkeleton } from '@/components/ui/ListSkeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 
 const STATUS: Record<string, { labelKey: string; color: string; icon: typeof CheckCircle2 }> = {
   active:    { labelKey: 'adminHotels.statusActive',    color: 'var(--qayed-conforme)', icon: CheckCircle2 },
-  suspended: { labelKey: 'adminHotels.statusSuspended', color: '#ef4444', icon: XCircle },
+  suspended: { labelKey: 'adminHotels.statusSuspended', color: 'var(--qayed-erreur)', icon: XCircle },
   pending:   { labelKey: 'adminHotels.statusPending',   color: 'var(--qayed-vigilance)', icon: Clock },
-  closed:    { labelKey: 'adminHotels.statusClosed',    color: '#9ca3af', icon: XCircle },
+  closed:    { labelKey: 'adminHotels.statusClosed',    color: 'var(--qayed-fiche-faible)', icon: XCircle },
 };
 
 const fmtDate = (d: string | null | undefined, locale: string) =>

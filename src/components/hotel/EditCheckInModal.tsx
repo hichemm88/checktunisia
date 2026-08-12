@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Minus, Plus, X } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { RoomSelector, type RoomChoice } from '@/components/hotel/RoomSelector';
 import { checkInsApi, type UpdateCheckInPayload } from '@/api/checkIns';
@@ -25,13 +26,13 @@ const Stepper = ({
 }) => (
   <div className="flex flex-col gap-1.5">
     <label className="label">{label}</label>
-    <div className="flex items-center rounded-xl overflow-hidden h-[52px] bg-white" style={{ border: '1.5px solid #DDD9CF' }}>
+    <div className="flex items-center rounded-xl overflow-hidden h-[52px] bg-white" style={{ border: '1.5px solid var(--qayed-ligne)' }}>
       <button
         type="button"
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={value <= min}
         className="flex items-center justify-center w-[52px] h-full text-gray-500 hover:bg-warm-100 active:bg-warm-200 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors shrink-0"
-        style={{ borderRight: '1.5px solid #DDD9CF' }}
+        style={{ borderRight: '1.5px solid var(--qayed-ligne)' }}
       >
         <Minus className="h-4 w-4" />
       </button>
@@ -41,7 +42,7 @@ const Stepper = ({
         onClick={() => onChange(Math.min(max, value + 1))}
         disabled={value >= max}
         className="flex items-center justify-center w-[52px] h-full text-gray-500 hover:bg-warm-100 active:bg-warm-200 disabled:text-gray-200 disabled:cursor-not-allowed transition-colors shrink-0"
-        style={{ borderLeft: '1.5px solid #DDD9CF' }}
+        style={{ borderLeft: '1.5px solid var(--qayed-ligne)' }}
       >
         <Plus className="h-4 w-4" />
       </button>
@@ -109,23 +110,9 @@ export const EditCheckInModal = ({
   const datesValid = !!checkInDate && !!checkOutDate && checkOutDate > checkInDate;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      style={{ background: 'rgba(0,0,0,0.5)' }}
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md flex flex-col gap-4 shadow-2xl max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-black text-gray-900">{t('hotelHistoryDetail.editCheckin')}</h3>
-          <button onClick={onClose} className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100" aria-label={t('common.close')}>
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
+    <Modal open onClose={onClose} variant="sheet" title={t('hotelHistoryDetail.editCheckin')} className="gap-4">
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Input
             label={t('checkinWizard.arrivalLabel')}
             type="date"
@@ -156,7 +143,7 @@ export const EditCheckInModal = ({
           allowConflictReference={checkIn.reference}
         />
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Stepper label={t('checkinWizard.adults')} value={adults} min={1} max={20} onChange={setAdults} />
           <Stepper label={t('checkinWizard.children')} value={children} min={0} max={20} onChange={setChildren} />
         </div>
@@ -184,7 +171,7 @@ export const EditCheckInModal = ({
         </div>
 
         {!datesValid && (
-          <p className="text-xs text-red-500">{t('hotelHistoryDetail.invalidDates')}</p>
+          <p className="text-xs text-qayed-erreur-texte" role="alert">{t('hotelHistoryDetail.invalidDates')}</p>
         )}
 
         <div className="flex gap-3 pt-1">
@@ -201,6 +188,6 @@ export const EditCheckInModal = ({
           </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };

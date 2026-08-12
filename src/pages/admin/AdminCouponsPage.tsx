@@ -10,8 +10,8 @@ import { useToast } from '@/components/ui/Toast';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { extractErrors } from '@/lib/api';
 import { formatTNDAmount } from '@/lib/money';
-import { ListSkeleton } from '@/components/admin/ListSkeleton';
-import { ErrorState } from '@/components/admin/ErrorState';
+import { ListSkeleton } from '@/components/ui/ListSkeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 const fmtDate = (d: string | null | undefined, locale: string) =>

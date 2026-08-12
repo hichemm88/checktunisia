@@ -7,7 +7,7 @@ import { adminPagesApi, type AdminPageListItem } from '@/api/admin/cms';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
-import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { ListSkeleton } from '@/components/ui/ListSkeleton';
 
 const PageRow = ({ page }: { page: AdminPageListItem }) => {
   const { t } = useTranslation();

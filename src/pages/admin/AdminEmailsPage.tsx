@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
-import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { ListSkeleton } from '@/components/ui/ListSkeleton';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { useAuthStore } from '@/stores/authStore';
 

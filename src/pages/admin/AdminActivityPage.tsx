@@ -7,7 +7,7 @@ import { adminHotelsApi } from '@/api/admin/hotels';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
-import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { ListSkeleton } from '@/components/ui/ListSkeleton';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 

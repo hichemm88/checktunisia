@@ -14,8 +14,8 @@ import { formatTND, formatTNDAmount } from '@/lib/money';
 import { type BillingCycle, cycleEndDate, effectiveYearlyPrice, priceForCycle } from '@/lib/billing';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
-import { ListSkeleton } from '@/components/admin/ListSkeleton';
-import { ErrorState } from '@/components/admin/ErrorState';
+import { ListSkeleton } from '@/components/ui/ListSkeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 
@@ -121,7 +121,7 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
         </div>
         <div className="flex items-center gap-2">
           {plan.is_public === false && (
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--qayed-vigilance-fond, #FBF0D7)', color: 'var(--qayed-vigilance-texte, #8A6206)' }}>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--qayed-vigilance-fond, var(--qayed-vigilance-fond))', color: 'var(--qayed-vigilance-texte, var(--qayed-vigilance-texte))' }}>
               {t('adminSubscriptions.legacyBadge')}
             </span>
           )}
@@ -194,11 +194,11 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
               ['ocrScans', plan.features?.ocr_scans_per_month],
               ['checkinsPerMonth', plan.features?.checkins_per_month],
             ] as const).map(([key, v]) => (
-              <span key={key} className="rounded-full bg-warm-100 px-2 py-0.5 text-[11px] font-medium text-gray-600">
+              <span key={key} className="rounded-full bg-warm-100 px-2 py-0.5 text-xs font-medium text-gray-600">
                 {t(`planFeatures.${key}`)} : <span className="font-mono">{v == null || v < 0 ? '∞' : v}</span>
               </span>
             ))}
-            <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${plan.features?.whatsapp_relay === false ? 'bg-gray-100 text-gray-400' : 'bg-[--qayed-conforme-fond] text-[--qayed-conforme-texte]'}`}>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${plan.features?.whatsapp_relay === false ? 'bg-gray-100 text-gray-400' : 'bg-[--qayed-conforme-fond] text-[--qayed-conforme-texte]'}`}>
               {t('planFeatures.whatsappRelay')} : {plan.features?.whatsapp_relay === false ? t('planFeatures.off') : t('planFeatures.on')}
             </span>
           </div>
@@ -355,7 +355,7 @@ const AbonnementsActifsTab = () => {
                   <div>
                     <span className="font-medium">{s.plan?.name ?? t('adminSubscriptions.planHash', { id: s.plan_id })}</span>
                     {s.billing_cycle === 'yearly' && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full ms-2 align-middle" style={{ background: 'rgba(83,70,168,0.08)', color: '#5346A8' }}>
+                      <span className="text-xs font-bold px-1.5 py-0.5 rounded-full ms-2 align-middle" style={{ background: 'rgba(83,70,168,0.08)', color: 'var(--qayed-cachet)' }}>
                         {t('adminSubscriptions.yearlyBadge')}
                       </span>
                     )}

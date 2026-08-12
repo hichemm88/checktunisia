@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { ChevronNext, ChevronPrev } from '@/components/ui/DirectionalIcon';
 
 /**
  * Sélecteur de PÉRIODE inline, sans dépendance : on clique le jour de début,
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export const DateRangeCalendar = ({ from, to, onChange, max, locale = 'fr-FR' }: Props) => {
+  const { t } = useTranslation();
   const [view, setView] = useState(() => parse(to || from || ymd(new Date())));
   const [hover, setHover] = useState<string | null>(null);
 
@@ -54,16 +56,18 @@ export const DateRangeCalendar = ({ from, to, onChange, max, locale = 'fr-FR' }:
       {/* En-tête mois */}
       <div className="mb-2 flex items-center justify-between">
         <button type="button" onClick={() => setView(new Date(year, month - 1, 1))}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"><ChevronLeft className="h-4 w-4" /></button>
+          aria-label={t('common.previous')}
+          className="flex h-11 w-11 items-center justify-center rounded-btn text-qayed-fiche hover:bg-qayed-papier hover:text-qayed-encre"><ChevronPrev className="h-4 w-4" /></button>
         <span className="text-sm font-semibold capitalize text-gray-800">
           {new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(first)}
         </span>
         <button type="button" onClick={() => setView(new Date(year, month + 1, 1))}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100"><ChevronRight className="h-4 w-4" /></button>
+          aria-label={t('common.next')}
+          className="flex h-11 w-11 items-center justify-center rounded-btn text-qayed-fiche hover:bg-qayed-papier hover:text-qayed-encre"><ChevronNext className="h-4 w-4" /></button>
       </div>
 
       {/* Jours de semaine */}
-      <div className="grid grid-cols-7 text-center text-[11px] font-medium text-gray-400">
+      <div className="grid grid-cols-7 text-center text-xs font-medium text-gray-400">
         {weekdays.map((w, i) => <div key={i} className="py-1">{w}</div>)}
       </div>
 
@@ -86,13 +90,13 @@ export const DateRangeCalendar = ({ from, to, onChange, max, locale = 'fr-FR' }:
               onMouseEnter={() => setHover(day)}
               onMouseLeave={() => setHover(null)}
               className="relative py-1.5 disabled:opacity-30"
-              style={inRange && !isEdge ? { background: '#EEEBFA' } : undefined}
+              style={inRange && !isEdge ? { background: 'var(--qayed-cachet-dilue)' } : undefined}
             >
               <span
                 className="mx-auto flex h-8 w-8 items-center justify-center rounded-full"
                 style={isEdge
-                  ? { background: '#5346A8', color: '#fff', fontWeight: 700 }
-                  : { color: disabled ? '#9ca3af' : '#374151' }}
+                  ? { background: 'var(--qayed-cachet)', color: '#fff', fontWeight: 700 }
+                  : { color: disabled ? 'var(--qayed-fiche-faible)' : 'var(--qayed-gris-700)' }}
               >
                 {Number(day.slice(-2))}
               </span>

@@ -29,7 +29,7 @@ export const QayedLogo = ({ size = 32, onDark = false, showWordmark = true, word
     {showWordmark && (
       <span
         className={`qayed-display ${wordmarkClassName}`}
-        style={{ fontSize: size * 0.7, color: onDark ? '#F6F5F1' : 'var(--qayed-encre)' }}
+        style={{ fontSize: size * 0.7, color: onDark ? 'var(--qayed-papier)' : 'var(--qayed-encre)' }}
       >
         QAYED
       </span>

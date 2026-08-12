@@ -11,8 +11,8 @@ import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { Pagination } from '@/components/ui/Pagination';
-import { ListSkeleton } from '@/components/admin/ListSkeleton';
-import { ErrorState } from '@/components/admin/ErrorState';
+import { ListSkeleton } from '@/components/ui/ListSkeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 // ─── Create form ────────────────────────────────────────────────────────────────
 
