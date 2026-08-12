@@ -1388,7 +1388,8 @@
     "quotaOverageBilled": "{{bundles}} شريحة مبدوءة — تقدير {{amount}} د.ت في نهاية الشهر. تسجيلات الوصول لديكم لا تُحظر أبدًا.",
     "quotaOverageBilledUnit": "{{count}} تسجيل وصول إضافي — تقدير {{amount}} د.ت في نهاية الشهر. تسجيلات الوصول لديكم لا تُحظر أبدًا.",
     "quotaNeverBlocked": "تستمر تسجيلات الوصول لديكم في العمل — دون أي حظر.",
-    "quotaUpgradeCta": "الترقية إلى باقة أعلى"
+    "quotaUpgradeCta": "الترقية إلى باقة أعلى",
+    "avgOccupancy30d": "متوسط الإشغال (30 يومًا)"
   },
   "register": {
     "step0Label": "نوع الحساب",

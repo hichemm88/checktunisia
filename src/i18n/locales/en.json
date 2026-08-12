@@ -1410,7 +1410,8 @@
     "quotaOverageBilled": "{{bundles}} bundle(s) started — estimated {{amount}} TND at the end of the month. Your check-ins are never blocked.",
     "quotaOverageBilledUnit": "{{count}} additional check-in(s) — estimated {{amount}} TND at the end of the month. Your check-ins are never blocked.",
     "quotaNeverBlocked": "Your check-ins keep working — never blocked.",
-    "quotaUpgradeCta": "Upgrade plan"
+    "quotaUpgradeCta": "Upgrade plan",
+    "avgOccupancy30d": "Average occupancy (30 d)"
   },
   "register": {
     "step0Label": "Account type",

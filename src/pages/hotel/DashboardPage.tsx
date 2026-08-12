@@ -404,17 +404,27 @@ const MonthInsightsCard = ({ insights }: { insights: NonNullable<DashboardData['
   const { t, i18n } = useTranslation();
   const nat    = insights.top_nationality;
   const nights = insights.avg_stay_nights;
+  const occ    = insights.avg_occupancy_30d;
   const flag   = nat ? getFlagUrl(nat.code) : null;
+  const locale = localeFor(i18n.language);
 
   // Durée moyenne de séjour (nuits) — nombre localisé + unité.
   const stayText = nights == null
     ? '—'
-    : `${Number(nights).toLocaleString(localeFor(i18n.language))} ${t('hotelDashboard.nightsUnit')}`;
+    : `${Number(nights).toLocaleString(locale)} ${t('hotelDashboard.nightsUnit')}`;
+
+  // Taux d'occupation moyen sur 30 jours. `null` = aucune chambre configurée,
+  // donc taux non mesurable : un tiret, pas un 0 % qui ferait croire à un
+  // établissement vide. `style: 'percent'` place le symbole et l'espace insé-
+  // cable selon la langue (« 62 % » en français, « 62% » en anglais).
+  const occText = occ == null
+    ? '—'
+    : (occ / 100).toLocaleString(locale, { style: 'percent', maximumFractionDigits: 0 });
 
   return (
     <Card>
       <p className="label mb-2.5">{t('hotelDashboard.monthInsights')}</p>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {/* Top nationalité */}
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl overflow-hidden" style={{ background: 'var(--qayed-cachet-dilue)' }}>
@@ -443,6 +453,22 @@ const MonthInsightsCard = ({ insights }: { insights: NonNullable<DashboardData['
           <div className="min-w-0">
             <p className="text-sm font-bold text-gray-900 truncate">{stayText}</p>
             <p className="text-xs text-gray-400 leading-snug">{t('hotelDashboard.avgStay')}</p>
+          </div>
+        </div>
+
+        {/* Taux d'occupation moyen — 30 derniers jours.
+            `col-span-2` sur mobile : troisième d'une grille à deux colonnes,
+            cette tuile se retrouvait seule sur une demi-largeur, avec le
+            libellé le plus long des trois replié sur trois lignes. Elle occupe
+            la ligne entière, ce qui se lit comme un choix et non comme un
+            reliquat. */}
+        <div className="col-span-2 flex items-center gap-2.5 min-w-0 sm:col-span-1">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: 'var(--qayed-cachet-dilue)' }}>
+            <Gauge className="h-4 w-4" style={{ color: 'var(--qayed-cachet)' }} aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-900 truncate tabular-nums">{occText}</p>
+            <p className="text-xs text-gray-400 leading-snug">{t('hotelDashboard.avgOccupancy30d')}</p>
           </div>
         </div>
       </div>

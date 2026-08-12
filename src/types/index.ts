@@ -175,6 +175,10 @@ export interface DashboardData {
     /** Durée moyenne de séjour (nuits) parmi les séjours arrivant ce mois. null si aucun échantillon. */
     avg_stay_nights: number | null;
     stay_sample: number;
+    /** Taux d'occupation moyen sur les 30 derniers jours, en pourcentage entier.
+        null si l'établissement n'a aucune chambre configurée — le taux n'est
+        alors pas mesurable, ce qui n'est pas la même chose que 0 %. */
+    avg_occupancy_30d: number | null;
   };
 }
 
