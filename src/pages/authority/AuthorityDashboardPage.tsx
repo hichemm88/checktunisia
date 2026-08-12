@@ -31,7 +31,7 @@ const KpiTile = ({
     </div>
     <div className="min-w-0">
       <p className="text-xs font-medium text-gray-400 uppercase tracking-wide truncate">{label}</p>
-      <p className="mt-0.5 text-2xl font-bold" style={{ color: '#5346A8' }}>{value}</p>
+      <p className="mt-0.5 text-2xl font-bold" style={{ color: 'var(--qayed-cachet)' }}>{value}</p>
       {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
     </div>
   </div>
@@ -44,7 +44,7 @@ const WeeklyTrend = ({ trend }: { trend: Array<{ date: string; label: string; co
     <div className="flex items-end justify-between gap-2 h-24">
       {trend.map((t) => (
         <div key={t.date} className="flex flex-1 flex-col items-center gap-1">
-          <span className="text-[10px] text-gray-400">{t.count}</span>
+          <span className="text-xs text-gray-400">{t.count}</span>
           <div
             className="w-full rounded-t-md transition-all"
             style={{
@@ -52,7 +52,7 @@ const WeeklyTrend = ({ trend }: { trend: Array<{ date: string; label: string; co
               background: 'var(--qayed-cachet)',
             }}
           />
-          <span className="text-[10px] text-gray-400 capitalize">{t.label}</span>
+          <span className="text-xs text-gray-400 capitalize">{t.label}</span>
         </div>
       ))}
     </div>
@@ -93,19 +93,19 @@ const SecurityAlertBanner = ({ count }: { count: number }) => {
     <button
       onClick={() => navigate('/authority/watchlist')}
       className="flex items-center gap-4 rounded-2xl p-5 text-start transition-shadow hover:shadow-md w-full"
-      style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}
+      style={{ background: 'var(--qayed-erreur-fond)', border: '1px solid var(--qayed-erreur)' }}
     >
       <div
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-        style={{ background: '#FEE2E2' }}
+        style={{ background: 'var(--qayed-erreur-fond)' }}
       >
-        <ShieldAlert className="h-6 w-6" style={{ color: '#DC2626' }} />
+        <ShieldAlert className="h-6 w-6" style={{ color: 'var(--qayed-erreur)' }} />
       </div>
       <div className="min-w-0">
-        <p className="font-semibold" style={{ color: '#991B1B' }}>
+        <p className="font-semibold" style={{ color: 'var(--qayed-erreur-texte)' }}>
           {t('authoritySecurityAlerts.bannerCount', { count })}
         </p>
-        <p className="text-sm" style={{ color: '#B91C1C' }}>{t('authoritySecurityAlerts.bannerHint')}</p>
+        <p className="text-sm" style={{ color: 'var(--qayed-erreur-texte)' }}>{t('authoritySecurityAlerts.bannerHint')}</p>
       </div>
     </button>
   );
@@ -123,24 +123,24 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        <KpiTile icon={Users}          label={t('authorityDashboard.activeGuests')}  value={data.guests_present}   color="#5346A8" />
-        <KpiTile icon={BedDouble}      label={t('authorityDashboard.activeStays')}   value={data.active_guests}    color="#8B7FE0" />
-        <KpiTile icon={ArrowDownToLine} label={t('authorityDashboard.checkinsToday')} value={data.check_ins_today}  color="#137453" />
-        <KpiTile icon={ArrowUpFromLine} label={t('authorityDashboard.checkoutsToday')} value={data.check_outs_today} color="#8B7FE0" />
-        <KpiTile icon={Building2}      label={t('authorityDashboard.activeHotels')}  value={data.active_hotels}    color="#5346A8" />
-        <KpiTile icon={Shield}         label={t('authorityDashboard.watchlistActive')} value={data.watchlist_active_entries} color="#5346A8" />
+        <KpiTile icon={Users}          label={t('authorityDashboard.activeGuests')}  value={data.guests_present}   color="var(--qayed-cachet)" />
+        <KpiTile icon={BedDouble}      label={t('authorityDashboard.activeStays')}   value={data.active_guests}    color="var(--qayed-cachet-sombre)" />
+        <KpiTile icon={ArrowDownToLine} label={t('authorityDashboard.checkinsToday')} value={data.check_ins_today}  color="var(--qayed-conforme-texte)" />
+        <KpiTile icon={ArrowUpFromLine} label={t('authorityDashboard.checkoutsToday')} value={data.check_outs_today} color="var(--qayed-cachet-sombre)" />
+        <KpiTile icon={Building2}      label={t('authorityDashboard.activeHotels')}  value={data.active_hotels}    color="var(--qayed-cachet)" />
+        <KpiTile icon={Shield}         label={t('authorityDashboard.watchlistActive')} value={data.watchlist_active_entries} color="var(--qayed-cachet)" />
         <KpiTile
           icon={ShieldAlert}
           label={t('authorityDashboard.securityAlerts')}
           value={data.security_alerts_active}
-          color={data.security_alerts_active > 0 ? '#DC2626' : '#6B7280'}
+          color={data.security_alerts_active > 0 ? 'var(--qayed-erreur)' : 'var(--qayed-fiche)'}
         />
         {FEATURES.expiredDocAlerts && (
           <KpiTile
             icon={AlertTriangle}
             label={t('authorityDashboard.docsExpiring30d')}
             value={data.expiring_docs_30d}
-            color={data.expiring_docs_30d > 0 ? '#5346A8' : '#6B7280'}
+            color={data.expiring_docs_30d > 0 ? 'var(--qayed-cachet)' : 'var(--qayed-fiche)'}
             sub={data.expiring_docs_30d > 0 ? t('authorityDashboard.seeAlerts') : undefined}
           />
         )}
@@ -152,8 +152,8 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
         <Card>
           <div className="flex items-center justify-between gap-2 mb-4">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" style={{ color: '#5346A8' }} />
-              <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>{t('authorityDashboard.weeklyTrend')}</p>
+              <TrendingUp className="h-4 w-4" style={{ color: 'var(--qayed-cachet)' }} />
+              <p className="text-sm font-semibold" style={{ color: 'var(--qayed-cachet)' }}>{t('authorityDashboard.weeklyTrend')}</p>
             </div>
             <span className="text-xs text-gray-400">
               {t('authorityDashboard.arrivals7dTotal', { count: data.weekly_trend.reduce((s, x) => s + x.count, 0) })}
@@ -165,8 +165,8 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
         {/* Top nationalities */}
         <Card>
           <div className="flex items-center gap-2 mb-4">
-            <Globe2 className="h-4 w-4" style={{ color: '#5346A8' }} />
-            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>{t('authorityDashboard.presentNationalities')}</p>
+            <Globe2 className="h-4 w-4" style={{ color: 'var(--qayed-cachet)' }} />
+            <p className="text-sm font-semibold" style={{ color: 'var(--qayed-cachet)' }}>{t('authorityDashboard.presentNationalities')}</p>
           </div>
           <NationalityList items={data.top_nationalities} />
         </Card>
@@ -176,8 +176,8 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
       <Card>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" style={{ color: '#5346A8' }} />
-            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>{t('authorityDashboard.byGovernorate')}</p>
+            <MapPin className="h-4 w-4" style={{ color: 'var(--qayed-cachet)' }} />
+            <p className="text-sm font-semibold" style={{ color: 'var(--qayed-cachet)' }}>{t('authorityDashboard.byGovernorate')}</p>
           </div>
           <span className="text-xs text-gray-400">{t('authorityDashboard.governoratesCount', { count: data.by_governorate.length })}</span>
         </div>
@@ -202,7 +202,7 @@ const MinistryDashboard = ({ data }: { data: AuthorityDashboardMinistry }) => {
                   <td className="py-2.5 text-end">
                     <span
                       className="inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                      style={{ background: '#EEEBFA', color: '#5346A8' }}
+                      style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
                     >
                       {row.active_guests}
                     </span>
@@ -250,17 +250,17 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        <KpiTile icon={Users}          label={t('authorityDashboard.activeGuests')}  value={data.guests_present}   color="#5346A8" />
-        <KpiTile icon={BedDouble}      label={t('authorityDashboard.activeStays')}   value={data.active_guests}    color="#8B7FE0" />
-        <KpiTile icon={ArrowDownToLine} label={t('authorityDashboard.checkinsToday')} value={data.check_ins_today}  color="#137453" />
-        <KpiTile icon={ArrowUpFromLine} label={t('authorityDashboard.checkoutsToday')} value={data.check_outs_today} color="#8B7FE0" />
-        <KpiTile icon={Building2}      label={t('authorityDashboard.hotelsInZone')}  value={data.hotels_in_zone}   color="#5346A8" />
-        <KpiTile icon={Shield}         label={t('authorityDashboard.watchlistActive')} value={data.watchlist_active_entries} color="#5346A8" />
+        <KpiTile icon={Users}          label={t('authorityDashboard.activeGuests')}  value={data.guests_present}   color="var(--qayed-cachet)" />
+        <KpiTile icon={BedDouble}      label={t('authorityDashboard.activeStays')}   value={data.active_guests}    color="var(--qayed-cachet-sombre)" />
+        <KpiTile icon={ArrowDownToLine} label={t('authorityDashboard.checkinsToday')} value={data.check_ins_today}  color="var(--qayed-conforme-texte)" />
+        <KpiTile icon={ArrowUpFromLine} label={t('authorityDashboard.checkoutsToday')} value={data.check_outs_today} color="var(--qayed-cachet-sombre)" />
+        <KpiTile icon={Building2}      label={t('authorityDashboard.hotelsInZone')}  value={data.hotels_in_zone}   color="var(--qayed-cachet)" />
+        <KpiTile icon={Shield}         label={t('authorityDashboard.watchlistActive')} value={data.watchlist_active_entries} color="var(--qayed-cachet)" />
         <KpiTile
           icon={ShieldAlert}
           label={t('authorityDashboard.securityAlerts')}
           value={data.security_alerts_active}
-          color={data.security_alerts_active > 0 ? '#DC2626' : '#6B7280'}
+          color={data.security_alerts_active > 0 ? 'var(--qayed-erreur)' : 'var(--qayed-fiche)'}
         />
       </div>
 
@@ -269,19 +269,19 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
         <button
           onClick={() => navigate('/authority/alerts')}
           className="flex items-center gap-4 rounded-2xl p-5 text-start transition-shadow hover:shadow-md w-full"
-          style={{ background: '#FFF8EE', border: '1px solid #5346A855' }}
+          style={{ background: 'var(--qayed-vigilance-fond)', border: '1px solid rgba(83,70,168,0.33)' }}
         >
           <div
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-            style={{ background: '#5346A820' }}
+            style={{ background: 'rgba(83,70,168,0.13)' }}
           >
-            <AlertTriangle className="h-5 w-5" style={{ color: '#5346A8' }} />
+            <AlertTriangle className="h-5 w-5" style={{ color: 'var(--qayed-cachet)' }} />
           </div>
           <div>
-            <p className="font-semibold" style={{ color: '#8A6206' }}>
+            <p className="font-semibold" style={{ color: 'var(--qayed-vigilance-texte)' }}>
               {t('authorityDashboard.docsExpiringIn30d', { count: data.expiring_docs_30d })}
             </p>
-            <p className="text-sm" style={{ color: '#B07820' }}>{t('authorityDashboard.clickToSeeAlerts')}</p>
+            <p className="text-sm" style={{ color: 'var(--qayed-vigilance-texte)' }}>{t('authorityDashboard.clickToSeeAlerts')}</p>
           </div>
         </button>
       )}
@@ -291,8 +291,8 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
         {/* Nationalities present */}
         <Card>
           <div className="flex items-center gap-2 mb-4">
-            <Globe2 className="h-4 w-4" style={{ color: '#5346A8' }} />
-            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>{t('authorityDashboard.nationalitiesInZone')}</p>
+            <Globe2 className="h-4 w-4" style={{ color: 'var(--qayed-cachet)' }} />
+            <p className="text-sm font-semibold" style={{ color: 'var(--qayed-cachet)' }}>{t('authorityDashboard.nationalitiesInZone')}</p>
           </div>
           {data.nationalities.length > 0
             ? <NationalityList items={data.nationalities} />
@@ -303,8 +303,8 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
         {/* Recent arrivals */}
         <Card>
           <div className="flex items-center gap-2 mb-4">
-            <Clock className="h-4 w-4" style={{ color: '#5346A8' }} />
-            <p className="text-sm font-semibold" style={{ color: '#5346A8' }}>{t('authorityDashboard.recentArrivals')}</p>
+            <Clock className="h-4 w-4" style={{ color: 'var(--qayed-cachet)' }} />
+            <p className="text-sm font-semibold" style={{ color: 'var(--qayed-cachet)' }}>{t('authorityDashboard.recentArrivals')}</p>
           </div>
           <div className="flex flex-col gap-2">
             {data.recent_arrivals.length === 0 && (
@@ -319,7 +319,7 @@ const PoliceDashboard = ({ data }: { data: AuthorityDashboardPolice }) => {
                 <div className="flex items-center gap-3 min-w-0">
                   <div
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                    style={{ background: '#5346A8' }}
+                    style={{ background: 'var(--qayed-cachet)' }}
                   >
                     {arrival.guest_name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()}
                   </div>

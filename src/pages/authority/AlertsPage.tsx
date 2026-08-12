@@ -9,9 +9,9 @@ import { type AuthorityAlert } from '@/types';
 
 // Urgency color by days remaining
 const urgencyStyle = (days: number): { bg: string; text: string; border: string } => {
-  if (days <= 7)  return { bg: '#FEF2F2', text: '#DC2626', border: '#FCA5A5' };
-  if (days <= 15) return { bg: '#FFF8EE', text: '#5346A8', border: '#FBF0D7' };
-  return           { bg: '#E4F5EC', text: '#137453', border: '#1F9D6B' };
+  if (days <= 7)  return { bg: 'var(--qayed-erreur-fond)', text: 'var(--qayed-erreur)', border: 'var(--qayed-erreur)' };
+  if (days <= 15) return { bg: 'var(--qayed-vigilance-fond)', text: 'var(--qayed-cachet)', border: 'var(--qayed-vigilance-fond)' };
+  return           { bg: 'var(--qayed-conforme-fond)', text: 'var(--qayed-conforme-texte)', border: 'var(--qayed-conforme)' };
 };
 
 const AlertCard = ({ alert, onClick }: { alert: AuthorityAlert; onClick: () => void }) => {
@@ -37,7 +37,7 @@ const AlertCard = ({ alert, onClick }: { alert: AuthorityAlert; onClick: () => v
           <span className="text-lg font-black leading-none" style={{ color: style.text }}>
             {alert.days_until_expiry}
           </span>
-          <span className="text-[9px] font-medium" style={{ color: style.text }}>{t('authorityAlerts.days')}</span>
+          <span className="text-xs font-medium" style={{ color: style.text }}>{t('authorityAlerts.days')}</span>
         </div>
 
         <div className="min-w-0">
@@ -124,11 +124,11 @@ export const AlertsPage = () => {
         {!isLoading && !isError && (
           <div
             className="flex items-center gap-4 rounded-2xl px-5 py-4"
-            style={{ background: alerts.length > 0 ? '#FFF8EE' : '#E4F5EC', border: `1px solid ${alerts.length > 0 ? '#FBF0D7' : '#1F9D6B'}` }}
+            style={{ background: alerts.length > 0 ? 'var(--qayed-vigilance-fond)' : 'var(--qayed-conforme-fond)', border: `1px solid ${alerts.length > 0 ? 'var(--qayed-vigilance-fond)' : 'var(--qayed-conforme)'}` }}
           >
-            <AlertTriangle className="h-5 w-5 shrink-0" style={{ color: alerts.length > 0 ? '#5346A8' : '#137453' }} />
+            <AlertTriangle className="h-5 w-5 shrink-0" style={{ color: alerts.length > 0 ? 'var(--qayed-cachet)' : 'var(--qayed-conforme-texte)' }} />
             <div>
-              <p className="font-semibold" style={{ color: alerts.length > 0 ? '#8A6206' : '#15803D' }}>
+              <p className="font-semibold" style={{ color: alerts.length > 0 ? 'var(--qayed-vigilance-texte)' : 'var(--qayed-conforme-texte)' }}>
                 {alerts.length === 0
                   ? t('authorityAlerts.noneExpiring')
                   : t('authorityAlerts.expiringCount', { count: alerts.length })}
@@ -157,16 +157,16 @@ export const AlertsPage = () => {
 
         {!isLoading && !isError && (
           <>
-            <Section title={t('authorityAlerts.urgentSection')}    items={urgent}  color="#DC2626" />
-            <Section title={t('authorityAlerts.attentionSection')}  items={warning} color="#5346A8" />
-            <Section title={t('authorityAlerts.watchSection')} items={watch}   color="#137453" />
+            <Section title={t('authorityAlerts.urgentSection')}    items={urgent}  color="var(--qayed-erreur)" />
+            <Section title={t('authorityAlerts.attentionSection')}  items={warning} color="var(--qayed-cachet)" />
+            <Section title={t('authorityAlerts.watchSection')} items={watch}   color="var(--qayed-conforme-texte)" />
             {alerts.length === 0 && (
               <div className="py-16 text-center">
                 <div
                   className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
-                  style={{ background: '#EEEBFA' }}
+                  style={{ background: 'var(--qayed-cachet-dilue)' }}
                 >
-                  <AlertTriangle className="h-8 w-8" style={{ color: '#5346A8' }} />
+                  <AlertTriangle className="h-8 w-8" style={{ color: 'var(--qayed-cachet)' }} />
                 </div>
                 <p className="text-gray-500">{t('authorityAlerts.allGood')}</p>
                 <p className="text-sm text-gray-400 mt-1">{t('authorityAlerts.noneExpiring')}</p>

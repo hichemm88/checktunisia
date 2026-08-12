@@ -12,13 +12,13 @@ export const ErrorState = ({ onRetry, message }: { onRetry?: () => void; message
   const { t } = useTranslation();
   return (
     <div className="relative flex flex-col items-center gap-3 py-10 text-center">
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: 'var(--qayed-vigilance-fond)' }}>
-        <AlertTriangle className="h-5 w-5" style={{ color: 'var(--qayed-vigilance-texte)' }} />
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-qayed-vigilance-fond">
+        <AlertTriangle className="h-5 w-5 text-qayed-vigilance-texte" aria-hidden="true" />
       </div>
-      <p className="text-sm font-semibold text-gray-700">{message ?? t('adminShared.loadError')}</p>
+      <p className="text-sm font-semibold text-qayed-gris-700">{message ?? t('adminShared.loadError')}</p>
       {onRetry && (
         <Button size="sm" variant="secondary" onClick={onRetry} className="gap-2">
-          <RotateCw className="h-3.5 w-3.5" /> {t('common.retry')}
+          <RotateCw className="h-3.5 w-3.5" aria-hidden="true" /> {t('common.retry')}
         </Button>
       )}
     </div>

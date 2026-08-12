@@ -2,10 +2,11 @@ import { useState, useRef, type ChangeEvent, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  AlertTriangle, ScanLine, CheckCircle, Loader2, Upload, ArrowRight,
-  CreditCard, UserCheck, RotateCw, X,
+  AlertTriangle, ScanLine, CheckCircle, Loader2, Upload,
+  CreditCard, UserCheck, RotateCw, RotateCcw, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ArrowNext } from '@/components/ui/DirectionalIcon';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { checkInsApi, type AddGuestPayload } from '@/api/checkIns';
@@ -25,16 +26,16 @@ import { type CheckIn, type CinConfidence, type CinScanResponse } from '@/types'
 
 // ─── Pastille de confiance (scan CIN uniquement) ──────────────────────────────
 const CONF_STYLE: Record<CinConfidence, { bg: string; fg: string; key: string }> = {
-  high:   { bg: '#E4F5EC', fg: '#137453', key: 'cinScan.confHigh' },
-  medium: { bg: '#FBF0D7', fg: '#8A6206', key: 'cinScan.confMedium' },
-  low:    { bg: '#FEE2E2', fg: '#B91C1C', key: 'cinScan.confLow' },
+  high:   { bg: 'var(--qayed-conforme-fond)', fg: 'var(--qayed-conforme-texte)', key: 'cinScan.confHigh' },
+  medium: { bg: 'var(--qayed-vigilance-fond)', fg: 'var(--qayed-vigilance-texte)', key: 'cinScan.confMedium' },
+  low:    { bg: 'var(--qayed-erreur-fond)', fg: 'var(--qayed-erreur-texte)', key: 'cinScan.confLow' },
 };
 
 const ConfPill = ({ level }: { level: CinConfidence }) => {
   const { t } = useTranslation();
   const s = CONF_STYLE[level];
   return (
-    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: s.bg, color: s.fg }}>
+    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: s.bg, color: s.fg }}>
       <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.fg }} />
       {t(s.key)}
     </span>
@@ -410,10 +411,7 @@ export const GuestScanPanel = ({
   };
 
   return (
-    <div
-      className="flex flex-col gap-4 rounded-2xl p-4"
-      style={{ background: '#F6F5F1', border: '1.5px solid #DDD9CF' }}
-    >
+    <div className="flex flex-col gap-4 rounded-2xl border-[1.5px] border-qayed-ligne bg-qayed-papier p-4">
       {/* Overlay caméra in-app (CIN ou passeport MRZ) */}
       {capture && (
         <CINCapture
@@ -425,11 +423,11 @@ export const GuestScanPanel = ({
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-sm font-bold text-gray-800">{label}</p>
+        <p className="text-sm font-bold text-qayed-gris-800">{label}</p>
         {onCancel && (
-          <button className="text-xs text-gray-400 hover:text-gray-600 font-medium" onClick={onCancel}>
+          <Button variant="link" size="sm" className="-me-2 text-qayed-fiche hover:text-qayed-encre" onClick={onCancel}>
             {t('common.cancel')}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -443,8 +441,8 @@ export const GuestScanPanel = ({
         <div className="flex flex-col gap-2.5">
           {scanState === 'error' && (
             <div
-              className="rounded-xl px-3 py-2.5 text-center text-sm font-medium"
-              style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#B91C1C' }}
+              role="alert"
+              className="rounded-xl border border-red-200 bg-qayed-erreur-fond px-3 py-2.5 text-center text-sm font-medium text-qayed-erreur-texte"
             >
               {cinError ?? t('guestScan.scanFailedRetry')}
             </div>
@@ -456,14 +454,14 @@ export const GuestScanPanel = ({
             className="group flex w-full items-center gap-3.5 rounded-2xl p-4 text-start shadow-card transition-all active:scale-[0.99]"
             style={{ background: 'var(--qayed-cachet)', color: '#fff' }}
           >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15" aria-hidden="true">
               <CreditCard className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold leading-tight">{t('cinScan.entryCinTitle')}</p>
               <p className="mt-0.5 text-xs text-white/80">{t('cinScan.scanCinSubtitle')}</p>
             </div>
-            <ArrowRight className="h-5 w-5 shrink-0 opacity-70 transition-transform group-hover:translate-x-0.5" />
+            <ArrowNext className="h-5 w-5 shrink-0 opacity-70" />
           </button>
 
           {/* Carte 2 — Passeport / CIN étrangère avec MRZ (même importance) */}
@@ -472,25 +470,26 @@ export const GuestScanPanel = ({
             className="group flex w-full items-center gap-3.5 rounded-2xl p-4 text-start shadow-card transition-all active:scale-[0.99]"
             style={{ background: 'var(--qayed-encre)', color: '#fff' }}
           >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10" aria-hidden="true">
               <ScanLine className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold leading-tight">{t('cinScan.entryPassportTitle')}</p>
               <p className="mt-0.5 text-xs text-white/70">{t('cinScan.entryPassportSubtitle')}</p>
             </div>
-            <ArrowRight className="h-5 w-5 shrink-0 opacity-70 transition-transform group-hover:translate-x-0.5" />
+            <ArrowNext className="h-5 w-5 shrink-0 opacity-70" />
           </button>
 
-          {/* Actions secondaires, discrètes */}
-          <div className="mt-1 flex items-center justify-center gap-4 text-xs font-medium text-gray-500">
-            <button onClick={() => uploadRef.current?.click()} className="flex items-center gap-1.5 hover:text-gray-700">
-              <Upload className="h-3.5 w-3.5" /> {t('guestScan.importPhoto')}
-            </button>
-            <span className="h-3 w-px bg-gray-300" />
-            <button onClick={() => { setExtractedOk(false); setScanKind('mrz'); setScanState('done'); }} className="hover:text-gray-700">
+          {/* Actions secondaires, discrètes — cibles tactiles de 44px : elles
+              faisaient 14px de haut, sur l'écran le plus utilisé du produit. */}
+          <div className="mt-1 flex items-center justify-center gap-2">
+            <Button variant="link" size="sm" className="text-qayed-fiche hover:text-qayed-encre" onClick={() => uploadRef.current?.click()}>
+              <Upload className="h-3.5 w-3.5" aria-hidden="true" /> {t('guestScan.importPhoto')}
+            </Button>
+            <span className="h-3 w-px bg-qayed-ligne" aria-hidden="true" />
+            <Button variant="link" size="sm" className="text-qayed-fiche hover:text-qayed-encre" onClick={() => { setExtractedOk(false); setScanKind('mrz'); setScanState('done'); }}>
               {t('guestScan.manualEntry')}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -498,30 +497,34 @@ export const GuestScanPanel = ({
       {/* ── Scanning ── */}
       {scanState === 'scanning' && (
         <div className="flex flex-col items-center gap-4 rounded-2xl bg-white py-9">
-          <div
-            className="flex h-14 w-14 items-center justify-center rounded-2xl animate-pulse"
-            style={{ background: '#EEEBFA' }}
-          >
-            <Loader2 className="h-7 w-7 animate-spin" style={{ color: '#5346A8' }} />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-qayed-cachet-dilue animate-pulse" aria-hidden="true">
+            <Loader2 className="h-7 w-7 animate-spin text-qayed-cachet" />
           </div>
           {scanKind === 'cin' ? (
             <>
-              <p className="text-sm font-semibold text-gray-700">{t('cinScan.reading')}</p>
-              <p className="text-xs qayed-arabic text-gray-400" dir="rtl">{t('cinScan.readingAr')}</p>
+              <p className="text-sm font-semibold text-qayed-gris-700">{t('cinScan.reading')}</p>
+              <p className="text-xs qayed-arabic text-qayed-fiche" dir="rtl">{t('cinScan.readingAr')}</p>
             </>
           ) : mrzFallback ? (
             // Repli Claude vision après une lecture locale douteuse (barre indéterminée).
             <>
-              <p className="text-sm font-semibold text-gray-700">{t('cinScan.mrzFallback')}</p>
-              <p className="text-xs text-gray-400">{t('cinScan.mrzFallbackHint')}</p>
+              <p className="text-sm font-semibold text-qayed-gris-700">{t('cinScan.mrzFallback')}</p>
+              <p className="text-xs text-qayed-fiche">{t('cinScan.mrzFallbackHint')}</p>
             </>
           ) : (
             <>
-              <p className="text-sm font-semibold text-gray-700">{t('guestScan.readingMrz')}</p>
-              <div className="w-full max-w-xs rounded-full bg-gray-100 h-2">
-                <div className="h-2 rounded-full transition-all duration-300" style={{ width: `${ocrProgress}%`, background: 'var(--qayed-cachet)' }} />
+              <p className="text-sm font-semibold text-qayed-gris-700">{t('guestScan.readingMrz')}</p>
+              <div
+                className="w-full max-w-xs rounded-full bg-qayed-gris-100 h-2"
+                role="progressbar"
+                aria-valuenow={ocrProgress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={t('guestScan.readingMrz')}
+              >
+                <div className="h-2 rounded-full bg-qayed-cachet transition-all duration-300" style={{ width: `${ocrProgress}%` }} />
               </div>
-              <p className="text-xs text-gray-400">{ocrProgress}%</p>
+              <p className="text-xs text-qayed-fiche">{ocrProgress}%</p>
             </>
           )}
         </div>
@@ -535,22 +538,21 @@ export const GuestScanPanel = ({
             <button
               type="button"
               onClick={() => setZoomOpen(true)}
-              className="relative overflow-hidden rounded-xl border"
-              style={{ borderColor: '#DDD9CF' }}
+              className="relative overflow-hidden rounded-xl border border-qayed-ligne"
             >
               <img src={cinImageUrl} alt={t('cinScan.cardImage')} className="max-h-40 w-full object-contain bg-white" />
-              <span className="absolute bottom-1 right-1 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] text-white">{t('cinScan.zoom')}</span>
+              <span className="absolute bottom-1 end-1 rounded-md bg-qayed-encre/70 px-1.5 py-0.5 text-xs text-white">{t('cinScan.zoom')}</span>
             </button>
           )}
 
           {/* Bandeau « Client déjà enregistré » */}
           {isCin && cinScan?.existingClient && !usedExisting && (
-            <div className="flex flex-col gap-2 rounded-xl px-3 py-3" style={{ background: '#E4F5EC', border: '1px solid #1F9D6B' }}>
+            <div className="flex flex-col gap-2 rounded-xl border border-qayed-conforme bg-qayed-conforme-fond px-3 py-3">
               <div className="flex items-center gap-2">
-                <UserCheck className="h-4 w-4 shrink-0" style={{ color: '#137453' }} />
-                <p className="text-xs font-bold" style={{ color: '#137453' }}>{t('cinScan.existingClientTitle')}</p>
+                <UserCheck className="h-4 w-4 shrink-0 text-qayed-conforme-texte" aria-hidden="true" />
+                <p className="text-xs font-bold text-qayed-conforme-texte">{t('cinScan.existingClientTitle')}</p>
               </div>
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-qayed-gris-600">
                 {cinScan.existingClient.first_name} {cinScan.existingClient.last_name}
                 {cinScan.existingClient.date_of_birth ? ` · ${cinScan.existingClient.date_of_birth}` : ''}
               </p>
@@ -562,9 +564,9 @@ export const GuestScanPanel = ({
           )}
 
           {extractedOk && (
-            <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 bg-emerald-50 border border-emerald-200">
-              <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600" />
-              <p className="text-xs font-semibold text-emerald-800">
+            <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-qayed-conforme-fond px-3 py-2.5">
+              <CheckCircle className="h-4 w-4 shrink-0 text-qayed-conforme-texte" aria-hidden="true" />
+              <p className="text-xs font-semibold text-qayed-conforme-texte">
                 {isCin ? t('cinScan.verifyHint') : t('guestScan.readSuccess')}
               </p>
             </div>
@@ -581,7 +583,7 @@ export const GuestScanPanel = ({
               onChange={(e) => setG('document_type', e.target.value)}
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label={t('guestScan.firstName')} level={conf?.names}>
                 <Input value={guestForm.first_name ?? ''} onChange={(e) => setG('first_name', e.target.value)} autoFocus={focusKey === 'last_name'} required />
               </Field>
@@ -592,20 +594,20 @@ export const GuestScanPanel = ({
 
             {/* Champs arabes (RTL, IBM Plex Sans Arabic) — scan CIN uniquement */}
             {isCin && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Field label={t('cinScan.lastNameAr')} level={conf?.names}>
                   <Input dir="rtl" className="qayed-arabic text-right" value={guestForm.last_name_ar ?? ''} onChange={(e) => setG('last_name_ar', e.target.value)} />
                 </Field>
                 <Field label={t('cinScan.firstNameAr')} level={conf?.names}>
                   <Input dir="rtl" className="qayed-arabic text-right" value={guestForm.first_name_ar ?? ''} onChange={(e) => setG('first_name_ar', e.target.value)} />
                 </Field>
-                <div className="col-span-2">
+                <div className="sm:col-span-2">
                   <Field label={t('cinScan.filiationAr')}>
                     <Input dir="rtl" className="qayed-arabic text-right" value={guestForm.filiation_ar ?? ''} onChange={(e) => setG('filiation_ar', e.target.value)} />
                   </Field>
                 </div>
                 {(guestForm.spouse_ar || cinScan?.spouseAr) && (
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <Field label={t('cinScan.spouseAr')}>
                       <Input dir="rtl" className="qayed-arabic text-right" value={guestForm.spouse_ar ?? ''} onChange={(e) => setG('spouse_ar', e.target.value)} />
                     </Field>
@@ -618,7 +620,7 @@ export const GuestScanPanel = ({
               <Input type="date" value={guestForm.date_of_birth ?? ''} onChange={(e) => setG('date_of_birth', e.target.value)} autoFocus={focusKey === 'date_of_birth'} required />
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Select label={t('common.sex')} options={SEX_OPTIONS} value={guestForm.sex ?? ''} onChange={(e) => setG('sex', e.target.value)} />
               <Input label={t('guestScan.nationality')} placeholder="TUN" value={guestForm.nationality_code ?? ''} onChange={(e) => setG('nationality_code', e.target.value.toUpperCase())} maxLength={3} />
             </div>
@@ -635,12 +637,12 @@ export const GuestScanPanel = ({
 
             {/* Pays de délivrance + expiration : masqués pour la CIN (pas d'expiration) */}
             {!isCin && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Input label={t('guestScan.issuingCountry')} placeholder="TUN" value={guestForm.issuing_country_code ?? ''} onChange={(e) => setG('issuing_country_code', e.target.value.toUpperCase())} maxLength={3} required />
                 <div className="flex flex-col gap-1">
                   <Input label={t('guestScan.expiry')} type="date" value={guestForm.expiry_date ?? ''} onChange={(e) => setG('expiry_date', e.target.value)} />
                   {docExpiresSoon && (
-                    <p className="text-[11px] font-medium" style={{ color: '#8A6206' }}>{t('guestScan.docExpiresSoon')}</p>
+                    <p className="text-xs font-medium text-qayed-vigilance-texte">{t('guestScan.docExpiresSoon')}</p>
                   )}
                 </div>
               </div>
@@ -648,17 +650,17 @@ export const GuestScanPanel = ({
           </div>
 
           {hasUnfilledLow && (
-            <p className="text-[11px] font-medium text-red-600">{t('cinScan.lowFieldRequired')}</p>
+            <p className="text-xs font-medium text-qayed-erreur-texte" role="alert">{t('cinScan.lowFieldRequired')}</p>
           )}
 
           {docFieldsMissing && (
-            <p className="text-[11px] font-medium text-red-600">{t('guestScan.documentFieldsRequired')}</p>
+            <p className="text-xs font-medium text-qayed-erreur-texte" role="alert">{t('guestScan.documentFieldsRequired')}</p>
           )}
 
           {docExpired && (
-            <div className="flex items-start gap-2 rounded-xl px-3 py-2.5" style={{ background: '#FBF0D7', border: '1px solid #E3A008' }}>
-              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: '#8A6206' }} />
-              <p className="text-xs font-semibold" style={{ color: '#8A6206' }}>
+            <div className="flex items-start gap-2 rounded-xl border border-qayed-vigilance bg-qayed-vigilance-fond px-3 py-2.5">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-qayed-vigilance-texte" aria-hidden="true" />
+              <p className="text-xs font-semibold text-qayed-vigilance-texte">
                 {t('guestScan.docExpiredSince', {
                   date: new Date(guestForm.expiry_date!).toLocaleDateString(
                     i18n.language === 'ar' ? 'ar-TN' : i18n.language === 'en' ? 'en-GB' : 'fr-TN',
@@ -670,14 +672,14 @@ export const GuestScanPanel = ({
           )}
 
           {docRequired && (
-            <label className="flex items-start gap-2 rounded-xl px-3 py-2.5 cursor-pointer" style={{ background: '#FBF0D7', border: '1px solid #E3A008' }}>
+            <label className="flex items-start gap-2 rounded-xl border border-qayed-vigilance bg-qayed-vigilance-fond px-3 py-2.5 cursor-pointer">
               <input
                 type="checkbox"
-                className="mt-0.5 h-4 w-4 shrink-0 accent-[#8A6206]"
+                className="mt-0.5 h-4 w-4 shrink-0 accent-qayed-vigilance-texte"
                 checked={noDocAck}
                 onChange={(e) => setNoDocAck(e.target.checked)}
               />
-              <span className="text-xs font-semibold" style={{ color: '#8A6206' }}>
+              <span className="text-xs font-semibold text-qayed-vigilance-texte">
                 {t('guestScan.noDocumentAck')}
               </span>
             </label>
@@ -689,18 +691,18 @@ export const GuestScanPanel = ({
             onClick={() => addGuestMutation.mutate()}
             disabled={blockers.length > 0}
           >
-            {t('guestScan.confirmGuest')} <ArrowRight className="h-4 w-4" />
+            {t('guestScan.confirmGuest')} <ArrowNext className="h-4 w-4" />
           </Button>
 
-          <button className="text-center text-sm font-medium" style={{ color: '#5346A8' }} onClick={reset}>
-            ↩ {t('guestScan.rescan')}
-          </button>
+          <Button variant="link" className="self-center" onClick={reset}>
+            <RotateCcw className="h-4 w-4" aria-hidden="true" /> {t('guestScan.rescan')}
+          </Button>
         </>
       )}
 
       {/* Zoom vignette CIN */}
       {zoomOpen && cinImageUrl && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-black/90" onClick={() => setZoomOpen(false)}>
+        <div className="fixed inset-0 z-50 flex flex-col bg-qayed-encre/95" role="dialog" aria-modal="true" onClick={() => setZoomOpen(false)}>
           <div className="flex justify-end gap-2 p-4">
             <button onClick={(e) => { e.stopPropagation(); setRotation((r) => (r + 90) % 360); }} className="rounded-full bg-white/15 p-3 text-white" aria-label={t('cinScan.rotate')}>
               <RotateCw className="h-5 w-5" />

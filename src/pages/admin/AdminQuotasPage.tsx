@@ -5,8 +5,8 @@ import { Link } from 'react-router-dom';
 import { Gauge, Download, TrendingUp } from 'lucide-react';
 import { adminQuotasApi, type AdminQuotaRow } from '@/api/admin/subscriptions';
 import { formatTNDAmount } from '@/lib/money';
-import { ListSkeleton } from '@/components/admin/ListSkeleton';
-import { ErrorState } from '@/components/admin/ErrorState';
+import { ListSkeleton } from '@/components/ui/ListSkeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 /**
  * Écran « Quotas » (grille V2) — pilotage commercial de l'upsell : comptes à
@@ -25,7 +25,7 @@ const QuotaBar = ({ row }: { row: AdminQuotaRow }) => {
           className="h-full rounded-full transition-all"
           style={{
             width: `${pct}%`,
-            background: over ? '#E3A008' : pct >= 80 ? 'var(--qayed-cachet)' : 'var(--qayed-conforme, #1F9D6B)',
+            background: over ? 'var(--qayed-vigilance)' : pct >= 80 ? 'var(--qayed-cachet)' : 'var(--qayed-conforme, var(--qayed-conforme))',
           }}
         />
       </div>
@@ -71,7 +71,7 @@ const OveragesSection = () => {
           </div>
           <div className="flex items-center gap-3">
             <span className="font-mono font-semibold">{formatTNDAmount(c.amount)} TND</span>
-            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
               c.status === 'invoiced' ? 'bg-green-50 text-green-700'
               : c.status === 'excluded_legacy' ? 'bg-gray-100 text-gray-500'
               : c.status === 'waived' ? 'bg-gray-100 text-gray-400'
@@ -129,10 +129,10 @@ export const AdminQuotasPage = () => {
             <div className="flex items-center gap-2 flex-wrap">
               <p className="font-bold text-gray-900 truncate">{row.name}</p>
               {row.legacy && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">{t('adminQuotas.legacy')}</span>
+                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">{t('adminQuotas.legacy')}</span>
               )}
               {row.upsell_flagged_at && (
-                <span className="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--qayed-cachet-dilue, #EEEBFA)', color: 'var(--qayed-cachet, #5346A8)' }}>
+                <span className="flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--qayed-cachet-dilue, var(--qayed-cachet-dilue))', color: 'var(--qayed-cachet, var(--qayed-cachet))' }}>
                   <TrendingUp className="h-3 w-3" /> {t('adminQuotas.upsellCandidate')}
                 </span>
               )}
@@ -143,7 +143,7 @@ export const AdminQuotasPage = () => {
           <div className="text-end min-w-[130px]">
             {row.quota != null && row.used > row.quota ? (
               <>
-                <p className="text-sm font-semibold" style={{ color: '#8A6206' }}>
+                <p className="text-sm font-semibold" style={{ color: 'var(--qayed-vigilance-texte)' }}>
                   {t('adminQuotas.overageCount', { count: row.overage_count })}
                 </p>
                 {row.overage_amount != null && (

@@ -39,7 +39,10 @@ const OccupancyRing = ({ pct, present, total }: { pct: number; present: number; 
   const { t } = useTranslation();
   const r = 42, circ = 2 * Math.PI * r;
   const filled = ((Math.min(pct, 100)) / 100) * circ;
-  const color  = pct >= 80 ? '#4ade80' : pct >= 50 ? '#fbbf24' : '#93c5fd';
+  // Trois paliers, trois couleurs de la charte : conforme / vigilance /
+  // cachet clair. Les valeurs precedentes (#4ade80, #fbbf24, #93c5fd) etaient
+  // hors charte, dont un bleu qui n'existe nulle part dans la marque.
+  const color  = pct >= 80 ? 'var(--qayed-conforme)' : pct >= 50 ? 'var(--qayed-vigilance)' : 'var(--qayed-cachet-sombre)';
   return (
     <div className="flex flex-col items-center gap-1.5">
       <svg width="104" height="104" viewBox="0 0 106 106" className="block">
@@ -59,12 +62,12 @@ const OccupancyRing = ({ pct, present, total }: { pct: number; present: number; 
           {pct}%
         </text>
         {/* Present count */}
-        <text x="53" y="63" textAnchor="middle" fill="rgba(255,255,255,0.7)" style={{ fontSize: 11 }}>
+        <text x="53" y="63" textAnchor="middle" fill="var(--qayed-sur-encre)" style={{ fontSize: 12 }}>
           {t('hotelDashboard.presentCount', { count: present })}
         </text>
       </svg>
       {total != null && (
-        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.5)' }}>
+        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--qayed-sur-encre)' }}>
           {t('hotelDashboard.ofTotalUnits', { count: total })}
         </span>
       )}
@@ -78,12 +81,12 @@ const OccupancyChart = ({ data }: { data: OccupancyDay[] }) => (
   <div className="flex items-end gap-1.5 h-28 w-full">
     {data.map((d) => {
       const pct = Math.max(Math.min(d.rate, 100), 2);
-      const color = d.is_today ? '#5346A8' : '#AFA9EC';
+      const color = d.is_today ? 'var(--qayed-cachet)' : 'var(--qayed-cachet-sombre)';
       return (
         <div key={d.date} className="flex flex-1 flex-col items-center gap-1 h-full justify-end">
           <span
-            className="text-[10px] font-semibold leading-none tabular-nums"
-            style={{ color: d.is_today ? '#5346A8' : d.is_future ? '#C4BFF0' : '#9CA3AF' }}
+            className="text-xs font-semibold leading-none tabular-nums"
+            style={{ color: d.is_today ? 'var(--qayed-cachet)' : d.is_future ? 'var(--qayed-cachet-sombre)' : 'var(--qayed-fiche)' }}
           >
             {Math.round(d.rate)}%
           </span>
@@ -92,13 +95,13 @@ const OccupancyChart = ({ data }: { data: OccupancyDay[] }) => (
             style={{
               height: `${pct}%`,
               ...(d.is_future
-                ? { border: '2px dashed #AFA9EC', background: 'transparent' }
+                ? { border: '2px dashed var(--qayed-cachet-sombre)', background: 'transparent' }
                 : { background: color }),
             }}
           />
           <span
-            className="text-[9px] leading-none truncate"
-            style={{ color: d.is_today ? '#5346A8' : '#9CA3AF', fontWeight: d.is_today ? 700 : 400, opacity: d.is_future ? 0.7 : 1 }}
+            className="text-xs leading-none truncate"
+            style={{ color: d.is_today ? 'var(--qayed-cachet)' : 'var(--qayed-fiche)', fontWeight: d.is_today ? 700 : 400, opacity: d.is_future ? 0.7 : 1 }}
           >
             {d.label}
           </span>
@@ -169,8 +172,8 @@ const OccupancyCard = ({ initial, property, roomCount }: {
             <button
               type="button"
               onClick={() => setOffset(0)}
-              className="rounded-full px-2.5 py-1 text-[11px] font-bold"
-              style={{ background: '#EEEBFA', color: '#5346A8' }}
+              className="rounded-full px-2.5 py-1 text-xs font-bold"
+              style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
             >
               {t('hotelDashboard.occThisWeek')}
             </button>
@@ -186,7 +189,7 @@ const OccupancyCard = ({ initial, property, roomCount }: {
 
       <div className="flex items-center justify-between gap-2 mb-1">
         <p className="text-xs text-gray-400 truncate">{subtitle}</p>
-        <p className="text-xs font-semibold shrink-0" style={{ color: '#5346A8' }}>{fmtRangeLabel(start, end, locale)}</p>
+        <p className="text-xs font-semibold shrink-0" style={{ color: 'var(--qayed-cachet)' }}>{fmtRangeLabel(start, end, locale)}</p>
       </div>
 
       <div
@@ -216,8 +219,8 @@ const StatTile = ({
         <Icon className="h-4 w-4" style={{ color: accent }} />
       </div>
       <div className="min-w-0">
-        <p className="text-xl font-black leading-none tabular-nums" style={{ color: emphasis ? accent : '#111827' }}>{value}</p>
-        <p className="text-[11px] font-medium leading-snug mt-1" style={{ color: '#6B7280' }}>{label}</p>
+        <p className="text-xl font-black leading-none tabular-nums" style={{ color: emphasis ? accent : 'var(--qayed-encre)' }}>{value}</p>
+        <p className="text-xs font-medium leading-snug mt-1" style={{ color: 'var(--qayed-fiche)' }}>{label}</p>
       </div>
     </>
   );
@@ -273,17 +276,17 @@ const PropertiesSummaryCard = ({
               onClick={() => !p.is_active && onSwitch(p.id, p.name)}
               className="flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-start transition-all shrink-0"
               style={{
-                border: p.is_active ? '2px solid #5346A8' : '1px solid #F3F4F6',
+                border: p.is_active ? '2px solid var(--qayed-cachet)' : '1px solid var(--qayed-gris-100)',
                 background: p.is_active ? 'rgba(83,70,168,0.06)' : '#fff',
                 cursor: p.is_active ? 'default' : 'pointer',
               }}
             >
               <span className="flex items-center gap-2 min-w-0">
-                <Building2 className="h-4 w-4 shrink-0" style={{ color: p.is_active ? '#5346A8' : '#9CA3AF' }} />
+                <Building2 className="h-4 w-4 shrink-0" style={{ color: p.is_active ? 'var(--qayed-cachet)' : 'var(--qayed-fiche-faible)' }} />
                 <span className="text-sm font-semibold text-gray-900 truncate">{p.name}</span>
               </span>
               <span className="flex items-center gap-2.5 shrink-0 text-xs">
-                <span className="font-bold tabular-nums" style={{ color: p.occupancy_rate >= 80 ? '#1F9D6B' : '#5346A8' }}>{p.occupancy_rate}%</span>
+                <span className="font-bold tabular-nums" style={{ color: p.occupancy_rate >= 80 ? 'var(--qayed-conforme)' : 'var(--qayed-cachet)' }}>{p.occupancy_rate}%</span>
                 <span className="text-gray-400">{t('hotelDashboard.presentCount', { count: p.present })}</span>
                 {p.is_active
                   ? <span className="h-4 w-4 shrink-0" />
@@ -316,7 +319,7 @@ const MovementRow = ({
   <button
     onClick={onClick}
     className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-start hover:bg-warm-100 transition-colors"
-    style={{ border: '1px solid #F3F4F6' }}
+    style={{ border: '1px solid var(--qayed-gris-100)' }}
   >
     <div className="min-w-0 flex-1">
       <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
@@ -338,7 +341,7 @@ const ArrivalsDeparturesCard = ({ d }: { d: DashboardData }) => {
   if (!arrivals.length && !departures.length) {
     return (
       <Card className="flex items-center gap-3 py-3.5">
-        <CalendarCheck className="h-5 w-5 shrink-0" style={{ color: '#5346A8' }} />
+        <CalendarCheck className="h-5 w-5 shrink-0" style={{ color: 'var(--qayed-cachet)' }} />
         <p className="text-sm text-gray-500">{t('hotelDashboard.todayNoMovement')}</p>
       </Card>
     );
@@ -349,9 +352,9 @@ const ArrivalsDeparturesCard = ({ d }: { d: DashboardData }) => {
   }: { icon: React.ElementType; title: string; count: number; children: React.ReactNode }) => (
     <div className="flex flex-col gap-2 flex-1 min-w-0">
       <div className="flex items-center gap-2">
-        <Icon className="h-4 w-4" style={{ color: '#5346A8' }} />
+        <Icon className="h-4 w-4" style={{ color: 'var(--qayed-cachet)' }} />
         <p className="text-sm font-bold text-gray-900">{title}</p>
-        <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#EEEBFA', color: '#5346A8' }}>{count}</span>
+        <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}>{count}</span>
       </div>
       {children}
     </div>
@@ -372,7 +375,7 @@ const ArrivalsDeparturesCard = ({ d }: { d: DashboardData }) => {
           ))}
           {!arrivals.length && <p className="text-sm text-gray-400 py-3 text-center">{t('hotelDashboard.noArrivalToday')}</p>}
         </Column>
-        <div className="hidden md:block w-px self-stretch" style={{ background: '#F3F4F6' }} />
+        <div className="hidden md:block w-px self-stretch" style={{ background: 'var(--qayed-gris-100)' }} />
         <Column icon={LogOut} title={t('hotelDashboard.departuresToday')} count={departures.length}>
           {departures.map((dep) => (
             <MovementRow
@@ -380,7 +383,7 @@ const ArrivalsDeparturesCard = ({ d }: { d: DashboardData }) => {
               name={dep.guest_name || dep.reference}
               sub={`${dep.room ?? t('hotelDashboard.noRoom')} · ${dep.reference}`}
               badge={
-                <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: '#FBF0D7', color: '#8A6206' }}>
+                <span className="shrink-0 rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: 'var(--qayed-vigilance-fond)', color: 'var(--qayed-vigilance-texte)' }}>
                   {t('hotelDashboard.departureNotConfirmed')}
                 </span>
               }
@@ -414,28 +417,32 @@ const MonthInsightsCard = ({ insights }: { insights: NonNullable<DashboardData['
       <div className="grid grid-cols-2 gap-3">
         {/* Top nationalité */}
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl overflow-hidden" style={{ background: '#EEEBFA' }}>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl overflow-hidden" style={{ background: 'var(--qayed-cachet-dilue)' }}>
             {flag
-              ? <img src={flag} alt={nat!.code} width={22} className="rounded-sm" style={{ border: '1px solid rgba(0,0,0,0.1)' }} />
-              : <Globe className="h-4 w-4" style={{ color: '#5346A8' }} />}
+              ? <img src={flag} alt={nat!.code} width={22} className="rounded-sm" style={{ border: '1px solid rgba(0,0,0,0.1)' }}
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                      />
+              : <Globe className="h-4 w-4" style={{ color: 'var(--qayed-cachet)' }} />}
           </div>
           <div className="min-w-0">
             <p className="text-sm font-bold text-gray-900 truncate">
               {nat ? nat.code : '—'}
               {nat && <span className="ms-1.5 text-xs font-semibold text-gray-400 tabular-nums">{nat.count}</span>}
             </p>
-            <p className="text-[11px] text-gray-400 leading-snug">{t('hotelDashboard.topNationality')}</p>
+            <p className="text-xs text-gray-400 leading-snug">{t('hotelDashboard.topNationality')}</p>
           </div>
         </div>
 
         {/* Durée moyenne de séjour */}
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: '#E4F5EC' }}>
-            <Moon className="h-4 w-4" style={{ color: '#1F9D6B' }} />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: 'var(--qayed-conforme-fond)' }}>
+            <Moon className="h-4 w-4" style={{ color: 'var(--qayed-conforme)' }} />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-bold text-gray-900 truncate">{stayText}</p>
-            <p className="text-[11px] text-gray-400 leading-snug">{t('hotelDashboard.avgStay')}</p>
+            <p className="text-xs text-gray-400 leading-snug">{t('hotelDashboard.avgStay')}</p>
           </div>
         </div>
       </div>
@@ -513,12 +520,12 @@ export const DashboardPage = () => {
               <div className="flex gap-4 mt-3">
                 <div className="flex flex-col" style={{ color: 'rgba(255,255,255,0.9)' }}>
                   <span className="text-lg font-black leading-none tabular-nums">{d.today.arrivals_expected}</span>
-                  <span className="text-[10px] font-medium uppercase tracking-wide mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('hotelDashboard.arrivals')}</span>
+                  <span className="text-xs font-medium uppercase tracking-wide mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('hotelDashboard.arrivals')}</span>
                 </div>
                 <div className="w-px self-stretch" style={{ background: 'rgba(255,255,255,0.15)' }} />
                 <div className="flex flex-col" style={{ color: 'rgba(255,255,255,0.9)' }}>
                   <span className="text-lg font-black leading-none tabular-nums">{d.today.departures_today}</span>
-                  <span className="text-[10px] font-medium uppercase tracking-wide mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('hotelDashboard.departures')}</span>
+                  <span className="text-xs font-medium uppercase tracking-wide mt-1" style={{ color: 'rgba(255,255,255,0.5)' }}>{t('hotelDashboard.departures')}</span>
                 </div>
               </div>
             </div>
@@ -540,7 +547,7 @@ export const DashboardPage = () => {
           <button
             onClick={() => navigate('/hotel/check-ins/new')}
             className="flex w-full items-center justify-center gap-2 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
-            style={{ background: '#fff', color: '#5346A8', minHeight: 48, boxShadow: '0 4px 14px rgba(0,0,0,0.18)' }}
+            style={{ background: '#fff', color: 'var(--qayed-cachet)', minHeight: 48, boxShadow: '0 4px 14px rgba(0,0,0,0.18)' }}
           >
             <Plus className="h-5 w-5" />
             {t('hotelDashboard.newCheckin')}
@@ -554,26 +561,26 @@ export const DashboardPage = () => {
             <button
               onClick={() => navigate('/hotel/security')}
               className="flex items-start gap-3 rounded-xl p-4 w-full text-start transition-opacity hover:opacity-90 active:scale-[.99]"
-              style={{ background: '#FEF2F2', border: '1px solid #FCA5A5' }}
+              style={{ background: 'var(--qayed-erreur-fond)', border: '1px solid var(--qayed-erreur)' }}
             >
               <div
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-                style={{ background: '#EF444420' }}
+                style={{ background: 'rgba(239,68,68,0.13)' }}
               >
-                <ShieldAlert className="h-5 w-5" style={{ color: '#DC2626' }} />
+                <ShieldAlert className="h-5 w-5" style={{ color: 'var(--qayed-erreur)' }} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold" style={{ color: '#7F1D1D' }}>
+                <p className="text-sm font-bold" style={{ color: 'var(--qayed-erreur-texte)' }}>
                   {t('hotelDashboard.securityNotification')}
                 </p>
-                <p className="text-sm font-semibold mt-0.5" style={{ color: '#991B1B' }}>
+                <p className="text-sm font-semibold mt-0.5" style={{ color: 'var(--qayed-erreur-texte)' }}>
                   {t('hotelDashboard.pendingAlerts', { count: securityHitCount })}
                 </p>
-                <p className="text-xs mt-1" style={{ color: '#B91C1C' }}>
+                <p className="text-xs mt-1" style={{ color: 'var(--qayed-erreur-texte)' }}>
                   {t('hotelDashboard.contactAuthorities')}
                 </p>
               </div>
-              <ChevronRight className="h-5 w-5 shrink-0 mt-1" style={{ color: '#DC2626' }} />
+              <ChevronRight className="h-5 w-5 shrink-0 mt-1" style={{ color: 'var(--qayed-erreur)' }} />
             </button>
           )}
 
@@ -608,19 +615,19 @@ export const DashboardPage = () => {
               <div
                 className="flex items-start gap-3 rounded-xl p-3"
                 style={reached
-                  ? { background: '#FBF0D7', border: '1px solid #E3A008' }
-                  : { background: '#EEEBFA', border: '1px solid #C9C1EE' }}
+                  ? { background: 'var(--qayed-vigilance-fond)', border: '1px solid var(--qayed-vigilance)' }
+                  : { background: 'var(--qayed-cachet-dilue)', border: '1px solid var(--qayed-cachet-sombre)' }}
               >
-                <Gauge className="mt-0.5 h-4 w-4 shrink-0" style={{ color: reached ? '#E3A008' : '#5346A8' }} />
+                <Gauge className="mt-0.5 h-4 w-4 shrink-0" style={{ color: reached ? 'var(--qayed-vigilance)' : 'var(--qayed-cachet)' }} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold" style={{ color: reached ? '#8A6206' : '#443896' }}>
+                  <p className="text-sm font-semibold" style={{ color: reached ? 'var(--qayed-vigilance-texte)' : 'var(--qayed-cachet-fonce)' }}>
                     {reached
                       ? (q.used > q.quota
                         ? t('hotelDashboard.quotaOverage', { over: q.used - q.quota, quota: q.quota })
                         : t('hotelDashboard.quotaReached', { quota: q.quota }))
                       : t('hotelDashboard.quotaWarning', { used: q.used, quota: q.quota })}
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: reached ? '#8A6206' : '#5346A8' }}>
+                  <p className="text-xs mt-0.5" style={{ color: reached ? 'var(--qayed-vigilance-texte)' : 'var(--qayed-cachet)' }}>
                     {reached
                       ? (q.billable && q.overage_amount != null && q.overage_amount > 0
                         // Tranche de 1 (grille V3) : on annonce des check-ins,
@@ -636,7 +643,7 @@ export const DashboardPage = () => {
                     <button
                       onClick={() => navigate('/hotel/subscription')}
                       className="mt-2 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition-all active:scale-[0.98]"
-                      style={{ background: '#5346A8' }}
+                      style={{ background: 'var(--qayed-cachet)' }}
                     >
                       {t('hotelDashboard.quotaUpgradeCta')}
                     </button>
@@ -671,13 +678,13 @@ export const DashboardPage = () => {
                 icon={FileWarning}
                 label={t('hotelDashboard.statDraftsPending')}
                 value={drafts}
-                accent={drafts > 0 ? '#E3A008' : '#1F9D6B'}
+                accent={drafts > 0 ? 'var(--qayed-vigilance)' : 'var(--qayed-conforme)'}
                 emphasis={drafts > 0}
                 onClick={drafts > 0 ? () => navigate('/hotel/history?status=draft') : undefined}
               />
-              <StatTile icon={DoorOpen}      label={t('hotelDashboard.statPresent')}            value={d.today.currently_present}   accent="#443896" />
-              <StatTile icon={CalendarClock} label={t('hotelDashboard.statDeparturesTomorrow')} value={d.today.departures_tomorrow} accent="#5346A8" />
-              <StatTile icon={TrendingUp}    label={t('hotelDashboard.statCheckinsMonth')}      value={d.month.check_ins_total}     accent="#8B7FE0" />
+              <StatTile icon={DoorOpen}      label={t('hotelDashboard.statPresent')}            value={d.today.currently_present}   accent="var(--qayed-cachet-fonce)" />
+              <StatTile icon={CalendarClock} label={t('hotelDashboard.statDeparturesTomorrow')} value={d.today.departures_tomorrow} accent="var(--qayed-cachet)" />
+              <StatTile icon={TrendingUp}    label={t('hotelDashboard.statCheckinsMonth')}      value={d.month.check_ins_total}     accent="var(--qayed-cachet-sombre)" />
             </div>
           )}
 
@@ -737,7 +744,7 @@ export const DashboardPage = () => {
               <button
                 onClick={() => navigate('/hotel/history')}
                 className="text-xs font-semibold"
-                style={{ color: '#5346A8' }}
+                style={{ color: 'var(--qayed-cachet)' }}
               >
                 {t('hotelDashboard.seeAll')} →
               </button>
@@ -756,7 +763,7 @@ export const DashboardPage = () => {
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ background: '#EEEBFA', color: '#5346A8' }}
+                        style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
                       >
                         {initials}
                       </div>
@@ -780,9 +787,9 @@ export const DashboardPage = () => {
                 <div className="flex flex-col items-center gap-3 px-5 py-10">
                   <div
                     className="h-12 w-12 rounded-full flex items-center justify-center"
-                    style={{ background: '#EEEBFA' }}
+                    style={{ background: 'var(--qayed-cachet-dilue)' }}
                   >
-                    <UserCheck className="h-5 w-5" style={{ color: '#5346A8' }} />
+                    <UserCheck className="h-5 w-5" style={{ color: 'var(--qayed-cachet)' }} />
                   </div>
                   <p className="text-sm text-gray-400">{t('hotelDashboard.noRecentCheckin')}</p>
                   <Button size="sm" onClick={() => navigate('/hotel/check-ins/new')}>

@@ -850,7 +850,8 @@
     "other": "Autre",
     "sex": "Sexe",
     "retry": "Réessayer",
-    "saved": "Enregistré"
+    "saved": "Enregistré",
+    "pagination": "Pagination"
   },
   "authorityWatchlist": {
     "title": "Personnes surveillées",
@@ -1821,5 +1822,22 @@
     "cancelChangeSubscribe": "Annuler cette souscription",
     "cancelChangeUpgrade": "Annuler ce changement",
     "cancelChangeDowngrade": "Annuler ce changement"
+  },
+  "site": {
+    "login": "Se connecter",
+    "tryFree": "Essayer gratuitement",
+    "menu": "Menu",
+    "notFound": "Cette page n'existe pas ou n'est plus publiée.",
+    "backHome": "Retour à l'accueil"
+  },
+  "pricingSection": {
+    "eyebrow": "Abonnement",
+    "title": "Simple et transparent.",
+    "lead": "Sans engagement. Sans frais cachés. Changez de plan à tout moment.",
+    "monthly": "Mensuel",
+    "yearly": "Annuel",
+    "yearlyBadge": "1 mois offert",
+    "footnote": "Aucune carte bancaire requise pour démarrer l'essai · Résiliable à tout moment",
+    "ctaFallback": "Essayer 7 jours gratuit"
   }
 }

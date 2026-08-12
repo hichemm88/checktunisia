@@ -6,8 +6,8 @@ import { adminDashboardApi, type AdminDashboardStats } from '@/api/admin/dashboa
 import { adminPaymentsApi } from '@/api/admin/payments';
 import { adminWhatsappApi } from '@/api/admin/whatsapp';
 import { adminAiCostsApi, type AiFeatureSummary } from '@/api/admin/aiCosts';
-import { ListSkeleton } from '@/components/admin/ListSkeleton';
-import { ErrorState } from '@/components/admin/ErrorState';
+import { ListSkeleton } from '@/components/ui/ListSkeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { Button } from '@/components/ui/Button';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { formatTND, formatUSD } from '@/lib/money';
@@ -44,7 +44,7 @@ const CheckInsChart = ({ data }: { data: { date: string; count: number }[] }) =>
               className="w-full rounded-sm transition-all"
               style={{ height: `${Math.max(3, (d.count / max) * 100)}%`, background: 'var(--qayed-cachet)', opacity: d.count === 0 ? 0.15 : 0.85 }}
             />
-            <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white z-10">
+            <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-xs text-white z-10">
               <span className="font-mono">{d.count}</span>
               <span>{new Date(d.date).toLocaleDateString(locale, { day: '2-digit', month: 'short' })}</span>
             </div>
@@ -204,7 +204,7 @@ const AiCostWidget = () => {
                     <div style={{ height: `${100 - cinPct}%`, background: 'var(--qayed-conforme)' }} />
                     <div style={{ height: `${cinPct}%`, background: 'var(--qayed-cachet)' }} />
                   </div>
-                  <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white z-10">
+                  <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-xs text-white z-10">
                     <span className="font-mono">
                       {t('aiCosts.cinLabel')} {d.cin_count} · {t('aiCosts.passportLabel')} {d.passport_count}
                     </span>
@@ -215,7 +215,7 @@ const AiCostWidget = () => {
             })}
           </div>
         )}
-        <div className="mt-2 flex items-center gap-4 text-[10px] text-gray-400">
+        <div className="mt-2 flex items-center gap-4 text-xs text-gray-400">
           <span className="flex items-center gap-1">
             <span className="inline-block h-2 w-2 rounded-sm" style={{ background: 'var(--qayed-cachet)' }} />
             {t('aiCosts.cinLabel')}
@@ -263,7 +263,7 @@ const ScanComparisonChart = () => {
             {'  ·  '}
             {t('aiCosts.scanCompareLegendVision')} <span className="font-mono font-semibold text-gray-700">{data.total_vision}</span>
           </p>
-          <p className="text-[11px] text-gray-400">{t('aiCosts.passportFallbackShort', { rate: data.passport_fallback_rate.toFixed(1) })}</p>
+          <p className="text-xs text-gray-400">{t('aiCosts.passportFallbackShort', { rate: data.passport_fallback_rate.toFixed(1) })}</p>
         </div>
       </div>
 
@@ -281,7 +281,7 @@ const ScanComparisonChart = () => {
                 className="w-1/2 rounded-sm"
                 style={{ height: `${Math.max(2, (d.vision / max) * 100)}%`, background: 'var(--qayed-cachet)', opacity: d.vision === 0 ? 0.12 : 0.9 }}
               />
-              <div className="pointer-events-none absolute -top-11 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-[10px] text-white z-10">
+              <div className="pointer-events-none absolute -top-11 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-xs text-white z-10">
                 <span className="font-mono">{t('aiCosts.scanCompareLegendMrz')} {d.mrz_local} · {t('aiCosts.scanCompareLegendVision')} {d.vision}</span>
                 <span>{d.date}</span>
               </div>
@@ -290,7 +290,7 @@ const ScanComparisonChart = () => {
         </div>
       )}
 
-      <div className="mt-2 flex items-center gap-4 text-[10px] text-gray-400">
+      <div className="mt-2 flex items-center gap-4 text-xs text-gray-400">
         <span className="flex items-center gap-1">
           <span className="inline-block h-2 w-2 rounded-sm" style={{ background: 'var(--qayed-conforme)' }} />
           {t('aiCosts.scanCompareLegendMrz')}
@@ -322,7 +322,7 @@ const PendingVirementsCard = ({ items }: { items: AdminDashboardStats['alerts'][
         <div key={p.id} className="flex items-center justify-between gap-2 text-sm">
           <div className="min-w-0">
             <p className="truncate font-medium text-gray-800">{p.name}</p>
-            <p className="font-mono text-[11px] text-gray-400 truncate">
+            <p className="font-mono text-xs text-gray-400 truncate">
               {p.invoice_number ?? '—'} · {formatTND(p.amount)}{p.reference ? ` · ${p.reference}` : ''}
             </p>
           </div>
@@ -351,7 +351,7 @@ const KpiTile = ({ icon: Icon, label, value, sub, color, amber }: { icon: typeof
     </div>
     <p
       className="font-mono text-3xl font-extrabold"
-      style={{ color: amber ? 'var(--qayed-vigilance-texte)' : '#111827' }}
+      style={{ color: amber ? 'var(--qayed-vigilance-texte)' : 'var(--qayed-encre)' }}
     >
       {value}
     </p>
@@ -381,7 +381,7 @@ const BusinessKpis = () => {
       />
       <KpiTile
         icon={TrendingDown}
-        color="#ef4444"
+        color="var(--qayed-erreur)"
         amber={churnAmber}
         label={t('adminKpis.churn')}
         value={pct(data.churn.rate_pct)}
@@ -396,14 +396,14 @@ const BusinessKpis = () => {
       />
       <KpiTile
         icon={TrendingUp}
-        color={net >= 0 ? 'var(--qayed-conforme)' : '#ef4444'}
+        color={net >= 0 ? 'var(--qayed-conforme)' : 'var(--qayed-erreur)'}
         label={t('adminKpis.netMrr')}
         value={`${netSign}${formatTND(net)}`}
         sub={
           <>
             <span style={{ color: 'var(--qayed-conforme)' }}>+{formatTND(data.mrr.new_this_month)}</span>
             {'  ·  '}
-            <span style={{ color: '#ef4444' }}>-{formatTND(data.mrr.churned_this_month)}</span>
+            <span style={{ color: 'var(--qayed-erreur)' }}>-{formatTND(data.mrr.churned_this_month)}</span>
           </>
         }
       />
@@ -440,7 +440,7 @@ const HealthPanel = () => {
     return (
       <div className="card p-5">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('adminHealth.title')}</p>
-        <p className="text-sm" style={{ color: '#ef4444' }}>{t('adminHealth.unavailable')}</p>
+        <p className="text-sm" style={{ color: 'var(--qayed-erreur)' }}>{t('adminHealth.unavailable')}</p>
       </div>
     );
   }
@@ -472,12 +472,12 @@ const HealthPanel = () => {
   const waWarn = !waAlert && (session?.paused || (session?.status !== 'ready' && session != null));
 
   const Signal = ({ label, value, level, hint }: { label: string; value: string; level: 'ok' | 'warn' | 'alert'; hint?: string }) => {
-    const color = level === 'alert' ? '#ef4444' : level === 'warn' ? 'var(--qayed-vigilance)' : 'var(--qayed-conforme)';
+    const color = level === 'alert' ? 'var(--qayed-erreur)' : level === 'warn' ? 'var(--qayed-vigilance)' : 'var(--qayed-conforme)';
     return (
       <div className="flex items-start justify-between gap-3 py-2 border-b border-gray-100 last:border-0">
         <div className="min-w-0">
           <p className="text-xs font-semibold text-gray-700">{label}</p>
-          {hint && <p className="text-[11px] text-gray-400 truncate">{hint}</p>}
+          {hint && <p className="text-xs text-gray-400 truncate">{hint}</p>}
         </div>
         <span className="shrink-0 inline-flex items-center gap-1.5 text-xs font-mono font-semibold" style={{ color }}>
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
@@ -497,7 +497,7 @@ const HealthPanel = () => {
       {/* Le releve lui-meme est-il frais ? Un panneau vert et perime rassure
           a tort ; on prefere le dire que le laisser croire. */}
       {readingStale && (
-        <p className="mb-2 rounded-lg px-2 py-1 text-[11px] font-semibold" style={{ background: '#fef3c7', color: '#92400e' }}>
+        <p className="mb-2 rounded-lg px-2 py-1 text-xs font-semibold" style={{ background: 'var(--qayed-vigilance-fond)', color: 'var(--qayed-vigilance-texte)' }}>
           {t('adminHealth.readingStale', { count: Math.round(readingAgeMs / 60_000) })}
         </p>
       )}
@@ -570,7 +570,7 @@ export const AdminDashboardPage = () => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Stat icon={Building2}    label={t('adminDashboard.properties')} value={stats.hotels.total}     color="var(--qayed-cachet)" />
             <Stat icon={CheckCircle2} label={t('adminDashboard.active')}     value={stats.hotels.active}    color="var(--qayed-conforme)" />
-            <Stat icon={XCircle}      label={t('adminDashboard.suspended')}  value={stats.hotels.suspended} color="#ef4444" />
+            <Stat icon={XCircle}      label={t('adminDashboard.suspended')}  value={stats.hotels.suspended} color="var(--qayed-erreur)" />
             <Stat icon={Clock}        label={t('adminDashboard.pending')}    value={stats.hotels.pending}   color="var(--qayed-vigilance)" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -588,7 +588,7 @@ export const AdminDashboardPage = () => {
                   existent dans le parc mais jamais dans le revenu. L'afficher
                   evite de lire une perte de clients la ou il n'y en a pas. */}
               {(stats.organizations?.internal ?? 0) > 0 && (
-                <p className="mt-1 text-[11px] text-gray-400">
+                <p className="mt-1 text-xs text-gray-400">
                   {t('adminDashboard.mrrScope', {
                     commercial: stats.organizations.commercial,
                     internal: stats.organizations.internal,
@@ -597,7 +597,7 @@ export const AdminDashboardPage = () => {
               )}
               {(stats.mrr_breakdown?.length ?? 0) > 0 && (
                 <div className="pointer-events-none absolute top-full left-0 mt-1 hidden group-hover:block w-72 rounded-xl bg-gray-900 p-3 text-white shadow-xl z-20">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-2">{t('adminDashboard.mrrBreakdown')}</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">{t('adminDashboard.mrrBreakdown')}</p>
                   {stats.mrr_breakdown.map((b, i) => (
                     <div key={i} className="flex items-center justify-between gap-2 text-xs py-0.5">
                       <span className="truncate">
@@ -622,7 +622,7 @@ export const AdminDashboardPage = () => {
                 </div>
               </div>
               <p className="font-mono text-3xl font-extrabold text-gray-900">{formatTND(stats.arr)}</p>
-              <p className="mt-1 text-[11px] text-gray-400">
+              <p className="mt-1 text-xs text-gray-400">
                 {t('adminDashboard.payingCustomers', { count: stats.paying_customers })}
               </p>
             </div>
@@ -655,7 +655,7 @@ export const AdminDashboardPage = () => {
                       {/* Deja en retard mais toujours servi : ce n'est pas la
                           meme relance qu'une echeance a venir. */}
                       {s.grace?.active && (
-                        <span className="ms-1.5 text-[10px] font-semibold uppercase" style={{ color: 'var(--qayed-vigilance)' }}>
+                        <span className="ms-1.5 text-xs font-semibold uppercase" style={{ color: 'var(--qayed-vigilance)' }}>
                           {t('adminDashboard.inGrace', { count: s.grace.days_left ?? 0 })}
                         </span>
                       )}
@@ -672,7 +672,7 @@ export const AdminDashboardPage = () => {
                   </div>
                 ))}
               </AlertCard>
-              <AlertCard icon={AlertTriangle} title={t('adminDashboard.failedPayments')} color="#ef4444" empty={!stats.alerts.failed_payments.length}>
+              <AlertCard icon={AlertTriangle} title={t('adminDashboard.failedPayments')} color="var(--qayed-erreur)" empty={!stats.alerts.failed_payments.length}>
                 {stats.alerts.failed_payments.map((p) => (
                   <div key={p.id} className="flex items-center justify-between text-sm">
                     <span className="truncate font-medium text-gray-800">{p.hotel_name ?? '—'}</span>
@@ -680,7 +680,7 @@ export const AdminDashboardPage = () => {
                   </div>
                 ))}
               </AlertCard>
-              <AlertCard icon={Ban} title={t('adminDashboard.recentlySuspended')} color="#9ca3af" empty={!stats.alerts.recently_suspended.length}>
+              <AlertCard icon={Ban} title={t('adminDashboard.recentlySuspended')} color="var(--qayed-fiche-faible)" empty={!stats.alerts.recently_suspended.length}>
                 {stats.alerts.recently_suspended.map((h) => (
                   <Link key={h.id} to={`/admin/hotels`} className="flex items-center justify-between text-sm hover:text-gray-900">
                     <span className="truncate font-medium text-gray-800">{h.name}</span>

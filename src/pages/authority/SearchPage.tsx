@@ -48,7 +48,7 @@ const RecentCheckInsSection = () => {
           onClick={() => navigate(`/authority/guests/${c.guest_id}`)}
           className="flex items-start gap-3 rounded-card bg-white p-4 shadow-card hover:shadow-card-hover transition-shadow text-start w-full"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: '#5346A8' }}>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{ background: 'var(--qayed-cachet)' }}>
             {[c.first_name?.[0], c.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'}
           </div>
           <div className="flex flex-col gap-0.5 min-w-0 flex-1">
@@ -105,9 +105,9 @@ const RecentCheckInsSection = () => {
 export const SearchPage = () => {
   const { t } = useTranslation();
   const WATCHLIST_COLORS: Record<WatchlistSeverity, { bg: string; border: string; text: string; label: string }> = {
-    critique: { bg: '#FEF2F2', border: '#EF4444', text: '#991B1B', label: t('authoritySearch.severityCritical') },
-    eleve:    { bg: '#FBF0D7', border: '#E3A008', text: '#8A6206', label: t('authoritySearch.severityHigh') },
-    moyen:    { bg: '#EEEBFA', border: '#5346A8', text: '#5346A8', label: t('authoritySearch.severityFlagged') },
+    critique: { bg: 'var(--qayed-erreur-fond)', border: 'var(--qayed-erreur)', text: 'var(--qayed-erreur-texte)', label: t('authoritySearch.severityCritical') },
+    eleve:    { bg: 'var(--qayed-vigilance-fond)', border: 'var(--qayed-vigilance)', text: 'var(--qayed-vigilance-texte)', label: t('authoritySearch.severityHigh') },
+    moyen:    { bg: 'var(--qayed-cachet-dilue)', border: 'var(--qayed-cachet)', text: 'var(--qayed-cachet)', label: t('authoritySearch.severityFlagged') },
   };
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -176,12 +176,12 @@ export const SearchPage = () => {
         {isPolice && zone && (
           <div
             className="flex items-center gap-3 rounded-xl px-4 py-3"
-            style={{ background: '#EEEBFA', border: '1px solid #EEEBFA' }}
+            style={{ background: 'var(--qayed-cachet-dilue)', border: '1px solid var(--qayed-cachet-dilue)' }}
           >
-            <MapPin className="h-4 w-4 shrink-0" style={{ color: '#5346A8' }} />
+            <MapPin className="h-4 w-4 shrink-0" style={{ color: 'var(--qayed-cachet)' }} />
             <p className="text-sm text-gray-700">
               {t('authoritySearch.zoneLimited')}{' '}
-              <span className="font-semibold" style={{ color: '#5346A8' }}>{zone}</span>
+              <span className="font-semibold" style={{ color: 'var(--qayed-cachet)' }}>{zone}</span>
             </p>
           </div>
         )}
@@ -299,7 +299,7 @@ export const SearchPage = () => {
             <p className="text-sm text-gray-500">
               {t('authoritySearch.resultsFound', { count: results.meta.total })}
               {isPolice && zone && (
-                <span className="ms-2 inline-flex items-center gap-1 text-xs font-medium" style={{ color: '#5346A8' }}>
+                <span className="ms-2 inline-flex items-center gap-1 text-xs font-medium" style={{ color: 'var(--qayed-cachet)' }}>
                   · <MapPin className="h-3 w-3" /> {t('authoritySearch.zone')} {zone}
                 </span>
               )}
@@ -318,7 +318,7 @@ export const SearchPage = () => {
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <div
                       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                      style={{ background: wl ? wl.border : '#5346A8' }}
+                      style={{ background: wl ? wl.border : 'var(--qayed-cachet)' }}
                     >
                       {hit ? <ShieldAlert className="h-5 w-5" /> : [g.first_name?.[0], g.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'}
                     </div>

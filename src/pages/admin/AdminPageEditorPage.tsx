@@ -1,19 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Puck, type Data } from '@measured/puck';
-// no-external.css et non puck.css : la feuille par défaut commence par
-// `@import "https://rsms.me/inter/inter.css"`, un chargement tiers refusé par
-// la CSP et tenté par chaque visiteur, puisque le CSS de l'application est
-// servi en un seul fichier. Cette variante est fournie par Puck pour ce cas ;
-// l'éditeur utilise la police système.
-import '@measured/puck/no-external.css';
 import { ArrowLeft, Copy, Eye, Save, Settings2 } from 'lucide-react';
 import { adminPagesApi } from '@/api/admin/cms';
 import type { CmsLang, CmsPageMeta } from '@/api/cms';
 import { puckConfig } from '@/cms/puckConfig';
-import { SITE_CSS } from '@/cms/siteCss';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
@@ -21,6 +14,30 @@ import { extractErrors } from '@/lib/api';
 
 const LANGS: CmsLang[] = ['fr', 'en', 'ar'];
 const emptyData = (): Data => ({ content: [], root: { props: {} } });
+
+/**
+ * Charge la feuille de l'éditeur Puck à la demande, en <link>.
+ *
+ * Elle n'est PAS importée dans le bundle : `cssCodeSplit: false` (vite.config)
+ * regroupe tout le CSS importé en une feuille unique, servie à chaque visiteur
+ * du site public. Le style de l'éditeur en représentait ~42 % du poids, pour
+ * une page que seul un administrateur ouvre. Un <link> n'a par ailleurs aucun
+ * mode d'échec de préchargement de chunk — le problème que `cssCodeSplit:
+ * false` corrigeait à l'origine.
+ */
+const usePuckEditorStylesheet = () => {
+  useEffect(() => {
+    const HREF = '/vendor/puck-editor.css';
+    if (document.querySelector(`link[href="${HREF}"]`)) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = HREF;
+    document.head.appendChild(link);
+    // Volontairement pas de retrait au démontage : la feuille est inerte hors
+    // de l'éditeur (toutes ses règles sont préfixées `._`/`.Puck`) et la
+    // conserver évite un rechargement à chaque aller-retour vers la liste.
+  }, []);
+};
 
 /**
  * Éditeur Puck d'une page CMS — plein écran, chargé en lazy (le bundle Puck
@@ -32,6 +49,7 @@ const emptyData = (): Data => ({ content: [], root: { props: {} } });
 export const AdminPageEditorPage = () => {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
+  usePuckEditorStylesheet();
   const { toast } = useToast();
   const qc = useQueryClient();
 
@@ -83,9 +101,6 @@ export const AdminPageEditorPage = () => {
 
   return (
     <div className="flex flex-col h-screen bg-white">
-      {/* Le canvas Puck rend les blocs avec le CSS du site */}
-      <style>{SITE_CSS}</style>
-
       <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-gray-100 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <Link to="/admin/pages" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900">
@@ -103,7 +118,7 @@ export const AdminPageEditorPage = () => {
             {LANGS.map((l) => (
               <button key={l} onClick={() => setLang(l)}
                 className="px-2.5 py-1 rounded-md text-xs font-bold uppercase transition-colors"
-                style={lang === l ? { background: 'var(--qayed-cachet)', color: '#fff' } : { color: '#6B7280' }}>
+                style={lang === l ? { background: 'var(--qayed-cachet)', color: '#fff' } : { color: 'var(--qayed-fiche)' }}>
                 {l}{!content[l]?.content?.length && ' ∅'}
               </button>
             ))}

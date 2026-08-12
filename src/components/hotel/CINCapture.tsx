@@ -288,7 +288,7 @@ export const CINCapture = ({
           </button>
         )}
 
-        <p className="text-center text-[11px] text-white/50">{isMrz ? t('cinScan.mrzNote') : t('cinScan.privacyNote')}</p>
+        <p className="text-center text-xs text-white/50">{isMrz ? t('cinScan.mrzNote') : t('cinScan.privacyNote')}</p>
       </div>
 
       {/* Inputs cachés */}

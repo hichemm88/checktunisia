@@ -66,7 +66,7 @@ const CurrentPlanCard = ({
       </CardHeader>
 
       <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-xl font-bold" style={{ color: '#5346A8' }}>{planName}</p>
+        <p className="text-xl font-bold" style={{ color: 'var(--qayed-cachet)' }}>{planName}</p>
         {!hideMoney && (
           <p className="font-mono text-lg font-semibold text-gray-900">
             {formatTND(quota?.monthly_base ?? sub.pricing?.monthly_total ?? 0)}
@@ -94,7 +94,7 @@ const CurrentPlanCard = ({
                 className="h-full rounded-full transition-all"
                 style={{
                   width: `${pct}%`,
-                  background: over || level === 'reached' ? '#E3A008' : level === 'warning' ? '#5346A8' : '#1F9D6B',
+                  background: over || level === 'reached' ? 'var(--qayed-vigilance)' : level === 'warning' ? 'var(--qayed-cachet)' : 'var(--qayed-conforme)',
                 }}
               />
             </div>
@@ -113,11 +113,11 @@ const CurrentPlanCard = ({
           </div>
 
           {!hideMoney && over && quota.billable && quota.overage_amount != null && quota.overage_amount > 0 && (
-            <div className="rounded-xl p-3" style={{ background: '#FBF0D7' }}>
-              <p className="text-sm font-semibold" style={{ color: '#8A6206' }}>
+            <div className="rounded-xl p-3" style={{ background: 'var(--qayed-vigilance-fond)' }}>
+              <p className="text-sm font-semibold" style={{ color: 'var(--qayed-vigilance-texte)' }}>
                 {t('settingsPage.quotaOverage', { count: quota.overage_count })}
               </p>
-              <p className="mt-0.5 text-xs" style={{ color: '#8A6206' }}>
+              <p className="mt-0.5 text-xs" style={{ color: 'var(--qayed-vigilance-texte)' }}>
                 {perUnit
                   ? t('settingsPage.quotaOverageBilledUnit', {
                       count: quota.bundle_count,
@@ -248,17 +248,17 @@ const ActivateBanner = ({
     <div
       className="flex items-start gap-3 rounded-2xl p-4"
       style={blocked
-        ? { background: '#FEF2F2', border: '1px solid #FECACA' }
-        : { background: '#EEEBFA', border: '1px solid #C9C1EE' }}
+        ? { background: 'var(--qayed-erreur-fond)', border: '1px solid var(--qayed-erreur)' }
+        : { background: 'var(--qayed-cachet-dilue)', border: '1px solid var(--qayed-cachet-sombre)' }}
     >
       {blocked
         ? <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-        : <CheckCircle className="mt-0.5 h-4 w-4 shrink-0" style={{ color: '#5346A8' }} />}
+        : <CheckCircle className="mt-0.5 h-4 w-4 shrink-0" style={{ color: 'var(--qayed-cachet)' }} />}
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold" style={{ color: blocked ? '#991B1B' : '#443896' }}>
+        <p className="text-sm font-semibold" style={{ color: blocked ? 'var(--qayed-erreur-texte)' : 'var(--qayed-cachet-fonce)' }}>
           {blocked ? t('subscriptionPage.activateBlockedTitle') : t('subscriptionPage.activateTrialTitle')}
         </p>
-        <p className="mt-0.5 text-xs" style={{ color: blocked ? '#991B1B' : '#5346A8' }}>
+        <p className="mt-0.5 text-xs" style={{ color: blocked ? 'var(--qayed-erreur-texte)' : 'var(--qayed-cachet)' }}>
           {blocked ? t('subscriptionPage.activateBlockedHint') : t('subscriptionPage.activateTrialHint')}
         </p>
         <Button size="sm" className="mt-2" loading={working} onClick={onActivate}>
@@ -295,7 +295,7 @@ const InternalAccountCard = ({ planName }: { planName: string }) => {
         <p className="text-sm text-gray-600">{t('subscriptionPage.internalHint')}</p>
         <div className="flex items-baseline justify-between gap-3 border-t border-gray-50 pt-2">
           <span className="text-sm text-gray-500">{t('subscriptionPage.internalPlan')}</span>
-          <span className="text-sm font-bold" style={{ color: '#5346A8' }}>{planName}</span>
+          <span className="text-sm font-bold" style={{ color: 'var(--qayed-cachet)' }}>{planName}</span>
         </div>
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-sm text-gray-500">{t('subscriptionPage.internalBilling')}</span>
@@ -334,22 +334,22 @@ const PendingChangeBanner = ({
     <div
       className="flex items-start gap-3 rounded-2xl p-4"
       style={awaitingPayment
-        ? { background: '#FBF0D7', border: '1px solid #E3A008' }
-        : { background: '#EEEBFA', border: '1px solid #C9C1EE' }}
+        ? { background: 'var(--qayed-vigilance-fond)', border: '1px solid var(--qayed-vigilance)' }
+        : { background: 'var(--qayed-cachet-dilue)', border: '1px solid var(--qayed-cachet-sombre)' }}
     >
       {awaitingPayment
-        ? <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" style={{ color: '#E3A008' }} />
-        : <CalendarClock className="mt-0.5 h-4 w-4 shrink-0" style={{ color: '#5346A8' }} />}
+        ? <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" style={{ color: 'var(--qayed-vigilance)' }} />
+        : <CalendarClock className="mt-0.5 h-4 w-4 shrink-0" style={{ color: 'var(--qayed-cachet)' }} />}
 
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold" style={{ color: awaitingPayment ? '#8A6206' : '#443896' }}>
+        <p className="text-sm font-semibold" style={{ color: awaitingPayment ? 'var(--qayed-vigilance-texte)' : 'var(--qayed-cachet-fonce)' }}>
           {awaitingPayment
             ? t(planChangeLabelKey('pendingPaymentTitle', change.kind), { plan: change.to_plan?.name ?? '—' })
             : t('subscriptionPage.scheduledTitle', {
                 plan: change.to_plan?.name ?? '—', date: longDate(change.effective_at),
               })}
         </p>
-        <p className="mt-0.5 text-xs" style={{ color: awaitingPayment ? '#8A6206' : '#5346A8' }}>
+        <p className="mt-0.5 text-xs" style={{ color: awaitingPayment ? 'var(--qayed-vigilance-texte)' : 'var(--qayed-cachet)' }}>
           {awaitingPayment
             ? t(planChangeLabelKey('pendingPaymentHint', change.kind), { amount: formatTND(change.amount_due) })
             : t('subscriptionPage.scheduledHint')}
@@ -360,7 +360,7 @@ const PendingChangeBanner = ({
             indisponible, réessayez » qui ne se résoudrait jamais — alors que
             la facture est réglable par virement depuis l'écran Factures. */}
         {awaitingPayment && !onlinePayment && (
-          <p className="mt-1 text-xs" style={{ color: '#8A6206' }}>
+          <p className="mt-1 text-xs" style={{ color: 'var(--qayed-vigilance-texte)' }}>
             {t('subscriptionPage.payOfflineHint')}
           </p>
         )}
@@ -397,13 +397,13 @@ const CancellationBanner = ({
   const longDate = useLongDate();
 
   return (
-    <div className="flex items-start gap-3 rounded-2xl p-4" style={{ background: '#FBF0D7', border: '1px solid #E3A008' }}>
-      <CalendarClock className="mt-0.5 h-4 w-4 shrink-0" style={{ color: '#E3A008' }} />
+    <div className="flex items-start gap-3 rounded-2xl p-4" style={{ background: 'var(--qayed-vigilance-fond)', border: '1px solid var(--qayed-vigilance)' }}>
+      <CalendarClock className="mt-0.5 h-4 w-4 shrink-0" style={{ color: 'var(--qayed-vigilance)' }} />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold" style={{ color: '#8A6206' }}>
+        <p className="text-sm font-semibold" style={{ color: 'var(--qayed-vigilance-texte)' }}>
           {t('subscriptionPage.cancelledTitle', { date: longDate(endsAt) })}
         </p>
-        <p className="mt-0.5 text-xs" style={{ color: '#8A6206' }}>{t('subscriptionPage.cancelledHint')}</p>
+        <p className="mt-0.5 text-xs" style={{ color: 'var(--qayed-vigilance-texte)' }}>{t('subscriptionPage.cancelledHint')}</p>
         <Button size="sm" className="mt-2" loading={working} onClick={onReactivate}>
           {t('subscriptionPage.keepSubscription')}
         </Button>
@@ -429,7 +429,7 @@ const PlanOption = ({ plan, onChoose }: { plan: SelectablePlan; onChoose: (p: Se
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-bold text-gray-900">{displayName}</p>
-          <p className="mt-0.5 font-mono text-base font-semibold" style={{ color: '#5346A8' }}>
+          <p className="mt-0.5 font-mono text-base font-semibold" style={{ color: 'var(--qayed-cachet)' }}>
             {formatTND(plan.price_monthly)}
             <span className="ml-1 font-sans text-xs font-normal text-gray-500">{t('subscriptionPage.perMonth')}</span>
           </p>
@@ -456,7 +456,7 @@ const PlanOption = ({ plan, onChoose }: { plan: SelectablePlan; onChoose: (p: Se
 
       {/* Effet et coût — calculés par le backend pour CE client. */}
       {change && (
-        <p className="text-xs" style={{ color: change.allowed ? '#5346A8' : '#B45309' }}>
+        <p className="text-xs" style={{ color: change.allowed ? 'var(--qayed-cachet)' : 'var(--qayed-vigilance-texte)' }}>
           {!change.allowed
             ? change.reason
             : change.effective === 'next_cycle'
@@ -548,9 +548,9 @@ const ConfirmChange = ({
         {/* L'usage déjà déclaré dépasse le quota du nouveau plan : on le dit
             avant, pas après. L'historique n'est jamais réécrit. */}
         {preview.usage_exceeds_new_quota && (
-          <div className="mt-3 flex items-start gap-2 rounded-xl p-3" style={{ background: '#FBF0D7' }}>
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" style={{ color: '#E3A008' }} />
-            <p className="text-xs" style={{ color: '#8A6206' }}>
+          <div className="mt-3 flex items-start gap-2 rounded-xl p-3" style={{ background: 'var(--qayed-vigilance-fond)' }}>
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" style={{ color: 'var(--qayed-vigilance)' }} />
+            <p className="text-xs" style={{ color: 'var(--qayed-vigilance-texte)' }}>
               {t('subscriptionPage.usageExceedsWarning', {
                 usage: preview.usage,
                 quota: preview.quota_to ?? 0,
@@ -561,7 +561,7 @@ const ConfirmChange = ({
 
         {/* Conditions historiques : jamais retirées sur un simple clic. */}
         {needsHistoric && (
-          <div className="mt-3 rounded-xl p-3" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+          <div className="mt-3 rounded-xl p-3" style={{ background: 'var(--qayed-erreur-fond)', border: '1px solid var(--qayed-erreur)' }}>
             <div className="flex items-start gap-2">
               <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
               <p className="text-xs text-red-800">

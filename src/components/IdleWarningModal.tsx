@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Clock } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 
 interface Props {
   onStay:   () => void;
   onLogout: () => void;
 }
 
+/**
+ * Avertissement de session inactive.
+ *
+ * Le balisage était entièrement en styles inline, sans `role="dialog"` ni
+ * piège de focus. Il n'utilise pas le composant Modal : cette boîte ne doit PAS
+ * pouvoir être fermée par Échap ou par un clic à côté — le seul moyen d'en
+ * sortir est un choix explicite entre rester connecté et se déconnecter.
+ */
 export const IdleWarningModal = ({ onStay, onLogout }: Props) => {
   const { t } = useTranslation();
   const [seconds, setSeconds] = useState(120);
@@ -17,62 +26,44 @@ export const IdleWarningModal = ({ onStay, onLogout }: Props) => {
   }, []);
 
   return (
-    <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'rgba(0,0,0,0.55)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}
-    >
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-qayed-encre/60 p-4">
       <div
-        style={{
-          background: '#fff', borderRadius: 16, padding: '2rem',
-          width: 360, boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
-        }}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="idle-title"
+        aria-describedby="idle-body"
+        className="w-full max-w-sm rounded-card bg-white p-8 shadow-float"
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-          <div style={{ background: '#FBF0D7', borderRadius: 10, padding: 10 }}>
-            <Clock style={{ color: '#D97706', width: 22, height: 22 }} />
+        <div className="mb-4 flex items-center gap-3">
+          <div className="rounded-xl bg-qayed-vigilance-fond p-2.5" aria-hidden="true">
+            <Clock className="h-[22px] w-[22px] text-qayed-vigilance-texte" />
           </div>
           <div>
-            <p style={{ fontWeight: 700, fontSize: 15, color: '#111827' }}>{t('idleWarning.title')}</p>
-            <p style={{ fontSize: 13, color: '#6B7280' }}>{t('idleWarning.subtitle')}</p>
+            <p id="idle-title" className="text-[15px] font-bold text-qayed-encre">{t('idleWarning.title')}</p>
+            <p className="text-[13px] text-qayed-fiche">{t('idleWarning.subtitle')}</p>
           </div>
         </div>
 
-        <div
-          style={{
-            textAlign: 'center', fontSize: 48, fontWeight: 800,
-            color: seconds <= 30 ? '#DC2626' : '#5346A8',
-            margin: '1rem 0',
-          }}
+        <p
+          className={`my-4 text-center text-5xl font-extrabold tabular-nums ${
+            seconds <= 30 ? 'text-qayed-erreur' : 'text-qayed-cachet'
+          }`}
+          aria-live="off"
         >
           {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}
-        </div>
+        </p>
 
-        <p style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', marginBottom: '1.5rem' }}>
+        <p id="idle-body" className="mb-6 text-center text-[13px] text-qayed-fiche">
           {t('idleWarning.body')}
         </p>
 
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button
-            onClick={onLogout}
-            style={{
-              flex: 1, padding: '10px', borderRadius: 10, border: '1px solid #E5E7EB',
-              background: '#fff', color: '#6B7280', fontWeight: 600, cursor: 'pointer', fontSize: 14,
-            }}
-          >
+        <div className="flex gap-2.5">
+          <Button variant="secondary" fullWidth onClick={onLogout}>
             {t('idleWarning.logout')}
-          </button>
-          <button
-            onClick={onStay}
-            style={{
-              flex: 1, padding: '10px', borderRadius: 10, border: 'none',
-              background: '#5346A8', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 14,
-            }}
-          >
+          </Button>
+          <Button fullWidth autoFocus onClick={onStay}>
             {t('idleWarning.stay')}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

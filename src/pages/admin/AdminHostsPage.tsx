@@ -18,8 +18,8 @@ import { type BillingCycle, cycleEndDate, isPerUnitOverage, priceForCycle } from
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { Pagination } from '@/components/ui/Pagination';
 import { InvoiceRow } from '@/components/admin/InvoiceRow';
-import { ListSkeleton } from '@/components/admin/ListSkeleton';
-import { ErrorState } from '@/components/admin/ErrorState';
+import { ListSkeleton } from '@/components/ui/ListSkeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 'en-GB' : 'fr-FR');
 
@@ -155,7 +155,7 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
           <p className="font-semibold">
             {sub.plan?.name}
             {sub.billing_cycle === 'yearly' && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full ms-2 align-middle" style={{ background: 'rgba(83,70,168,0.08)', color: '#5346A8' }}>
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded-full ms-2 align-middle" style={{ background: 'rgba(83,70,168,0.08)', color: 'var(--qayed-cachet)' }}>
                 {t('adminSubscriptions.yearlyBadge')}
               </span>
             )}
@@ -169,20 +169,20 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
                 const overridden = key in (host.feature_overrides ?? {});
                 if ('enabled' in e && e.limit === undefined) {
                   return (
-                    <span key={key} className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${e.enabled ? 'bg-[--qayed-conforme-fond] text-[--qayed-conforme-texte]' : 'bg-gray-100 text-gray-400'}`}>
+                    <span key={key} className={`rounded-full px-2 py-0.5 text-xs font-medium ${e.enabled ? 'bg-[--qayed-conforme-fond] text-[--qayed-conforme-texte]' : 'bg-gray-100 text-gray-400'}`}>
                       {e.label} : {e.enabled ? t('planFeatures.on') : t('planFeatures.off')}{overridden ? ' *' : ''}
                     </span>
                   );
                 }
                 const over = e.limit != null && (e.used ?? 0) >= e.limit;
                 return (
-                  <span key={key} className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${over ? 'bg-[--qayed-vigilance-fond] text-[--qayed-vigilance-texte]' : 'bg-white text-gray-600'}`}>
+                  <span key={key} className={`rounded-full px-2 py-0.5 text-xs font-medium ${over ? 'bg-[--qayed-vigilance-fond] text-[--qayed-vigilance-texte]' : 'bg-white text-gray-600'}`}>
                     {e.label} : <span className="font-mono">{e.used}/{e.limit == null ? '∞' : e.limit}</span>{overridden ? ' *' : ''}
                   </span>
                 );
               })}
               {Object.keys(host.feature_overrides ?? {}).length > 0 && (
-                <span className="text-[11px] text-gray-400">{t('planFeatures.overriddenLegend')}</span>
+                <span className="text-xs text-gray-400">{t('planFeatures.overriddenLegend')}</span>
               )}
             </div>
           )}
@@ -266,10 +266,10 @@ const QuotaSection = ({ host }: { host: AdminHostDetail }) => {
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('adminHosts.quotaTitle')}</p>
         <div className="flex items-center gap-1.5">
           {host.is_legacy_plan && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">{t('adminQuotas.legacy')}</span>
+            <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">{t('adminQuotas.legacy')}</span>
           )}
           {host.upsell_flagged_at && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--qayed-cachet-dilue, #EEEBFA)', color: 'var(--qayed-cachet, #5346A8)' }}>
+            <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--qayed-cachet-dilue, var(--qayed-cachet-dilue))', color: 'var(--qayed-cachet, var(--qayed-cachet))' }}>
               {t('adminQuotas.upsellCandidate')}
             </span>
           )}
@@ -284,12 +284,12 @@ const QuotaSection = ({ host }: { host: AdminHostDetail }) => {
             <div className="flex items-center gap-2">
               <div className="h-2.5 flex-1 rounded-full bg-white overflow-hidden border border-gray-100">
                 <div className="h-full rounded-full transition-all"
-                  style={{ width: `${pct}%`, background: over ? '#E3A008' : (pct ?? 0) >= 80 ? 'var(--qayed-cachet)' : 'var(--qayed-conforme, #1F9D6B)' }} />
+                  style={{ width: `${pct}%`, background: over ? 'var(--qayed-vigilance)' : (pct ?? 0) >= 80 ? 'var(--qayed-cachet)' : 'var(--qayed-conforme, var(--qayed-conforme))' }} />
               </div>
               <span className="font-mono text-xs text-gray-600">{q.used}/{q.quota}</span>
             </div>
             {over && (
-              <p className="text-xs font-medium" style={{ color: '#8A6206' }}>
+              <p className="text-xs font-medium" style={{ color: 'var(--qayed-vigilance-texte)' }}>
                 {isPerUnitOverage(q)
                   ? t('adminHosts.quotaOverageUnit', { count: q.overage_count })
                   : t('adminHosts.quotaOverage', { count: q.overage_count, bundles: q.bundle_count })}
@@ -496,7 +496,7 @@ export const AdminHostsPage = () => {
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: h.status === 'active' ? 'var(--qayed-conforme)' : '#ef4444' }}>
+                    <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: h.status === 'active' ? 'var(--qayed-conforme)' : 'var(--qayed-erreur)' }}>
                       {h.status === 'active' ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />} {h.status === 'active' ? t('adminDashboard.active') : t('adminHotels.statusSuspended')}
                     </span>
                     {h.subscription && <span className="text-xs text-gray-400">{h.subscription.plan}</span>}

@@ -14,8 +14,8 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Pagination } from '@/components/ui/Pagination';
-import { ListSkeleton } from '@/components/admin/ListSkeleton';
-import { EmptyState } from '@/components/admin/EmptyState';
+import { ListSkeleton } from '@/components/ui/ListSkeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 
 /*
@@ -78,7 +78,7 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
   const stat = (label: string, value: number, color: string) => (
     <div className="flex flex-col items-center rounded-xl bg-warm-100 px-4 py-2 min-w-[72px]">
       <span className={`text-lg font-bold ${color}`}>{value}</span>
-      <span className="text-[11px] font-medium text-gray-500">{label}</span>
+      <span className="text-xs font-medium text-gray-500">{label}</span>
     </div>
   );
 
@@ -169,8 +169,8 @@ const LogRow = ({ log }: { log: WhatsappLog }) => {
           {log.hotel && <span className="text-xs text-gray-400">· {log.hotel}</span>}
           {!log.is_test && (
             log.has_photo
-              ? <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-green-600" title={t('adminWhatsapp.photoAttached')}><ImageIcon className="h-3 w-3" />{t('adminWhatsapp.photoAttached')}</span>
-              : <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-amber-600" title={t('adminWhatsapp.noPhoto')}><ImageOff className="h-3 w-3" />{t('adminWhatsapp.noPhoto')}</span>
+              ? <span className="inline-flex items-center gap-0.5 text-xs font-medium text-green-600" title={t('adminWhatsapp.photoAttached')}><ImageIcon className="h-3 w-3" />{t('adminWhatsapp.photoAttached')}</span>
+              : <span className="inline-flex items-center gap-0.5 text-xs font-medium text-amber-600" title={t('adminWhatsapp.noPhoto')}><ImageOff className="h-3 w-3" />{t('adminWhatsapp.noPhoto')}</span>
           )}
         </p>
         {!log.is_test && (log.recipient_name || log.recipient_number) && (

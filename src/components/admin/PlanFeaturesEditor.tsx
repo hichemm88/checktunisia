@@ -60,7 +60,7 @@ export const PlanFeaturesEditor = ({ value, onChange, asOverrides = false, usage
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{t('planFeatures.title')}</p>
+      <p className="text-xs font-bold uppercase tracking-wide text-gray-400">{t('planFeatures.title')}</p>
       <div className="grid grid-cols-3 gap-2">
         <Input label={t('planFeatures.maxProperties')} type="number" min={asOverrides ? '-1' : '0'} value={value.max_properties}
           placeholder="∞" hint={usedHint('max_properties')}
@@ -91,7 +91,7 @@ export const PlanFeaturesEditor = ({ value, onChange, asOverrides = false, usage
           </button>
         )}
       </div>
-      <p className="text-[11px] text-gray-400">{emptyHint}</p>
+      <p className="text-xs text-gray-400">{emptyHint}</p>
     </div>
   );
 };

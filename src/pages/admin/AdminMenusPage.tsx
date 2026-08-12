@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
-import { ListSkeleton } from '@/components/admin/ListSkeleton';
+import { ListSkeleton } from '@/components/ui/ListSkeleton';
 
 const LANGS = ['fr', 'en', 'ar'] as const;
 

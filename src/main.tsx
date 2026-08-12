@@ -61,15 +61,44 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
   }
   render() {
     if (this.state.error) {
+      // Volontairement sans i18n ni composant partagé : cette limite se
+      // déclenche aussi quand le rendu casse AVANT que i18next ou le système de
+      // design soient prêts. Les styles restent inline, mais sur les tokens de
+      // la charte, avec un repli littéral si la feuille n'a pas chargé.
       return (
-        <div style={{ fontFamily: 'sans-serif', padding: '2rem', maxWidth: '500px', margin: '4rem auto', textAlign: 'center' }}>
-          <h2 style={{ color: '#DC2626' }}>Une erreur est survenue</h2>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+        <div
+          role="alert"
+          style={{
+            fontFamily: "'IBM Plex Sans', sans-serif",
+            padding: '2rem',
+            maxWidth: '480px',
+            margin: '4rem auto',
+            textAlign: 'center',
+            color: 'var(--qayed-encre, #10222E)',
+          }}
+        >
+          <h1 style={{ fontFamily: "'Archivo', sans-serif", fontWeight: 900, fontSize: '1.5rem', marginBottom: '0.75rem' }}>
+            Une erreur est survenue
+          </h1>
+          <p style={{ color: 'var(--qayed-fiche, #616B75)', fontSize: '0.875rem', lineHeight: 1.5 }}>
             {(this.state.error as Error).message}
           </p>
           <button
+            type="button"
             onClick={() => window.location.href = '/'}
-            style={{ marginTop: '1rem', padding: '0.5rem 1.5rem', background: '#5346A8', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+            style={{
+              marginTop: '1.5rem',
+              minHeight: '48px',
+              padding: '0 1.5rem',
+              background: 'var(--qayed-cachet, #5346A8)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '14px',
+              fontFamily: 'inherit',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
           >
             Retour à l'accueil
           </button>

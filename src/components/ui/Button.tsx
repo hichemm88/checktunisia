@@ -3,55 +3,78 @@ import { cn } from '@/lib/cn';
 import { Loader2 } from 'lucide-react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'gold' | 'secondary' | 'ghost' | 'danger';
+  /**
+   * `link` : action textuelle (« Passer », « Retour », « Annuler »). Elle garde
+   * l'apparence d'un lien mais conserve une cible tactile de 44 px — ces
+   * actions étaient auparavant des <button> nus, hauts comme leur texte.
+   */
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'link' | 'icon';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   fullWidth?: boolean;
 }
 
-const variants = {
-  primary:   'text-white active:scale-[0.98]',
-  gold:      'text-white active:scale-[0.98]', // deprecated alias — renders identically to primary
-  secondary: 'bg-transparent border-[1.5px] border-qayed-encre text-qayed-encre hover:bg-qayed-papier active:scale-[0.98]',
-  ghost:     'bg-qayed-cachet-dilue text-qayed-cachet hover:bg-qayed-cachet-dilue/70 active:scale-[0.98]',
-  danger:    'bg-red-600 text-white hover:bg-red-700 active:scale-[0.98]',
+/**
+ * Le survol et l'état désactivé passent par des classes CSS, plus par des
+ * gestionnaires `onMouseEnter`/`onMouseLeave` qui écrivaient dans `style` :
+ * cette mécanique ne se déclenchait jamais au clavier et empêchait toute
+ * surcharge via `className`.
+ */
+const variants: Record<NonNullable<ButtonProps['variant']>, string> = {
+  primary:   'bg-qayed-cachet text-white hover:bg-qayed-cachet-fonce active:scale-[0.98] disabled:bg-qayed-desactive disabled:text-white',
+  secondary: 'bg-transparent border-[1.5px] border-qayed-encre text-qayed-encre hover:bg-qayed-papier active:scale-[0.98] disabled:opacity-50',
+  ghost:     'bg-qayed-cachet-dilue text-qayed-cachet hover:bg-qayed-cachet-dilue/70 active:scale-[0.98] disabled:opacity-50',
+  danger:    'bg-qayed-erreur text-white hover:bg-qayed-erreur-texte active:scale-[0.98] disabled:bg-qayed-desactive disabled:text-white',
+  link:      'bg-transparent text-qayed-cachet hover:underline underline-offset-4 disabled:opacity-50',
+  icon:      'bg-transparent text-qayed-fiche hover:bg-qayed-papier hover:text-qayed-encre active:scale-[0.95] disabled:opacity-40',
 };
 
-const sizes = {
-  sm: 'h-10 px-4 text-sm rounded-btn',
+const sizes: Record<NonNullable<ButtonProps['size']>, string> = {
+  sm: 'h-btn-sm px-4 text-sm rounded-btn',
   md: 'h-btn-md px-5 text-sm rounded-btn',
   lg: 'h-btn-lg px-6 text-base rounded-btn',
 };
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', size = 'md', loading, fullWidth, children, disabled, style, ...props }, ref) => {
-    const isPrimary = variant === 'primary' || variant === 'gold';
-    const isDisabled = disabled || loading;
+/** `link` et `icon` ne sont pas des blocs : leur gabarit ne suit pas l'échelle
+ *  de hauteur, mais garde le plancher tactile de 44 px. */
+const looseSizes: Record<NonNullable<ButtonProps['size']>, string> = {
+  sm: 'min-h-[44px] px-2 text-sm rounded-btn',
+  md: 'min-h-[44px] px-3 text-sm rounded-btn',
+  lg: 'min-h-[48px] px-3 text-base rounded-btn',
+};
 
-    // État désactivé franchement gris (jamais un violet délavé ambigu) ;
-    // état actif toujours violet cachet plein contraste.
-    const inlineStyle = isPrimary
-      ? { background: isDisabled ? '#AEB4BF' : 'var(--qayed-cachet)', ...style }
-      : style;
+const iconSizes: Record<NonNullable<ButtonProps['size']>, string> = {
+  sm: 'h-11 w-11 rounded-btn',
+  md: 'h-11 w-11 rounded-btn',
+  lg: 'h-12 w-12 rounded-btn',
+};
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = 'primary', size = 'md', loading, fullWidth, children, disabled, type, ...props }, ref) => {
+    const isDisabled = disabled || loading;
+    const sizeClass =
+      variant === 'icon' ? iconSizes[size]
+      : variant === 'link' ? looseSizes[size]
+      : sizes[size];
 
     return (
       <button
         ref={ref}
+        // Sans `type`, un bouton placé dans un <form> vaut `submit` et envoie
+        // le formulaire au premier clic.
+        type={type ?? 'button'}
         disabled={isDisabled}
-        style={inlineStyle}
-        onMouseEnter={isPrimary && !isDisabled ? (e) => { e.currentTarget.style.background = 'var(--qayed-cachet-fonce)'; } : undefined}
-        onMouseLeave={isPrimary && !isDisabled ? (e) => { e.currentTarget.style.background = 'var(--qayed-cachet)'; } : undefined}
+        aria-busy={loading || undefined}
         className={cn(
-          'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-qayed-cachet focus-visible:ring-offset-2 disabled:pointer-events-none',
-          isPrimary ? 'disabled:text-white' : 'disabled:opacity-50',
+          'inline-flex items-center justify-center gap-2 font-semibold transition-colors duration-150 disabled:pointer-events-none',
           variants[variant],
-          sizes[size],
+          sizeClass,
           fullWidth && 'w-full',
           className,
         )}
         {...props}
       >
-        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+        {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
         {children}
       </button>
     );

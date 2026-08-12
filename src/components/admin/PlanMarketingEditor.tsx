@@ -77,7 +77,7 @@ export const PlanMarketingEditor = ({ plan, onDone }: { plan: AdminPlan; onDone:
           {LANGS.map((l) => (
             <button key={l} onClick={() => setLang(l)}
               className="px-2.5 py-1 rounded-md text-xs font-bold uppercase transition-colors"
-              style={lang === l ? { background: 'var(--qayed-cachet)', color: '#fff' } : { color: '#6B7280' }}>
+              style={lang === l ? { background: 'var(--qayed-cachet)', color: '#fff' } : { color: 'var(--qayed-fiche)' }}>
               {l}
             </button>
           ))}

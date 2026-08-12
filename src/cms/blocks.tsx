@@ -5,7 +5,7 @@ import { MOCKUPS } from './mockups';
 
 /**
  * Composants des blocs Puck — rendus avec les classes exactes du CSS scopé
- * .qayed-landing (src/cms/siteCss.ts) pour une fidélité 1:1 avec la landing
+ * .qayed-landing (src/styles/site.css) pour une fidélité 1:1 avec la landing
  * d'origine. Le RTL est géré par le dir global posé sur <html> par i18n.
  */
 
@@ -80,7 +80,7 @@ export const HeroBlock = (p: HeroProps) => (
     </section>
     {p.showWave && (
       <div className="wave">
-        <svg viewBox="0 0 1440 56" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 C480 56 960 0 1440 56 L1440 0 Z" fill="#10222E" /></svg>
+        <svg viewBox="0 0 1440 56" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 C480 56 960 0 1440 56 L1440 0 Z" fill="var(--qayed-encre)" /></svg>
       </div>
     )}
   </>
@@ -294,7 +294,7 @@ export const FicheShowcaseBlock = (p: FicheShowcaseProps) => (
           ))}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <span className="badge b-ok"><span className="dot"></span>Actif</span>
-            <span className="badge" style={{ background: '#F3F4F6', color: '#374151' }}><span className="dot" style={{ background: '#9CA3AF' }}></span>Terminé</span>
+            <span className="badge" style={{ background: 'var(--qayed-gris-100)', color: 'var(--qayed-gris-700)' }}><span className="dot" style={{ background: 'var(--qayed-fiche-faible)' }}></span>Terminé</span>
           </div>
         </div>
         <div aria-hidden="true" dangerouslySetInnerHTML={{ __html: MOCKUPS['fiche-visual'] ?? '' }} />
@@ -322,7 +322,7 @@ export const SecurityBlock = (p: SecurityProps) => (
         <div>
           <div className="eyebrow fade-in" style={{ color: 'var(--cachet-sombre)' }}>{p.eyebrow}</div>
           <h2 className="section-h2 fade-in" style={{ color: 'var(--papier)' }}>{withBreaks(p.title)}</h2>
-          <p className="fade-in" style={{ fontSize: 17, color: '#9BA8B3', lineHeight: 1.65, marginBottom: 32 }}>{p.lead}</p>
+          <p className="fade-in" style={{ fontSize: 17, color: 'var(--qayed-fiche-faible)', lineHeight: 1.65, marginBottom: 32 }}>{p.lead}</p>
           <ul className="sec-list fade-in">
             {p.items.map((it, i) => (
               <li key={i}>

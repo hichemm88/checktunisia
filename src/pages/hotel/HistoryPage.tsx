@@ -117,11 +117,11 @@ const STATUS_FILTERS = ['active', 'draft', 'completed', 'all'] as const;
 
 // Left border + subtle bg per status
 const STATUS_ROW_STYLE: Record<string, { border: string; dot: string }> = {
-  active:    { border: '#1F9D6B', dot: '#1F9D6B' },
-  draft:     { border: '#5346A8', dot: '#5346A8' },
-  completed: { border: '#d1d5db', dot: '#d1d5db' },
-  no_show:   { border: '#E3A008', dot: '#E3A008' },
-  cancelled: { border: '#d1d5db', dot: '#d1d5db' },
+  active:    { border: 'var(--qayed-conforme)', dot: 'var(--qayed-conforme)' },
+  draft:     { border: 'var(--qayed-cachet)', dot: 'var(--qayed-cachet)' },
+  completed: { border: 'var(--qayed-gris-300)', dot: 'var(--qayed-gris-300)' },
+  no_show:   { border: 'var(--qayed-vigilance)', dot: 'var(--qayed-vigilance)' },
+  cancelled: { border: 'var(--qayed-gris-300)', dot: 'var(--qayed-gris-300)' },
 };
 
 // A stay whose expected checkout date has arrived (or passed) while still active —
@@ -225,15 +225,15 @@ export const HistoryPage = () => {
                 className="flex items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-bold transition-all"
                 style={
                   selected
-                    ? { background: '#5346A8', color: '#fff', boxShadow: '0 4px 14px rgba(83,70,168,0.25)' }
-                    : { background: '#fff', color: '#6B7280', border: '1px solid #E5E7EB' }
+                    ? { background: 'var(--qayed-cachet)', color: '#fff', boxShadow: '0 4px 14px rgba(83,70,168,0.25)' }
+                    : { background: '#fff', color: 'var(--qayed-fiche)', border: '1px solid var(--qayed-gris-200)' }
                 }
               >
                 {STATUS_FILTER_LABELS[s]}
                 {showDraftBadge && (
                   <span
-                    className="inline-flex min-w-[1.125rem] items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none tabular-nums"
-                    style={{ background: '#E3A008', color: '#fff', height: '1.125rem' }}
+                    className="inline-flex min-w-[1.125rem] items-center justify-center rounded-full px-1 text-xs font-bold leading-none tabular-nums"
+                    style={{ background: 'var(--qayed-vigilance)', color: '#fff', height: '1.125rem' }}
                   >
                     {draftCount}
                   </span>
@@ -250,7 +250,7 @@ export const HistoryPage = () => {
               onClick={() => setShowExport((s) => !s)}
               className="flex w-full items-center gap-3 px-4 py-3 text-start"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: '#EEEBFA', color: '#5346A8' }}>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}>
                 <Download className="h-4.5 w-4.5" />
               </span>
               <span className="min-w-0 flex-1">
@@ -270,7 +270,7 @@ export const HistoryPage = () => {
                     return (
                       <button key={p.key} onClick={() => { setExportFrom(f); setExportTo(tt); }}
                         className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
-                        style={active ? { background: '#5346A8', color: '#fff' } : { background: '#F3F4F6', color: '#6B7280' }}>
+                        style={active ? { background: 'var(--qayed-cachet)', color: '#fff' } : { background: 'var(--qayed-gris-100)', color: 'var(--qayed-fiche)' }}>
                         {t(p.labelKey)}
                       </button>
                     );
@@ -289,7 +289,7 @@ export const HistoryPage = () => {
 
                 {/* Rappel du destinataire — le PDF part par e-mail à cette adresse. */}
                 {userEmail && (
-                  <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs" style={{ background: '#EEEBFA', color: '#5346A8' }}>
+                  <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs" style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}>
                     <Mail className="h-4 w-4 shrink-0" />
                     <span className="min-w-0 truncate">{t('hotelHistory.exportSentTo', { email: userEmail })}</span>
                   </div>
@@ -318,7 +318,7 @@ export const HistoryPage = () => {
           ))}
 
           {!isLoading && data?.data.map((ci) => {
-            const style = STATUS_ROW_STYLE[ci.status] ?? { border: '#d1d5db', dot: '#d1d5db' };
+            const style = STATUS_ROW_STYLE[ci.status] ?? { border: 'var(--qayed-gris-300)', dot: 'var(--qayed-gris-300)' };
             const checkoutDue = isCheckoutDue(ci.status, ci.expected_check_out_date);
             const guestName = ci.primary_guest
               ? `${ci.primary_guest.first_name} ${ci.primary_guest.last_name}`
@@ -332,8 +332,8 @@ export const HistoryPage = () => {
               <div
                 className="flex items-center rounded-card shadow-card overflow-hidden"
                 style={{
-                  borderLeft: `4px solid ${checkoutDue ? '#E3A008' : style.border}`,
-                  background: checkoutDue ? '#FBF0D7' : '#fff',
+                  borderLeft: `4px solid ${checkoutDue ? 'var(--qayed-vigilance)' : style.border}`,
+                  background: checkoutDue ? 'var(--qayed-vigilance-fond)' : '#fff',
                 }}
               >
                 <button
@@ -344,7 +344,7 @@ export const HistoryPage = () => {
                   <div className="relative shrink-0">
                     <div
                       className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-bold"
-                      style={{ background: '#EEEBFA', color: '#5346A8' }}
+                      style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
                     >
                       {initials}
                     </div>
@@ -355,6 +355,9 @@ export const HistoryPage = () => {
                         width={15}
                         className="absolute -bottom-1 -end-1 rounded-sm shadow-sm"
                         style={{ border: '1px solid rgba(0,0,0,0.1)' }}
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
                       />
                     )}
                   </div>
@@ -364,7 +367,7 @@ export const HistoryPage = () => {
                     <span className="text-xs text-gray-500 truncate">
                       {ci.room ? ci.room.number : t('hotelHistory.noUnit')} · <span className="font-mono">{ci.reference}</span>
                       {ci.document_expired && (
-                        <span className="ms-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold align-middle" style={{ background: '#FBF0D7', color: '#8A6206' }}>
+                        <span className="ms-1.5 rounded-full px-1.5 py-0.5 text-xs font-bold align-middle" style={{ background: 'var(--qayed-vigilance-fond)', color: 'var(--qayed-vigilance-texte)' }}>
                           {t('hotelHistory.docExpired')}
                         </span>
                       )}
@@ -376,12 +379,12 @@ export const HistoryPage = () => {
                   {/* Status dot + label + chevron */}
                   <div className="flex items-center gap-2 shrink-0">
                     {checkoutDue ? (
-                      <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold" style={{ background: '#FBF0D7', color: '#8A6206' }}>
+                      <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: 'var(--qayed-vigilance-fond)', color: 'var(--qayed-vigilance-texte)' }}>
                         <LogOut className="h-3 w-3" /> {t('hotelHistory.departureNotConfirmed')}
                       </span>
                     ) : (
                       <span
-                        className="text-[11px] font-bold"
+                        className="text-xs font-bold"
                         style={{ color: style.dot }}
                       >
                         {STATUS_LABELS[ci.status] ?? ci.status}

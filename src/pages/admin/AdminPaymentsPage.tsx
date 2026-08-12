@@ -9,9 +9,9 @@ import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
-import { ListSkeleton } from '@/components/admin/ListSkeleton';
-import { EmptyState } from '@/components/admin/EmptyState';
-import { ErrorState } from '@/components/admin/ErrorState';
+import { ListSkeleton } from '@/components/ui/ListSkeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { Pagination } from '@/components/ui/Pagination';
 import { formatTND } from '@/lib/money';
 
@@ -19,7 +19,7 @@ const C = { navy: 'var(--qayed-cachet)' };
 
 const Toggle = ({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) => (
   <label className="flex items-center gap-3 cursor-pointer select-none">
-    <div onClick={() => onChange(!checked)} className="relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0" style={{ background: checked ? C.navy : '#d1d5db' }}>
+    <div onClick={() => onChange(!checked)} className="relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0" style={{ background: checked ? C.navy : 'var(--qayed-gris-300)' }}>
       <span className="absolute top-0.5 start-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200" style={{ transform: checked ? 'translateX(20px)' : 'none' }} />
     </div>
     <span className="text-sm font-semibold text-gray-700">{label}</span>

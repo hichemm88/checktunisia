@@ -140,7 +140,7 @@ export const ProfilePage = () => {
       : '/hotel/dashboard';
 
   return (
-    <div className="min-h-screen" style={{ background: '#F6F5F1' }}>
+    <div className="min-h-screen" style={{ background: 'var(--qayed-papier)' }}>
 
       {/* ── Header ───────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-20 bg-white shadow-sm">
@@ -167,7 +167,7 @@ export const ProfilePage = () => {
               <div className="flex items-center gap-3">
                 <div
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-                  style={{ background: '#5346A8' }}
+                  style={{ background: 'var(--qayed-cachet)' }}
                 >
                   <Shield className="h-5 w-5 text-white" />
                 </div>
@@ -177,8 +177,8 @@ export const ProfilePage = () => {
                 </div>
               </div>
               <span
-                className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
-                style={{ background: '#5346A833', color: '#5346A8', border: '1px solid #5346A866' }}
+                className="rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide"
+                style={{ background: 'rgba(83,70,168,0.2)', color: 'var(--qayed-cachet)', border: '1px solid rgba(83,70,168,0.4)' }}
               >
                 {t('profile.authority')}
               </span>
@@ -187,25 +187,25 @@ export const ProfilePage = () => {
             <div className="mt-4 grid grid-cols-2 gap-3">
               {profile.badge_number && (
                 <div>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wide">{t('profile.badge')}</p>
+                  <p className="text-xs text-white/40 uppercase tracking-wide">{t('profile.badge')}</p>
                   <p className="text-sm font-mono font-semibold text-white">{profile.badge_number}</p>
                 </div>
               )}
               {profile.rank && (
                 <div>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wide">{t('profile.rank')}</p>
+                  <p className="text-xs text-white/40 uppercase tracking-wide">{t('profile.rank')}</p>
                   <p className="text-sm font-semibold text-white">{profile.rank}</p>
                 </div>
               )}
               {profile.governorate && (
                 <div>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wide">{t('profile.governorate')}</p>
+                  <p className="text-xs text-white/40 uppercase tracking-wide">{t('profile.governorate')}</p>
                   <p className="text-sm text-white">{profile.governorate}</p>
                 </div>
               )}
               {profile.expires_at && (
                 <div>
-                  <p className="text-[10px] text-white/40 uppercase tracking-wide">{t('profile.expiration')}</p>
+                  <p className="text-xs text-white/40 uppercase tracking-wide">{t('profile.expiration')}</p>
                   <p className="text-sm text-white">
                     {new Date(profile.expires_at).toLocaleDateString(dateLocaleFor(i18n.language), {
                       day: '2-digit', month: 'short', year: 'numeric',
@@ -221,19 +221,19 @@ export const ProfilePage = () => {
         <div className="rounded-2xl bg-white p-4 flex items-center gap-4 shadow-sm">
           <div
             className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white"
-            style={{ background: '#5346A8' }}
+            style={{ background: 'var(--qayed-cachet)' }}
           >
             {[user?.first_name?.[0], user?.last_name?.[0]].filter(Boolean).join('').toUpperCase() || '?'}
           </div>
           <div>
             <p className="font-semibold text-gray-900">{user?.first_name} {user?.last_name}</p>
             <p className="text-sm text-gray-500">{user?.email}</p>
-            <span className="mt-1 inline-block rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+            <span className="mt-1 inline-block rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-blue-700">
               {t(`profile.role.${user?.role}`, { defaultValue: user?.role?.replace('_', ' ') })}
             </span>
             {user?.role === 'hotel_admin' && user.role_org && (
               <span
-                className="mt-1 ms-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                className="mt-1 ms-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide"
                 style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
               >
                 {user.role_org === 'owner' ? t('hotelLayout.roleOwner') : t('hotelLayout.roleAdmin')}
@@ -253,7 +253,7 @@ export const ProfilePage = () => {
                   ? 'border-b-2 text-gray-900'
                   : 'text-gray-400 hover:text-gray-600'
               }`}
-              style={tab === tabKey ? { borderColor: '#5346A8', color: '#5346A8' } : undefined}
+              style={tab === tabKey ? { borderColor: 'var(--qayed-cachet)', color: 'var(--qayed-cachet)' } : undefined}
             >
               {tabKey === 'info'
                 ? <><User className="h-4 w-4" /> {t('profile.tabInfo')}</>
@@ -279,7 +279,7 @@ export const ProfilePage = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 label={t('profile.firstName')}
                 value={firstName}
@@ -379,7 +379,7 @@ export const ProfilePage = () => {
 
             {/* Complexity indicators */}
             {newPwd.length > 0 && (
-              <div className="rounded-xl bg-gray-50 border border-gray-100 p-3 grid grid-cols-2 gap-y-1.5 gap-x-3">
+              <div className="rounded-xl bg-gray-50 border border-gray-100 p-3 grid grid-cols-1 sm:grid-cols-2 gap-y-1.5 gap-x-3">
                 <PasswordRule ok={pwdChecks.length}    label={t('profile.rule12Chars')} />
                 <PasswordRule ok={pwdChecks.uppercase} label={t('profile.ruleUppercase')} />
                 <PasswordRule ok={pwdChecks.lowercase} label={t('profile.ruleLowercase')} />

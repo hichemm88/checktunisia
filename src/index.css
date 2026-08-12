@@ -1,39 +1,13 @@
 @import './styles/fonts.css';
+@import './styles/tokens.css';
+/* Site public. Toutes ses règles sont scopées `.qayed-landing` (spécificité
+   0,2,0) : elles ne peuvent ni fuir dans les portails, ni être écrasées par
+   une utilitaire Tailwind (0,1,0), quel que soit l'ordre. */
+@import './styles/site.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-:root {
-  /* ============================================
-     QAYED — Design tokens v1.0 (Juillet 2026)
-     ============================================ */
-  --qayed-encre: #10222E;
-  --qayed-papier: #F6F5F1;
-  --qayed-cachet: #5346A8;
-  --qayed-cachet-fonce: #443896;
-  --qayed-cachet-sombre: #8B7FE0;
-  --qayed-cachet-dilue: #EEEBFA;
-  --qayed-conforme: #1F9D6B;
-  --qayed-conforme-fond: #E4F5EC;
-  --qayed-conforme-texte: #137453;
-  --qayed-vigilance: #E3A008;
-  --qayed-vigilance-fond: #FBF0D7;
-  --qayed-vigilance-texte: #8A6206;
-  --qayed-fiche: #8A94A0;
-  --qayed-ligne: #DDD9CF;
-  --qayed-blanc: #FFFFFF;
-
-  --qayed-font-display: 'Archivo', sans-serif;
-  --qayed-font-body: 'IBM Plex Sans', sans-serif;
-  --qayed-font-arabic: 'IBM Plex Sans Arabic', sans-serif;
-  --qayed-font-mono: 'IBM Plex Mono', monospace;
-
-  --qayed-radius-sm: 10px;
-  --qayed-radius-md: 14px;
-  --qayed-radius-lg: 18px;
-  --qayed-stamp-tilt: -6deg;
-}
 
 @layer base {
   * { box-sizing: border-box; }
@@ -67,11 +41,42 @@
     font-family: var(--qayed-font-arabic);
   }
 
-  /* Prevent iOS zoom on inputs */
-  input, textarea, select { font-size: 16px !important; }
+  /* ── Focus ──
+     Un seul anneau de focus pour TOUT élément atteignable au clavier. Cette
+     règle de base couvre les centaines de <button>/<a> qui n'utilisent pas le
+     composant Button : sans elle, ils n'avaient aucun état focus conçu, et
+     plusieurs supprimaient même l'état natif du navigateur.
+     `:where()` garde une spécificité nulle : n'importe quelle classe utilitaire
+     peut encore surcharger le rayon ou la couleur. */
+  :where(a, button, [role='button'], input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: none;
+    box-shadow: var(--qayed-focus-ring);
+  }
+  /* Sur aplat sombre, le liseré blanc du double anneau disparaît : on inverse. */
+  :where(.on-encre) :where(a, button, [role='button']):focus-visible {
+    box-shadow: var(--qayed-focus-ring-dark);
+  }
+
+  /* Champs : 16px évite le zoom automatique iOS. Valeur de base et non
+     `!important` — le `!important` global interdisait toute variation
+     légitime (champ compact dans une barre de filtre, par exemple). */
+  input, textarea, select { font-size: 16px; }
 }
 
 @layer components {
+
+  /* ── Échelle typographique ──
+     Neuf rôles, plancher à 12px. Toute taille hors de cette échelle est une
+     dérive : il n'existe plus de 9, 10 ni 11 px dans l'interface. */
+  .t-display-xl { font-family: var(--qayed-font-display); font-variation-settings: 'wdth' 120; font-weight: 900; font-size: 56px; line-height: 1;    letter-spacing: -0.025em; }
+  .t-display-l  { font-family: var(--qayed-font-display); font-variation-settings: 'wdth' 118; font-weight: 900; font-size: 40px; line-height: 1.05; letter-spacing: -0.02em; }
+  .t-display-m  { font-family: var(--qayed-font-display); font-variation-settings: 'wdth' 118; font-weight: 800; font-size: 28px; line-height: 1.1;  letter-spacing: -0.015em; }
+  .t-display-s  { font-family: var(--qayed-font-display); font-variation-settings: 'wdth' 115; font-weight: 800; font-size: 20px; line-height: 1.2;  letter-spacing: -0.01em; }
+  .t-body-l     { font-size: 18px; line-height: 1.6; }
+  .t-body       { font-size: 16px; line-height: 1.55; }
+  .t-body-s     { font-size: 14px; line-height: 1.5; }
+  .t-caption    { font-size: 12px; line-height: 1.4; }
+  .t-mono       { font-family: var(--qayed-font-mono); font-size: 13px; line-height: 1.4; }
 
   /* ── Input ──
      `.input` est un alias de `.input-field` : de nombreuses barres de filtre et
@@ -81,23 +86,50 @@
   .input-field,
   .input {
     @apply h-input w-full px-4 bg-white border border-warm-300 rounded-input
-           text-gray-900 placeholder:text-gray-400
+           text-gray-900
            focus:outline-none focus:border-qayed-cachet
            focus:ring-4 focus:ring-qayed-cachet/10
            transition-all duration-150;
   }
+  /* Indicatif de saisie : `text-gray-400` était à 2,5:1 sur blanc. La rampe
+     neutre le remonte à 3,3:1 — le minimum acceptable pour un texte de
+     substitution, qui reste par nature un texte non essentiel. */
+  .input-field::placeholder,
+  .input::placeholder { color: var(--qayed-fiche-faible); }
+
+  /* L'anneau Tailwind du focus (ci-dessus) suffit sur les champs : le double
+     anneau global ferait doublon. */
+  .input-field:focus-visible,
+  .input:focus-visible { box-shadow: none; }
+
+  .input-field[aria-invalid='true'],
+  .input[aria-invalid='true'] { border-color: var(--qayed-erreur); }
 
   /* ── Card ── */
   .card {
-    background: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 1px 3px rgba(16,34,46,0.05), 0 0 0 1px rgba(16,34,46,0.04);
+    background: var(--qayed-blanc);
+    border-radius: var(--qayed-radius-lg);
+    box-shadow: var(--qayed-shadow-card);
     padding: 20px;
   }
 
-  /* ── Label ── */
+  /* ── Label ──
+     12px (et non 11) : plancher de l'échelle. Couleur `--qayed-fiche`, remontée
+     à #616B75 pour passer AA — l'ancienne valeur (#8A94A0) plaçait TOUS les
+     libellés de formulaire du portail à 2,8:1. */
   .label {
-    @apply block text-[11px] font-bold uppercase tracking-widest text-qayed-fiche mb-2;
+    @apply block text-xs font-semibold uppercase tracking-wider mb-2;
+    color: var(--qayed-fiche);
+  }
+
+  /* ── Conteneur de page ──
+     Le portail établissement n'avait aucune largeur maximale : dashboard,
+     wizard, historique et réglages s'étiraient d'un bord à l'autre au-delà de
+     1 100 px. Une seule classe, posée dans HotelLayout, borne tout le portail. */
+  .page-container {
+    width: 100%;
+    max-width: 1120px;
+    margin-inline: auto;
   }
 
   /* ── Display headings (Archivo) ── */
@@ -122,21 +154,22 @@
   }
   .qayed-stamp--on-dark { color: var(--qayed-cachet-sombre); border-color: var(--qayed-cachet-sombre); }
 
-  /* ── Badges ── */
+  /* ── Badge ──
+     Les variantes `.badge-active`, `.badge-draft`… ont été supprimées : le
+     composant Badge (src/components/ui/Badge.tsx) est désormais l'unique
+     implémentation des statuts. La classe de base reste, alignée sur les specs
+     du composant, pour les quelques badges libres de l'admin. */
   .badge {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide;
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold;
   }
-  .badge-active    { @apply badge; background: var(--qayed-conforme-fond); color: var(--qayed-conforme-texte); }
-  .badge-draft     { @apply badge; background: var(--qayed-cachet-dilue); color: var(--qayed-cachet); }
-  .badge-completed { @apply badge bg-gray-100 text-gray-500; }
-  .badge-suspended { @apply badge bg-red-50 text-red-700 ring-1 ring-red-200; }
-  .badge-expired   { @apply badge; background: var(--qayed-vigilance-fond); color: var(--qayed-vigilance-texte); }
-  .badge-cancelled { @apply badge bg-gray-100 text-gray-500; }
-  .badge-no_show   { @apply badge; background: var(--qayed-vigilance-fond); color: var(--qayed-vigilance-texte); }
 }
 
 @layer utilities {
   .scrollbar-none { scrollbar-width: none; }
   .scrollbar-none::-webkit-scrollbar { display: none; }
   .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  /* Nav basse : hauteur + zone de sécurité iOS. Sans elle, la barre de gestes
+     de l'iPhone recouvre les libellés des onglets. */
+  .h-nav-safe { height: calc(72px + env(safe-area-inset-bottom, 0px)); }
+  .pb-nav-safe { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
 }

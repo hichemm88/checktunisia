@@ -100,7 +100,7 @@ const SocieteTab = () => {
           </div>
         </CardTitle>
         {!editing
-          ? <button onClick={startEdit} className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity" style={{ color: '#5346A8' }}>
+          ? <button onClick={startEdit} className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity" style={{ color: 'var(--qayed-cachet)' }}>
               <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
             </button>
           : <button onClick={cancelEdit} className="text-gray-400 hover:text-gray-600">
@@ -172,7 +172,7 @@ const SocieteTab = () => {
           <hr className="border-gray-100" />
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t('onboarding.address')}</p>
           <Input label={t('onboarding.address')} value={form?.address?.line1 ?? ''} onChange={e => setAddr('line1', e.target.value)} />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input label={t('propertiesPage.city')} value={form?.address?.city ?? ''} onChange={e => setAddr('city', e.target.value)} />
             <Select label={t('propertiesPage.governorate')} value={form?.address?.governorate ?? ''}
               onChange={e => setAddr('governorate', e.target.value)}
@@ -288,7 +288,7 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
     return (
       <div className="py-3 border-b border-gray-50 last:border-0">
         <div className="flex flex-col gap-2">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Input label={t('profile.firstName')} value={editForm.first_name} onChange={e => setEditForm(f => ({ ...f, first_name: e.target.value }))} />
             <Input label={t('profile.lastName')}    value={editForm.last_name}  onChange={e => setEditForm(f => ({ ...f, last_name:  e.target.value }))} />
           </div>
@@ -351,7 +351,7 @@ const UserRow = ({ u, onDeleted }: { u: HotelUser; onDeleted: () => void }) => {
       <div className="flex items-center gap-3 min-w-0">
         <div
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold"
-          style={{ background: '#EEEBFA', color: '#5346A8' }}
+          style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
         >
           {u.first_name?.[0]}{u.last_name?.[0]}
         </div>
@@ -447,7 +447,7 @@ const AddUserForm = ({ onDone }: { onDone: () => void }) => {
   return (
     <div className="flex flex-col gap-3 border border-gray-100 rounded-xl p-4 mt-2">
       <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">{t('settingsPage.newMember')}</p>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <Input label={t('profile.firstName')} value={form.first_name} onChange={e => set('first_name', e.target.value)} />
         <Input label={t('profile.lastName')}    value={form.last_name}  onChange={e => set('last_name',  e.target.value)} />
       </div>
@@ -507,7 +507,7 @@ const EquipeTab = () => {
         <button
           onClick={() => setShowAdd(s => !s)}
           className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity"
-          style={{ color: '#5346A8' }}
+          style={{ color: 'var(--qayed-cachet)' }}
         >
           {showAdd ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
           {showAdd ? t('common.cancel') : t('common.add')}
@@ -570,7 +570,7 @@ const QuotaCard = ({ quota }: { quota: NonNullable<Awaited<ReturnType<typeof set
         <div className="flex items-center gap-3">
           <div className="h-2.5 flex-1 rounded-full bg-gray-100 overflow-hidden">
             <div className="h-full rounded-full transition-all"
-              style={{ width: `${pct}%`, background: over || level === 'reached' ? '#E3A008' : level === 'warning' ? '#5346A8' : '#1F9D6B' }} />
+              style={{ width: `${pct}%`, background: over || level === 'reached' ? 'var(--qayed-vigilance)' : level === 'warning' ? 'var(--qayed-cachet)' : 'var(--qayed-conforme)' }} />
           </div>
           <span className="font-mono text-sm font-semibold text-gray-700">{quota.used}/{quota.quota}</span>
         </div>
@@ -589,12 +589,12 @@ const QuotaCard = ({ quota }: { quota: NonNullable<Awaited<ReturnType<typeof set
         <p className="text-xs text-gray-500">{t('settingsPage.quotaHint')}</p>
 
         {over && (
-          <div className="rounded-xl p-3" style={{ background: '#FBF0D7' }}>
-            <p className="text-sm font-semibold" style={{ color: '#8A6206' }}>
+          <div className="rounded-xl p-3" style={{ background: 'var(--qayed-vigilance-fond)' }}>
+            <p className="text-sm font-semibold" style={{ color: 'var(--qayed-vigilance-texte)' }}>
               {t('settingsPage.quotaOverage', { count: quota.overage_count })}
             </p>
             {showBilling && quota.overage_amount != null && quota.overage_amount > 0 && (
-              <p className="text-xs mt-0.5" style={{ color: '#8A6206' }}>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--qayed-vigilance-texte)' }}>
                 {perUnit
                   ? t('settingsPage.quotaOverageBilledUnit', {
                       count: quota.bundle_count,
@@ -676,7 +676,7 @@ const AbonnementTab = () => {
           <div className="mt-3 flex flex-col gap-2">
             <div className="flex justify-between py-1.5 border-b border-gray-50">
               <span className="text-sm text-gray-500">{t('settingsPage.plan')}</span>
-              <span className="text-sm font-bold" style={{ color: '#5346A8' }}>
+              <span className="text-sm font-bold" style={{ color: 'var(--qayed-cachet)' }}>
                 {typeof sub.plan === 'string' ? sub.plan : (sub.plan?.name ?? '—')}
               </span>
             </div>
@@ -722,7 +722,7 @@ const AbonnementTab = () => {
                 )}
                 <div className="flex justify-between font-bold text-gray-900 mt-2 pt-2 border-t border-gray-200">
                   <span>{sub.pricing.negotiated ? t('settingsPage.priceNegotiated') : t('settingsPage.priceMonthlyTotal')}</span>
-                  <span className="font-mono" style={{ color: '#5346A8' }}>{formatTND(sub.pricing.negotiated ? sub.pricing.cycle_total : sub.pricing.monthly_total)}</span>
+                  <span className="font-mono" style={{ color: 'var(--qayed-cachet)' }}>{formatTND(sub.pricing.negotiated ? sub.pricing.cycle_total : sub.pricing.monthly_total)}</span>
                 </div>
               </div>
             )}
@@ -734,7 +734,7 @@ const AbonnementTab = () => {
               du cycle d'un client mensuel — l'invitation à nous écrire était
               donc affichée en permanence. */}
           {sub.days_remaining <= 30 && (
-            <div className="mt-3 rounded-xl p-3 flex items-start gap-2" style={{ background: '#FBF0D7', border: '1px solid #FBF0D7' }}>
+            <div className="mt-3 rounded-xl p-3 flex items-start gap-2" style={{ background: 'var(--qayed-vigilance-fond)', border: '1px solid var(--qayed-vigilance-fond)' }}>
               <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-amber-800">{t('settingsPage.renewalDue')}</p>
@@ -842,13 +842,13 @@ const InvoicesSection = () => {
 
             {isInvoiceOpen(inv.status) && (
               declaringFor === inv.id ? (
-                <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: '#F6F5F1' }}>
+                <div className="rounded-xl p-3 flex flex-col gap-2" style={{ background: 'var(--qayed-papier)' }}>
                   {platformSettings?.virement_iban && (
                     <p className="text-xs text-gray-500">
                       {t('settingsPage.transferTo', { beneficiary: platformSettings.virement_beneficiary, iban: platformSettings.virement_iban })}
                     </p>
                   )}
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Input label={t('settingsPage.transferReference')} value={form.reference} onChange={(e) => setForm((f) => ({ ...f, reference: e.target.value }))} />
                     <Input label={t('settingsPage.transferDate')} type="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
                   </div>
@@ -931,8 +931,8 @@ const ActiviteTab = () => {
             onClick={() => { setRole(f.value); setPage(1); }}
             className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
             style={role === f.value
-              ? { background: '#5346A8', color: '#fff' }
-              : { background: '#F6F5F1', color: '#6B7280' }}
+              ? { background: 'var(--qayed-cachet)', color: '#fff' }
+              : { background: 'var(--qayed-papier)', color: 'var(--qayed-fiche)' }}
           >
             {f.label}
           </button>
@@ -948,7 +948,7 @@ const ActiviteTab = () => {
           <div key={entry.id} className="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
             <div
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold mt-0.5"
-              style={{ background: '#EEEBFA', color: '#5346A8' }}
+              style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
             >
               {entry.actor?.name?.[0] ?? '?'}
             </div>
@@ -1040,7 +1040,7 @@ const DestinatairesTab = () => {
           <p className="text-sm text-gray-400 px-2 py-4">{t('settingsPage.recipientsEmpty')}</p>
         )}
         {(recipients ?? []).map(r => (
-          <label key={r.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer hover:bg-warm-100" style={{ border: '1px solid #E5E7EB' }}>
+          <label key={r.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer hover:bg-warm-100" style={{ border: '1px solid var(--qayed-gris-200)' }}>
             <input type="checkbox" className="h-4 w-4 shrink-0" checked={current.has(r.id)} onChange={() => toggle(r.id)} />
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-semibold text-gray-900 truncate">{r.name}{r.rank ? ` · ${r.rank}` : ''}</span>
@@ -1098,7 +1098,7 @@ export const SettingsPage = () => {
         {/* ── Tab bar (scroll horizontal sur mobile plutôt que déborder) ── */}
         <div
           className="sticky top-0 z-10 flex border-b px-4 overflow-x-auto scrollbar-none"
-          style={{ background: '#fff', borderColor: '#E5E7EB' }}
+          style={{ background: '#fff', borderColor: 'var(--qayed-gris-200)' }}
         >
           {visibleTabs.map(td => (
             <button
@@ -1106,8 +1106,8 @@ export const SettingsPage = () => {
               onClick={() => setTab(td.id)}
               className="flex shrink-0 items-center gap-1.5 px-3 py-3.5 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap"
               style={tab === td.id
-                ? { borderColor: '#5346A8', color: '#5346A8' }
-                : { borderColor: 'transparent', color: '#9CA3AF' }
+                ? { borderColor: 'var(--qayed-cachet)', color: 'var(--qayed-cachet)' }
+                : { borderColor: 'transparent', color: 'var(--qayed-fiche-faible)' }
               }
             >
               <td.icon className="h-4 w-4" />

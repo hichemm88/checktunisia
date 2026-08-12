@@ -27,10 +27,10 @@ const TYPE_LABEL_KEY: Record<string, string> = {
 };
 
 const DOT: Record<string, string> = {
-  free: '#1F9D6B',        // vert conforme
-  departing: '#E3A008',   // ambre vigilance — se libère le jour d'arrivée
-  occupied: '#9CA3AF',
-  unavailable: '#D1D5DB',
+  free: 'var(--qayed-conforme)',        // vert conforme
+  departing: 'var(--qayed-vigilance)',   // ambre vigilance — se libère le jour d'arrivée
+  occupied: 'var(--qayed-fiche-faible)',
+  unavailable: 'var(--qayed-gris-300)',
 };
 
 const RoomRow = ({
@@ -77,7 +77,7 @@ const RoomRow = ({
         aria-disabled={!selectable}
         className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start transition-all"
         style={{
-          border: selected ? '2px solid #5346A8' : '1.5px solid #DDD9CF',
+          border: selected ? '2px solid var(--qayed-cachet)' : '1.5px solid var(--qayed-ligne)',
           background: selected ? 'rgba(83,70,168,0.05)' : '#fff',
           opacity: selectable ? 1 : 0.55,
           cursor: selectable ? 'pointer' : 'help',
@@ -93,15 +93,15 @@ const RoomRow = ({
           </span>
         </span>
         <span
-          className="text-[11px] font-semibold shrink-0"
-          style={{ color: isCurrent ? '#137453' : room.state === 'free' ? (room.departing_same_day ? '#8A6206' : '#137453') : '#9CA3AF' }}
+          className="text-xs font-semibold shrink-0"
+          style={{ color: isCurrent ? 'var(--qayed-conforme-texte)' : room.state === 'free' ? (room.departing_same_day ? 'var(--qayed-vigilance-texte)' : 'var(--qayed-conforme-texte)') : 'var(--qayed-fiche-faible)' }}
         >
           {stateLabel}
         </span>
-        {selected && <Check className="h-4 w-4 shrink-0" style={{ color: '#5346A8' }} />}
+        {selected && <Check className="h-4 w-4 shrink-0" style={{ color: 'var(--qayed-cachet)' }} />}
       </button>
       {!selectable && showReason && (
-        <p className="text-xs px-3 py-1.5 rounded-lg mt-1" style={{ background: '#FBF0D7', color: '#8A6206' }}>
+        <p className="text-xs px-3 py-1.5 rounded-lg mt-1" style={{ background: 'var(--qayed-vigilance-fond)', color: 'var(--qayed-vigilance-texte)' }}>
           {reason}
         </p>
       )}
@@ -171,7 +171,7 @@ export const RoomSelector = ({
     return (
       <div className="flex flex-col gap-1.5">
         <label className="label">{t('checkinWizard.roomLabel')}</label>
-        <p className="text-sm text-gray-400 rounded-xl px-4 py-5 text-center" style={{ background: '#F6F5F1', border: '1.5px dashed #DDD9CF' }}>
+        <p className="text-sm text-gray-400 rounded-xl px-4 py-5 text-center" style={{ background: 'var(--qayed-papier)', border: '1.5px dashed var(--qayed-ligne)' }}>
           {t('checkinWizard.roomSelectorHint')}
         </p>
       </div>
@@ -197,7 +197,7 @@ export const RoomSelector = ({
       {isLoading && <div className="h-24 animate-pulse rounded-xl bg-gray-100" />}
 
       {!isLoading && !rooms?.length && (
-        <p className="text-sm text-gray-400 rounded-xl px-4 py-5 text-center" style={{ background: '#F6F5F1' }}>
+        <p className="text-sm text-gray-400 rounded-xl px-4 py-5 text-center" style={{ background: 'var(--qayed-papier)' }}>
           {t('checkinWizard.noRoomConfigured')}
         </p>
       )}
@@ -242,7 +242,7 @@ export const RoomSelector = ({
         onClick={() => onChange({ kind: 'none' })}
         className="text-xs mt-1 self-center underline-offset-2"
         style={{
-          color: value?.kind === 'none' ? '#5346A8' : '#9CA3AF',
+          color: value?.kind === 'none' ? 'var(--qayed-cachet)' : 'var(--qayed-fiche-faible)',
           fontWeight: value?.kind === 'none' ? 700 : 400,
           textDecoration: value?.kind === 'none' ? 'none' : 'underline',
         }}
