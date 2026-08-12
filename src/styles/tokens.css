@@ -1,0 +1,97 @@
+/**
+ * QAYED — Tokens de design, source unique de vérité.
+ *
+ * Ce fichier est le SEUL endroit où une couleur, un rayon, une ombre ou une
+ * durée sont définis. Il est consommé par :
+ *   - src/index.css        (portails applicatifs, via Tailwind)
+ *   - tailwind.config.js   (rampes de couleur exposées en classes)
+ *   - src/styles/site.css  (site public, qui aliase ces variables)
+ *
+ * Règles non négociables :
+ *   1. Aucune couleur en dur ailleurs que dans ce fichier.
+ *   2. `--qayed-vigilance` et `--qayed-conforme` sont des couleurs d'APLAT,
+ *      de BORDURE et de PASTILLE. Pour du texte, utiliser leur variante
+ *      `-texte` : les teintes pleines sont respectivement à 2,3:1 et 3,5:1
+ *      sur fond clair, donc illisibles en corps de texte.
+ *   3. Les ratios de contraste annotés ci-dessous sont mesurés sur blanc et
+ *      sur `--qayed-papier`. Ne pas éclaircir une valeur sans les recalculer.
+ */
+
+:root {
+  /* ── Marque ──────────────────────────────────────────────────────────── */
+  --qayed-encre:          #10222E;
+  --qayed-papier:         #F6F5F1;
+  --qayed-blanc:          #FFFFFF;
+  --qayed-cachet:         #5346A8;  /* 7,5:1 sur blanc */
+  --qayed-cachet-fonce:   #443896;  /* survol, actif */
+  --qayed-cachet-sombre:  #8B7FE0;  /* réservé aux fonds encre — 4,8:1 */
+  --qayed-cachet-dilue:   #EEEBFA;  /* aplats, boutons ghost */
+
+  /* ── Sémantique ──────────────────────────────────────────────────────── */
+  --qayed-conforme:        #1F9D6B;  /* APLAT UNIQUEMENT — 3,5:1 */
+  --qayed-conforme-fond:   #E4F5EC;
+  --qayed-conforme-texte:  #137453;  /* 5,1:1 sur son fond */
+
+  --qayed-vigilance:       #E3A008;  /* APLAT UNIQUEMENT — 2,3:1 */
+  --qayed-vigilance-fond:  #FBF0D7;
+  --qayed-vigilance-texte: #8A6206;  /* 4,8:1 sur son fond */
+
+  /* Erreur — absente de la charte v1.0, ajoutée ici : rouge institutionnel
+     désaturé, cohérent avec l'encre, distinct de l'ambre de vigilance. */
+  --qayed-erreur:          #B3261E;  /* 6,5:1 sur blanc */
+  --qayed-erreur-fond:     #FCEEEC;
+  --qayed-erreur-texte:    #8C1D18;  /* 8,1:1 sur son fond */
+
+  /* ── Neutres ─────────────────────────────────────────────────────────── */
+  /* Rampe teintée vers l'encre — jamais les gris neutres de Tailwind. */
+  --qayed-gris-50:  #F7F8F9;
+  --qayed-gris-100: #EFF1F3;
+  --qayed-gris-200: #E1E5E9;
+  --qayed-gris-300: #C7CDD3;
+  --qayed-gris-400: #868F99;  /* 3,3:1 blanc · 3,0:1 papier — icônes et grands textes */
+  --qayed-gris-500: #616B75;  /* 5,4:1 blanc · 5,0:1 papier — texte secondaire */
+  --qayed-gris-600: #566068;
+  --qayed-gris-700: #3F484F;
+  --qayed-gris-800: #2A323A;
+  --qayed-gris-900: #10222E;  /* = encre */
+  --qayed-gris-950: #0A161E;
+
+  /* Une seule teinte intermédiaire de violet est nécessaire hors palette de
+     marque : le survol des boutons ghost. */
+  --qayed-cachet-100: #E3DEF7;
+
+  /* Alias sémantiques des neutres */
+  --qayed-fiche:        var(--qayed-gris-500);  /* libellés, texte secondaire */
+  --qayed-fiche-faible: var(--qayed-gris-400);  /* indicatifs, icônes seulement */
+  --qayed-ligne:        #DDD9CF;                /* filets sur papier (chaud) */
+  --qayed-desactive:    var(--qayed-gris-600);  /* fond désactivé + texte blanc = 6,4:1 */
+
+  /* Textes posés sur fond encre */
+  --qayed-sur-encre:     #A8B4BE;  /* 8,0:1 sur encre */
+  --qayed-sur-encre-bas: #8794A0;  /* 5,7:1 sur encre */
+
+  /* ── Typographie ─────────────────────────────────────────────────────── */
+  --qayed-font-display: 'Archivo', sans-serif;
+  --qayed-font-body:    'IBM Plex Sans', sans-serif;
+  --qayed-font-arabic:  'IBM Plex Sans Arabic', sans-serif;
+  --qayed-font-mono:    'IBM Plex Mono', monospace;
+
+  /* ── Rayons — trois valeurs, pas sept ────────────────────────────────── */
+  --qayed-radius-sm: 10px;  /* champs, petits contrôles */
+  --qayed-radius-md: 14px;  /* boutons */
+  --qayed-radius-lg: 20px;  /* cartes, feuilles */
+
+  /* ── Ombres ──────────────────────────────────────────────────────────── */
+  --qayed-shadow-card:  0 1px 3px rgba(16, 34, 46, .05), 0 0 0 1px rgba(16, 34, 46, .04);
+  --qayed-shadow-hover: 0 4px 16px rgba(16, 34, 46, .08);
+  --qayed-shadow-float: 0 12px 40px rgba(16, 34, 46, .14);
+
+  /* ── Focus — un seul anneau, partout ─────────────────────────────────── */
+  /* Double anneau : liseré blanc puis violet, lisible sur fond clair comme
+     sur aplat coloré. */
+  --qayed-focus-ring: 0 0 0 2px var(--qayed-blanc), 0 0 0 4px var(--qayed-cachet);
+  --qayed-focus-ring-dark: 0 0 0 2px var(--qayed-encre), 0 0 0 4px var(--qayed-cachet-sombre);
+
+  /* ── Identité ────────────────────────────────────────────────────────── */
+  --qayed-stamp-tilt: -6deg;
+}

@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { Globe, ChevronDown } from 'lucide-react';
 import { fetchCmsMenus, type CmsMenuItem } from '@/api/cms';
 import { pickI18n } from '@/lib/i18nContent';
-import { SITE_CSS } from './siteCss';
 
 const SITE_LANGS = [
   { code: 'fr', name: 'Français', label: 'FR' },
@@ -46,16 +45,25 @@ const SiteLanguageSwitcher = ({ current, onSelect }: { current: string; onSelect
 
   return (
     <div className="lang-switch" ref={ref}>
-      <button type="button" className="lang-btn" onClick={() => setOpen((o) => !o)} aria-label="Choisir la langue">
+      <button
+        type="button"
+        className="lang-btn"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Choisir la langue"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
         <Globe size={14} strokeWidth={2.2} />
         {active.label}
         <ChevronDown size={12} strokeWidth={2.5} style={{ opacity: 0.6, transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'none' }} />
       </button>
       {open && (
-        <div className="lang-menu">
+        <div className="lang-menu" role="listbox">
           {SITE_LANGS.map((l) => (
             <button key={l.code} type="button"
               className={`lang-opt${l.code === active.code ? ' active' : ''}`}
+              role="option"
+              aria-selected={l.code === active.code}
               onClick={() => { onSelect(l.code); setOpen(false); }}>
               <span>{l.name}</span>
               <span className="lang-code">{l.label}</span>
@@ -73,7 +81,7 @@ const SiteLanguageSwitcher = ({ current, onSelect }: { current: string; onSelect
  * fade-in) — même comportement que la landing.
  */
 export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage ?? 'fr';
   const rootRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -135,8 +143,6 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="qayed-landing" ref={rootRef}>
-      <style>{SITE_CSS}</style>
-
       <nav id="navbar">
         <div className="nav-inner">
           <Link to="/" className="nav-logo">
@@ -146,19 +152,26 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
           <ul className="nav-links">
             {(menus?.navbar ?? []).map((item) => <li key={item.id}><NavLink item={item} /></li>)}
             <li><SiteLanguageSwitcher current={lang} onSelect={changeLanguage} /></li>
-            <li><Link to="/login" className="nav-login">Se connecter</Link></li>
-            <li><Link to="/register" className="nav-cta">Essayer gratuitement</Link></li>
+            <li><Link to="/login" className="nav-login">{t('site.login')}</Link></li>
+            <li><Link to="/register" className="nav-cta">{t('site.tryFree')}</Link></li>
           </ul>
-          <button className={`burger${menuOpen ? ' open' : ''}`} aria-label="Menu" onClick={() => setMenuOpen((o) => !o)}>
+          <button
+            type="button"
+            className={`burger${menuOpen ? ' open' : ''}`}
+            aria-label={t('site.menu')}
+            aria-expanded={menuOpen}
+            aria-controls="site-mobile-menu"
+            onClick={() => setMenuOpen((o) => !o)}
+          >
             <span></span><span></span><span></span>
           </button>
         </div>
-        <div className={`mobile-menu${menuOpen ? ' open' : ''}`}>
+        <div id="site-mobile-menu" className={`mobile-menu${menuOpen ? ' open' : ''}`}>
           {(menus?.navbar ?? []).map((item) => <NavLink key={item.id} item={item} onClick={() => setMenuOpen(false)} />)}
           <div className="mobile-menu-actions">
             <SiteLanguageSwitcher current={lang} onSelect={(code) => { changeLanguage(code); setMenuOpen(false); }} />
-            <Link to="/login" className="btn btn-ghost btn-full" onClick={() => setMenuOpen(false)}>Se connecter</Link>
-            <Link to="/register" className="btn btn-primary btn-full" onClick={() => setMenuOpen(false)}>Essayer gratuitement</Link>
+            <Link to="/login" className="btn btn-ghost btn-full" onClick={() => setMenuOpen(false)}>{t('site.login')}</Link>
+            <Link to="/register" className="btn btn-primary btn-full" onClick={() => setMenuOpen(false)}>{t('site.tryFree')}</Link>
           </div>
         </div>
       </nav>
