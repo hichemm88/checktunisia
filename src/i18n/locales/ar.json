@@ -1321,7 +1321,12 @@
     "tryOtherFilter": "جرّب مرشّحًا أو بحثًا آخر",
     "docExpired": "وثيقة منتهية الصلاحية",
     "departureNotConfirmed": "مغادرة غير مؤكدة",
-    "exportPickEnd": "اختر يوم النهاية"
+    "exportPickEnd": "اختر يوم النهاية",
+    "deleteTitle": "حذف هذه البطاقة؟",
+    "deleteBody": "ستُزال البطاقة {{reference}} ({{guest}}) من سجلّك.",
+    "deleteHint": "تبقى الإقامة محفوظة في الخادم، لكن قائمة نزلائها تُحذف نهائيًا.",
+    "deleteAria": "حذف البطاقة {{reference}}",
+    "noGuestYet": "لا نزيل"
   },
   "hotelDashboard": {
     "title": "لوحة التحكم",

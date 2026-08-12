@@ -1337,7 +1337,12 @@
     "tryOtherFilter": "Essayez un autre filtre ou une autre recherche",
     "docExpired": "Document expiré",
     "departureNotConfirmed": "Départ non confirmé",
-    "exportPickEnd": "Choisissez le jour de fin"
+    "exportPickEnd": "Choisissez le jour de fin",
+    "deleteTitle": "Supprimer cette fiche ?",
+    "deleteBody": "La fiche {{reference}} ({{guest}}) sera retirée de votre historique.",
+    "deleteHint": "Le séjour reste archivé côté serveur, mais la liste de ses voyageurs est supprimée définitivement.",
+    "deleteAria": "Supprimer la fiche {{reference}}",
+    "noGuestYet": "aucun voyageur"
   },
   "hotelDashboard": {
     "title": "Tableau de bord",

@@ -1337,7 +1337,12 @@
     "tryOtherFilter": "Try another filter or search",
     "docExpired": "Expired document",
     "departureNotConfirmed": "Departure not confirmed",
-    "exportPickEnd": "Pick the end day"
+    "exportPickEnd": "Pick the end day",
+    "deleteTitle": "Delete this record?",
+    "deleteBody": "Record {{reference}} ({{guest}}) will be removed from your history.",
+    "deleteHint": "The stay stays archived on the server, but its guest list is deleted for good.",
+    "deleteAria": "Delete record {{reference}}",
+    "noGuestYet": "no guest"
   },
   "hotelDashboard": {
     "title": "Dashboard",

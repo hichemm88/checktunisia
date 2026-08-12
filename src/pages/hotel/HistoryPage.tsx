@@ -6,9 +6,11 @@ import { Search, ChevronRight, Trash2, LogOut, Download, Mail } from 'lucide-rea
 import { getFlagUrl } from '@/lib/flags';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { DateRangeCalendar } from '@/components/ui/DateRangeCalendar';
 import { checkInsApi } from '@/api/checkIns';
+import { type CheckIn } from '@/types';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
@@ -19,7 +21,7 @@ const dateLocaleFor = (lng: string) => (lng === 'ar' ? 'ar-TN' : lng === 'en' ? 
 
 const REVEAL_WIDTH = 76;
 
-const SwipeableRow = ({ children, onDelete, deleting }: { children: ReactNode; onDelete: () => void; deleting: boolean }) => {
+const SwipeableRow = ({ children, onDelete, deleting, label }: { children: ReactNode; onDelete: () => void; deleting: boolean; label: string }) => {
   const [dragX, setDragX] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const dragging = useRef(false);
@@ -27,7 +29,13 @@ const SwipeableRow = ({ children, onDelete, deleting }: { children: ReactNode; o
   const startX = useRef(0);
   const baseX = useRef(0);
 
+  // Le glissement est un raccourci TACTILE. Il répondait aussi à la souris, ce
+  // qui faisait partir la ligne de travers au moindre cliquer-glisser sur
+  // poste — et restait la seule façon d'atteindre la suppression, donc
+  // invisible pour qui ne devine pas le geste. Le bouton visible de la ligne
+  // est désormais le chemin principal ; ceci n'est plus qu'un accélérateur.
   const onPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== 'touch') return;
     dragging.current = true;
     moved.current = false;
     startX.current = e.clientX;
@@ -59,12 +67,17 @@ const SwipeableRow = ({ children, onDelete, deleting }: { children: ReactNode; o
   return (
     <div className="relative overflow-hidden rounded-card">
       <button
+        type="button"
         onClick={onDelete}
         disabled={deleting}
-        className="absolute inset-y-0 end-0 flex items-center justify-center bg-red-500 text-white disabled:opacity-60"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="absolute inset-y-0 end-0 flex items-center justify-center bg-qayed-erreur px-2 text-xs font-semibold text-white disabled:opacity-60"
         style={{ width: REVEAL_WIDTH }}
       >
-        <Trash2 className="h-5 w-5" />
+        {/* Un libellé, pas une corbeille : la ligne porte déjà une icône
+            corbeille visible, et le glissement en révélait une seconde. */}
+        {label}
       </button>
       <div
         onPointerDown={onPointerDown}
@@ -180,11 +193,15 @@ export const HistoryPage = () => {
   // Compteur de brouillons (renvoyé par l'API, indépendant du filtre actif).
   const draftCount = data?.meta.draft_count ?? 0;
 
+  // Fiche en attente de confirmation de suppression (null = aucune).
+  const [pendingDelete, setPendingDelete] = useState<CheckIn | null>(null);
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => checkInsApi.deleteCheckIn(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['check-ins'] });
       toast(t('hotelHistory.deleted'), 'success');
+      setPendingDelete(null);
     },
     onError: (err) => toast(extractErrors(err), 'error'),
   });
@@ -393,6 +410,22 @@ export const HistoryPage = () => {
                     <ChevronRight className="h-4 w-4 text-gray-300" />
                   </div>
                 </button>
+
+                {/* Suppression — visible sur tous les écrans. Elle n'était
+                    atteignable que par glissement, donc inaccessible à la
+                    souris, au clavier et à toute personne ne devinant pas le
+                    geste. Frère du bouton de navigation, jamais imbriqué. */}
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setPendingDelete(ci)}
+                    aria-label={t('hotelHistory.deleteAria', { reference: ci.reference })}
+                    title={t('common.delete')}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center self-center me-1.5 rounded-btn text-qayed-fiche-faible transition-colors hover:bg-qayed-erreur-fond hover:text-qayed-erreur-texte"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                )}
               </div>
             );
 
@@ -401,7 +434,8 @@ export const HistoryPage = () => {
               <SwipeableRow
                 key={ci.id}
                 deleting={deleteMutation.isPending && deleteMutation.variables === ci.id}
-                onDelete={() => deleteMutation.mutate(ci.id)}
+                onDelete={() => setPendingDelete(ci)}
+                label={t('common.delete')}
               >
                 {row}
               </SwipeableRow>
@@ -442,6 +476,40 @@ export const HistoryPage = () => {
           </div>
         )}
       </div>
+
+      {/* Confirmation de suppression — la fiche partait au premier clic.
+          Le séjour n'est qu'archivé côté serveur, mais ses liens voyageurs
+          sont supprimés pour de bon : le restaurer ne rendrait pas la
+          composition de la fiche. Cela mérite une question. */}
+      <Modal
+        open={!!pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        title={t('hotelHistory.deleteTitle')}
+        size="sm"
+      >
+        <p className="text-sm text-qayed-gris-700">
+          {t('hotelHistory.deleteBody', {
+            reference: pendingDelete?.reference ?? '',
+            guest: pendingDelete?.primary_guest
+              ? `${pendingDelete.primary_guest.first_name} ${pendingDelete.primary_guest.last_name}`.trim()
+              : t('hotelHistory.noGuestYet'),
+          })}
+        </p>
+        <p className="mt-2 text-xs text-qayed-fiche">{t('hotelHistory.deleteHint')}</p>
+        <div className="mt-5 flex gap-3">
+          <Button variant="secondary" fullWidth onClick={() => setPendingDelete(null)}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            variant="danger"
+            fullWidth
+            loading={deleteMutation.isPending}
+            onClick={() => pendingDelete && deleteMutation.mutate(pendingDelete.id)}
+          >
+            {t('common.delete')}
+          </Button>
+        </div>
+      </Modal>
     </HotelLayout>
   );
 };
