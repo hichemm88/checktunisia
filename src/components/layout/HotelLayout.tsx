@@ -8,6 +8,7 @@ import { authApi } from '@/api/auth';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { NotificationBell } from '@/components/hotel/NotificationBell';
+import { PasskeyPromptBanner } from '@/components/security/PasskeyPromptBanner';
 
 interface HotelLayoutProps { children: ReactNode; title?: string; backHref?: string }
 
@@ -99,7 +100,10 @@ export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
           la valeur était 73px, soit 12px de blanc parasite en haut de chaque
           page. `pb-nav-safe` réserve la nav basse ET la zone de sécurité iOS. */}
       <main className="flex-1 pt-[61px] pb-nav-safe">
-        <div className="page-container">{children}</div>
+        <div className="page-container">
+          <PasskeyPromptBanner />
+          {children}
+        </div>
       </main>
 
       {/* ── Bottom Nav ────────────────────────────────────────────────

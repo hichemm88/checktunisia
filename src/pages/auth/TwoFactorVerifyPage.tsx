@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { KeyRound } from 'lucide-react';
 import { authApi } from '@/api/auth';
+import { recoveryCodesApi } from '@/api/passkeys';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { QayedStamp } from '@/components/ui/QayedStamp';
@@ -28,6 +29,12 @@ export const TwoFactorVerifyPage = () => {
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Repli du repli : l'appareil portant la passkey ET l'application
+  // d'authentification sont indisponibles. Le code de récupération est le
+  // seul chemin restant avant une réinitialisation par e-mail.
+  const [useRecovery, setUseRecovery] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState('');
 
   useEffect(() => {
     if (!partialToken) navigate('/login', { replace: true });
@@ -60,8 +67,27 @@ export const TwoFactorVerifyPage = () => {
     }
   };
 
+  const handleRecovery = async () => {
+    if (!recoveryCode.trim()) return;
+    setError('');
+    setLoading(true);
+    try {
+      const result = await recoveryCodesApi.verify(partialToken, recoveryCode.trim());
+      setAuth(result.token, { ...result.user, _token_expires_at: result.expires_at });
+      navigate(homePathForRole(result.user.role), { replace: true });
+    } catch (err) {
+      setError(extractErrors(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    if (useRecovery) {
+      handleRecovery();
+      return;
+    }
     handleVerify();
   };
 
@@ -97,28 +123,52 @@ export const TwoFactorVerifyPage = () => {
             </div>
           )}
 
-          {/* OTP input — large, centered */}
-          <input
-            ref={inputRef}
-            type="text"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            value={code}
-            onChange={handleChange}
-            maxLength={6}
-            placeholder="000000"
-            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-4 text-center text-3xl font-mono font-bold tracking-[0.5em] text-gray-900 outline-none focus:border-qayed-cachet focus:ring-2 focus:ring-qayed-cachet/20 placeholder:text-gray-300 placeholder:tracking-[0.5em]"
-          />
+          {useRecovery ? (
+            <input
+              type="text"
+              autoComplete="one-time-code"
+              value={recoveryCode}
+              onChange={(e) => setRecoveryCode(e.target.value.toUpperCase().slice(0, 9))}
+              placeholder="XXXX-XXXX"
+              aria-label={t('passkeys.recoveryCodeLabel')}
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-4 text-center text-xl font-mono font-bold tracking-[0.2em] text-gray-900 outline-none focus:border-qayed-cachet focus:ring-2 focus:ring-qayed-cachet/20 placeholder:text-gray-300"
+            />
+          ) : (
+            /* OTP input — large, centered */
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={code}
+              onChange={handleChange}
+              maxLength={6}
+              placeholder="000000"
+              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-4 text-center text-3xl font-mono font-bold tracking-[0.5em] text-gray-900 outline-none focus:border-qayed-cachet focus:ring-2 focus:ring-qayed-cachet/20 placeholder:text-gray-300 placeholder:tracking-[0.5em]"
+            />
+          )}
 
           <Button
             type="submit"
             fullWidth
             loading={loading}
-            disabled={code.length !== 6}
+            disabled={useRecovery ? recoveryCode.trim().length < 8 : code.length !== 6}
             size="lg"
           >
             {t('auth.verify')}
           </Button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setUseRecovery((v) => !v);
+              setError('');
+            }}
+            className="text-center text-sm font-medium hover:underline"
+            style={{ color: 'var(--qayed-cachet)' }}
+          >
+            {useRecovery ? t('passkeys.useAuthenticator') : t('passkeys.useRecoveryCode')}
+          </button>
 
           <button
             type="button"

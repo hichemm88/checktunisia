@@ -37,6 +37,18 @@ export interface AuthUser {
   } | null;
   authority_profile?: AuthorityProfile | null;
   permissions: string[];
+  /**
+   * État de sécurité du compte, renvoyé par /auth/login, /auth/me et la
+   * connexion par passkey. Absent des sessions ouvertes avant la mise en
+   * place des passkeys — d'où l'optionalité, qui évite de déconnecter tout
+   * le monde au déploiement.
+   */
+  security?: {
+    two_factor_enabled: boolean;
+    passkeys_count: number;
+    recovery_codes_remaining: number;
+    auth_method: 'password' | 'totp' | 'recovery_code' | 'passkey' | null;
+  } | null;
   /** Échéance du token, posée côté client au login pour l'auto-refresh (non renvoyée par l'API). */
   _token_expires_at?: string;
 }

@@ -12,6 +12,7 @@ import { authApi } from '@/api/auth';
 import { adminSearchApi, type GlobalSearchResult } from '@/api/admin/search';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
+import { PasskeyPromptBanner } from '@/components/security/PasskeyPromptBanner';
 
 interface NavItem { to: string; icon: typeof LayoutDashboard; label: string }
 interface NavGroup { title?: string; items: NavItem[] }
@@ -339,6 +340,7 @@ export const AdminLayout = () => {
           </div>
         </header>
         <main className="flex-1 min-w-0 p-4 md:p-6">
+          <PasskeyPromptBanner />
           <Outlet />
         </main>
         <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
