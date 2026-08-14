@@ -453,7 +453,9 @@
     "unavailable": "Reading unavailable — operational health cannot be verified.",
     "readingStale": "Reading is {{count}} min old — the signals below may be stale.",
     "unknownValue": "UNREADABLE",
-    "queuePendingUnknown": "queue depth unreadable"
+    "queuePendingUnknown": "queue depth unreadable",
+    "webauthn": "WebAuthn (passkeys)",
+    "webauthnNoOrigin": "no allowed origin — passkeys cannot be registered"
   },
   "settingsPage": {
     "title": "Settings",
