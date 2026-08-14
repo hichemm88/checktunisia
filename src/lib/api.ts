@@ -83,3 +83,18 @@ export const extractErrors = (err: unknown): string => {
   }
   return 'An unexpected error occurred.';
 };
+
+/**
+ * Cause technique éventuelle, quand le serveur la juge utile à celui qui la
+ * lit (aujourd'hui : l'enregistrement d'une passkey par son propre
+ * propriétaire). Affichée en second, discrètement — c'est ce qui permet de
+ * rapporter un incident sans avoir à ouvrir un journal.
+ */
+export const extractErrorDetail = (err: unknown): string | null => {
+  if (!axios.isAxiosError(err)) return null;
+  const errors = err.response?.data?.errors;
+  if (Array.isArray(errors) && errors.length > 0 && typeof errors[0].detail === 'string') {
+    return errors[0].detail;
+  }
+  return null;
+};
