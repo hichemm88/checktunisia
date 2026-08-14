@@ -13,7 +13,7 @@ import { passkeysApi, recoveryCodesApi, type Passkey } from '@/api/passkeys';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { extractErrors } from '@/lib/api';
+import { extractErrors, extractErrorDetail } from '@/lib/api';
 import {
   classifyPasskeyError,
   detectPasskeyFlavor,
@@ -43,6 +43,10 @@ export const PasskeyManager = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // Cause technique renvoyée par le serveur pour l'enregistrement d'une
+  // passkey : c'est elle qui distingue « recommencez » d'une configuration à
+  // corriger, et elle évite d'avoir à ouvrir le journal d'audit.
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [success, setSuccess] = useState('');
   const [flavor, setFlavor] = useState<PasskeyFlavor | null>(null);
 
@@ -85,6 +89,7 @@ export const PasskeyManager = () => {
 
   const handleAdd = async () => {
     setError('');
+    setErrorDetail(null);
     setSuccess('');
     setBusy(true);
     try {
@@ -99,6 +104,7 @@ export const PasskeyManager = () => {
       const kind = classifyPasskeyError(err);
       if (kind !== 'cancelled') {
         setError((err as { response?: unknown })?.response ? extractErrors(err) : t(passkeyErrorKey(kind)));
+        setErrorDetail(extractErrorDetail(err));
       }
     } finally {
       setBusy(false);
@@ -163,9 +169,14 @@ export const PasskeyManager = () => {
         </div>
       )}
       {error && (
-        <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-          {error}
+        <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <div className="min-w-0">
+            <p>{error}</p>
+            {errorDetail && (
+              <p className="mt-1 break-words font-mono text-xs text-red-600/80">{errorDetail}</p>
+            )}
+          </div>
         </div>
       )}
 
