@@ -1,7 +1,9 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Fingerprint } from 'lucide-react';
 import { authApi } from '@/api/auth';
+import { passkeysApi } from '@/api/passkeys';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -10,6 +12,16 @@ import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { extractErrors } from '@/lib/api';
 import { homePathForRole } from '@/lib/roleRoutes';
 import { useSeoMeta } from '@/cms/useSeoMeta';
+import {
+  classifyPasskeyError,
+  detectPasskeyFlavor,
+  hasPlatformAuthenticator,
+  isConditionalMediationAvailable,
+  isWebAuthnSupported,
+  passkeyErrorKey,
+  passkeyLabelKey,
+  type PasskeyFlavor,
+} from '@/lib/webauthn';
 
 export const LoginPage = () => {
   const { t, i18n } = useTranslation();
@@ -27,13 +39,99 @@ export const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // ── Passkeys ──────────────────────────────────────────────────────────────
+  // `null` tant que la détection n'a pas répondu : on n'affiche RIEN plutôt
+  // qu'un bouton qui disparaîtrait sous le doigt de l'utilisateur.
+  const [flavor, setFlavor] = useState<PasskeyFlavor | null>(null);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const conditionalAbort = useRef<AbortController | null>(null);
+
+  const finishLogin = (token: string, user: Parameters<typeof setAuth>[1], expiresAt: string) => {
+    setAuth(token, { ...user, _token_expires_at: expiresAt });
+    navigate(homePathForRole(user.role));
+  };
+
+  // Détection des capacités réelles de l'appareil. Le libellé « Face ID » n'est
+  // proposé que si un authentificateur intégré existe vraiment.
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!isWebAuthnSupported()) {
+      setFlavor(null);
+      return;
+    }
+
+    hasPlatformAuthenticator().then((hasPlatform) => {
+      if (!cancelled) setFlavor(detectPasskeyFlavor(hasPlatform));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Remplissage conditionnel : quand le navigateur le sait faire, la passkey
+  // apparaît directement dans l'autocomplétion du champ e-mail. L'appel reste
+  // en attente jusqu'au choix de l'utilisateur, d'où l'interruption au
+  // démontage et dès qu'il bascule sur le mot de passe.
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+    conditionalAbort.current = controller;
+
+    isConditionalMediationAvailable().then((available) => {
+      if (!available || cancelled) return;
+
+      passkeysApi
+        .login({ mediation: 'conditional', signal: controller.signal })
+        .then((result) => {
+          if (!cancelled) finishLogin(result.token, result.user, result.expires_at);
+        })
+        .catch(() => {
+          // Annulation, absence de passkey sur l'appareil, ou navigation :
+          // ce chemin est silencieux par construction — il ne doit jamais
+          // afficher d'erreur à quelqu'un qui tapait simplement son mot de passe.
+        });
+    });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handlePasskeyLogin = async () => {
+    setError('');
+    setPasskeyLoading(true);
+    // La cérémonie explicite prend la main sur l'attente en arrière-plan.
+    conditionalAbort.current?.abort();
+
+    try {
+      const result = await passkeysApi.login();
+      finishLogin(result.token, result.user, result.expires_at);
+    } catch (err) {
+      const kind = classifyPasskeyError(err);
+      // Une annulation n'est pas une erreur : l'utilisateur a peut-être
+      // simplement décidé de saisir son mot de passe, qui l'attend juste
+      // en dessous. Lui afficher un bandeau rouge serait inutilement inquiétant.
+      if (kind === 'cancelled') return;
+      // Refus venu du serveur (passkey révoquée, compte suspendu) : son message
+      // est plus précis que le nôtre.
+      setError((err as { response?: unknown })?.response ? extractErrors(err) : t(passkeyErrorKey(kind)));
+    } finally {
+      setPasskeyLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+    conditionalAbort.current?.abort();
     try {
       const result = await authApi.login(email, password);
-      // Authority user with 2FA enabled → go to TOTP verification step.
+      // Compte avec 2FA activée → étape de vérification TOTP.
       // Le garde `in` narrow de façon fiable l'union (le discriminant
       // requires_2fa est optionnel côté LoginResult, ce qui empêche le
       // narrowing par booléen).
@@ -41,15 +139,15 @@ export const LoginPage = () => {
         navigate('/auth/2fa/verify', { state: { partialToken: result.partial_token } });
         return;
       }
-      // Store token expiry so auto-refresh can trigger before the 8h token expires
-      setAuth(result.token, { ...result.user, _token_expires_at: result.expires_at });
-      navigate(homePathForRole(result.user.role));
+      finishLogin(result.token, result.user, result.expires_at);
     } catch (err) {
       setError(extractErrors(err));
     } finally {
       setLoading(false);
     }
   };
+
+  const passkeyAvailable = flavor !== null;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4" style={{ background: 'var(--qayed-papier)' }}>
@@ -76,6 +174,32 @@ export const LoginPage = () => {
             </div>
           )}
 
+          {/* Passkey d'abord : c'est le chemin le plus court ET le plus sûr.
+              Le mot de passe reste visible juste en dessous — « utiliser une
+              autre méthode » ne doit pas être une porte cachée, et le champ
+              e-mail doit exister dans le DOM pour que le remplissage
+              conditionnel du navigateur ait un point d'ancrage. */}
+          {passkeyAvailable && (
+            <>
+              <Button
+                type="button"
+                fullWidth
+                size="lg"
+                loading={passkeyLoading}
+                onClick={handlePasskeyLogin}
+              >
+                <Fingerprint className="h-5 w-5" aria-hidden="true" />
+                {t(passkeyLabelKey(flavor))}
+              </Button>
+
+              <div className="flex items-center gap-3" aria-hidden="true">
+                <span className="h-px flex-1 bg-gray-200" />
+                <span className="text-xs uppercase tracking-wide text-gray-400">{t('passkeys.or')}</span>
+                <span className="h-px flex-1 bg-gray-200" />
+              </div>
+            </>
+          )}
+
           <Input
             label={t('auth.emailLabel')}
             type="email"
@@ -83,7 +207,9 @@ export const LoginPage = () => {
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t('auth.emailPlaceholder')}
             required
-            autoComplete="email"
+            // « webauthn » ajoute la passkey à l'autocomplétion du champ, là où
+            // le navigateur sait le faire (remplissage conditionnel).
+            autoComplete="username webauthn"
           />
 
           <Input
@@ -96,7 +222,13 @@ export const LoginPage = () => {
             autoComplete="current-password"
           />
 
-          <Button type="submit" fullWidth loading={loading} size="lg">
+          <Button
+            type="submit"
+            fullWidth
+            loading={loading}
+            size="lg"
+            variant={passkeyAvailable ? 'secondary' : 'primary'}
+          >
             {t('auth.loginButton')}
           </Button>
 

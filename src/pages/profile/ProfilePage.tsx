@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { User, Lock, Shield, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { authApi } from '@/api/auth';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PasskeyManager, RecoveryCodesPanel } from '@/components/security/PasskeyManager';
 import { extractErrors } from '@/lib/api';
 
 type Tab = 'info' | 'security';
@@ -30,7 +31,10 @@ export const ProfilePage = () => {
   const { t, i18n } = useTranslation();
   const navigate  = useNavigate();
   const { user, setUser } = useAuthStore();
-  const [tab, setTab] = useState<Tab>('info');
+  // `?tab=security` : cible de la bannière « Sécurisez votre compte avec une
+  // passkey », qui doit atterrir sur le bon onglet et pas sur les informations.
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState<Tab>(searchParams.get('tab') === 'security' ? 'security' : 'info');
 
   // ── Info tab state ───────────────────────────────────────────────────────────
   const [firstName, setFirstName] = useState(user?.first_name ?? '');
@@ -343,7 +347,13 @@ export const ProfilePage = () => {
           </form>
         )}
 
-        {/* ── Security form ─────────────────────────────────────────────── */}
+        {/* ── Sécurité ─────────────────────────────────────────────────── */}
+        {/* Les passkeys viennent EN PREMIER : c'est le moyen de connexion que
+            l'on veut voir adopter, et le mot de passe n'est plus que le repli. */}
+        {tab === 'security' && <PasskeyManager />}
+
+        {tab === 'security' && (user?.security?.passkeys_count ?? 0) > 0 && <RecoveryCodesPanel />}
+
         {tab === 'security' && (
           <form onSubmit={handlePasswordSubmit} className="rounded-2xl bg-white p-5 shadow-sm space-y-4">
             {pwdSuccess && (

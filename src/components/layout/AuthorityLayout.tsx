@@ -10,6 +10,7 @@ import { authApi } from '@/api/auth';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { FEATURES } from '@/config/features';
+import { PasskeyPromptBanner } from '@/components/security/PasskeyPromptBanner';
 
 interface AuthorityLayoutProps { children: ReactNode; title?: string }
 
@@ -160,7 +161,10 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
         </div>
       )}
 
-      <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-6">
+        <PasskeyPromptBanner />
+        {children}
+      </main>
     </div>
   );
 };
