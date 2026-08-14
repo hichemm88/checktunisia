@@ -108,6 +108,17 @@ export interface AdminHealth {
       revoked_at: string | null;
     } | null;
   };
+  /**
+   * Configuration WebAuthn effective, telle que la voit le serveur qui
+   * répond. Optionnelle : une session ouverte contre un backend antérieur à
+   * son ajout ne doit pas casser le panneau.
+   */
+  webauthn?: {
+    rp_id: string | null;
+    origins: string[];
+    user_verification: string;
+    credentials: number;
+  };
   checked_at: string;
 }
 

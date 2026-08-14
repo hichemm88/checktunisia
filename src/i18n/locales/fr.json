@@ -453,7 +453,9 @@
     "unavailable": "Relevé indisponible — l'état d'exploitation ne peut pas être vérifié.",
     "readingStale": "Relevé vieux de {{count}} min — les indicateurs ci-dessous peuvent être périmés.",
     "unknownValue": "ILLISIBLE",
-    "queuePendingUnknown": "file d'attente illisible"
+    "queuePendingUnknown": "file d'attente illisible",
+    "webauthn": "WebAuthn (passkeys)",
+    "webauthnNoOrigin": "aucune origine autorisée — les passkeys ne peuvent pas être enregistrées"
   },
   "settingsPage": {
     "title": "Paramètres",

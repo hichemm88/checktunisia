@@ -471,13 +471,13 @@ const HealthPanel = () => {
   const waAlert = session?.needs_pairing || session?.status === 'logged_out';
   const waWarn = !waAlert && (session?.paused || (session?.status !== 'ready' && session != null));
 
-  const Signal = ({ label, value, level, hint }: { label: string; value: string; level: 'ok' | 'warn' | 'alert'; hint?: string }) => {
+  const Signal = ({ label, value, level, hint, wrapHint }: { label: string; value: string; level: 'ok' | 'warn' | 'alert'; hint?: string; wrapHint?: boolean }) => {
     const color = level === 'alert' ? 'var(--qayed-erreur)' : level === 'warn' ? 'var(--qayed-vigilance)' : 'var(--qayed-conforme)';
     return (
       <div className="flex items-start justify-between gap-3 py-2 border-b border-gray-100 last:border-0">
         <div className="min-w-0">
           <p className="text-xs font-semibold text-gray-700">{label}</p>
-          {hint && <p className="text-xs text-gray-400 truncate">{hint}</p>}
+          {hint && <p className={`text-xs text-gray-400 ${wrapHint ? 'break-all' : 'truncate'}`}>{hint}</p>}
         </div>
         <span className="shrink-0 inline-flex items-center gap-1.5 text-xs font-mono font-semibold" style={{ color }}>
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
@@ -547,6 +547,20 @@ const HealthPanel = () => {
         value={`${data.database.latency_ms} ms`}
         level={data.database.reachable ? 'ok' : 'alert'}
       />
+      {/* Une origine légitime absente de cette liste ne casse rien de visible :
+          elle bloque seulement l'enregistrement des passkeys, avec un message
+          que l'utilisateur ne peut pas interpréter. La voir ici, telle que le
+          serveur la lit, évite de comparer une configuration supposée à une
+          adresse que le navigateur affiche tronquée. */}
+      {data.webauthn && (
+        <Signal
+          label={t('adminHealth.webauthn')}
+          hint={data.webauthn.origins.length > 0 ? data.webauthn.origins.join('  ·  ') : t('adminHealth.webauthnNoOrigin')}
+          wrapHint
+          value={data.webauthn.rp_id ?? '—'}
+          level={!data.webauthn.rp_id || data.webauthn.origins.length === 0 ? 'alert' : 'ok'}
+        />
+      )}
     </div>
   );
 };
