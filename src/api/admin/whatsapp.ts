@@ -25,7 +25,9 @@ export interface WhatsappHealth {
   paused: boolean;
   last_ready_at: string | null;
   heartbeat_at: string | null;
-  queue: { pending: number; sent: number; failed: number; cancelled: number };
+  // `stuck` = fiches que « Renvoyer tout » débloquerait : échouées + en
+  // attente d'un backoff (jusqu'à 4 h après une panne).
+  queue: { pending: number; sent: number; failed: number; cancelled: number; stuck: number };
 }
 
 export interface WhatsappLog {

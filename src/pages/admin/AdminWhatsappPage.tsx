@@ -129,9 +129,11 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
         <Button size="sm" variant="secondary" onClick={() => testM.mutate()} loading={testM.isPending} disabled={!health.enabled}>
           <Send className="h-4 w-4" /> {t('adminWhatsapp.sendTest')}
         </Button>
-        {health.queue.failed > 0 && (
+        {/* Bloquées = échouées + en attente d'un backoff. Ne compter que les
+            échouées cachait le bouton quand la file était figée par le backoff. */}
+        {(health.queue.stuck ?? health.queue.failed) > 0 && (
           <Button size="sm" variant="secondary" onClick={() => resendAllM.mutate()} loading={resendAllM.isPending}>
-            <RefreshCw className="h-4 w-4" /> {t('adminWhatsapp.resendAll', { n: health.queue.failed })}
+            <RefreshCw className="h-4 w-4" /> {t('adminWhatsapp.resendAll', { n: health.queue.stuck ?? health.queue.failed })}
           </Button>
         )}
         {health.last_ready_at && (
