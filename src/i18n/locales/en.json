@@ -348,6 +348,11 @@
     "enabled": "Enabled",
     "disabled": "Disabled",
     "disabledHint": "The module is disabled (WHATSAPP_POLICE_ENABLED=false or no recipient configured). No messages are sent.",
+    "throttle": {
+      "warmup": "Recently paired number: gradual ramp-up ({{n}} sends/h max, {{s}}s apart). Safeguard against a WhatsApp restriction.",
+      "capped": "Hourly cap reached ({{sent}}/{{max}} sends this hour): the queue will resume on its own.",
+      "nextSlot": "Next slot around {{time}}."
+    },
     "pausedTag": "Paused",
     "pause": "Pause",
     "resume": "Resume",

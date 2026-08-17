@@ -348,6 +348,11 @@
     "enabled": "Activé",
     "disabled": "Désactivé",
     "disabledHint": "Le module est désactivé (WHATSAPP_POLICE_ENABLED=false ou destinataire non configuré). Aucun envoi n'est effectué.",
+    "throttle": {
+      "warmup": "Numéro récemment appairé : montée en charge progressive ({{n}} envois/h maximum, {{s}} s entre deux). Garde-fou contre une restriction de WhatsApp.",
+      "capped": "Plafond horaire atteint ({{sent}}/{{max}} envois cette heure) : la file reprendra d'elle-même.",
+      "nextSlot": "Prochaine place vers {{time}}."
+    },
     "pausedTag": "En pause",
     "pause": "Mettre en pause",
     "resume": "Reprendre",

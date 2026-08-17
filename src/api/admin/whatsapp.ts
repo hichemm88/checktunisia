@@ -28,6 +28,22 @@ export interface WhatsappHealth {
   // `stuck` = fiches que « Renvoyer tout » débloquerait : échouées + en
   // attente d'un backoff (jusqu'à 4 h après une panne).
   queue: { pending: number; sent: number; failed: number; cancelled: number; stuck: number };
+  /**
+   * Cadence en vigueur (garde-fous anti-restriction Meta). Sans elle, une file
+   * bridée par le plafond horaire est indiscernable d'une file en panne :
+   * « 14 en attente » et rien qui part, sans explication à l'écran.
+   *
+   * Optionnel : l'écran doit rester lisible si le front est déployé avant l'API.
+   */
+  throttle?: {
+    sending: boolean;
+    warmup: boolean;
+    sent_last_hour: number;
+    max_per_hour: number;
+    min_interval_seconds: number;
+    next_slot_at: string | null;
+    paired_at: string | null;
+  };
 }
 
 export interface WhatsappLog {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, Send, Pause, Play, AlertTriangle, Image as ImageIcon, ImageOff } from 'lucide-react';
+import { RefreshCw, Send, Pause, Play, AlertTriangle, Gauge, Image as ImageIcon, ImageOff } from 'lucide-react';
 import {
   adminWhatsappApi,
   type WhatsappHealth,
@@ -115,6 +115,32 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
         {stat(t('adminWhatsapp.queue.failed'), health.queue.failed, 'text-red-600')}
         {stat(t('adminWhatsapp.queue.cancelled'), health.queue.cancelled, 'text-gray-500')}
       </div>
+
+      {/* Cadence anti-restriction. Une file bridée par le plafond horaire ou
+          par la montée en charge d'un numéro neuf ne bouge PAS, et sans ce
+          bandeau c'est indiscernable d'une panne : « 14 en attente » et rien
+          qui part. Muet quand tout coule normalement. */}
+      {health.throttle && (!health.throttle.sending || health.throttle.warmup) && (
+        <div className="flex items-start gap-2 rounded-xl bg-[--qayed-vigilance-fond] px-3 py-2 text-xs text-[--qayed-vigilance-texte]">
+          <Gauge className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>
+            {health.throttle.warmup
+              ? t('adminWhatsapp.throttle.warmup', {
+                  n: health.throttle.max_per_hour,
+                  s: health.throttle.min_interval_seconds,
+                })
+              : t('adminWhatsapp.throttle.capped', {
+                  sent: health.throttle.sent_last_hour,
+                  max: health.throttle.max_per_hour,
+                })}
+            {!health.throttle.sending && health.throttle.next_slot_at && (
+              <> {t('adminWhatsapp.throttle.nextSlot', {
+                time: new Date(health.throttle.next_slot_at).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }),
+              })}</>
+            )}
+          </span>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         {health.paused ? (
