@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Globe, ChevronDown } from 'lucide-react';
 import { fetchCmsMenus, type CmsMenuItem } from '@/api/cms';
 import { pickI18n } from '@/lib/i18nContent';
+import { publisherFooterLine } from '@/config/publisher';
 
 const SITE_LANGS = [
   { code: 'fr', name: 'Français', label: 'FR' },
@@ -207,10 +208,16 @@ export const SiteChrome = ({ children }: { children: React.ReactNode }) => {
               </ul>
             </div>
           </div>
+          {/* Identité de l'éditeur, en clair et en texte sélectionnable sur
+              TOUTES les pages publiques — pas seulement dans les mentions
+              légales. Un examinateur qui ouvre n'importe quelle page doit
+              pouvoir rattacher qayed.tn à une personne morale sans cliquer.
+              Le détail complet (contact, directeur de la publication) reste
+              sur /mentions-legales, liée juste au-dessus. */}
+          <p className="footer-publisher">
+            {publisherFooterLine(lang)}
+          </p>
           <div className="footer-bottom">
-            {/* L'entité juridique (UW AGENCY SUARL) reste dans les Mentions
-                légales et les CGV, où elle est requise — pas dans l'habillage
-                marketing du site. */}
             <span className="footer-legal">© {new Date().getFullYear()} QAYED · TUNIS, TUNISIE</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <span className="footer-legal" style={{ marginInlineEnd: 6 }}>{FOOTER_T.securePay[lang as 'fr' | 'en' | 'ar'] ?? FOOTER_T.securePay.fr}</span>

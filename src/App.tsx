@@ -16,6 +16,10 @@ import { api } from '@/lib/api';
 // qayed.tn. Le CSS n'est plus découpé par chunk (vite.config.ts), donc le
 // préchargement d'un CSS de chunk ne peut plus échouer.
 import { CmsPage } from '@/pages/CmsPage';
+// Mentions légales : page obligatoire, donc jamais derrière un chunk qui peut
+// échouer à se charger. Elle réutilise SiteChrome et les blocs déjà présents
+// dans le bundle d'entrée — son coût se limite à son texte.
+import { MentionsLegalesPage } from '@/pages/legal/MentionsLegalesPage';
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then((m) => ({ default: m.LoginPage })));
 const ActivityPage = lazy(() => import('@/pages/authority/ActivityPage').then((m) => ({ default: m.ActivityPage })));
@@ -269,6 +273,15 @@ export const App = () => (
         <Route path="/admin/pages/:id/edit" element={<AdminPageEditorPage />} />
       </Route>
     </Route>
+
+    {/* Mentions légales — page obligatoire, servie par le code et non par le
+        CMS (cf. MentionsLegalesPage). Déclarée AVANT /:locale/:slug pour
+        primer sur la page `mentions-legales` restée en base. La forme sans
+        langue suit la langue active de l'interface. */}
+    <Route path="/mentions-legales"     element={<MentionsLegalesPage />} />
+    <Route path="/fr/mentions-legales"  element={<MentionsLegalesPage localeOverride="fr" />} />
+    <Route path="/en/mentions-legales"  element={<MentionsLegalesPage localeOverride="en" />} />
+    <Route path="/ar/mentions-legales"  element={<MentionsLegalesPage localeOverride="ar" />} />
 
     {/* Pages CMS publiques — /:locale (home) et /:locale/:slug. Déclarées en
         dernier avant le fallback : les routes applicatives ci-dessus priment,

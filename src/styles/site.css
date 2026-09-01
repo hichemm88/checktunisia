@@ -306,6 +306,10 @@
 .qayed-landing .footer-col ul a:hover{color:var(--papier)}
 .qayed-landing .footer-bottom{padding-top:26px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
 .qayed-landing .footer-legal{font-family:var(--font-m);font-size:11px;letter-spacing:.1em;color:var(--sur-encre-bas)}
+/* Mention de l'éditeur : même discrétion que les liens du pied de page, mais
+   elle doit rester lisible — d'où l'interlignage confortable et le retour à la
+   ligne libre plutôt qu'une ligne unique qui déborderait sur mobile. */
+.qayed-landing .footer-publisher{padding-top:24px;font-size:12px;line-height:1.6;color:var(--sur-encre-bas);max-width:760px}
 
 /* ANIMATIONS */
 @keyframes qLandFadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}

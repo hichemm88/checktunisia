@@ -1841,7 +1841,8 @@
     "tryFree": "Try it free",
     "menu": "Menu",
     "notFound": "This page does not exist or is no longer published.",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "legalNotice": "Legal notice"
   },
   "pricingSection": {
     "eyebrow": "Subscription",

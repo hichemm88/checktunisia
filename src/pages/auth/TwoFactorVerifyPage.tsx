@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
+import { PublisherNotice } from '@/components/ui/PublisherNotice';
 import { extractErrors } from '@/lib/api';
 import { homePathForRole } from '@/lib/roleRoutes';
 import { safeIntendedPath } from '@/lib/intendedRoute';
@@ -189,6 +190,7 @@ export const TwoFactorVerifyPage = () => {
         <p className="mt-4 text-center text-xs text-gray-400">
           © {new Date().getFullYear()} {t('auth.footer')}
         </p>
+        <PublisherNotice />
       </div>
     </div>
   );
