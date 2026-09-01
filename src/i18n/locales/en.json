@@ -1143,6 +1143,28 @@
     "documentFieldsRequired": "Document number and issuing country are required for the police record."
   },
   "auth": {
+    "otp": {
+      "entry": "Get a code on WhatsApp",
+      "phoneTitle": "Sign in with WhatsApp",
+      "phoneSubtitle": "Enter the number where you receive police records.",
+      "phoneLabel": "WhatsApp number",
+      "dialCodeLabel": "Country code",
+      "phonePlaceholder": "20 123 456",
+      "sendCode": "Send the code",
+      "backToPassword": "Back to password",
+      "codeTitle": "Enter the code",
+      "codeSent": "If this number is registered, a code has just been sent to you on WhatsApp.",
+      "codeLabel": "6-digit code",
+      "expiresIn": "This code expires in {{time}}.",
+      "expired": "This code has expired. Request a new one.",
+      "verify": "Sign in",
+      "resend": "Resend the code",
+      "resendIn": "Resend the code ({{seconds}}s)",
+      "changeNumber": "Change number",
+      "passkeyOfferTitle": "No code needed next time",
+      "passkeyOfferBody": "Turn on device recognition to sign in within a second, without waiting for a message.",
+      "later": "Later"
+    },
     "tagline": "Digital guest registration",
     "login": "Sign in",
     "loginButton": "Sign in",
