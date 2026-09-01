@@ -47,7 +47,7 @@ export interface AuthUser {
     two_factor_enabled: boolean;
     passkeys_count: number;
     recovery_codes_remaining: number;
-    auth_method: 'password' | 'totp' | 'recovery_code' | 'passkey' | null;
+    auth_method: 'password' | 'totp' | 'recovery_code' | 'passkey' | 'whatsapp_otp' | null;
   } | null;
   /** Échéance du token, posée côté client au login pour l'auto-refresh (non renvoyée par l'API). */
   _token_expires_at?: string;
