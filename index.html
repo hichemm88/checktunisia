@@ -28,6 +28,32 @@
     <meta name="twitter:description" content="La fiche de police digitale pour hébergements tunisiens." />
     <meta name="twitter:image" content="https://qayed.tn/og-image.png" />
     <link rel="canonical" href="https://qayed.tn" />
+    <!-- Éditeur du site, en donnée structurée. Servi DANS LE HTML et non posé
+         par le JavaScript (comme le reste du JSON-LD, cf. src/cms/useSeoMeta.ts) :
+         c'est la seule forme qu'un robot ou un examinateur qui n'exécute pas de
+         script puisse lire. Copie manuelle de ORGANIZATION_LD
+         (src/config/publisher.ts) — src/config/publisher.test.ts vérifie que les
+         deux ne divergent pas. -->
+    <script type="application/ld+json" data-publisher-ld>
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": "https://qayed.tn/#organization",
+        "name": "Qayed",
+        "legalName": "SOCIETE UW AGENCY",
+        "url": "https://qayed.tn",
+        "logo": "https://qayed.tn/icon-512.png",
+        "email": "contact@qayed.tn",
+        "telephone": "+216 93 116 000",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "02 Rue Abdallah El Mahdi, Carthage Byrsa",
+          "addressLocality": "Carthage",
+          "postalCode": "2016",
+          "addressCountry": "TN"
+        }
+      }
+    </script>
     <!-- Polices auto-hébergées (voir src/styles/fonts.css) : on précharge les
          deux seuls sous-ensembles utilisés dès le premier écran. Les autres
          (latin-ext, arabe) restent à la charge de leur unicode-range. -->

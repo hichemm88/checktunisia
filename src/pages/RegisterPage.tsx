@@ -7,6 +7,7 @@ import {
   Building2, User, CreditCard, Briefcase,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { PublisherNotice } from '@/components/ui/PublisherNotice';
 import { Input } from '@/components/ui/Input';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
@@ -374,6 +375,7 @@ export const RegisterPage = () => {
           {t('register.alreadyHaveAccount')}{' '}
           <Link to="/login" className="font-semibold" style={{ color: 'var(--qayed-cachet)' }}>{t('auth.loginButton')}</Link>
         </p>
+        <PublisherNotice />
       </div>
     </div>
   );

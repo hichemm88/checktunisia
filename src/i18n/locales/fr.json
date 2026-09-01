@@ -1841,7 +1841,8 @@
     "tryFree": "Essayer gratuitement",
     "menu": "Menu",
     "notFound": "Cette page n'existe pas ou n'est plus publiée.",
-    "backHome": "Retour à l'accueil"
+    "backHome": "Retour à l'accueil",
+    "legalNotice": "Mentions légales"
   },
   "pricingSection": {
     "eyebrow": "Abonnement",

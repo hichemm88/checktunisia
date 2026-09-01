@@ -10,19 +10,17 @@ import { useSeoMeta } from '@/cms/useSeoMeta';
 const VALID_LANGS: CmsLang[] = ['fr', 'en', 'ar'];
 
 /**
- * Donnée structurée schema.org de la page d'accueil (éditeur + application).
+ * Donnée structurée schema.org de la page d'accueil.
  * Statique : décrit le produit Qayed pour les résultats enrichis Google.
+ *
+ * L'organisation éditrice n'est PAS redéclarée ici : elle est servie dans le
+ * <head> de index.html, où un robot sans JavaScript la voit. Les nœuds
+ * ci-dessous s'y rattachent par son `@id` — deux définitions concurrentes du
+ * même `@id` se contrediraient.
  */
 const HOME_STRUCTURED_DATA: Record<string, unknown> = {
   '@context': 'https://schema.org',
   '@graph': [
-    {
-      '@type': 'Organization',
-      '@id': 'https://qayed.tn/#organization',
-      name: 'Qayed',
-      url: 'https://qayed.tn',
-      logo: 'https://qayed.tn/icon-512.png',
-    },
     {
       '@type': 'WebSite',
       '@id': 'https://qayed.tn/#website',
