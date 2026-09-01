@@ -348,6 +348,11 @@
     "enabled": "Activé",
     "disabled": "Désactivé",
     "disabledHint": "Le module est désactivé (WHATSAPP_POLICE_ENABLED=false ou destinataire non configuré). Aucun envoi n'est effectué.",
+    "throttle": {
+      "warmup": "Numéro récemment appairé : montée en charge progressive ({{n}} envois/h maximum, {{s}} s entre deux). Garde-fou contre une restriction de WhatsApp.",
+      "capped": "Plafond horaire atteint ({{sent}}/{{max}} envois cette heure) : la file reprendra d'elle-même.",
+      "nextSlot": "Prochaine place vers {{time}}."
+    },
     "pausedTag": "En pause",
     "pause": "Mettre en pause",
     "resume": "Reprendre",
@@ -453,7 +458,9 @@
     "unavailable": "Relevé indisponible — l'état d'exploitation ne peut pas être vérifié.",
     "readingStale": "Relevé vieux de {{count}} min — les indicateurs ci-dessous peuvent être périmés.",
     "unknownValue": "ILLISIBLE",
-    "queuePendingUnknown": "file d'attente illisible"
+    "queuePendingUnknown": "file d'attente illisible",
+    "webauthn": "WebAuthn (passkeys)",
+    "webauthnNoOrigin": "aucune origine autorisée — les passkeys ne peuvent pas être enregistrées"
   },
   "settingsPage": {
     "title": "Paramètres",
@@ -1845,5 +1852,61 @@
     "yearlyBadge": "1 mois offert",
     "footnote": "Aucune carte bancaire requise pour démarrer l'essai · Résiliable à tout moment",
     "ctaFallback": "Essayer 7 jours gratuit"
+  },
+  "passkeys": {
+    "title": "Passkeys",
+    "subtitle": "Connectez-vous avec Face ID, Touch ID, Windows Hello, votre empreinte ou une clé de sécurité — sans mot de passe.",
+    "continueWith": {
+      "faceid": "Continuer avec Face ID",
+      "touchid": "Continuer avec Touch ID",
+      "hello": "Continuer avec Windows Hello",
+      "biometric": "Continuer avec la biométrie",
+      "passkey": "Continuer avec une passkey"
+    },
+    "or": "ou",
+    "useAnotherMethod": "Utiliser une autre méthode de connexion",
+    "useRecoveryCode": "Utiliser un code de récupération",
+    "useAuthenticator": "Utiliser l'application d'authentification",
+    "recoveryCodeLabel": "Code de récupération",
+    "add": "Ajouter une passkey",
+    "addWithFaceId": "Activer Face ID / Touch ID",
+    "addWithTouchId": "Activer Touch ID",
+    "addWithHello": "Activer Windows Hello",
+    "addSuccess": "Passkey activée avec succès.",
+    "nameLabel": "Nom de l'appareil",
+    "namePlaceholder": "iPhone de Hichem",
+    "nameHint": "Pour reconnaître cet appareil dans la liste. Modifiable à tout moment.",
+    "empty": "Aucune passkey enregistrée pour ce compte.",
+    "lastUsed": "Dernière utilisation : {{date}}",
+    "neverUsed": "jamais utilisée",
+    "synced": "synchronisée",
+    "rename": "Renommer",
+    "renameLabel": "Nouveau nom de l'appareil",
+    "revoke": "Supprimer",
+    "confirmRevoke": "Supprimer la passkey « {{name}} » ? Cet appareil ne pourra plus se connecter sans mot de passe.",
+    "revokeSuccess": "Passkey supprimée.",
+    "limitReached": "Limite atteinte ({{max}} passkeys). Supprimez-en une pour en ajouter une nouvelle.",
+    "unsupportedHere": "Cet appareil ou ce navigateur ne gère pas les passkeys. La connexion par mot de passe reste disponible.",
+    "recoveryTitle": "Vos codes de récupération",
+    "recoveryHint": "Conservez-les hors de cet appareil. Chacun ne sert qu'une fois, et ils ne seront plus jamais affichés.",
+    "recoverySaved": "Je les ai notés",
+    "recoveryRemaining": "{{count}} code(s) de récupération restant(s)",
+    "recoveryPanelTitle": "Codes de récupération",
+    "recoveryPanelSubtitle": "À utiliser si vous perdez l'appareil portant votre passkey.",
+    "regenerate": "Générer de nouveaux codes",
+    "regenerateHint": "Les codes actuels seront invalidés et remplacés.",
+    "promptTitle": "Sécurisez votre compte avec une passkey",
+    "promptBody": "Connectez-vous en une seconde, sans mot de passe et sans code à recopier.",
+    "promptCta": "Activer une passkey",
+    "promptCtaFaceId": "Activer Face ID / Passkey",
+    "promptCtaTouchId": "Activer Touch ID / Passkey",
+    "promptCtaHello": "Activer Windows Hello / Passkey",
+    "errors": {
+      "cancelled": "Demande annulée.",
+      "unsupported": "Ce navigateur ne gère pas les passkeys. Utilisez votre mot de passe.",
+      "insecure": "Les passkeys exigent une connexion sécurisée (HTTPS).",
+      "duplicate": "Cet appareil possède déjà une passkey pour ce compte.",
+      "unknown": "La passkey n'a pas pu être utilisée. Réessayez ou utilisez une autre méthode."
+    }
   }
 }
