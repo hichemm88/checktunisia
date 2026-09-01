@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Fingerprint } from 'lucide-react';
 import { authApi } from '@/api/auth';
@@ -11,6 +11,7 @@ import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { extractErrors } from '@/lib/api';
 import { homePathForRole } from '@/lib/roleRoutes';
+import { readIntendedPath } from '@/lib/intendedRoute';
 import { useSeoMeta } from '@/cms/useSeoMeta';
 import {
   classifyPasskeyError,
@@ -26,6 +27,11 @@ import {
 export const LoginPage = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Destination visée avant la redirection vers cette page — typiquement la
+  // fiche ouverte depuis le bouton d'un message WhatsApp.
+  const intended = readIntendedPath(location.search);
 
   useSeoMeta({
     title: t('seo.loginTitle'),
@@ -48,7 +54,11 @@ export const LoginPage = () => {
 
   const finishLogin = (token: string, user: Parameters<typeof setAuth>[1], expiresAt: string) => {
     setAuth(token, { ...user, _token_expires_at: expiresAt });
-    navigate(homePathForRole(user.role));
+    // `intended` d'abord : place ici, il couvre les TROIS chemins de connexion
+    // — mot de passe, bouton passkey, remplissage conditionnel. Un agent qui
+    // suit le lien d'un message WhatsApp peut tres bien s'authentifier par
+    // Face ID ; la fiche doit l'attendre dans les trois cas.
+    navigate(intended ?? homePathForRole(user.role));
   };
 
   // Détection des capacités réelles de l'appareil. Le libellé « Face ID » n'est
@@ -136,7 +146,10 @@ export const LoginPage = () => {
       // requires_2fa est optionnel côté LoginResult, ce qui empêche le
       // narrowing par booléen).
       if (!('token' in result)) {
-        navigate('/auth/2fa/verify', { state: { partialToken: result.partial_token } });
+        // La destination traverse l'étape 2FA : sans cela, tout compte soumis à
+        // la double authentification — c'est-à-dire tous les agents — perdrait
+        // le lien sur lequel il vient de cliquer.
+        navigate('/auth/2fa/verify', { state: { partialToken: result.partial_token, next: intended } });
         return;
       }
       finishLogin(result.token, result.user, result.expires_at);

@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { loginPathFor } from '@/lib/intendedRoute';
 import { useAuthStore, type Role } from '@/stores/authStore';
 import { FEATURES } from '@/config/features';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
@@ -63,14 +64,27 @@ const TwoFactorVerifyPage = lazy(() => import('@/pages/auth/TwoFactorVerifyPage'
 const WatchlistPage = lazy(() => import('@/pages/authority/WatchlistPage').then((m) => ({ default: m.WatchlistPage })));
 
 // ─── Guards ─────────────────────────────────────────────────────────────────
+//
+// La destination visée part avec la redirection. Sans elle, un agent qui suit
+// le lien « Consulter la fiche » d'un message WhatsApp se connectait puis
+// atterrissait sur son tableau de bord : la fiche pour laquelle il avait
+// cliqué était perdue, et il devait la retrouver à la main.
 const RequireAuth = () => {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+  const location = useLocation();
+
+  return isAuthenticated
+    ? <Outlet />
+    : <Navigate to={loginPathFor(location.pathname, location.search)} replace />;
 };
 
 const RequireRole = ({ roles }: { roles: Role[] }) => {
   const role = useAuthStore((s) => s.user?.role);
-  return role && roles.includes(role) ? <Outlet /> : <Navigate to="/login" replace />;
+  const location = useLocation();
+
+  return role && roles.includes(role)
+    ? <Outlet />
+    : <Navigate to={loginPathFor(location.pathname, location.search)} replace />;
 };
 
 const RoleRedirect = () => {

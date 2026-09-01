@@ -10,6 +10,7 @@ import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { extractErrors } from '@/lib/api';
 import { homePathForRole } from '@/lib/roleRoutes';
+import { safeIntendedPath } from '@/lib/intendedRoute';
 
 /**
  * Step 2 of authority-user login.
@@ -23,7 +24,13 @@ export const TwoFactorVerifyPage = () => {
   const setAuth    = useAuthStore((s) => s.setAuth);
 
   // Partial token passed from LoginPage via navigate state
-  const partialToken: string = (location.state as { partialToken?: string })?.partialToken ?? '';
+  const state = location.state as { partialToken?: string; next?: string | null } | null;
+  const partialToken: string = state?.partialToken ?? '';
+
+  // Relayée par LoginPage. Revalidée ici : l'état du routeur est manipulable
+  // depuis la console, et une destination non vérifiée ferait de cette page un
+  // tremplin de redirection.
+  const intended = safeIntendedPath(state?.next);
 
   const [code, setCode]       = useState('');
   const [error, setError]     = useState('');
@@ -57,7 +64,7 @@ export const TwoFactorVerifyPage = () => {
       // La 2FA ne concerne plus seulement les comptes autorité : un admin
       // plateforme passe aussi par cet écran et ne doit pas atterrir sur le
       // portail autorité.
-      navigate(homePathForRole(result.user.role), { replace: true });
+      navigate(intended ?? homePathForRole(result.user.role), { replace: true });
     } catch (err) {
       setError(extractErrors(err));
       setCode('');
