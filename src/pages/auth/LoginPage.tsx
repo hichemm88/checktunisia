@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { authApi } from '@/api/auth';
 import { useAuthStore } from '@/stores/authStore';
@@ -9,11 +9,17 @@ import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { extractErrors } from '@/lib/api';
 import { homePathForRole } from '@/lib/roleRoutes';
+import { readIntendedPath } from '@/lib/intendedRoute';
 import { useSeoMeta } from '@/cms/useSeoMeta';
 
 export const LoginPage = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Destination visée avant la redirection vers cette page — typiquement la
+  // fiche ouverte depuis le bouton d'un message WhatsApp.
+  const intended = readIntendedPath(location.search);
 
   useSeoMeta({
     title: t('seo.loginTitle'),
@@ -38,12 +44,15 @@ export const LoginPage = () => {
       // requires_2fa est optionnel côté LoginResult, ce qui empêche le
       // narrowing par booléen).
       if (!('token' in result)) {
-        navigate('/auth/2fa/verify', { state: { partialToken: result.partial_token } });
+        // La destination traverse l'étape 2FA : sans cela, tout compte soumis à
+        // la double authentification — c'est-à-dire tous les agents — perdrait
+        // le lien sur lequel il vient de cliquer.
+        navigate('/auth/2fa/verify', { state: { partialToken: result.partial_token, next: intended } });
         return;
       }
       // Store token expiry so auto-refresh can trigger before the 8h token expires
       setAuth(result.token, { ...result.user, _token_expires_at: result.expires_at });
-      navigate(homePathForRole(result.user.role));
+      navigate(intended ?? homePathForRole(result.user.role));
     } catch (err) {
       setError(extractErrors(err));
     } finally {
