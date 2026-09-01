@@ -381,6 +381,13 @@
   .qayed-landing .hero-actions{flex-direction:column}
   .qayed-landing .hero-actions a{width:100%;justify-content:center}
   .qayed-landing .section{padding:56px 16px}
+  /* La navbar est fixe et haute de 65 px : à 56 px de padding, le titre du
+     premier bloc passait DESSOUS et se retrouvait tronqué sur toutes les pages
+     qui commencent par une section (mentions légales, CGV, confidentialité…).
+     Les paliers plus larges (72 et 96 px) la dégageaient déjà ; seul le mobile
+     était en défaut. L'accueil n'est pas concerné : il commence par .hero, qui
+     a son propre calage. */
+  .qayed-landing main > .section:first-child{padding-top:89px}
   .qayed-landing .trust-bar{padding:14px 16px}
   .qayed-landing .stats-bar{grid-template-columns:1fr 1fr}
   .qayed-landing .stat-num{font-size:34px}
