@@ -44,6 +44,30 @@ export interface WhatsappHealth {
     next_slot_at: string | null;
     paired_at: string | null;
   };
+  /**
+   * Pourquoi rien ne part. Sans ça, un canal retenu par un garde-fou est
+   * indiscernable d'un canal qui n'a rien à envoyer — c'est ainsi qu'une file
+   * gonfle en silence.
+   *
+   * Optionnel : l'écran doit rester lisible si le front est déployé avant l'API.
+   */
+  sending_blocked?: boolean;
+  blocked_reason?: string | null;
+  /**
+   * État du modèle de message chez Meta.
+   *
+   * Un modèle non approuvé n'est pas une panne : c'est une attente, et elle ne
+   * se corrige pas, elle se subit. Le dire explicitement évite qu'on cherche
+   * une panne qui n'existe pas — ou pire, qu'on force les envois.
+   */
+  template?: {
+    name: string;
+    language: string;
+    status: string | null;
+    approved: boolean;
+    checked_at: string | null;
+    error: string | null;
+  };
 }
 
 export interface WhatsappLog {

@@ -116,6 +116,29 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
         {stat(t('adminWhatsapp.queue.cancelled'), health.queue.cancelled, 'text-gray-500')}
       </div>
 
+      {/* Pourquoi rien ne part.
+          C'est la ligne qui manquait pendant l'incident : le modèle attendait
+          son approbation chez Meta, la file gonflait, et l'écran n'en disait
+          rien — « 40 en attente » et pas un mot sur la cause. Le motif vient
+          du garde-fou lui-même, il dit donc toujours l'action à mener (ou
+          l'absence d'action possible, quand il s'agit d'attendre Meta). */}
+      {health.sending_blocked && health.blocked_reason && (
+        <div className="flex items-start gap-2 rounded-xl bg-[--qayed-vigilance-fond] px-3 py-2 text-xs text-[--qayed-vigilance-texte]">
+          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>
+            {health.blocked_reason}
+            {health.template && !health.template.approved && (
+              <span className="block mt-1 opacity-80">
+                {health.template.name} ({health.template.language}) — {health.template.status ?? '—'}
+                {health.template.checked_at && (
+                  <> · {new Date(health.template.checked_at).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}</>
+                )}
+              </span>
+            )}
+          </span>
+        </div>
+      )}
+
       {/* Cadence anti-restriction. Une file bridée par le plafond horaire ou
           par la montée en charge d'un numéro neuf ne bouge PAS, et sans ce
           bandeau c'est indiscernable d'une panne : « 14 en attente » et rien
