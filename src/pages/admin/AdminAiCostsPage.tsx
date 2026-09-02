@@ -188,6 +188,34 @@ export const AdminAiCostsPage = () => {
         </div>
       )}
 
+      {/*
+        Modèles appelés sans tarif. Distinct du bandeau ci-dessus, et il faut
+        les deux : la grille peut être complète et juste, et ne rien couvrir du
+        modèle que le scanner appelle depuis qu'on l'a fait évoluer. Le coût
+        tombe alors à 0 par événement et le total BAISSE — dans le sens où
+        personne ne va vérifier. Le nom exact du modèle est ce qui manque pour
+        corriger, d'où son affichage.
+      */}
+      {summary && summary.unpriced_models.length > 0 && (
+        <div
+          className="flex items-start gap-2 rounded-xl px-4 py-3 text-sm"
+          style={{ background: 'var(--qayed-erreur-fond)', color: 'var(--qayed-erreur-texte)' }}
+        >
+          <AlertTriangle className="h-5 w-5 shrink-0" />
+          <div>
+            <p className="font-semibold">{t('aiCosts.unpricedModelsTitle')}</p>
+            <p className="mt-0.5 text-xs">{t('aiCosts.unpricedModelsHint')}</p>
+            <ul className="mt-1.5 space-y-0.5">
+              {summary.unpriced_models.map((m) => (
+                <li key={m.model} className="font-mono text-xs">
+                  {m.model} — {t('aiCosts.unpricedModelsCount', { count: m.events })}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
       {/* Sélecteurs période + feature */}
       <div className="flex flex-wrap gap-3">
         <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1">
