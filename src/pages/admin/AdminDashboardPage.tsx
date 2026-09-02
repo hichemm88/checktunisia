@@ -1,11 +1,12 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown, Wallet, Award, UserPlus, Landmark, Cpu, ScanLine, Coins, Zap, Gauge } from 'lucide-react';
+import { Building2, CheckCircle2, XCircle, Clock, TrendingUp, Users, AlertTriangle, CreditCard, Ban, Hourglass, TrendingDown, Wallet, Award, UserPlus, Landmark, Cpu, ScanLine, Coins, Zap, Gauge, Receipt } from 'lucide-react';
 import { adminDashboardApi, type AdminDashboardStats } from '@/api/admin/dashboard';
 import { adminPaymentsApi } from '@/api/admin/payments';
 import { adminWhatsappApi } from '@/api/admin/whatsapp';
 import { adminAiCostsApi, type AiFeatureSummary } from '@/api/admin/aiCosts';
+import { adminMetaCostsApi, type MetaCategorySummary } from '@/api/admin/metaCosts';
 import { ListSkeleton } from '@/components/ui/ListSkeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Button } from '@/components/ui/Button';
@@ -223,6 +224,122 @@ const AiCostWidget = () => {
           <span className="flex items-center gap-1">
             <span className="inline-block h-2 w-2 rounded-sm" style={{ background: 'var(--qayed-conforme)' }} />
             {t('aiCosts.passportLabel')}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Widget "Coûts Meta" — dépenses WhatsApp Cloud API du mois en cours, à côté
+ * du coût IA et sur le même gabarit. Chiffre principal en USD (Meta facture en
+ * USD), split utility/authentication, badge de provenance et mini graphique
+ * barres empilées du volume LIVRÉ des 30 derniers jours.
+ *
+ * Le badge n'est pas décoratif : « estimation » signifie tarif Tunisie
+ * uniforme, paliers de volume ignorés — un chiffre qui peut se tromper de
+ * plusieurs pourcents. Le montrer sans le dire serait le présenter pour ce
+ * qu'il n'est pas.
+ */
+const MetaCostWidget = () => {
+  const { t } = useTranslation();
+  const { data: summary } = useQuery({
+    queryKey: ['admin-meta-costs-summary', 'current_month'],
+    queryFn: () => adminMetaCostsApi.summary('current_month'),
+  });
+  const { data: daily } = useQuery({
+    queryKey: ['admin-meta-costs-daily', 30, 'all'],
+    queryFn: () => adminMetaCostsApi.daily(30, 'all'),
+  });
+
+  if (!summary) return null;
+
+  const byCategory = (name: MetaCategorySummary['category']) => summary.categories.find((c) => c.category === name);
+  const utility = byCategory('utility');
+  const authentication = byCategory('authentication');
+
+  const days = daily?.series ?? [];
+  const maxCount = Math.max(1, ...days.map((d) => d.total_count));
+  const real = summary.source === 'meta';
+
+  return (
+    <div className="card p-5">
+      {!summary.pricing_configured && (
+        <div
+          className="mb-4 flex items-start gap-2 rounded-xl px-3 py-2 text-xs font-semibold"
+          style={{ background: 'var(--qayed-vigilance-fond)', color: 'var(--qayed-vigilance-texte)' }}
+        >
+          <AlertTriangle className="h-4 w-4 shrink-0 mt-px" />
+          <span>{t('metaCosts.pricingNotConfigured')}</span>
+        </div>
+      )}
+
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: 'var(--qayed-cachet)18' }}>
+            <Receipt className="h-4 w-4" style={{ color: 'var(--qayed-cachet)' }} />
+          </div>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('metaCosts.widgetTitle')}</p>
+        </div>
+        <Link to="/admin/meta-costs" className="-m-1.5 inline-flex min-h-[24px] items-center p-1.5 text-xs font-semibold text-gray-400 hover:text-gray-700">
+          {t('metaCosts.detail')}
+        </Link>
+      </div>
+
+      <p className="font-mono text-3xl font-extrabold text-gray-900">{formatUSD(summary.total_cost_usd, 4)}</p>
+      <p className="mt-1 text-xs text-gray-500">
+        {t('metaCosts.utilityLabel')} <span className="font-mono font-semibold text-gray-700">{formatUSD(utility?.cost_usd, 4)}</span>
+        {'  ·  '}
+        {t('metaCosts.authenticationLabel')} <span className="font-mono font-semibold text-gray-700">{formatUSD(authentication?.cost_usd, 4)}</span>
+      </p>
+      <p className="mt-0.5 text-xs">
+        <span className="text-gray-500">{t('metaCosts.messagesThisMonth', { count: summary.total_messages })}</span>
+        {'  ·  '}
+        <span
+          className={real ? 'text-gray-500' : 'font-bold'}
+          style={real ? undefined : { color: 'var(--qayed-vigilance-texte)' }}
+        >
+          {t(real ? 'metaCosts.sourceMeta' : 'metaCosts.sourceEstimate')}
+        </span>
+      </p>
+
+      <div className="mt-4">
+        {days.length === 0 || maxCount === 1 ? (
+          <p className="text-xs text-gray-400 py-6 text-center">{t('metaCosts.noData')}</p>
+        ) : (
+          <div className="flex items-end gap-1 h-20">
+            {days.map((d) => {
+              const total = d.total_count;
+              const utilityPct = total > 0 ? (d.utility_count / total) * 100 : 0;
+              return (
+                <div key={d.date} className="flex-1 group relative flex flex-col justify-end h-full">
+                  <div
+                    className="w-full rounded-sm overflow-hidden flex flex-col"
+                    style={{ height: `${Math.max(3, (total / maxCount) * 100)}%`, opacity: total === 0 ? 0.15 : 1 }}
+                  >
+                    <div style={{ height: `${100 - utilityPct}%`, background: 'var(--qayed-conforme)' }} />
+                    <div style={{ height: `${utilityPct}%`, background: 'var(--qayed-cachet)' }} />
+                  </div>
+                  <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center whitespace-nowrap rounded-lg bg-gray-900 px-2 py-1 text-xs text-white z-10">
+                    <span className="font-mono">
+                      {t('metaCosts.utilityLabel')} {d.utility_count} · {t('metaCosts.authenticationLabel')} {d.authentication_count}
+                    </span>
+                    <span>{d.date}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <div className="mt-2 flex items-center gap-4 text-xs text-gray-400">
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-2 w-2 rounded-sm" style={{ background: 'var(--qayed-cachet)' }} />
+            {t('metaCosts.utilityLabel')}
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-2 w-2 rounded-sm" style={{ background: 'var(--qayed-conforme)' }} />
+            {t('metaCosts.authenticationLabel')}
           </span>
         </div>
       </div>
@@ -647,6 +764,8 @@ export const AdminDashboardPage = () => {
           <HealthPanel />
 
           <AiCostWidget />
+
+          <MetaCostWidget />
 
           <ScanComparisonChart />
 
