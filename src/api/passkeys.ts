@@ -25,7 +25,7 @@ export interface SecurityState {
   two_factor_enabled: boolean;
   passkeys_count: number;
   recovery_codes_remaining: number;
-  auth_method: 'password' | 'totp' | 'recovery_code' | 'passkey' | null;
+  auth_method: 'password' | 'totp' | 'recovery_code' | 'passkey' | 'whatsapp_otp' | null;
 }
 
 export interface PasskeySessionResult {

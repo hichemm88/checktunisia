@@ -1143,6 +1143,28 @@
     "documentFieldsRequired": "Le numéro de document et le pays de délivrance sont obligatoires pour la fiche de police."
   },
   "auth": {
+    "otp": {
+      "entry": "Recevoir un code sur WhatsApp",
+      "phoneTitle": "Connexion par WhatsApp",
+      "phoneSubtitle": "Saisissez le numéro sur lequel vous recevez les fiches de police.",
+      "phoneLabel": "Numéro WhatsApp",
+      "dialCodeLabel": "Indicatif du pays",
+      "phonePlaceholder": "20 123 456",
+      "sendCode": "Envoyer le code",
+      "backToPassword": "Revenir au mot de passe",
+      "codeTitle": "Saisissez le code",
+      "codeSent": "Si ce numéro est enregistré, un code vient de vous être envoyé sur WhatsApp.",
+      "codeLabel": "Code à 6 chiffres",
+      "expiresIn": "Ce code expire dans {{time}}.",
+      "expired": "Ce code a expiré. Demandez-en un nouveau.",
+      "verify": "Se connecter",
+      "resend": "Renvoyer le code",
+      "resendIn": "Renvoyer le code ({{seconds}} s)",
+      "changeNumber": "Changer de numéro",
+      "passkeyOfferTitle": "Plus besoin de code la prochaine fois",
+      "passkeyOfferBody": "Activez la reconnaissance de votre appareil pour vous reconnecter en une seconde, sans attendre de message.",
+      "later": "Plus tard"
+    },
     "tagline": "Enregistrement numérique des hôtes",
     "login": "Connexion",
     "loginButton": "Se connecter",

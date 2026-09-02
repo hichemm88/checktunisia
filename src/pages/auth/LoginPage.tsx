@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Fingerprint } from 'lucide-react';
-import { authApi } from '@/api/auth';
+import { Fingerprint, MessageCircle } from 'lucide-react';
+import { authApi, type LoginResult } from '@/api/auth';
 import { passkeysApi } from '@/api/passkeys';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/Button';
@@ -14,6 +14,9 @@ import { extractErrors } from '@/lib/api';
 import { homePathForRole } from '@/lib/roleRoutes';
 import { readIntendedPath } from '@/lib/intendedRoute';
 import { useSeoMeta } from '@/cms/useSeoMeta';
+import { WhatsappOtpLogin } from './WhatsappOtpLogin';
+import { PasskeyOffer } from './PasskeyOffer';
+import { passkeyOfferDismissed } from '@/lib/whatsappOtp';
 import {
   classifyPasskeyError,
   detectPasskeyFlavor,
@@ -53,13 +56,45 @@ export const LoginPage = () => {
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const conditionalAbort = useRef<AbortController | null>(null);
 
+  // ── Code WhatsApp ─────────────────────────────────────────────────────────
+  // Troisième chemin de connexion, pour les agents autorité : leur adresse
+  // e-mail est fictive, ils n'ont jamais pu activer de mot de passe, et le
+  // téléphone sur lequel la fiche vient d'arriver est leur seul facteur.
+  //
+  // `otpSession` retient la session ouverte le temps de proposer une passkey.
+  // Sans cette étape, l'agent redemanderait un code à chaque connexion — et
+  // c'est le seul instant où la proposition a une valeur évidente pour lui,
+  // puisqu'il vient d'en constater le coût.
+  const [mode, setMode] = useState<'credentials' | 'otp'>('credentials');
+  const [otpSession, setOtpSession] = useState<LoginResult | null>(null);
+
   const finishLogin = (token: string, user: Parameters<typeof setAuth>[1], expiresAt: string) => {
     setAuth(token, { ...user, _token_expires_at: expiresAt });
-    // `intended` d'abord : place ici, il couvre les TROIS chemins de connexion
-    // — mot de passe, bouton passkey, remplissage conditionnel. Un agent qui
-    // suit le lien d'un message WhatsApp peut tres bien s'authentifier par
-    // Face ID ; la fiche doit l'attendre dans les trois cas.
+    // `intended` d'abord : place ici, il couvre TOUS les chemins de connexion —
+    // mot de passe, bouton passkey, remplissage conditionnel, code WhatsApp. Un
+    // agent qui suit le lien d'un message WhatsApp peut tres bien s'authentifier
+    // par Face ID ; la fiche doit l'attendre dans tous les cas.
     navigate(intended ?? homePathForRole(user.role));
+  };
+
+  /**
+   * Session ouverte par code WhatsApp.
+   *
+   * La session est posée TOUT DE SUITE — la cérémonie WebAuthn qui suit
+   * éventuellement appelle /auth/passkeys/options, qui exige d'être
+   * authentifié. La navigation, elle, attend la réponse à la proposition.
+   */
+  const handleOtpAuthenticated = (result: LoginResult) => {
+    const offerPasskey =
+      flavor !== null && (result.user.security?.passkeys_count ?? 1) === 0 && !passkeyOfferDismissed();
+
+    if (offerPasskey) {
+      setAuth(result.token, { ...result.user, _token_expires_at: result.expires_at });
+      setOtpSession(result);
+      return;
+    }
+
+    finishLogin(result.token, result.user, result.expires_at);
   };
 
   // Détection des capacités réelles de l'appareil. Le libellé « Face ID » n'est
@@ -178,7 +213,32 @@ export const LoginPage = () => {
           </div>
         </div>
 
+        {/* Proposition de passkey, une seule fois, juste après une connexion par
+            code. Elle ne bloque rien : « Plus tard » — comme un refus ou une
+            erreur — ouvre la fiche visée. */}
+        {otpSession && flavor !== null && (
+          <div className="card p-6">
+            <PasskeyOffer
+              flavor={flavor}
+              onDone={() =>
+                finishLogin(otpSession.token, otpSession.user, otpSession.expires_at)
+              }
+            />
+          </div>
+        )}
+
+        {/* Connexion par code WhatsApp — deux écrans, dans la même carte. */}
+        {!otpSession && mode === 'otp' && (
+          <div className="card p-6">
+            <WhatsappOtpLogin
+              onAuthenticated={handleOtpAuthenticated}
+              onCancel={() => setMode('credentials')}
+            />
+          </div>
+        )}
+
         {/* Form */}
+        {!otpSession && mode === 'credentials' && (
         <form onSubmit={handleSubmit} className="card p-6 flex flex-col gap-5">
           <h2 className="text-center text-base font-semibold text-gray-900">{t('auth.loginTitle')}</h2>
 
@@ -253,7 +313,33 @@ export const LoginPage = () => {
           >
             {t('auth.forgotPassword')}
           </Link>
+
+          <div className="flex items-center gap-3" aria-hidden="true">
+            <span className="h-px flex-1 bg-gray-200" />
+            <span className="text-xs uppercase tracking-wide text-gray-400">{t('passkeys.or')}</span>
+            <span className="h-px flex-1 bg-gray-200" />
+          </div>
+
+          {/* Dernier des trois chemins, et pas le premier : il ne concerne que
+              les agents autorité. Visible sans repli déroulant pour autant —
+              c'est le SEUL chemin praticable pour eux, une porte cachée les
+              laisserait dehors. */}
+          <Button
+            type="button"
+            variant="ghost"
+            fullWidth
+            size="lg"
+            onClick={() => {
+              conditionalAbort.current?.abort();
+              setError('');
+              setMode('otp');
+            }}
+          >
+            <MessageCircle className="h-5 w-5" aria-hidden="true" />
+            {t('auth.otp.entry')}
+          </Button>
         </form>
+        )}
 
         <p className="mt-4 text-center text-xs text-gray-400">
           © {new Date().getFullYear()} {t('auth.footer')}
