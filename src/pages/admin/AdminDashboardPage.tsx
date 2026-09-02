@@ -282,7 +282,7 @@ const MetaCostWidget = () => {
           </div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('metaCosts.widgetTitle')}</p>
         </div>
-        <Link to="/admin/meta-costs" className="text-xs font-semibold text-gray-400 hover:text-gray-700">
+        <Link to="/admin/meta-costs" className="-m-1.5 inline-flex min-h-[24px] items-center p-1.5 text-xs font-semibold text-gray-400 hover:text-gray-700">
           {t('metaCosts.detail')}
         </Link>
       </div>
