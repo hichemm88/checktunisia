@@ -136,8 +136,8 @@ const UserRow = ({ u }: { u: AdminUser }) => {
               <Send className="h-3.5 w-3.5" />
             </button>
           )}
-          <button onClick={() => setMode('edit')} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet] transition-colors"><Pencil className="h-3.5 w-3.5" /></button>
-          <button onClick={() => setMode('confirm_delete')} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
+          <button aria-label={t('common.edit')} onClick={() => setMode('edit')} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet] transition-colors"><Pencil className="h-3.5 w-3.5" /></button>
+          <button aria-label={t('common.delete')} onClick={() => setMode('confirm_delete')} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
         </div>
       </div>
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}

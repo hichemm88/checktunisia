@@ -218,24 +218,24 @@ export const AdminAiCostsPage = () => {
 
       {/* Sélecteurs période + feature */}
       <div className="flex flex-wrap gap-3">
-        <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1">
+        <div className="inline-flex max-w-full overflow-x-auto rounded-xl border border-gray-200 bg-white p-1">
           {PERIODS.map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${period === p ? 'text-white' : 'text-gray-500 hover:text-gray-800'}`}
+              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${period === p ? 'text-white' : 'text-gray-500 hover:text-gray-800'}`}
               style={period === p ? { background: 'var(--qayed-cachet)' } : undefined}
             >
               {t(`aiCosts.period.${p}`)}
             </button>
           ))}
         </div>
-        <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1">
+        <div className="inline-flex max-w-full overflow-x-auto rounded-xl border border-gray-200 bg-white p-1">
           {FEATURES.map((f) => (
             <button
               key={f}
               onClick={() => setFeature(f)}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${feature === f ? 'text-white' : 'text-gray-500 hover:text-gray-800'}`}
+              className={`shrink-0 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${feature === f ? 'text-white' : 'text-gray-500 hover:text-gray-800'}`}
               style={feature === f ? { background: 'var(--qayed-cachet)' } : undefined}
             >
               {t(`aiCosts.feature.${f}`)}

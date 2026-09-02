@@ -127,16 +127,16 @@ export const AdminActivityPage = () => {
         </Button>
       </div>
       <div className="flex items-center gap-2 flex-wrap">
-        <select className="input w-fit" value={action} onChange={(e) => { setAction(e.target.value); setPage(1); }}>
+        <select className="input w-fit max-w-full" value={action} onChange={(e) => { setAction(e.target.value); setPage(1); }}>
           <option value="">{t('adminActivity.allActions')}</option>
           {(allActions ?? Object.keys(ACTION_KEYS)).map((a) => <option key={a} value={a}>{a in ACTION_KEYS ? t(ACTION_KEYS[a]) : a}</option>)}
         </select>
-        <select className="input w-fit" value={hotelId} onChange={(e) => { setHotelId(e.target.value); setPage(1); }}>
+        <select className="input w-fit max-w-full" value={hotelId} onChange={(e) => { setHotelId(e.target.value); setPage(1); }}>
           <option value="">{t('adminActivity.allProperties')}</option>
           {hotels?.data.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
         </select>
-        <input type="date" className="input w-fit" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} aria-label={t('adminActivity.dateFrom')} />
-        <input type="date" className="input w-fit" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} aria-label={t('adminActivity.dateTo')} />
+        <input type="date" className="input w-fit max-w-full" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} aria-label={t('adminActivity.dateFrom')} />
+        <input type="date" className="input w-fit max-w-full" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} aria-label={t('adminActivity.dateTo')} />
         {actor && (
           <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full" style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}>
             {t('adminActivity.filteredByAgent', { name: actor.name })}

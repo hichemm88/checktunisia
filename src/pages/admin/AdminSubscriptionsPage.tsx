@@ -119,7 +119,7 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
             <p className="text-xs text-gray-400">{t('adminSubscriptions.roomsRange', { min: plan.min_rooms, max: plan.max_rooms ?? '∞' })}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           {plan.is_public === false && (
             <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--qayed-vigilance-fond, var(--qayed-vigilance-fond))', color: 'var(--qayed-vigilance-texte, var(--qayed-vigilance-texte))' }}>
               {t('adminSubscriptions.legacyBadge')}
@@ -129,8 +129,8 @@ const PlanRow = ({ plan }: { plan: AdminPlan }) => {
           {!editing && !editingMarketing && (
             <>
               <button onClick={() => setEditingMarketing(true)} title={t('adminSubscriptions.publicContent')} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet]"><Globe className="h-3.5 w-3.5" /></button>
-              <button onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet]"><Pencil className="h-3.5 w-3.5" /></button>
-              <button onClick={() => setConfirmDelete((s) => !s)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
+              <button aria-label={t('common.edit')} onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet]"><Pencil className="h-3.5 w-3.5" /></button>
+              <button aria-label={t('common.delete')} onClick={() => setConfirmDelete((s) => !s)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
             </>
           )}
         </div>

@@ -114,9 +114,9 @@ const LocationSection = ({ location, items }: { location: 'navbar' | 'footer'; i
                 <span className="text-xs text-gray-400 ms-2">{item.page ? `/${item.page.slug}` : item.external_url}</span>
               </button>
               <div className="flex items-center gap-0.5 shrink-0">
-                <button onClick={() => move(idx, -1)} disabled={idx === 0} className="p-1 text-gray-300 hover:text-gray-600 disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>
-                <button onClick={() => move(idx, 1)} disabled={idx === items.length - 1} className="p-1 text-gray-300 hover:text-gray-600 disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button>
-                <button onClick={() => deleteMut.mutate(item.id)} className="p-1 text-gray-300 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
+                <button aria-label={t('common.moveUp')} onClick={() => move(idx, -1)} disabled={idx === 0} className="inline-flex min-h-[24px] min-w-[24px] items-center justify-center p-1 text-gray-300 hover:text-gray-600 disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>
+                <button aria-label={t('common.moveDown')} onClick={() => move(idx, 1)} disabled={idx === items.length - 1} className="inline-flex min-h-[24px] min-w-[24px] items-center justify-center p-1 text-gray-300 hover:text-gray-600 disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button>
+                <button aria-label={t('common.delete')} onClick={() => deleteMut.mutate(item.id)} className="inline-flex min-h-[24px] min-w-[24px] items-center justify-center p-1 text-gray-300 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
               </div>
             </div>
           )}

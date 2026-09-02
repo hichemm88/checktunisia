@@ -91,9 +91,9 @@ const OrgRow = ({ org }: { org: AdminAuthorityOrganization }) => {
         <p className="text-xs text-gray-400">{org.type in TYPE_KEYS ? t(TYPE_KEYS[org.type]) : org.type}{org.governorate ? ` · ${org.governorate}` : ''}{org.user_profiles_count ? ` · ${t('adminAuthority.usersCount', { count: org.user_profiles_count })}` : ''}</p>
       </div>
       <div className="flex items-center gap-1 shrink-0 ms-2">
-        <button onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet]"><Pencil className="h-3.5 w-3.5" /></button>
+        <button aria-label={t('common.edit')} onClick={() => setEditing(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet]"><Pencil className="h-3.5 w-3.5" /></button>
         {!confirmDelete ? (
-          <button onClick={() => setConfirmDelete(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
+          <button aria-label={t('common.delete')} onClick={() => setConfirmDelete(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
         ) : (
           <div className="flex gap-1">
             <button onClick={() => deleteMut.mutate()} className="text-xs font-bold text-red-600">{t('common.confirm')}</button>
@@ -272,14 +272,14 @@ const AuthorityUserRow = ({ u }: { u: AdminAuthorityUser }) => {
           <span className={`text-xs font-semibold px-2 py-1 rounded-full ${u.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{u.status}</span>
           {/* Inviter : envoie un lien 'définir mon mot de passe' (compte utilisable). */}
           <button onClick={() => inviteMut.mutate()} disabled={isFakeEmail || inviteMut.isPending} title={isFakeEmail ? t('adminAuthority.setEmailFirst') : t('adminAuthority.sendInvite')} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet] disabled:opacity-40 disabled:hover:bg-transparent"><Send className="h-3.5 w-3.5" /></button>
-          <button onClick={() => setEditing(true)} title={t('common.edit')} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet]"><Pencil className="h-3.5 w-3.5" /></button>
+          <button aria-label={t('common.edit')} onClick={() => setEditing(true)} title={t('common.edit')} className="rounded-lg p-1.5 text-gray-300 hover:bg-[--qayed-cachet-dilue] hover:text-[--qayed-cachet]"><Pencil className="h-3.5 w-3.5" /></button>
           {u.status === 'active' ? (
-            <button onClick={() => statusMut.mutate('suspended')} className="text-xs text-gray-400 hover:text-red-500">{t('adminHotels.suspend')}</button>
+            <button onClick={() => statusMut.mutate('suspended')} className="-m-1.5 inline-flex min-h-[24px] items-center p-1.5 text-xs text-gray-400 hover:text-red-500">{t('adminHotels.suspend')}</button>
           ) : (
             <button onClick={() => statusMut.mutate('active')} className="text-xs text-gray-400 hover:text-green-600">{t('adminHotels.reactivate')}</button>
           )}
           {!confirmDelete ? (
-            <button onClick={() => setConfirmDelete(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
+            <button aria-label={t('common.delete')} onClick={() => setConfirmDelete(true)} className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
           ) : (
             <div className="flex gap-1">
               <button onClick={() => deleteMut.mutate()} className="text-xs font-bold text-red-600">{t('common.confirm')}</button>

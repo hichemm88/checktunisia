@@ -165,7 +165,7 @@ const AiCostWidget = () => {
           </div>
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('aiCosts.widgetTitle')}</p>
         </div>
-        <Link to="/admin/ai-costs" className="text-xs font-semibold text-gray-400 hover:text-gray-700">
+        <Link to="/admin/ai-costs" className="-m-1.5 inline-flex min-h-[24px] items-center p-1.5 text-xs font-semibold text-gray-400 hover:text-gray-700">
           {t('aiCosts.detail')}
         </Link>
       </div>
