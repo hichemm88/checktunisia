@@ -26,6 +26,7 @@ const ActivityPage = lazy(() => import('@/pages/authority/ActivityPage').then((m
 const AdminActivityPage = lazy(() => import('@/pages/admin/AdminActivityPage').then((m) => ({ default: m.AdminActivityPage })));
 const AdminAiCostsPage = lazy(() => import('@/pages/admin/AdminAiCostsPage').then((m) => ({ default: m.AdminAiCostsPage })));
 const AdminMetaCostsPage = lazy(() => import('@/pages/admin/AdminMetaCostsPage').then((m) => ({ default: m.AdminMetaCostsPage })));
+const AdminWhatsappInboxPage = lazy(() => import('@/pages/admin/AdminWhatsappInboxPage').then((m) => ({ default: m.AdminWhatsappInboxPage })));
 const AdminAuthorityPage = lazy(() => import('@/pages/admin/AdminAuthorityPage').then((m) => ({ default: m.AdminAuthorityPage })));
 const AdminCouponsPage = lazy(() => import('@/pages/admin/AdminCouponsPage').then((m) => ({ default: m.AdminCouponsPage })));
 const AdminDashboardPage = lazy(() => import('@/pages/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })));
@@ -267,6 +268,7 @@ export const App = () => (
           <Route path="/admin/activity"      element={<AdminActivityPage />} />
           {/* MODULE PROVISOIRE — relais WhatsApp (à retirer après homologation MI) */}
           <Route path="/admin/whatsapp"      element={<AdminWhatsappPage />} />
+          <Route path="/admin/whatsapp/inbox" element={<AdminWhatsappInboxPage />} />
           <Route path="/admin/pages"         element={<AdminPagesPage />} />
           <Route path="/admin/menus"         element={<AdminMenusPage />} />
           <Route path="/admin/settings"      element={<Navigate to="/admin/payments" replace />} />

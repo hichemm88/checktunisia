@@ -1518,6 +1518,7 @@
       "whatsapp": "واتساب",
       "aiCosts": "تكاليف الذكاء الاصطناعي",
       "metaCosts": "تكاليف Meta",
+      "whatsappInbox": "ردود السلطات",
       "coupons": "رموز الخصم",
       "quotas": "الحصص"
     },
@@ -1704,6 +1705,51 @@
       "authentication": "تسجيل الدخول",
       "marketing": "تسويق",
       "service": "خدمة"
+    }
+  },
+  "whatsappInbox": {
+    "pageTitle": "ردود السلطات",
+    "pageHint": "ما يرد به الأعوان على بطاقات الشرطة المرسلة عبر واتساب. الرد الحر ممكن فقط خلال 24 ساعة من رسالتهم — وهي قاعدة من ميتا، وليست إعدادًا في قيد.",
+    "searchPlaceholder": "عون، رقم، مصلحة…",
+    "filter": {
+      "all": "الكل",
+      "unread": "غير مقروءة",
+      "awaiting": "في انتظار الرد",
+      "replied": "ردّوا"
+    },
+    "emptyTitle": "لا توجد مراسلات",
+    "emptyHint": "تظهر المحادثات فور إرسال بطاقة إلى عون، وتمتلئ عندما يرد.",
+    "noThreadTitle": "لم تُحدَّد أي محادثة",
+    "noThreadHint": "اختر سلطة من القائمة لعرض البطاقات المرسلة وردودها.",
+    "emptyThreadTitle": "محادثة فارغة",
+    "emptyThreadHint": "لا توجد بطاقة ولا رسالة على هذا الرقم.",
+    "unknownNumber": "رقم غير مرتبط بأي عون مسجَّل.",
+    "ficheSent": "أُرسلت بطاقة الشرطة",
+    "testFiche": "بطاقة اختبار",
+    "readAt": "قُرئت في {{at}}",
+    "replyPlaceholder": "ردّك على السلطة…",
+    "send": "إرسال",
+    "replySent": "أُرسل الرد.",
+    "replyFailed": "تعذّر إرسال الرد.",
+    "windowOpenUntil": "الرد الحر ممكن حتى {{at}}",
+    "windowClosed": "نافذة الرد مغلقة (24 ساعة)",
+    "windowNeverOpened": "لم تراسلنا هذه السلطة قط",
+    "windowClosedHint": "لا تسمح ميتا بالنص الحر إلا خلال 24 ساعة من رسالة العون. خارج هذه النافذة، لا يمر إلا قالب معتمد — أي إرسال بطاقة.",
+    "status": {
+      "sent": "أُرسلت",
+      "delivered": "وصلت",
+      "read": "قُرئت",
+      "failed": "فشل"
+    },
+    "mediaType": {
+      "image": "صورة",
+      "document": "مستند",
+      "audio": "رسالة صوتية",
+      "video": "فيديو",
+      "sticker": "ملصق",
+      "location": "موقع",
+      "contacts": "جهة اتصال",
+      "unsupported": "رسالة غير مدعومة"
     }
   },
   "adminCoupons": {
