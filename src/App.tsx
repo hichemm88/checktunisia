@@ -25,6 +25,7 @@ const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then((m) => ({ def
 const ActivityPage = lazy(() => import('@/pages/authority/ActivityPage').then((m) => ({ default: m.ActivityPage })));
 const AdminActivityPage = lazy(() => import('@/pages/admin/AdminActivityPage').then((m) => ({ default: m.AdminActivityPage })));
 const AdminAiCostsPage = lazy(() => import('@/pages/admin/AdminAiCostsPage').then((m) => ({ default: m.AdminAiCostsPage })));
+const AdminMetaCostsPage = lazy(() => import('@/pages/admin/AdminMetaCostsPage').then((m) => ({ default: m.AdminMetaCostsPage })));
 const AdminAuthorityPage = lazy(() => import('@/pages/admin/AdminAuthorityPage').then((m) => ({ default: m.AdminAuthorityPage })));
 const AdminCouponsPage = lazy(() => import('@/pages/admin/AdminCouponsPage').then((m) => ({ default: m.AdminCouponsPage })));
 const AdminDashboardPage = lazy(() => import('@/pages/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })));
@@ -252,6 +253,7 @@ export const App = () => (
         <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard"     element={<AdminDashboardPage />} />
           <Route path="/admin/ai-costs"      element={<AdminAiCostsPage />} />
+          <Route path="/admin/meta-costs"    element={<AdminMetaCostsPage />} />
           <Route path="/admin/hosts"         element={<AdminHostsPage />} />
           <Route path="/admin/hotels"        element={<AdminHotelsPage />} />
           <Route path="/admin/users"         element={<AdminUsersPage />} />

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, Building2, Home, Users, Landmark,
   CreditCard, Wallet, Mail, Activity, LogOut, Search, X, FileText, Menu,
-  Globe, ListTree, MessageCircle, Cpu, Ticket, Gauge,
+  Globe, ListTree, MessageCircle, Cpu, Receipt, Ticket, Gauge,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
@@ -49,6 +49,7 @@ const useNavGroups = (): NavGroup[] => {
     ] },
     { title: t('adminLayout.group.supervision'), items: [
       { to: '/admin/ai-costs',      icon: Cpu,             label: t('adminLayout.nav.aiCosts') },
+      { to: '/admin/meta-costs',    icon: Receipt,         label: t('adminLayout.nav.metaCosts') },
       { to: '/admin/activity',      icon: Activity,        label: t('adminLayout.nav.activity') },
       // MODULE PROVISOIRE — relais WhatsApp (à retirer après homologation MI).
       { to: '/admin/whatsapp',      icon: MessageCircle,   label: t('adminLayout.nav.whatsapp') },
