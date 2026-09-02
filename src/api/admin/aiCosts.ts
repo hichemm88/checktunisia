@@ -34,6 +34,20 @@ export interface AiCostsSummary {
    * "Tarifs non configurés" et les coûts sont considérés faux.
    */
   pricing_configured: boolean;
+  /**
+   * Modèles APPELÉS sur la période dont aucun tarif n'a été trouvé — leurs
+   * événements sont figés à 0. C'est le seul mode de panne que
+   * `pricing_configured` ne voit pas : la grille peut être complète et juste,
+   * et ne rien couvrir du modèle que le scanner appelle réellement.
+   */
+  unpriced_models: AiUnpricedModel[];
+}
+
+export interface AiUnpricedModel {
+  model: string;
+  events: number;
+  input_tokens: number;
+  output_tokens: number;
 }
 
 export interface AiCostByEstablishment {
