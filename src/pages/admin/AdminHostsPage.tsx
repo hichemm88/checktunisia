@@ -148,7 +148,7 @@ const SubscriptionSection = ({ host }: { host: AdminHostDetail }) => {
     <div>
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('settingsPage.subscription')}</p>
-        {!editing && <button onClick={() => setEditing(true)} className="text-gray-300 hover:text-[--qayed-cachet]"><Pencil className="h-3.5 w-3.5" /></button>}
+        {!editing && <button aria-label={t('common.edit')} onClick={() => setEditing(true)} className="text-gray-300 hover:text-[--qayed-cachet]"><Pencil className="h-3.5 w-3.5" /></button>}
       </div>
       {!editing ? (
         <div className="rounded-xl p-3 text-sm" style={{ background: 'var(--qayed-papier)' }}>

@@ -822,6 +822,8 @@
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
     "edit": "Edit",
     "add": "Add",
     "search": "Search",

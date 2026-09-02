@@ -138,7 +138,13 @@ export const ActivityPage = () => {
 
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
-          <div className="flex items-center gap-2">
+          {/*
+            Deux champs date de 160 px + icône + flèche dépassaient la largeur
+            d'un téléphone : la ligne ne cassait pas et poussait la PAGE hors
+            cadre. `flex-wrap` laisse le second champ passer dessous plutôt que
+            de déborder — la contrainte n'existe qu'en dessous de ~390 px.
+          */}
+          <div className="flex flex-wrap items-center gap-2">
             <Calendar className="h-4 w-4 text-gray-400 shrink-0" />
             <Input
               type="date" placeholder={t('authorityActivity.from')} value={from}

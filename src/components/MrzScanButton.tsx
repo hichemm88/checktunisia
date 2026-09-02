@@ -65,7 +65,11 @@ export const MrzScanButton = ({
         <button
           type="button"
           onClick={() => uploadRef.current?.click()}
-          className="flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-600"
+          // 14 x 14 px : bien en deçà des 24 x 24 recommandés, sur un bouton
+          // qu'on vise au pouce, en mobilité, à côté d'un passeport. Le padding
+          // agrandit la cible sans changer la taille de l'icône.
+          className="inline-flex min-h-[24px] min-w-[24px] items-center justify-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-600"
+          aria-label={t('guestScan.importPhoto')}
           title={t('guestScan.importPhoto')}
         >
           <Upload className="h-3.5 w-3.5" />
