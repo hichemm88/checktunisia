@@ -1538,6 +1538,7 @@
       "whatsapp": "WhatsApp",
       "aiCosts": "Coûts IA",
       "metaCosts": "Coûts Meta",
+      "whatsappInbox": "Réponses autorités",
       "coupons": "Codes promo",
       "quotas": "Quotas"
     },
@@ -1721,6 +1722,51 @@
       "authentication": "Connexions",
       "marketing": "Marketing",
       "service": "Service"
+    }
+  },
+  "whatsappInbox": {
+    "pageTitle": "Réponses des autorités",
+    "pageHint": "Ce que les agents répondent aux fiches transmises par WhatsApp. La réponse libre n'est possible que dans les 24 h qui suivent leur message — c'est une règle de Meta, pas un réglage Qayed.",
+    "searchPlaceholder": "Agent, numéro, service…",
+    "filter": {
+      "all": "Tous",
+      "unread": "Non lus",
+      "awaiting": "En attente",
+      "replied": "Ont répondu"
+    },
+    "emptyTitle": "Aucun échange",
+    "emptyHint": "Les fils apparaissent dès qu'une fiche part vers un agent, et se remplissent quand il répond.",
+    "noThreadTitle": "Aucun fil sélectionné",
+    "noThreadHint": "Choisissez une autorité dans la liste pour voir les fiches transmises et ses réponses.",
+    "emptyThreadTitle": "Fil vide",
+    "emptyThreadHint": "Aucune fiche ni message sur ce numéro.",
+    "unknownNumber": "Numéro rattaché à aucun agent enregistré.",
+    "ficheSent": "Fiche de police transmise",
+    "testFiche": "Fiche de test",
+    "readAt": "Lue le {{at}}",
+    "replyPlaceholder": "Votre réponse à l'autorité…",
+    "send": "Envoyer",
+    "replySent": "Réponse envoyée.",
+    "replyFailed": "La réponse n'a pas pu être envoyée.",
+    "windowOpenUntil": "Réponse libre possible jusqu'au {{at}}",
+    "windowClosed": "Fenêtre de réponse fermée (24 h)",
+    "windowNeverOpened": "Cette autorité n'a jamais écrit",
+    "windowClosedHint": "Meta n'autorise le texte libre que dans les 24 h suivant un message de l'agent. En dehors, seul un modèle approuvé passe — c'est-à-dire l'envoi d'une fiche.",
+    "status": {
+      "sent": "Envoyé",
+      "delivered": "Remis",
+      "read": "Lu",
+      "failed": "Échec"
+    },
+    "mediaType": {
+      "image": "Image",
+      "document": "Document",
+      "audio": "Message vocal",
+      "video": "Vidéo",
+      "sticker": "Sticker",
+      "location": "Localisation",
+      "contacts": "Contact",
+      "unsupported": "Message non pris en charge"
     }
   },
   "adminCoupons": {

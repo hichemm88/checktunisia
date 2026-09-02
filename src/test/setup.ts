@@ -26,6 +26,19 @@ if (typeof document !== 'undefined') {
    * pour un test.
    */
   afterEach(cleanup);
+
+  /*
+   * jsdom n'implémente PAS `scrollIntoView` : il n'a pas de mise en page, donc
+   * rien à faire défiler. Tout composant qui s'en sert — une chronologie qui
+   * se cale sur son dernier message, par exemple — lève « is not a function »
+   * depuis un `useEffect`, c'est-à-dire HORS du test, en exception non
+   * rattrapée. Le test échoue alors sans rapport avec ce qu'il vérifiait.
+   *
+   * Ce n'est pas un contournement : c'est la fonction manquante du faux DOM.
+   */
+  if (typeof Element !== 'undefined' && typeof Element.prototype.scrollIntoView !== 'function') {
+    Element.prototype.scrollIntoView = () => {};
+  }
 }
 
 export {};

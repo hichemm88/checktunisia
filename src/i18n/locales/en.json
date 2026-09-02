@@ -1538,6 +1538,7 @@
       "whatsapp": "WhatsApp",
       "aiCosts": "AI costs",
       "metaCosts": "Meta costs",
+      "whatsappInbox": "Authority replies",
       "coupons": "Coupons",
       "quotas": "Quotas"
     },
@@ -1721,6 +1722,51 @@
       "authentication": "Sign-ins",
       "marketing": "Marketing",
       "service": "Service"
+    }
+  },
+  "whatsappInbox": {
+    "pageTitle": "Authority replies",
+    "pageHint": "What officers reply to the police sheets sent over WhatsApp. A free-text reply is only possible within 24 hours of their message — that is a Meta rule, not a Qayed setting.",
+    "searchPlaceholder": "Officer, number, unit…",
+    "filter": {
+      "all": "All",
+      "unread": "Unread",
+      "awaiting": "Awaiting reply",
+      "replied": "Replied"
+    },
+    "emptyTitle": "No conversations",
+    "emptyHint": "Threads appear as soon as a sheet is sent to an officer, and fill up when they reply.",
+    "noThreadTitle": "No thread selected",
+    "noThreadHint": "Pick an authority from the list to see the sheets sent and their replies.",
+    "emptyThreadTitle": "Empty thread",
+    "emptyThreadHint": "No sheet nor message on this number.",
+    "unknownNumber": "Number not linked to any registered officer.",
+    "ficheSent": "Police sheet sent",
+    "testFiche": "Test sheet",
+    "readAt": "Read on {{at}}",
+    "replyPlaceholder": "Your reply to the authority…",
+    "send": "Send",
+    "replySent": "Reply sent.",
+    "replyFailed": "The reply could not be sent.",
+    "windowOpenUntil": "Free-text reply possible until {{at}}",
+    "windowClosed": "Reply window closed (24 h)",
+    "windowNeverOpened": "This authority has never written",
+    "windowClosedHint": "Meta only allows free text within 24 hours of a message from the officer. Outside that window, only an approved template goes through — that is, sending a sheet.",
+    "status": {
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "read": "Read",
+      "failed": "Failed"
+    },
+    "mediaType": {
+      "image": "Image",
+      "document": "Document",
+      "audio": "Voice message",
+      "video": "Video",
+      "sticker": "Sticker",
+      "location": "Location",
+      "contacts": "Contact",
+      "unsupported": "Unsupported message"
     }
   },
   "adminCoupons": {

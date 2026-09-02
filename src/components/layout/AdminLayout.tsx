@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard, Building2, Home, Users, Landmark,
   CreditCard, Wallet, Mail, Activity, LogOut, Search, X, FileText, Menu,
-  Globe, ListTree, MessageCircle, Cpu, Receipt, Ticket, Gauge,
+  Globe, ListTree, MessageCircle, Inbox, Cpu, Receipt, Ticket, Gauge,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '@/api/auth';
@@ -53,6 +53,7 @@ const useNavGroups = (): NavGroup[] => {
       { to: '/admin/activity',      icon: Activity,        label: t('adminLayout.nav.activity') },
       // MODULE PROVISOIRE — relais WhatsApp (à retirer après homologation MI).
       { to: '/admin/whatsapp',      icon: MessageCircle,   label: t('adminLayout.nav.whatsapp') },
+      { to: '/admin/whatsapp/inbox', icon: Inbox,        label: t('adminLayout.nav.whatsappInbox') },
     ] },
   ];
 };
