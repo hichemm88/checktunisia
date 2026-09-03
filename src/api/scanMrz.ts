@@ -16,6 +16,17 @@ export interface MrzVisionResult {
   sex: 'M' | 'F' | 'X' | null;
   nationality_code: string | null;
   issuing_country_code: string | null;
+  /**
+   * Integrite de la lecture, verifiee par les chiffres de controle de la MRZ.
+   *
+   * `true`  : les chiffres tombent juste, la lecture est corroboree.
+   * `false` : ils sont dementis — au moins un champ est mal lu.
+   * `null`  : non verifiable (lignes MRZ absentes ou trop courtes).
+   *
+   * `false` ET `null` doivent tous deux declencher une relecture humaine :
+   * seul `true` autorise a faire confiance.
+   */
+  mrz_verified: boolean | null;
   latencyMs: number;
 }
 

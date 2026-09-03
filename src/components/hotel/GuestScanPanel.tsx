@@ -207,6 +207,19 @@ export const GuestScanPanel = ({
       const prepared = await prepareCinImage(file);
       const mrz = await scanMrzVision(prepared, propertyId);
       applyMrz(mrz);
+      /*
+       * Le repli vision est emprunte quand la lecture est DIFFICILE : c'est la
+       * que les confusions 0/O, 1/I, 5/S, 8/B sont les plus probables. Ses
+       * champs etaient pourtant appliques sans le moindre avertissement, la ou
+       * une lecture locale douteuse en declenchait un — le chemin le moins
+       * verifiable passait donc pour le plus sur.
+       *
+       * `null` (invérifiable) est traite comme `false` : dans les deux cas,
+       * personne n'a corrobore ce numero de passeport.
+       */
+      if (mrz.mrz_verified !== true) {
+        toast(t('guestScan.verifyExtracted'), 'error');
+      }
     } catch (err: unknown) {
       setMrzFallback(false);
       if (local) {

@@ -14,6 +14,7 @@ import Busboy from 'busboy';
 import Anthropic from '@anthropic-ai/sdk';
 import { MRZ_SYSTEM_PROMPT, MRZ_USER_PROMPT, parseMrzResponse, MrzParseError } from '../_lib/mrzExtraction.js';
 import { trackAiUsage } from '../_lib/aiUsageTracking.js';
+import { authorizeScan } from '../_lib/scanAuthorization.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -144,6 +145,18 @@ export default async function handler(req: IncomingMessage & { method?: string }
   const mediaType = (form.mediaType || '').toLowerCase();
   if (!ALLOWED_MEDIA.has(mediaType)) { json(res, 415, { error: 'unsupported_media_type' }); return; }
   if (rateLimited(propertyId)) { log({ ok: false, propertyId, reason: 'rate_limited' }); json(res, 429, { error: 'rate_limited' }); return; }
+
+
+  // ── Autorisation, AVANT tout appel paye ────────────────────────────────
+  // Jusqu'ici seule la FORME du jeton etait verifiee : « Bearer x » suffisait
+  // a declencher un appel Claude facture, sur un etablissement choisi par
+  // l'appelant. Le controle est desormais reel, et il echoue FERME.
+  const auth = await authorizeScan({ authorization, propertyId });
+  if (!auth.ok) {
+    log({ ok: false, propertyId, reason: auth.reason });
+    json(res, auth.status, { error: auth.status === 401 ? 'unauthorized' : auth.status === 503 ? 'authorization_unavailable' : 'forbidden' });
+    return;
+  }
 
   const client = new Anthropic({ apiKey, timeout: HARD_TIMEOUT_MS, maxRetries: 0 });
 
