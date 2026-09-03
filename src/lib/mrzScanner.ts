@@ -380,11 +380,14 @@ export async function scanMrz(
     //    brute. Positionné ici (plutôt qu'en tout dernier recours) parce que
     //    l'acceptation exige déjà une lecture confiante — aucun risque de
     //    préférer une lecture de moins bonne qualité à celle des rotations.
-    if (!data) data = await tryOpenCv(64, 12, 4);               // 64 → 76
+    // 6, not 4: each detected band now yields 2 crop variants (tight +
+    // upward-extended, see mrzZoneDetect.ts) — need enough headroom for both
+    // variants of the winning band to survive the maxCandidates cut.
+    if (!data) data = await tryOpenCv(64, 14, 6);               // 64 → 78
 
     // 3) Document à l'envers / pivoté — dernier recours pour les cas que la
     //    détection de bande OpenCV aurait manqués (contours non exploitables).
-    if (!data) data = await tryOrientations(order.slice(1), 76, 20); // 76 → 96
+    if (!data) data = await tryOrientations(order.slice(1), 78, 18); // 78 → 96
 
     if (data) { report(100); return { ...data, confident: true }; }
   }
