@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { setSentryUser } from '@/lib/sentry';
+import { queryClient } from '@/lib/queryClient';
 
 export type Role = 'platform_admin' | 'hotel_admin' | 'receptionist' | 'authority_user';
 
@@ -87,6 +88,14 @@ export const useAuthStore = create<AuthState>()(
         // Ne pas rattacher les erreurs suivantes au compte qui vient de partir.
         setSentryUser(null);
         set({ token: null, user: null, isAuthenticated: false, activePropertyId: null, activePropertyName: null });
+        // Sans ceci, une donnée mise en cache sous une clé non scopée par
+        // compte (ex. ['onboarding-status']) pouvait survivre à la
+        // déconnexion et être resservie — pour un rendu — à la session
+        // suivante dans le même onglet (ex. admin plateforme → admin hôtel) :
+        // un guard basé dessus redirigeait alors vers un mauvais écran avant
+        // que la requête fraîche n'arrive, ce qui donnait l'impression que la
+        // connexion « ne passait pas » tant qu'on ne rechargeait pas l'URL.
+        queryClient.clear();
       },
     }),
     {
