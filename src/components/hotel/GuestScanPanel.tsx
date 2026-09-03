@@ -1,4 +1,4 @@
-import { useState, useRef, type ChangeEvent, type ReactNode } from 'react';
+import { useState, useRef, useEffect, type ChangeEvent, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -131,6 +131,16 @@ export const GuestScanPanel = ({
   // Voir src/lib/mrzDebug.ts.
   const mrzDebugEnabled = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('mrzdebug');
   const [debugLines, setDebugLines] = useState<string[]>([]);
+  const debugPanelRef = useRef<HTMLDivElement>(null);
+  // Défile automatiquement vers le bas à chaque nouvelle ligne : la ligne la
+  // plus récente (souvent le résultat final) est celle qui compte le plus,
+  // et un panneau de 20+ lignes sur petit écran oblige sinon à faire défiler
+  // manuellement pour la voir — ce qui a coûté un aller-retour de capture
+  // d'écran la première fois que ce panneau a servi en conditions réelles.
+  useEffect(() => {
+    const el = debugPanelRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [debugLines]);
 
   // MODULE PROVISOIRE — relais WhatsApp : téléverse l'image du document et
   // mémorise son scan_id pour le relier à CE voyageur (multi-voyageurs).
@@ -469,8 +479,8 @@ export const GuestScanPanel = ({
 
       {/* ── Diagnostic MRZ (?mrzdebug) — visible sans DevTools, à capturer en screenshot ── */}
       {mrzDebugEnabled && debugLines.length > 0 && (
-        <div className="max-h-64 overflow-y-auto rounded-xl border border-amber-300 bg-amber-50 p-2.5 font-mono text-[11px] leading-snug text-amber-900">
-          <p className="mb-1 font-bold">Diagnostic MRZ ({debugLines.length} lignes)</p>
+        <div ref={debugPanelRef} className="max-h-96 overflow-y-auto rounded-xl border border-amber-300 bg-amber-50 p-2.5 font-mono text-[11px] leading-snug text-amber-900">
+          <p className="mb-1 font-bold sticky top-0 bg-amber-50">Diagnostic MRZ ({debugLines.length} lignes)</p>
           {debugLines.map((line, i) => (
             <p key={i} className="whitespace-pre-wrap break-all">{line}</p>
           ))}

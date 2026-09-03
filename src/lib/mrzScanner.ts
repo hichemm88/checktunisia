@@ -333,6 +333,13 @@ export async function scanMrz(
   const budgetExpired = () => Date.now() > attemptDeadline;
   const elapsed = () => Math.round(performance.now() - scanStartedAt);
 
+  // Aperçu du texte OCR brut pour le diagnostic (?mrzdebug) — tronqué, retours
+  // à la ligne rendus visibles. Sert à voir POURQUOI aucune ligne MRZ n'a été
+  // reconnue (texte garbled ? trop court ? contenu inattendu ?) quand la seule
+  // confiance Tesseract ne suffit pas à l'expliquer (ex: confiance élevée mais
+  // structure MRZ absente).
+  const previewText = (text: string) => JSON.stringify(text.length > 220 ? `${text.slice(0, 220)}…` : text);
+
   // Une passe = crop bas de l'image pivotée de `deg`, puis OCR éprouvé.
   // Renvoie une lecture CONFIANTE (check digits OK), sinon null en mémorisant
   // la première lecture douteuse dans `partial`.
@@ -359,7 +366,7 @@ export async function scanMrz(
             dlog(`[MRZ] rotation=${deg}° crop=${fraction}: MRZ trouvée mais pas confiante (check digits KO)`);
             if (!partial) partial = parsed.data; // lecture douteuse mémorisée
           } else {
-            dlog(`[MRZ] rotation=${deg}° crop=${fraction}: aucune ligne MRZ reconnue dans le texte OCR`);
+            dlog(`[MRZ] rotation=${deg}° crop=${fraction}: aucune ligne MRZ reconnue — texte OCR: ${previewText(text)}`);
           }
           lastError = new Error('Lignes MRZ non détectées dans cette zone');
         } catch (err) {
@@ -400,10 +407,10 @@ export async function scanMrz(
             return parsed.data;
           }
           if (parsed) {
-            dlog(`[MRZ] secours OpenCV candidat ${i}: MRZ trouvée mais pas confiante ou incomplète`);
+            dlog(`[MRZ] secours OpenCV candidat ${i}: MRZ trouvée mais pas confiante ou incomplète (confident=${parsed.confident} docNumber=${parsed.data.document_number} dob=${parsed.data.date_of_birth})`);
             if (!partial) partial = parsed.data;
           } else {
-            dlog(`[MRZ] secours OpenCV candidat ${i}: aucune ligne MRZ reconnue`);
+            dlog(`[MRZ] secours OpenCV candidat ${i}: aucune ligne MRZ reconnue — texte OCR: ${previewText(text)}`);
           }
         } catch (err) {
           lastError = err instanceof Error ? err : new Error(String(err));
