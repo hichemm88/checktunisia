@@ -860,7 +860,8 @@
     "sex": "الجنس",
     "retry": "إعادة المحاولة",
     "saved": "تم الحفظ",
-    "pagination": "ترقيم الصفحات"
+    "pagination": "ترقيم الصفحات",
+    "skipToContent": "تخطي إلى المحتوى"
   },
   "authorityWatchlist": {
     "title": "الأشخاص الخاضعون للمراقبة",

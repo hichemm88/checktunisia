@@ -13,6 +13,7 @@ import { adminSearchApi, type GlobalSearchResult } from '@/api/admin/search';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { PasskeyPromptBanner } from '@/components/security/PasskeyPromptBanner';
+import { SkipToContent, MAIN_CONTENT_ID } from './SkipToContent';
 
 interface NavItem { to: string; icon: typeof LayoutDashboard; label: string }
 interface NavGroup { title?: string; items: NavItem[] }
@@ -284,6 +285,8 @@ export const AdminLayout = () => {
 
   return (
     <div className="flex min-h-screen" style={{ background: 'var(--qayed-papier)' }}>
+      <SkipToContent />
+
       {/* ── Sidebar (desktop) ── épinglée au viewport : la nav défile en interne,
            l'en-tête et le bouton « Se déconnecter » restent fixes. ── */}
       <aside className="hidden md:flex w-60 shrink-0 flex-col sticky top-0 h-screen" style={{ background: 'var(--qayed-encre)' }}>
@@ -341,7 +344,7 @@ export const AdminLayout = () => {
             </NavLink>
           </div>
         </header>
-        <main className="flex-1 min-w-0 p-4 md:p-6">
+        <main id={MAIN_CONTENT_ID} className="flex-1 min-w-0 p-4 md:p-6">
           <PasskeyPromptBanner />
           <Outlet />
         </main>

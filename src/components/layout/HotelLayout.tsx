@@ -9,6 +9,8 @@ import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { NotificationBell } from '@/components/hotel/NotificationBell';
 import { PasskeyPromptBanner } from '@/components/security/PasskeyPromptBanner';
+import { SkipToContent, MAIN_CONTENT_ID } from './SkipToContent';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 
 interface HotelLayoutProps { children: ReactNode; title?: string; backHref?: string }
 
@@ -24,6 +26,8 @@ const useNavItems = (isAdmin: boolean) => {
 };
 
 export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
+  useDocumentTitle(title);
+
   const { t } = useTranslation();
   const { user, logout, activePropertyName } = useAuthStore();
   const navigate = useNavigate();
@@ -41,6 +45,7 @@ export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
 
   return (
     <div className="flex min-h-screen flex-col bg-qayed-papier">
+      <SkipToContent />
 
       {/* ── Header ─────────────────────────────────────────────────── */}
       <header className="fixed top-0 inset-x-0 z-30 bg-white shadow-header">
@@ -99,7 +104,7 @@ export const HotelLayout = ({ children, title }: HotelLayoutProps) => {
           `pt-header` = 61px, la hauteur réelle de l'en-tête (60 + 1 de filet) :
           la valeur était 73px, soit 12px de blanc parasite en haut de chaque
           page. `pb-nav-safe` réserve la nav basse ET la zone de sécurité iOS. */}
-      <main className="flex-1 pt-[61px] pb-nav-safe">
+      <main id={MAIN_CONTENT_ID} className="flex-1 pt-[61px] pb-nav-safe">
         <div className="page-container">
           <PasskeyPromptBanner />
           {children}

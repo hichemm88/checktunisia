@@ -860,7 +860,8 @@
     "sex": "Sexe",
     "retry": "Réessayer",
     "saved": "Enregistré",
-    "pagination": "Pagination"
+    "pagination": "Pagination",
+    "skipToContent": "Aller au contenu"
   },
   "authorityWatchlist": {
     "title": "Personnes surveillées",

@@ -860,7 +860,8 @@
     "sex": "Sex",
     "retry": "Retry",
     "saved": "Saved",
-    "pagination": "Pagination"
+    "pagination": "Pagination",
+    "skipToContent": "Skip to content"
   },
   "authorityWatchlist": {
     "title": "Watched persons",

@@ -11,6 +11,8 @@ import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { FEATURES } from '@/config/features';
 import { PasskeyPromptBanner } from '@/components/security/PasskeyPromptBanner';
+import { SkipToContent, MAIN_CONTENT_ID } from './SkipToContent';
+import { useDocumentTitle } from '@/lib/useDocumentTitle';
 
 interface AuthorityLayoutProps { children: ReactNode; title?: string }
 
@@ -32,6 +34,8 @@ const NavItem = ({
 );
 
 export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
+  useDocumentTitle(title);
+
   const { t } = useTranslation();
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
@@ -51,6 +55,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--qayed-papier)' }}>
+      <SkipToContent />
       {/* ── Top bar ──────────────────────────────────────────────────── */}
       <header
         className="sticky top-0 z-30 shadow-lg relative"
@@ -161,7 +166,7 @@ export const AuthorityLayout = ({ children, title }: AuthorityLayoutProps) => {
         </div>
       )}
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main id={MAIN_CONTENT_ID} className="mx-auto max-w-6xl px-4 py-6">
         <PasskeyPromptBanner />
         {children}
       </main>
