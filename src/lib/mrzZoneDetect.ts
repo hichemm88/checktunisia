@@ -22,6 +22,7 @@
  */
 
 import { loadOpenCv } from './opencvLoader';
+import { dlog, dwarn } from './mrzDebug';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Cv = any;
@@ -216,7 +217,7 @@ export async function detectMrzCandidates(file: File, maxCandidates = 6): Promis
   try {
     cv = await loadOpenCv();
   } catch (e) {
-    console.warn('[MRZ] OpenCV indisponible, fallback pipeline classique:', e);
+    dwarn('[MRZ] OpenCV indisponible, fallback pipeline classique:', e instanceof Error ? e.message : String(e));
     return [];
   }
 
@@ -227,16 +228,16 @@ export async function detectMrzCandidates(file: File, maxCandidates = 6): Promis
     return [];
   }
 
-  const orientations: Array<number | null> = [
-    null,
-    cv.ROTATE_90_CLOCKWISE,
-    cv.ROTATE_180,
-    cv.ROTATE_90_COUNTERCLOCKWISE,
+  const orientations: Array<{ name: string; rot: number | null }> = [
+    { name: '0°',   rot: null },
+    { name: '90°',  rot: cv.ROTATE_90_CLOCKWISE },
+    { name: '180°', rot: cv.ROTATE_180 },
+    { name: '270°', rot: cv.ROTATE_90_COUNTERCLOCKWISE },
   ];
 
   const all: Candidate[] = [];
 
-  for (const rot of orientations) {
+  for (const { name, rot } of orientations) {
     let src: Mat | null = null;
     try {
       src = cv.imread(baseCanvas);
@@ -246,9 +247,11 @@ export async function detectMrzCandidates(file: File, maxCandidates = 6): Promis
         src.delete();
         src = r;
       }
-      all.push(...detectBandsInMat(cv, src, 2));
+      const found = detectBandsInMat(cv, src, 2);
+      dlog(`[MRZ] OpenCV orientation=${name}: ${found.length} candidat(s)`);
+      all.push(...found);
     } catch (e) {
-      console.warn('[MRZ] détection orientation échouée:', e);
+      dwarn(`[MRZ] détection orientation=${name} échouée:`, e instanceof Error ? e.message : String(e));
     } finally {
       if (src) src.delete();
     }
@@ -256,6 +259,6 @@ export async function detectMrzCandidates(file: File, maxCandidates = 6): Promis
 
   all.sort((a, b) => b.score - a.score);
   const urls = all.slice(0, maxCandidates).map((c) => c.url);
-  console.log(`[MRZ] OpenCV: ${urls.length} bande(s) MRZ candidate(s) détectée(s)`);
+  dlog(`[MRZ] OpenCV: ${urls.length} bande(s) MRZ candidate(s) retenue(s) (sur ${all.length} au total)`);
   return urls;
 }

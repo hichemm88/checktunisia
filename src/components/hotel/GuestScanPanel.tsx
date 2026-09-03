@@ -13,7 +13,7 @@ import { checkInsApi, type AddGuestPayload } from '@/api/checkIns';
 import { scansApi } from '@/api/scans';
 import { useToast } from '@/components/ui/Toast';
 import { api, extractErrors } from '@/lib/api';
-import { scanMrz } from '@/lib/mrzScanner';
+import { scanMrz, setMrzDebugSink } from '@/lib/mrzScanner';
 import { downscaleForUpload } from '@/lib/uploadImagePrep';
 import { guestFormBlockers } from '@/lib/guestFormGuards';
 import { CINCapture } from '@/components/hotel/CINCapture';
@@ -125,6 +125,13 @@ export const GuestScanPanel = ({
   // Repli Claude vision passeport en cours (lecture locale douteuse/absente).
   const [mrzFallback, setMrzFallback] = useState(false);
 
+  // Diagnostic MRZ — désactivé par défaut, activé via ?mrzdebug dans l'URL.
+  // Affiche à l'écran (copiable en capture) les mêmes logs que la console,
+  // pour diagnostiquer un échec réel sans accès aux DevTools du téléphone.
+  // Voir src/lib/mrzDebug.ts.
+  const mrzDebugEnabled = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('mrzdebug');
+  const [debugLines, setDebugLines] = useState<string[]>([]);
+
   // MODULE PROVISOIRE — relais WhatsApp : téléverse l'image du document et
   // mémorise son scan_id pour le relier à CE voyageur (multi-voyageurs).
   // Non bloquant (l'ajout du voyageur ne doit jamais être empêché) ; l'image
@@ -186,13 +193,23 @@ export const GuestScanPanel = ({
     uploadDocImage(file);
 
     // 1) OCR local.
+    if (mrzDebugEnabled) {
+      setDebugLines([]);
+      setMrzDebugSink((line) => setDebugLines((prev) => [...prev, line]));
+    }
     let local: import('@/lib/mrzScanner').MrzScanResult | null = null;
     try {
       const startedAt = performance.now();
       local = await scanMrz(file, setOcrProgress);
       reportLocalMrzScan(performance.now() - startedAt); // beacon best-effort (graphe admin)
-    } catch {
+    } catch (err) {
       local = null; // rien de lisible
+      if (mrzDebugEnabled) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setDebugLines((prev) => [...prev, `[MRZ] scanMrz() a levé une exception: ${msg}`]);
+      }
+    } finally {
+      if (mrzDebugEnabled) setMrzDebugSink(null);
     }
 
     // 2) Lecture locale FIABLE → on la garde (gratuit, pas de vision).
@@ -418,6 +435,7 @@ export const GuestScanPanel = ({
     pendingScanUpload.current = null;
     setScanKind('mrz');
     setCinScan(null); setConf(null); setUsedExisting(false); setCinError(null);
+    setDebugLines([]);
     if (cinImageUrl) { URL.revokeObjectURL(cinImageUrl); setCinImageUrl(null); }
     if (fileRef.current)   fileRef.current.value = '';
     if (uploadRef.current) uploadRef.current.value = '';
@@ -448,6 +466,16 @@ export const GuestScanPanel = ({
       <input ref={fileRef}   type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFile} />
       {/* Upload MRZ — galerie ou fichier existant */}
       <input ref={uploadRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+
+      {/* ── Diagnostic MRZ (?mrzdebug) — visible sans DevTools, à capturer en screenshot ── */}
+      {mrzDebugEnabled && debugLines.length > 0 && (
+        <div className="max-h-64 overflow-y-auto rounded-xl border border-amber-300 bg-amber-50 p-2.5 font-mono text-[11px] leading-snug text-amber-900">
+          <p className="mb-1 font-bold">Diagnostic MRZ ({debugLines.length} lignes)</p>
+          {debugLines.map((line, i) => (
+            <p key={i} className="whitespace-pre-wrap break-all">{line}</p>
+          ))}
+        </div>
+      )}
 
       {/* ── Idle / Error ── */}
       {(scanState === 'idle' || scanState === 'error') && (
