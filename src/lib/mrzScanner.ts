@@ -454,10 +454,13 @@ export async function scanMrz(
     //    brute. Positionné ici (plutôt qu'en tout dernier recours) parce que
     //    l'acceptation exige déjà une lecture confiante — aucun risque de
     //    préférer une lecture de moins bonne qualité à celle des rotations.
-    // 6, not 4: each detected band now yields 2 crop variants (tight +
-    // upward-extended, see mrzZoneDetect.ts) — need enough headroom for both
-    // variants of the winning band to survive the maxCandidates cut.
-    if (!data) data = await tryOpenCv(64, 14, 6);               // 64 → 78
+    // 10, not 6: each detected band yields 2 crop variants (tight +
+    // upward-extended, see mrzZoneDetect.ts), and an orientation with ZERO
+    // real bands now contributes 2 positional-fallback candidates of its own
+    // (dense bio-page photos where no band contour survives at all) — up to
+    // 4 orientations × 2 fallback candidates need to fit without truncating
+    // the sweep before the combine step gets a chance to pair them up.
+    if (!data) data = await tryOpenCv(64, 14, 10);              // 64 → 78
 
     // 3) Document à l'envers / pivoté — dernier recours pour les cas que la
     //    détection de bande OpenCV aurait manqués (contours non exploitables).
