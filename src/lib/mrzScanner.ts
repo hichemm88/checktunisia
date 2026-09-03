@@ -43,8 +43,10 @@ import { createWorker } from 'tesseract.js';
 import { detectMrzCandidates } from './mrzZoneDetect';
 import { loadOpenCv } from './opencvLoader';
 import { type MrzData, otsuThreshold, parseOcrText } from './mrzTextParsing';
+import { dlog, dwarn } from './mrzDebug';
 
 export type { MrzData };
+export { setMrzDebugSink } from './mrzDebug';
 
 // ─── Preprocessing image ────────────────────────────────────────────────────────
 
@@ -171,13 +173,15 @@ async function runOcr(
     tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
     tessedit_pageseg_mode: psm as never,
   });
+  const startedAt = performance.now();
   const { data: { text, confidence } } = await worker.recognize(image);
+  const elapsed = Math.round(performance.now() - startedAt);
   // Log uniquement — pas de seuil bloquant.
   // Le modèle OCRB est entraîné sur des chars parfaits et retourne une confiance
   // plus basse que 'eng' sur des photos mobiles, même quand les lignes MRZ sont
   // parfaitement lisibles. La validation structurelle + les check digits sont
   // le vrai filtre qualité (voir mrzTextParsing.ts).
-  console.log(`[MRZ] OCR PSM=${psm}  confiance=${(confidence as number).toFixed(1)}%`);
+  dlog(`[MRZ] OCR PSM=${psm}  confiance=${(confidence as number).toFixed(1)}%  (${elapsed}ms)`);
   return text;
 }
 
@@ -242,6 +246,7 @@ let cachedWorker: Promise<TesseractWorker> | null = null;
 function getWorker(report: (pct: number) => void): Promise<TesseractWorker> {
   if (cachedWorker) return cachedWorker;
 
+  const startedAt = performance.now();
   cachedWorker = (async () => {
     const logger = (m: { status: string; progress: number }) => {
       if (m.status === 'loading tesseract core')            report(5  + m.progress * 15);
@@ -253,15 +258,15 @@ function getWorker(report: (pct: number) => void): Promise<TesseractWorker> {
         workerPath: WORKER_PATH, corePath: CORE_PATH, langPath: OCRB_LANG_PATH,
         workerBlobURL: false, gzip: false, logger,
       });
-      console.log('[MRZ] Modèle OCRB chargé (mis en cache)');
+      dlog(`[MRZ] Modèle OCRB chargé (mis en cache) — ${Math.round(performance.now() - startedAt)}ms`);
       return w;
     } catch (e) {
-      console.warn('[MRZ] Modèle OCRB indisponible, fallback eng:', e);
+      dwarn('[MRZ] Modèle OCRB indisponible, fallback eng:', e instanceof Error ? e.message : String(e));
       const w = await createWorker('eng', 1, {
         workerPath: WORKER_PATH, corePath: CORE_PATH, langPath: ENG_LANG_PATH,
         workerBlobURL: false, logger,
       });
-      console.log('[MRZ] Modèle eng chargé (fallback, mis en cache)');
+      dlog(`[MRZ] Modèle eng chargé (fallback, mis en cache) — ${Math.round(performance.now() - startedAt)}ms`);
       return w;
     }
   })();
@@ -323,8 +328,10 @@ export async function scanMrz(
   // vision, et retombera dessus si la vision est indisponible).
   let partial: MrzData | null = null;
 
+  const scanStartedAt = performance.now();
   const attemptDeadline = Date.now() + ATTEMPT_BUDGET_MS;
   const budgetExpired = () => Date.now() > attemptDeadline;
+  const elapsed = () => Math.round(performance.now() - scanStartedAt);
 
   // Une passe = crop bas de l'image pivotée de `deg`, puis OCR éprouvé.
   // Renvoie une lecture CONFIANTE (check digits OK), sinon null en mémorisant
@@ -336,7 +343,7 @@ export async function scanMrz(
     for (const deg of orients) {
       for (const fraction of fractions) {
         if (budgetExpired()) {
-          console.warn('[MRZ] budget de temps dépassé, arrêt des tentatives');
+          dwarn(`[MRZ] budget de temps dépassé (${elapsed()}ms), arrêt des tentatives`);
           return null;
         }
         report(base + Math.round((k++ / total) * span));
@@ -345,14 +352,19 @@ export async function scanMrz(
           const text  = await runOcr(worker, image, '6');
           const parsed = parseOcrText(text);
           if (parsed?.confident) {
-            console.log(`[MRZ] Lecture fiable rotation=${deg}° crop=${fraction}`);
+            dlog(`[MRZ] Lecture fiable rotation=${deg}° crop=${fraction} (${elapsed()}ms)`);
             return parsed.data;
           }
-          if (parsed && !partial) partial = parsed.data; // lecture douteuse mémorisée
+          if (parsed) {
+            dlog(`[MRZ] rotation=${deg}° crop=${fraction}: MRZ trouvée mais pas confiante (check digits KO)`);
+            if (!partial) partial = parsed.data; // lecture douteuse mémorisée
+          } else {
+            dlog(`[MRZ] rotation=${deg}° crop=${fraction}: aucune ligne MRZ reconnue dans le texte OCR`);
+          }
           lastError = new Error('Lignes MRZ non détectées dans cette zone');
         } catch (err) {
           lastError = err instanceof Error ? err : new Error(String(err));
-          console.warn(`[MRZ] rotation=${deg}° crop=${fraction} échoué:`, lastError.message);
+          dwarn(`[MRZ] rotation=${deg}° crop=${fraction} échoué:`, lastError.message);
         }
       }
     }
@@ -370,28 +382,40 @@ export async function scanMrz(
   // contrôle — jeter les candidats déjà obtenus sans même tenter l'OCR dessus
   // gâcherait ce travail pour rien. On va au bout des candidats trouvés.
   const tryOpenCv = async (base: number, span: number, maxCandidates: number): Promise<MrzData | null> => {
-    if (budgetExpired()) return null;
+    if (budgetExpired()) {
+      dwarn(`[MRZ] budget de temps dépassé (${elapsed()}ms) avant même de lancer le secours OpenCV`);
+      return null;
+    }
     try {
+      const cvStartedAt = performance.now();
       const candidates = await detectMrzCandidates(file, maxCandidates);
+      dlog(`[MRZ] secours OpenCV: ${candidates.length} candidat(s) détecté(s) en ${Math.round(performance.now() - cvStartedAt)}ms (total ${elapsed()}ms)`);
       for (let i = 0; i < candidates.length; i++) {
         report(base + Math.round((i / Math.max(1, candidates.length)) * span));
         try {
           const text = await runOcr(worker, candidates[i], '6');
           const parsed = parseOcrText(text);
           if (parsed?.confident && parsed.data.document_number && parsed.data.date_of_birth) {
-            console.log('[MRZ] Lecture fiable via secours OpenCV, candidat', i);
+            dlog(`[MRZ] Lecture fiable via secours OpenCV, candidat ${i} (${elapsed()}ms)`);
             return parsed.data;
           }
-          if (parsed && !partial) partial = parsed.data;
+          if (parsed) {
+            dlog(`[MRZ] secours OpenCV candidat ${i}: MRZ trouvée mais pas confiante ou incomplète`);
+            if (!partial) partial = parsed.data;
+          } else {
+            dlog(`[MRZ] secours OpenCV candidat ${i}: aucune ligne MRZ reconnue`);
+          }
         } catch (err) {
           lastError = err instanceof Error ? err : new Error(String(err));
+          dwarn(`[MRZ] secours OpenCV candidat ${i} échoué:`, lastError.message);
         }
       }
     } catch (err) {
-      console.warn('[MRZ] Secours OpenCV indisponible:', err);
+      dwarn('[MRZ] Secours OpenCV indisponible:', err instanceof Error ? err.message : String(err));
     }
     return null;
   };
+
 
   {
     // 1) Cas courant : document droit → lu en 1-2 passes.
@@ -412,10 +436,16 @@ export async function scanMrz(
     //    détection de bande OpenCV aurait manqués (contours non exploitables).
     if (!data) data = await tryOrientations(order.slice(1), 78, 18); // 78 → 96
 
-    if (data) { report(100); return { ...data, confident: true }; }
+    if (data) {
+      report(100);
+      dlog(`[MRZ] scan réussi en ${elapsed()}ms`);
+      return { ...data, confident: true };
+    }
   }
   // NE PAS terminer le worker : il est mis en cache et réutilisé d'un scan à
   // l'autre (c'était le principal coût). L'<img> est libéré par le GC.
+
+  dlog(`[MRZ] aucune lecture confiante après ${elapsed()}ms — lecture partielle disponible: ${!!partial}`);
 
   // Aucune lecture fiable, mais une lecture douteuse existe → on la renvoie
   // marquée non confiante (l'appelant tentera la vision d'abord).
