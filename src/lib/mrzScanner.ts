@@ -1,5 +1,5 @@
 /**
- * MRZ Scanner — réécriture complète (v3)
+ * MRZ Scanner — réécriture complète (v3), passe perf/robustesse ultérieure (v4)
  *
  * Améliorations clés vs version précédente :
  *
@@ -20,65 +20,42 @@
  *    → Single worker partagé entre toutes les tentatives (performance mobile)
  *    → Preprocessing Otsu + cap 2000px (qualité / vitesse mobile)
  *    → Fallback 'eng' automatique si OCRB indisponible (dégradation gracieuse)
+ *
+ * 4. v4 — vitesse et taux de repli vision :
+ *    → Le texte OCR brut → MrzData vit désormais dans mrzTextParsing.ts, pur et
+ *      testé unitairement (aucune dépendance navigateur) — c'est la partie qui
+ *      décide « confiant » ou « repli vision », donc la plus sensible.
+ *    → La source est redimensionnée UNE fois avant les rotations (au lieu de
+ *      pivoter/recadrer une photo 12 Mpx à chaque tentative) : même qualité
+ *      OCR (le crop final est de toute façon plafonné à MAX_CANVAS_W), 4-5×
+ *      moins de pixels à manipuler par tentative sur un téléphone récent.
+ *    → OpenCV (déskew + CLAHE, gère les 4 orientations en un seul appel, sans
+ *      OCR) est préchargé en tâche de fond dès le lancement du scan et essayé
+ *      JUSTE APRÈS la passe rapide (rotation 0°), avant les 3 rotations à
+ *      l'aveugle — il traite la vraie cause d'échec la plus fréquente
+ *      (reflet/contraste/inclinaison) au lieu de la contourner par force brute.
+ *    → Budget de temps global sur la boucle de tentatives : au-delà, on rend
+ *      la main (lecture partielle ou échec) plutôt que d'épuiser les ~14 passes
+ *      possibles — la vision prend le relais plus vite dans le pire cas.
  */
 
 import { createWorker } from 'tesseract.js';
-import { parse as mrzParse } from 'mrz';
 import { detectMrzCandidates } from './mrzZoneDetect';
+import { loadOpenCv } from './opencvLoader';
+import { type MrzData, otsuThreshold, parseOcrText } from './mrzTextParsing';
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
-
-export interface MrzData {
-  first_name: string | null;
-  last_name: string | null;
-  date_of_birth: string | null;
-  sex: 'M' | 'F' | 'X' | null;
-  nationality_code: string | null;
-  document_number: string | null;
-  issuing_country_code: string | null;
-  expiry_date: string | null;
-  document_type: string;
-}
-
-// ─── Conversion date ────────────────────────────────────────────────────────────
-
-/**
- * YYMMDD (format MRZ) → ISO YYYY-MM-DD
- * Pour les dates de naissance : YY > année courante → siècle précédent (1900).
- */
-function mrzDateToISO(yymmdd: string | null | undefined, isBirth: boolean): string | null {
-  if (!yymmdd || !/^\d{6}$/.test(yymmdd)) return null;
-  const yy = parseInt(yymmdd.slice(0, 2), 10);
-  const mm = yymmdd.slice(2, 4);
-  const dd = yymmdd.slice(4, 6);
-  const currentYY = new Date().getFullYear() % 100;
-  const century = isBirth && yy > currentYY ? 1900 : 2000;
-  return `${century + yy}-${mm}-${dd}`;
-}
+export type { MrzData };
 
 // ─── Preprocessing image ────────────────────────────────────────────────────────
 
 const MAX_CANVAS_W = 1300; // px — la MRZ reste lisible et l'OCR est bien plus rapide
+// Plafond de la SOURCE avant rotations. Généreux au-dessus de MAX_CANVAS_W : le
+// crop final downscale de toute façon à MAX_CANVAS_W, donc aucune perte de
+// qualité OCR, mais chaque rotation/recadrage manipule ~4-5× moins de pixels
+// qu'une photo de téléphone brute (souvent 3000-4000 px de long côté).
+const SOURCE_MAX_EDGE = 1800;
 
-/** Seuil Otsu — s'adapte à l'éclairage réel sans valeur fixe arbitraire */
-function otsuThreshold(histogram: number[], total: number): number {
-  let sumAll = 0;
-  for (let t = 0; t < 256; t++) sumAll += t * histogram[t];
-
-  let sumBg = 0, wBg = 0, maxVar = -1, threshold = 127;
-  for (let t = 0; t < 256; t++) {
-    wBg += histogram[t];
-    if (wBg === 0) continue;
-    const wFg = total - wBg;
-    if (wFg === 0) break;
-    sumBg += t * histogram[t];
-    const mBg = sumBg / wBg;
-    const mFg = (sumAll - sumBg) / wFg;
-    const v = wBg * wFg * (mBg - mFg) ** 2;
-    if (v > maxVar) { maxVar = v; threshold = t; }
-  }
-  return threshold;
-}
+type ImageSource = HTMLImageElement | HTMLCanvasElement;
 
 /**
  * Charge un File en image bitmap, EN APPLIQUANT l'orientation EXIF.
@@ -105,6 +82,29 @@ async function loadImage(file: File): Promise<HTMLImageElement> {
 }
 
 /**
+ * Plafonne le grand côté de la source à `maxEdge` (aucun agrandissement).
+ *
+ * Fait UNE fois, avant les rotations : sans ça, une photo 3000-4000 px de
+ * téléphone était repivotée + recadrée en entier à CHAQUE tentative (jusqu'à
+ * 8 fois côté OCR local, une 9e côté détection OpenCV) — pour un gain de
+ * qualité nul, le crop final étant de toute façon plafonné à MAX_CANVAS_W.
+ */
+function capSourceEdge(img: HTMLImageElement, maxEdge: number): ImageSource {
+  const longEdge = Math.max(img.width, img.height);
+  if (longEdge <= maxEdge) return img;
+
+  const scale = maxEdge / longEdge;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(img.width * scale));
+  canvas.height = Math.max(1, Math.round(img.height * scale));
+  const ctx = canvas.getContext('2d')!;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+/**
  * Fait pivoter l'image entière de `rotationDeg` (0/90/180/270), recadre la bande
  * du bas (là où atterrit la MRZ une fois le document droit) et binarise (Otsu).
  * Retourne un data URL PNG prêt pour tesseract.
@@ -112,7 +112,7 @@ async function loadImage(file: File): Promise<HTMLImageElement> {
  * En essayant les 4 rotations, on couvre : document droit (0), à l'envers (180)
  * et paysage/portrait pivoté (90/270) — sans aucune dépendance externe.
  */
-function renderRotatedCrop(img: ImageBitmap | HTMLImageElement, rotationDeg: number, cropFromBottom: number): string {
+function renderRotatedCrop(img: ImageSource, rotationDeg: number, cropFromBottom: number): string {
   const swap = rotationDeg === 90 || rotationDeg === 270;
   const srcW = img.width, srcH = img.height;
   const rotW = swap ? srcH : srcW;
@@ -158,184 +158,6 @@ function renderRotatedCrop(img: ImageBitmap | HTMLImageElement, rotationDeg: num
   return canvas.toDataURL('image/png');
 }
 
-// ─── Extraction des lignes MRZ ──────────────────────────────────────────────────
-
-/**
- * Extrait les lignes MRZ depuis le texte brut OCR.
- *
- * Avec le modèle OCRB, le '<' est correctement lu. L'extraction est simple :
- * trouver des lignes de la longueur attendue (44 pour TD3, 30 pour TD1, 36 pour TD2)
- * et vérifier les contraintes structurelles minimales.
- *
- * Contraintes structurelles :
- * - TD3 ligne 1 : commence par P / I / V / A
- * - TD3 ligne 2 : 6 chiffres en [13-18] (DOB) ET 6 chiffres en [21-26] (expiry)
- *   → Ces deux fenêtres en chiffres sont quasi impossibles à satisfaire par hasard.
- */
-function extractMrzLines(
-  rawText: string,
-): { lines: string[]; format: 'TD3' | 'TD1' | 'TD2' } | null {
-  console.log('[MRZ] OCR brut:\n', rawText);
-
-  const candidates: string[] = [];
-
-  for (const raw of rawText.split('\n')) {
-    // 2+ espaces consécutifs → '<<' (le double-filler MRZ peut être rendu par tesseract
-    // comme 2 espaces quand le whitelist ne contient pas d'espace)
-    // espace simple restant → supprimé (artefact de séparation de mots)
-    // chars non-MRZ → supprimés
-    const clean = raw
-      .toUpperCase()
-      .replace(/[ \t]{2,}/g, '<<')
-      .replace(/[ \t]/g, '')
-      .replace(/[^A-Z0-9<]/g, '');
-
-    if (clean.length >= 28) {
-      candidates.push(clean);
-      console.log('[MRZ] candidat ligne:', clean, `(${clean.length} chars)`);
-    }
-  }
-
-  // ── TD3 : 2 lignes de 44 chars ──────────────────────────────────────────
-  {
-    const td3 = candidates
-      .filter(l => l.length >= 38 && l.length <= 52)
-      .map(l => l.length >= 44 ? l.slice(0, 44) : l.padEnd(44, '<'));
-
-    const l1Candidates = td3.filter(l => /^[PIVA]/.test(l));
-    const l2Candidates = td3.filter(
-      l => /^\d{6}$/.test(l.slice(13, 19)) && /^\d{6}$/.test(l.slice(21, 27)),
-    );
-
-    if (l1Candidates.length >= 1 && l2Candidates.length >= 1) {
-      const line2 = l2Candidates[0];
-      const line1 = l1Candidates.find(l => l !== line2) ?? l1Candidates[0];
-      console.log('[MRZ] TD3 détecté');
-      return { lines: [line1, line2], format: 'TD3' };
-    }
-  }
-
-  // ── TD1 : 3 lignes de 30 chars ──────────────────────────────────────────
-  {
-    const td1 = candidates
-      .filter(l => l.length >= 26 && l.length <= 36)
-      .map(l => l.length >= 30 ? l.slice(0, 30) : l.padEnd(30, '<'));
-
-    // TD1 ligne 2 : DOB en [0-5], expiry en [8-13]
-    const td1L2 = td1.filter(l => /^\d{6}/.test(l) && /^\d{6}$/.test(l.slice(8, 14)));
-
-    if (td1L2.length >= 1 && td1.length >= 3) {
-      console.log('[MRZ] TD1 détecté');
-      return { lines: td1.slice(0, 3), format: 'TD1' };
-    }
-  }
-
-  // ── TD2 : 2 lignes de 36 chars ──────────────────────────────────────────
-  {
-    const td2 = candidates
-      .filter(l => l.length >= 32 && l.length <= 42)
-      .map(l => l.length >= 36 ? l.slice(0, 36) : l.padEnd(36, '<'));
-
-    const td2L1 = td2.filter(l => /^[PIV]/.test(l));
-    const td2L2 = td2.filter(l => /^\d{6}$/.test(l.slice(13, 19)));
-
-    if (td2L1.length >= 1 && td2L2.length >= 1) {
-      console.log('[MRZ] TD2 détecté');
-      return { lines: [td2L1[0], td2L2[0]], format: 'TD2' };
-    }
-  }
-
-  // ── Fallback : lignes MRZ concaténées en une seule chaîne ───────────────
-  // Certains modèles ou PSM retournent les 2 lignes MRZ collées l'une à l'autre.
-  // On essaie de découper une ligne de ~88 chars en deux moitiés de 44.
-  {
-    const allText = rawText
-      .toUpperCase()
-      .replace(/\s+/g, '')
-      .replace(/[^A-Z0-9<]/g, '');
-
-    if (allText.length >= 80 && allText.length <= 96) {
-      const mid = Math.floor(allText.length / 2);
-      for (const cut of [44, mid, 43, 45]) {
-        if (cut < 30 || cut > allText.length - 30) continue;
-        const h1 = allText.slice(0, cut).padEnd(44, '<');
-        const h2 = allText.slice(cut, cut + 44).padEnd(44, '<');
-        if (
-          /^[PIVA]/.test(h1) &&
-          /^\d{6}$/.test(h2.slice(13, 19)) &&
-          /^\d{6}$/.test(h2.slice(21, 27))
-        ) {
-          console.log('[MRZ] TD3 détecté via ligne concaténée, coupure à', cut);
-          return { lines: [h1, h2], format: 'TD3' };
-        }
-      }
-    }
-  }
-
-  console.warn('[MRZ] Aucun format MRZ reconnu dans le texte OCR');
-  return null;
-}
-
-// ─── Secours extraction directe des dates (TD3) ────────────────────────────────
-//
-// Le package 'mrz' met un champ à `null` dès que son propre parseur `throw` —
-// notamment si un caractère résiduel non couvert par son autocorrect (B/G/O/I/S/Z
-// uniquement) traîne dans la zone date après OCR. Résultat observé en prod : nom,
-// prénom et nationalité correctement extraits, mais date de naissance/expiration
-// vides alors que la zone MRZ elle-même contient bien 6 chiffres à cet endroit.
-//
-// On retente donc une extraction tolérante directement depuis la ligne brute
-// (même correspondances lettre→chiffre que le package) plutôt que d'abandonner
-// dès que son parseur interne échoue.
-const OCR_DIGIT_FIX: Record<string, string> = { O: '0', I: '1', B: '8', G: '6', S: '5', Z: '2' };
-
-function fallbackTd3Date(line2: string, start: number): string | null {
-  const raw = line2.slice(start, start + 6);
-  const digits = raw.split('').map(c => (/[0-9]/.test(c) ? c : (OCR_DIGIT_FIX[c] ?? c))).join('');
-  return /^\d{6}$/.test(digits) ? digits : null;
-}
-
-// ─── Conversion résultat mrz → MrzData ─────────────────────────────────────────
-
-function toMrzData(result: ReturnType<typeof mrzParse>, td3Line2: string | null): MrzData {
-  const f = result.fields;
-
-  // Sex : le package mrz v3 retourne 'male' | 'female' | null (pas 'M'/'F')
-  let sex: 'M' | 'F' | 'X' = 'X';
-  if (f.sex === 'male')        sex = 'M';
-  else if (f.sex === 'female') sex = 'F';
-
-  // Document type
-  const code = (f.documentCode ?? '').toUpperCase();
-  let document_type = 'travel_document';
-  if (code.startsWith('P')) document_type = 'passport';
-  else if (/^[IAC]/.test(code)) document_type = 'national_id';
-  else if (code.startsWith('V')) document_type = 'visa';
-
-  // Nettoyage des noms (le package retire déjà les '<' mais on sanitise par sécurité)
-  const cleanName = (s: string | null | undefined): string | null =>
-    s ? s.replace(/<+/g, ' ').replace(/\s+/g, ' ').trim() || null : null;
-
-  // Si le champ mrz est vide (parseur interne ayant `throw`) et qu'on a la ligne
-  // brute TD3 sous la main, on retente une extraction tolérante avant d'abandonner.
-  const birthRaw  = f.birthDate      ?? (td3Line2 ? fallbackTd3Date(td3Line2, 13) : null);
-  const expiryRaw = f.expirationDate ?? (td3Line2 ? fallbackTd3Date(td3Line2, 21) : null);
-
-  return {
-    last_name:            cleanName(f.lastName),
-    first_name:           cleanName(f.firstName),
-    date_of_birth:        mrzDateToISO(birthRaw,  true),
-    sex,
-    // f.nationality peut être null si ce champ MRZ n'est pas reconnu par l'OCR.
-    // Fallback sur issuingState (même pays dans la quasi-totalité des cas).
-    nationality_code:     f.nationality || f.issuingState || null,
-    document_number:      f.documentNumber   || null,
-    issuing_country_code: f.issuingState     || null,
-    expiry_date:          mrzDateToISO(expiryRaw, false),
-    document_type,
-  };
-}
-
 // ─── OCR ───────────────────────────────────────────────────────────────────────
 
 type TesseractWorker = Awaited<ReturnType<typeof createWorker>>;
@@ -353,48 +175,10 @@ async function runOcr(
   // Log uniquement — pas de seuil bloquant.
   // Le modèle OCRB est entraîné sur des chars parfaits et retourne une confiance
   // plus basse que 'eng' sur des photos mobiles, même quand les lignes MRZ sont
-  // parfaitement lisibles. La validation structurelle dans extractMrzLines est
-  // le vrai filtre qualité (longueur 44, chiffres aux positions DOB/expiry…).
+  // parfaitement lisibles. La validation structurelle + les check digits sont
+  // le vrai filtre qualité (voir mrzTextParsing.ts).
   console.log(`[MRZ] OCR PSM=${psm}  confiance=${(confidence as number).toFixed(1)}%`);
   return text;
-}
-
-// ─── Parsing d'un texte OCR → MrzData ──────────────────────────────────────────
-
-/**
- * Fiabilité d'une lecture MRZ via ses CHIFFRES DE CONTRÔLE (check digits).
- * La MRZ inclut ces chiffres précisément pour détecter les erreurs d'OCR.
- * « Confiant » = le check digit composite passe (il couvre numéro + date de
- * naissance + expiration en TD3) ; à défaut, numéro ET date de naissance valides.
- * Un résultat NON confiant est une lecture douteuse → on préférera Claude vision.
- */
-function isConfidentRead(result: ReturnType<typeof mrzParse>): boolean {
-  const dg = (field: string) => result.details.find((d) => d.field === field);
-  const composite = dg('compositeCheckDigit');
-  if (composite) return composite.valid;
-  const docNum = dg('documentNumberCheckDigit');
-  const birth = dg('birthDateCheckDigit');
-  return !!(docNum?.valid && birth?.valid);
-}
-
-/**
- * Tente d'extraire une fiche MrzData depuis un texte OCR brut.
- * Retourne null si aucune ligne MRZ exploitable (nom de famille au minimum),
- * sinon la donnée + un drapeau `confident` (check digits) pour arbitrer entre
- * garder l'OCR local (gratuit) et basculer sur Claude vision (payant).
- * Partagé par les deux pipelines (OpenCV et crop bas classique).
- */
-function parseOcrText(text: string): { data: MrzData; confident: boolean } | null {
-  const extracted = extractMrzLines(text);
-  if (!extracted) return null;
-
-  const result   = mrzParse(extracted.lines, { autocorrect: true });
-  const td3Line2 = extracted.format === 'TD3' ? extracted.lines[1] : null;
-  const data     = toMrzData(result, td3Line2);
-
-  // Nom de famille au minimum pour considérer qu'on a une lecture.
-  if (!data.last_name) return null;
-  return { data, confident: isConfidentRead(result) };
 }
 
 // ─── API publique ───────────────────────────────────────────────────────────────
@@ -479,6 +263,13 @@ export type MrzScanResult = MrzData & {
   confident: boolean;
 };
 
+// Budget de temps pour la boucle de tentatives OCR (hors chargement du worker,
+// déjà compté à part). Passé ce délai, on arrête d'essayer d'autres
+// rotations/candidats et on rend la main — mieux vaut basculer plus tôt sur
+// Claude vision (qui a son propre timeout serveur) que de laisser l'appareil
+// enchaîner jusqu'à ~14 passes OCR sans limite.
+const ATTEMPT_BUDGET_MS = 6500;
+
 export async function scanMrz(
   file: File,
   onProgress?: (pct: number) => void,
@@ -487,12 +278,21 @@ export async function scanMrz(
 
   report(5);
 
+  // Précharge OpenCV en tâche de fond dès le lancement du scan : son WASM
+  // (~9 Mo) était jusqu'ici demandé seulement en tout dernier recours, ce qui
+  // ajoutait un téléchargement + une init au moment où l'utilisateur attendait
+  // déjà le plus longtemps. En le lançant ici (en parallèle du chargement du
+  // worker Tesseract, réseau non-bloquant pour le CPU), il a de bonnes chances
+  // d'être prêt quand on en a besoin. Best-effort : une erreur ici ne doit
+  // jamais faire échouer le scan, `detectMrzCandidates` gère l'absence d'OpenCV.
+  void loadOpenCv().catch(() => {});
+
   // Worker chargé une seule fois puis réutilisé (voir getWorker).
   const worker = await getWorker(report);
 
   report(50);
 
-  const img = await loadImage(file);
+  const img = capSourceEdge(await loadImage(file), SOURCE_MAX_EDGE);
   // Ordre : droit d'abord (cas courant, EXIF déjà appliqué par <img>), puis à
   // l'envers, puis pivoté. Les 4 orientations couvrent bas/haut/gauche/droite.
   const order = [0, 180, 90, 270];
@@ -501,6 +301,9 @@ export async function scanMrz(
   // en dernier recours (renvoyée avec confident=false → l'appelant tentera la
   // vision, et retombera dessus si la vision est indisponible).
   let partial: MrzData | null = null;
+
+  const attemptDeadline = Date.now() + ATTEMPT_BUDGET_MS;
+  const budgetExpired = () => Date.now() > attemptDeadline;
 
   // Une passe = crop bas de l'image pivotée de `deg`, puis OCR éprouvé.
   // Renvoie une lecture CONFIANTE (check digits OK), sinon null en mémorisant
@@ -511,6 +314,10 @@ export async function scanMrz(
     const total = orients.length * fractions.length;
     for (const deg of orients) {
       for (const fraction of fractions) {
+        if (budgetExpired()) {
+          console.warn('[MRZ] budget de temps dépassé, arrêt des tentatives');
+          return null;
+        }
         report(base + Math.round((k++ / total) * span));
         try {
           const image = renderRotatedCrop(img, deg, fraction);
@@ -531,26 +338,26 @@ export async function scanMrz(
     return null;
   };
 
-  {
-    // 1) Cas courant : document droit → lu en 1-2 passes.
-    let data = await tryOrientations([order[0]], 52, 16);       // 52 → 68
-    // 2) Document à l'envers / pivoté.
-    if (!data) data = await tryOrientations(order.slice(1), 68, 22); // 68 → 90
-    if (data) { report(100); return { ...data, confident: true }; }
-
-    // 3) SECOURS OpenCV — si toutes les rotations ont raté. On n'accepte que des
-    //    lectures FIABLES (check digits OK) ; les douteuses alimentent `partial`.
+  // Secours OpenCV : déskew + CLAHE, couvre les 4 orientations en un seul appel
+  // (pas d'OCR dans la détection elle-même, donc bien moins coûteux que des
+  // rotations à l'aveugle). On n'accepte qu'une lecture FIABLE (check digits OK)
+  // avec numéro de document ET date de naissance présents.
+  const tryOpenCv = async (base: number, span: number, maxCandidates: number): Promise<MrzData | null> => {
+    if (budgetExpired()) return null;
     try {
-      const candidates = await detectMrzCandidates(file, 6);
+      const candidates = await detectMrzCandidates(file, maxCandidates);
       for (let i = 0; i < candidates.length; i++) {
-        report(91 + i);
+        if (budgetExpired()) {
+          console.warn('[MRZ] budget de temps dépassé pendant le secours OpenCV');
+          return null;
+        }
+        report(base + Math.round((i / Math.max(1, candidates.length)) * span));
         try {
           const text = await runOcr(worker, candidates[i], '6');
           const parsed = parseOcrText(text);
           if (parsed?.confident && parsed.data.document_number && parsed.data.date_of_birth) {
             console.log('[MRZ] Lecture fiable via secours OpenCV, candidat', i);
-            report(100);
-            return { ...parsed.data, confident: true };
+            return parsed.data;
           }
           if (parsed && !partial) partial = parsed.data;
         } catch (err) {
@@ -560,6 +367,26 @@ export async function scanMrz(
     } catch (err) {
       console.warn('[MRZ] Secours OpenCV indisponible:', err);
     }
+    return null;
+  };
+
+  {
+    // 1) Cas courant : document droit → lu en 1-2 passes.
+    let data = await tryOrientations([order[0]], 52, 12);       // 52 → 64
+
+    // 2) Secours OpenCV — déskew + contraste, avant de pivoter à l'aveugle :
+    //    traite directement la cause d'échec la plus fréquente (reflet,
+    //    inclinaison, faible contraste) plutôt que de la contourner par force
+    //    brute. Positionné ici (plutôt qu'en tout dernier recours) parce que
+    //    l'acceptation exige déjà une lecture confiante — aucun risque de
+    //    préférer une lecture de moins bonne qualité à celle des rotations.
+    if (!data) data = await tryOpenCv(64, 12, 4);               // 64 → 76
+
+    // 3) Document à l'envers / pivoté — dernier recours pour les cas que la
+    //    détection de bande OpenCV aurait manqués (contours non exploitables).
+    if (!data) data = await tryOrientations(order.slice(1), 76, 20); // 76 → 96
+
+    if (data) { report(100); return { ...data, confident: true }; }
   }
   // NE PAS terminer le worker : il est mis en cache et réutilisé d'un scan à
   // l'autre (c'était le principal coût). L'<img> est libéré par le GC.
