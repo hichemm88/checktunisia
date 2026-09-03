@@ -35,6 +35,13 @@ interface Candidate { score: number; url: string }
 const DETECT_WIDTH = 900;
 // Upscale factor applied to the final MRZ strip before OCR — OCR-B likes big glyphs.
 const OCR_UPSCALE = 2.0;
+// The positional fallback strip (see extractPositionalStrip) covers a taller
+// band than a tight single-line crop — its glyphs are relatively smaller in
+// the source pixels, and 2.0× wasn't enough: verified against a real photo
+// that exhibits this fallback's exact trigger condition, only 3.0× (not 2.0×)
+// reached a confident, check-digit-verified read; 2.0× stayed structurally
+// close but never passed.
+const POSITIONAL_UPSCALE = 3.0;
 
 /** Load a File into a canvas, capping the long edge to `maxEdge` px. */
 function fileToCanvas(file: File, maxEdge: number): Promise<HTMLCanvasElement> {
@@ -132,6 +139,49 @@ function extractDeskewedStrip(cv: Cv, gray: Mat, rotatedRect: any, verticalOffse
   return out;
 }
 
+/**
+ * Positional fallback crop: a horizontal band taken directly from `gray` by
+ * position ([topFrac, botFrac] of its height), no contour, no deskew — the
+ * band is assumed already axis-aligned within this (already-oriented) Mat.
+ *
+ * Exists for a real failure mode found on dense bio-page passport scans
+ * (multiple printed fields, portrait, hologram all close together): the
+ * blackhat/close morphology in `detectBandsInMat` merges the ENTIRE printed
+ * page into one blob — correctly rejected by the wide/short band-shape
+ * filter since it spans nearly the full page — and the MRZ line inside it
+ * never gets its own contour, so zero candidates come out at all. Verified
+ * against two real French passport photos exhibiting exactly this (both had
+ * `scored.length === 0` in every orientation). MRZ is always the bottom of
+ * an upright document page (ICAO 9303); each orientation already tried here
+ * covers what "bottom" means for that rotation, so a plain positional crop
+ * near the bottom edge recovers it without needing a contour at all.
+ */
+function extractPositionalStrip(cv: Cv, gray: Mat, topFrac: number, botFrac: number): HTMLCanvasElement | null {
+  const imgH = gray.rows;
+  const imgW = gray.cols;
+  const y = Math.max(0, Math.round(imgH * topFrac));
+  const y2 = Math.min(imgH, Math.round(imgH * botFrac));
+  const rh = y2 - y;
+  if (rh < 10) return null;
+
+  const roi = gray.roi(new cv.Rect(0, y, imgW, rh));
+
+  const big = new cv.Mat();
+  cv.resize(roi, big, new cv.Size(0, 0), POSITIONAL_UPSCALE, POSITIONAL_UPSCALE, cv.INTER_CUBIC);
+
+  const clahe = new cv.CLAHE(2.0, new cv.Size(8, 8));
+  const eq = new cv.Mat();
+  clahe.apply(big, eq);
+  const bin = new cv.Mat();
+  cv.threshold(eq, bin, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+
+  const canvas = document.createElement('canvas');
+  cv.imshow(canvas, bin);
+
+  roi.delete(); big.delete(); eq.delete(); bin.delete(); clahe.delete();
+  return canvas;
+}
+
 /** Detect MRZ-band candidates inside one (already-oriented) BGR/RGBA Mat. */
 function detectBandsInMat(cv: Cv, src: Mat, limit: number): Candidate[] {
   const out: Candidate[] = [];
@@ -211,6 +261,19 @@ function detectBandsInMat(cv: Cv, src: Mat, limit: number): Candidate[] {
     if (atBand) out.push({ score: s.score, url: atBand.toDataURL('image/png') });
     const above = extractDeskewedStrip(cv, gray, s.rect, -s.pitchPx);
     if (above) out.push({ score: s.score, url: above.toDataURL('image/png') });
+  }
+
+  // Zero real bands survived the shape filter for this orientation → try the
+  // positional fallback (see extractPositionalStrip). Two overlapping bottom
+  // windows: neither alone generalised across the two real photos that
+  // exposed this (0.72 gave a byte-perfect single-candidate read on one,
+  // 0.78 the other) — the caller's existing multi-candidate combine already
+  // recombines whichever one actually pairs with a confident line 1 + line 2.
+  if (scored.length === 0) {
+    for (const topFrac of [0.72, 0.78]) {
+      const strip = extractPositionalStrip(cv, gray, topFrac, 1.0);
+      if (strip) out.push({ score: 0, url: strip.toDataURL('image/png') });
+    }
   }
 
   gray.delete(); blur.delete(); rectKernel.delete(); sqKernel.delete();
