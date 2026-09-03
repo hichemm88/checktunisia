@@ -397,10 +397,18 @@ export async function scanMrz(
       const cvStartedAt = performance.now();
       const candidates = await detectMrzCandidates(file, maxCandidates);
       dlog(`[MRZ] secours OpenCV: ${candidates.length} candidat(s) détecté(s) en ${Math.round(performance.now() - cvStartedAt)}ms (total ${elapsed()}ms)`);
+      // Chaque candidat est désormais un recadrage SERRÉ d'une seule ligne
+      // (bande détectée, ou une ligne au-dessus — voir mrzZoneDetect.ts) :
+      // fiable individuellement, mais la ligne 1 et la ligne 2 arrivent quasi
+      // toujours dans des candidats SÉPARÉS. On mémorise donc le texte de
+      // chacun pour, si aucun candidat seul ne suffit, tenter la combinaison
+      // de tous — c'est là que la paire ligne 1 + ligne 2 se reconstitue.
+      const candidateTexts: string[] = [];
       for (let i = 0; i < candidates.length; i++) {
         report(base + Math.round((i / Math.max(1, candidates.length)) * span));
         try {
           const text = await runOcr(worker, candidates[i], '6');
+          candidateTexts.push(text);
           const parsed = parseOcrText(text);
           if (parsed?.confident && parsed.data.document_number && parsed.data.date_of_birth) {
             dlog(`[MRZ] Lecture fiable via secours OpenCV, candidat ${i} (${elapsed()}ms)`);
@@ -416,6 +424,18 @@ export async function scanMrz(
           lastError = err instanceof Error ? err : new Error(String(err));
           dwarn(`[MRZ] secours OpenCV candidat ${i} échoué:`, lastError.message);
         }
+      }
+
+      // Combinaison de tous les textes OCR des candidats : recompose la paire
+      // ligne 1 / ligne 2 quand chacune vient d'un candidat différent (le cas
+      // le plus fréquent — voir commentaire ci-dessus).
+      if (candidateTexts.length >= 2) {
+        const combined = parseOcrText(candidateTexts.join('\n'));
+        if (combined?.confident && combined.data.document_number && combined.data.date_of_birth) {
+          dlog(`[MRZ] Lecture fiable via secours OpenCV, combinaison de ${candidateTexts.length} candidats (${elapsed()}ms)`);
+          return combined.data;
+        }
+        if (combined && !partial) partial = combined.data;
       }
     } catch (err) {
       dwarn('[MRZ] Secours OpenCV indisponible:', err instanceof Error ? err.message : String(err));

@@ -58,22 +58,27 @@ function fileToCanvas(file: File, maxEdge: number): Promise<HTMLCanvasElement> {
 }
 
 /**
- * Deskew + crop the given (skewed) bounding rect from a grayscale Mat.
+ * Deskew + crop the given (skewed) bounding rect from a grayscale Mat, offset
+ * vertically by `verticalOffsetPx` in the source image's pixel space (0 = the
+ * detected band itself; negative = that many pixels above it — the caller
+ * derives this from the band's `boundingRect` height, NOT from this rect's
+ * own — see the comment at the call site for why that distinction matters).
  *
- * `extendUp`: the contour finder isolates ONE MRZ line reliably (almost always
- * the bottom one — a passport's upper text/photo/security print tends to melt
+ * The contour finder isolates ONE MRZ line reliably (almost always the
+ * bottom one — a passport's upper text/photo/security print tends to melt
  * the top line into one big undifferentiated blob that the wide-short-band
  * filter correctly rejects, leaving only the bottom line as its own contour).
- * Verified against a real passport photo: the line-1 name row never formed
- * its own qualifying contour at all, so a tight crop around the ONE band that
- * *was* found only ever yields half the MRZ — never enough for
- * `extractMrzLines` to accept (it requires an MRZ line 1 AND line 2 in the
- * same OCR text). Anchoring the crop's BOTTOM on the detected band and
- * extending upward (rather than padding symmetrically, which was tried and
- * visibly degraded OCR quality — CLAHE over-amplifies the extra blank space)
- * recovers the adjacent line above at the same, already-proven quality.
+ * Verified against real passport photos: a SINGLE crop trying to cover both
+ * the detected band and the adjacent line above it (wider padding, or an
+ * asymmetric bottom-anchored crop — both tried) reliably degrades that
+ * adjacent line's OCR quality, even though it reads perfectly when cropped
+ * on its own with the exact same tight, proven parameters used for the
+ * anchor band. So each candidate line gets the SAME simple, tight crop,
+ * just repositioned — no crop ever tries to cover more than one line — and
+ * the caller (mrzScanner.ts) recombines whichever candidates' texts pair up
+ * into a full MRZ record.
  */
-function extractDeskewedStrip(cv: Cv, gray: Mat, rotatedRect: any, extendUp: boolean): HTMLCanvasElement | null {
+function extractDeskewedStrip(cv: Cv, gray: Mat, rotatedRect: any, verticalOffsetPx: number): HTMLCanvasElement | null {
   const angleRaw = rotatedRect.angle;
   const size = rotatedRect.size;
   let w = size.width;
@@ -84,24 +89,20 @@ function extractDeskewedStrip(cv: Cv, gray: Mat, rotatedRect: any, extendUp: boo
   if (w < h) { [w, h] = [h, w]; angle = angleRaw + 90; }
   if (w < 1 || h < 1) return null;
 
-  const center = new cv.Point(rotatedRect.center.x, rotatedRect.center.y);
+  const center = new cv.Point(rotatedRect.center.x, rotatedRect.center.y + verticalOffsetPx);
   const M = cv.getRotationMatrix2D(center, angle, 1);
   const rotated = new cv.Mat();
   const dsize = new cv.Size(gray.cols, gray.rows);
   cv.warpAffine(gray, rotated, M, dsize, cv.INTER_CUBIC, cv.BORDER_REPLICATE, new cv.Scalar());
 
-  // Pad the crop a little so no glyph edge is clipped. `extendUp` pads far more
-  // generously (≈1 extra line height) to reach the adjacent MRZ line, and
-  // anchors the BOTTOM of the crop on the detected band instead of centering
-  // the padding — extending only upward, toward where a missed line sits.
+  // Pad the crop a little so no glyph edge is clipped — same tight padding
+  // regardless of offset, since that's what reads cleanly (see above).
   const padX = Math.round(h * 0.15);
-  const padY = Math.round(h * (extendUp ? 0.9 : 0.25));
+  const padY = Math.round(h * 0.25);
   const cw = Math.min(gray.cols, Math.round(w) + padX * 2);
   const ch = Math.min(gray.rows, Math.round(h) + padY * 2);
   const x = Math.max(0, Math.round(center.x - cw / 2));
-  const y = extendUp
-    ? Math.max(0, Math.round(center.y + h / 2 + padY * 0.3) - ch)
-    : Math.max(0, Math.round(center.y - ch / 2));
+  const y = Math.max(0, Math.round(center.y - ch / 2));
   const rw = Math.min(cw, gray.cols - x);
   const rh = Math.min(ch, gray.rows - y);
 
@@ -167,7 +168,7 @@ function detectBandsInMat(cv: Cv, src: Mat, limit: number): Candidate[] {
   const imgW = src.cols;
   const imgH = src.rows;
 
-  const scored: { score: number; rect: any }[] = [];
+  const scored: { score: number; rect: any; pitchPx: number }[] = [];
   for (let i = 0; i < contours.size(); i++) {
     const c = contours.get(i);
     const br = cv.boundingRect(c);
@@ -183,22 +184,33 @@ function detectBandsInMat(cv: Cv, src: Mat, limit: number): Candidate[] {
       const cy = br.y + br.height / 2;
       const edgeBias = 1 + Math.abs(cy - imgH / 2) / (imgH / 2) * 0.25;
       const score = coverage * ar * edgeBias;
-      scored.push({ score, rect: rr });
+      // Line-to-line pitch estimate for the "above" crop: `minAreaRect`'s
+      // height is a TIGHT fit around the ink itself (~half of boundingRect's
+      // here, verified on a real photo: 23px vs 45px for the same line) — a
+      // pitch offset scaled from it undershoots by roughly half and lands
+      // the crop on a mix of blank space and glyph edges instead of the
+      // adjacent line, degrading OCR badly. `boundingRect`'s height already
+      // includes the usual glyph margin and is what the working pitch
+      // (empirically ~0.9× it) was actually measured against.
+      scored.push({ score, rect: rr, pitchPx: br.height });
     }
     c.delete();
   }
 
   scored.sort((a, b) => b.score - a.score);
   for (const s of scored.slice(0, limit)) {
-    // Tight crop (the detected band alone) AND an upward-extended crop (the
-    // detected band + the adjacent line above it, see extractDeskewedStrip) —
-    // whichever one actually contains both MRZ lines is what lets a caller
-    // reach a confident (check-digit-verified) read; the other is a cheap,
-    // harmless extra attempt when the tight one was already sufficient.
-    const tight = extractDeskewedStrip(cv, gray, s.rect, false);
-    if (tight) out.push({ score: s.score, url: tight.toDataURL('image/png') });
-    const extended = extractDeskewedStrip(cv, gray, s.rect, true);
-    if (extended) out.push({ score: s.score, url: extended.toDataURL('image/png') });
+    // The detected band itself (almost always the digit line, TD3 line 2)
+    // AND a second, equally tight crop one full line-pitch above it (almost
+    // always the name line, TD3 line 1) — verified against a real photo to
+    // read PERFECTLY on its own at exactly 1× the line pitch (0.9× and 0.85×
+    // were tried and measurably worse — under-shooting the pitch mixes in
+    // trailing pixels of line 2, degrading the back half of the reading).
+    // The caller pairs whichever candidates' texts together complete a full
+    // MRZ record.
+    const atBand = extractDeskewedStrip(cv, gray, s.rect, 0);
+    if (atBand) out.push({ score: s.score, url: atBand.toDataURL('image/png') });
+    const above = extractDeskewedStrip(cv, gray, s.rect, -s.pitchPx);
+    if (above) out.push({ score: s.score, url: above.toDataURL('image/png') });
   }
 
   gray.delete(); blur.delete(); rectKernel.delete(); sqKernel.delete();
