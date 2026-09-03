@@ -1448,7 +1448,10 @@
     "quotaOverageBilledUnit": "{{count}} additional check-in(s) — estimated {{amount}} TND at the end of the month. Your check-ins are never blocked.",
     "quotaNeverBlocked": "Your check-ins keep working — never blocked.",
     "quotaUpgradeCta": "Upgrade plan",
-    "avgOccupancy30d": "Average occupancy (30 d)"
+    "avgOccupancy30d": "Average occupancy (30 d)",
+    "loadError": "Could not load the dashboard.",
+    "checkConnection": "Check your connection and try again.",
+    "retry": "Retry"
   },
   "register": {
     "step0Label": "Account type",
