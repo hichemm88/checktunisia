@@ -10,7 +10,7 @@ import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { PublisherNotice } from '@/components/ui/PublisherNotice';
 import { extractErrors } from '@/lib/api';
-import { homePathForRole } from '@/lib/roleRoutes';
+import { homePathForRole, isPathAllowedForRole } from '@/lib/roleRoutes';
 import { safeIntendedPath } from '@/lib/intendedRoute';
 
 /**
@@ -64,8 +64,14 @@ export const TwoFactorVerifyPage = () => {
       setAuth(result.token, { ...result.user, _token_expires_at: result.expires_at });
       // La 2FA ne concerne plus seulement les comptes autorité : un admin
       // plateforme passe aussi par cet écran et ne doit pas atterrir sur le
-      // portail autorité.
-      navigate(intended ?? homePathForRole(result.user.role), { replace: true });
+      // portail autorité. Même contrôle qu'à l'étape mot de passe (LoginPage) :
+      // `next` peut viser une route d'un AUTRE rôle (resté dans l'URL depuis
+      // une session précédente) — sans ce contrôle, RequireRole renvoyait
+      // aussitôt vers ce même /login?next=..., et la connexion semblait figée.
+      const destination = intended && isPathAllowedForRole(intended, result.user.role)
+        ? intended
+        : homePathForRole(result.user.role);
+      navigate(destination, { replace: true });
     } catch (err) {
       setError(extractErrors(err));
       setCode('');

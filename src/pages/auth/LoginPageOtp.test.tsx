@@ -158,6 +158,28 @@ describe('connexion par code, depuis la page de connexion', () => {
   });
 });
 
+describe('destination visée incompatible avec le rôle nouvellement authentifié', () => {
+  it("ignore un `next` qui vise une route d'un autre rôle et repart sur l'accueil du rôle réel", async () => {
+    const user = userEvent.setup();
+    // Le `next` vise le portail autorité, mais le compte qui se connecte est
+    // un admin plateforme — ex. `/hotel/dashboard` ou `/authority/...` resté
+    // dans l'URL après une déconnexion suivie d'une connexion sous un autre
+    // rôle. Sans ce contrôle, RequireRole aurait aussitôt renvoyé vers ce
+    // même /login?next=..., et la connexion aurait semblé figée.
+    otpVerify.mockReset().mockResolvedValue({
+      ...session,
+      user: { ...session.user, role: 'platform_admin' },
+    });
+    renderLogin('/login?next=%2Fauthority%2Fguests%2Fabc');
+
+    await signInWithCode(user);
+
+    await waitFor(() => expect(navigate).toHaveBeenCalled());
+    expect(navigate).toHaveBeenCalledWith('/admin/dashboard');
+    expect(navigate).not.toHaveBeenCalledWith('/authority/guests/abc');
+  });
+});
+
 describe('proposition de passkey après une connexion par code', () => {
   it('ne propose rien quand l\'appareil n\'a pas d\'authentificateur intégré', async () => {
     const user = userEvent.setup();

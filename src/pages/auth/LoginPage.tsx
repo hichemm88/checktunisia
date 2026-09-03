@@ -11,7 +11,7 @@ import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { PublisherNotice } from '@/components/ui/PublisherNotice';
 import { extractErrors } from '@/lib/api';
-import { homePathForRole } from '@/lib/roleRoutes';
+import { homePathForRole, isPathAllowedForRole } from '@/lib/roleRoutes';
 import { readIntendedPath } from '@/lib/intendedRoute';
 import { useSeoMeta } from '@/cms/useSeoMeta';
 import { WhatsappOtpLogin } from './WhatsappOtpLogin';
@@ -74,7 +74,15 @@ export const LoginPage = () => {
     // mot de passe, bouton passkey, remplissage conditionnel, code WhatsApp. Un
     // agent qui suit le lien d'un message WhatsApp peut tres bien s'authentifier
     // par Face ID ; la fiche doit l'attendre dans tous les cas.
-    navigate(intended ?? homePathForRole(user.role));
+    //
+    // Mais seulement si elle reste accessible au rôle qui vient de se
+    // connecter : ce `next` peut dater d'une session précédente, d'un autre
+    // rôle (ex. `/hotel/dashboard` resté dans l'URL après une déconnexion,
+    // puis une connexion en admin plateforme). Sans ce contrôle, RequireRole
+    // renvoie aussitôt vers ce même /login?next=... — la connexion semble ne
+    // jamais aboutir.
+    const destination = intended && isPathAllowedForRole(intended, user.role) ? intended : homePathForRole(user.role);
+    navigate(destination);
   };
 
   /**
