@@ -383,11 +383,17 @@ export async function scanMrz(
   // rotations à l'aveugle). On n'accepte qu'une lecture FIABLE (check digits OK)
   // avec numéro de document ET date de naissance présents.
   //
-  // PAS de re-vérification du budget dans la boucle ci-dessous (seulement
-  // avant de LANCER detectMrzCandidates) : une fois le chargement WASM et la
-  // détection payés — le plus gros du coût, et réseau, donc hors de notre
-  // contrôle — jeter les candidats déjà obtenus sans même tenter l'OCR dessus
-  // gâcherait ce travail pour rien. On va au bout des candidats trouvés.
+  // Le budget EST re-vérifié à chaque candidat ci-dessous (contrairement à la
+  // version précédente : les candidats issus de bandes réellement détectées
+  // sont de petits recadrages toujours rapides, mais le repli positionnel
+  // (mrzZoneDetect.ts, quand aucune bande n'est détectée sur une orientation)
+  // couvre une zone bien plus large — sur une mauvaise orientation, ce
+  // contenu dense/brouillé peut faire tourner le moteur de segmentation de
+  // Tesseract 8-10s pour un seul candidat, vérifié sur une vraie photo. Sans
+  // ce garde-fou, une poignée de candidats de repli sur une orientation
+  // fausse peut à elle seule épuiser tout le budget de la tentative avant
+  // même la combinaison finale. Les candidats déjà OCR'isés avant la coupure
+  // restent utilisés par la combinaison ci-dessous (peu coûteuse, pas d'OCR).
   const tryOpenCv = async (base: number, span: number, maxCandidates: number): Promise<MrzData | null> => {
     if (budgetExpired()) {
       dwarn(`[MRZ] budget de temps dépassé (${elapsed()}ms) avant même de lancer le secours OpenCV`);
@@ -405,6 +411,10 @@ export async function scanMrz(
       // de tous — c'est là que la paire ligne 1 + ligne 2 se reconstitue.
       const candidateTexts: string[] = [];
       for (let i = 0; i < candidates.length; i++) {
+        if (budgetExpired()) {
+          dwarn(`[MRZ] budget de temps dépassé (${elapsed()}ms), arrêt après ${i}/${candidates.length} candidat(s) OpenCV`);
+          break;
+        }
         report(base + Math.round((i / Math.max(1, candidates.length)) * span));
         try {
           const text = await runOcr(worker, candidates[i], '6');
