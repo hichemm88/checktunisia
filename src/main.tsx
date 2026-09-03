@@ -1,6 +1,7 @@
 import { StrictMode, Suspense, Component, lazy, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import axios from 'axios';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '@/components/ui/Toast';
 import { captureAttribution } from '@/lib/analytics';
@@ -22,7 +23,17 @@ captureAttribution();
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { staleTime: 30_000, retry: 1 },
+    queries: {
+      staleTime: 30_000,
+      // Une 4xx est une réponse du serveur : la retenter ne changera rien.
+      // Seules les pannes réseau/timeout (pas de réponse) ou 5xx méritent un
+      // nouvel essai — avec le backoff exponentiel par défaut de React Query.
+      retry: (failureCount, error) => {
+        const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+        if (status !== undefined && status < 500) return false;
+        return failureCount < 2;
+      },
+    },
   },
 });
 

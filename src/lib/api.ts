@@ -5,6 +5,12 @@ import { twoFactorSetupPathForRole } from '@/lib/roleRoutes';
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? '/api/v1',
   headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+  // Sans ceci, une requête qui reste en attente sur une connexion dégradée
+  // (paquets perdus, 4G instable) ne se résout ni ne rejette jamais : la
+  // promesse axios pend indéfiniment et React Query reste bloqué en
+  // `isLoading` pour toujours — c'est ce qui laissait les skeletons du
+  // dashboard tourner sans fin en mauvaise connexion.
+  timeout: 15_000,
 });
 
 // Attach token + active property on every request

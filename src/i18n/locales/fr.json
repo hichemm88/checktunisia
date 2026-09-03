@@ -1448,7 +1448,10 @@
     "quotaOverageBilledUnit": "{{count}} check-in(s) supplémentaire(s) — estimation {{amount}} TND en fin de mois. Vos check-ins ne sont jamais bloqués.",
     "quotaNeverBlocked": "Vos check-ins continuent de fonctionner — aucun blocage.",
     "quotaUpgradeCta": "Passer au plan supérieur",
-    "avgOccupancy30d": "Occupation moyenne (30 j)"
+    "avgOccupancy30d": "Occupation moyenne (30 j)",
+    "loadError": "Impossible de charger le tableau de bord.",
+    "checkConnection": "Vérifiez votre connexion et réessayez.",
+    "retry": "Réessayer"
   },
   "register": {
     "step0Label": "Type de compte",

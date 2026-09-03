@@ -476,6 +476,24 @@ const MonthInsightsCard = ({ insights }: { insights: NonNullable<DashboardData['
   );
 };
 
+// ── État d'erreur ────────────────────────────────────────────────────────────
+// Affiché uniquement quand la requête a échoué ET qu'aucune donnée (même
+// périmée, venue du cache) n'est disponible — sinon on préfère montrer les
+// dernières données connues plutôt qu'un écran d'erreur qui les remplacerait.
+const DashboardErrorState = ({ onRetry }: { onRetry: () => void }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-10 text-center">
+      <AlertCircle className="h-6 w-6 text-red-500" />
+      <div>
+        <p className="text-sm font-semibold text-red-700">{t('hotelDashboard.loadError')}</p>
+        <p className="text-xs text-red-500 mt-1">{t('hotelDashboard.checkConnection')}</p>
+      </div>
+      <Button size="sm" onClick={onRetry}>{t('hotelDashboard.retry')}</Button>
+    </div>
+  );
+};
+
 // ── Dashboard ────────────────────────────────────────────────────────────────
 const EMPTY_DASH: DashboardData = {
   today: { arrivals_expected: 0, arrivals_done: 0, currently_present: 0, departures_today: 0, departures_tomorrow: 0, drafts_pending: 0, occupancy_rate: 0 },
@@ -490,12 +508,18 @@ export const DashboardPage = () => {
   const { t, i18n } = useTranslation();
   const navigate    = useNavigate();
   const { user, activePropertyId, activePropertyName, setActiveProperty } = useAuthStore();
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['dashboard', activePropertyId],
     queryFn: dashboardApi.get,
     refetchInterval: 60_000,
   });
 
+  // `data` reste celui du dernier succès pendant un refetch en arrière-plan
+  // (React Query ne le vide pas tant qu'un nouveau essai n'a pas abouti) : un
+  // échec ou une lenteur ponctuelle n'efface donc jamais ce qui est déjà
+  // affiché. On ne bascule sur l'état d'erreur que s'il n'y a encore jamais
+  // eu de donnée à montrer.
+  const showErrorState = isError && !data;
   const d   = data ?? EMPTY_DASH;
   const sub = d.subscription;
   const isTrial = sub.status === 'trial';
@@ -581,6 +605,10 @@ export const DashboardPage = () => {
         </div>
 
         <div className="px-4 flex flex-col gap-4">
+          {showErrorState ? (
+          <DashboardErrorState onRetry={() => refetch()} />
+          ) : (
+          <>
 
           {/* Security alert banner */}
           {securityHitCount > 0 && (
@@ -826,6 +854,8 @@ export const DashboardPage = () => {
             </div>
           </Card>
 
+          </>
+          )}
         </div>
       </div>
     </HotelLayout>
