@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod';
+import { verifyTd3Line2 } from './mrzCheckDigits.js';
 
 export const MRZ_SYSTEM_PROMPT = `Tu es un moteur d'extraction de la zone lisible par machine (MRZ) d'un passeport, format TD-3 (2 lignes de 44 caractères en bas de la page d'identité). Tu reçois une photo de la page d'identité. Tu réponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans texte autour.
 
@@ -22,12 +23,15 @@ Schéma :
   "expiry_date": "YYYY-MM-DD" | null,    // depuis YYMMDD : toujours 20xx
   "sex": "M" | "F" | "X" | null,
   "nationality_code": string | null,     // code pays 3 lettres (ex. FRA)
-  "issuing_country_code": string | null  // code pays émetteur 3 lettres (ex. FRA)
+  "issuing_country_code": string | null, // code pays émetteur 3 lettres (ex. FRA)
+  "mrz_line1": string | null,            // 1re ligne MRZ, BRUTE, < compris, telle que lue
+  "mrz_line2": string | null             // 2e ligne MRZ, BRUTE, < compris, telle que lue
 }
 
 Règles :
 - Remplace les < par des espaces dans les noms ; ignore les < de remplissage en fin.
 - first_name : inclure la TOTALITÉ des prénoms (given names), jamais seulement le premier. Si la MRZ tronque un nom long (limite de 44 caractères par ligne), complète avec la zone visuelle « Given names / Prénoms ».
+- mrz_line1 / mrz_line2 : recopie EXACTE des deux lignes, sans corriger, sans compléter, sans remplacer les < . Elles servent à vérifier les chiffres de contrôle : les « arranger » détruirait précisément ce qui permet de détecter une erreur de lecture. Si une ligne est illisible, null.
 - Un champ illisible : null, jamais d'invention.
 - Si l'image n'est pas un passeport avec MRZ : tous les champs null.`;
 
@@ -55,6 +59,8 @@ export const mrzSchema = z.object({
     .transform((v) => v ?? null),
   nationality_code: nullableStr,
   issuing_country_code: nullableStr,
+  mrz_line1: nullableStr,
+  mrz_line2: nullableStr,
 });
 
 export class MrzParseError extends Error {
@@ -76,7 +82,33 @@ function validIso(v: string | null): string | null {
   const mo = +m[2];
   const d = +m[3];
   if (y < 1900 || y > 2100 || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+
+  /*
+   * Le contrôle ci-dessus laisse passer le 31 février : « jour <= 31 » n'est
+   * pas « jour existant ». Une date impossible n'est pas rejetée plus loin —
+   * PHP la ROULE (2001-02-31 devient 2001-03-03), donc elle atterrit en base
+   * transformée, sans que personne ne voie l'écart. On la refuse ici, au seul
+   * endroit qui peut encore la distinguer d'une vraie date.
+   */
+  const asDate = new Date(Date.UTC(y, mo - 1, d));
+  if (asDate.getUTCFullYear() !== y || asDate.getUTCMonth() !== mo - 1 || asDate.getUTCDate() !== d) {
+    return null;
+  }
+
   return v;
+}
+
+/**
+ * Une date de naissance dans le FUTUR est une hallucination, pas une lecture.
+ *
+ * Le backend refuse déjà `date_of_birth` future à la création d'un voyageur ;
+ * la refuser ici évite de pré-remplir un formulaire avec une valeur qui sera
+ * rejetée à l'enregistrement, sans que l'agent comprenne pourquoi.
+ */
+function validBirthDate(v: string | null): string | null {
+  const iso = validIso(v);
+  if (!iso) return null;
+  return iso <= new Date().toISOString().slice(0, 10) ? iso : null;
 }
 
 const up3 = (v: string | null): string | null => (v ? v.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) || null : null);
@@ -105,11 +137,27 @@ export function parseMrzResponse(rawText: string) {
     document_number: d.document_number ? d.document_number.replace(/</g, '').trim() || null : null,
     last_name: d.last_name,
     first_name: d.first_name,
-    date_of_birth: validIso(d.date_of_birth),
+    date_of_birth: validBirthDate(d.date_of_birth),
     expiry_date: validIso(d.expiry_date),
     sex: d.sex,
     nationality_code: up3(d.nationality_code),
     issuing_country_code: up3(d.issuing_country_code),
+    /*
+     * Intégrité de la lecture, et non « le modèle a-t-il répondu ».
+     *
+     * Sans cela, le repli vision — emprunté précisément quand la lecture est
+     * difficile, donc quand une confusion 0/O, 1/I, 5/S ou 8/B est la plus
+     * probable — livrait un numéro de passeport faux mais plausible sans que
+     * rien ne le signale. Ce numéro part ensuite sur une fiche de police.
+     *
+     * `null` = non vérifiable (lignes absentes ou trop courtes). L'écran doit
+     * traiter `null` et `false` de la même façon : demander une relecture
+     * humaine. Seul `true` autorise à faire confiance.
+     */
+    mrz_verified: (() => {
+      const check = verifyTd3Line2(d.mrz_line2);
+      return check.checked ? check.valid : null;
+    })(),
   };
 
   // Rien d'exploitable → considéré comme échec (l'image n'est pas une MRZ lisible).
