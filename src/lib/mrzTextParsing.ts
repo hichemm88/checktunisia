@@ -96,11 +96,25 @@ export function extractMrzLines(
     if (clean.length >= 28) candidates.push(clean);
   }
 
+  // Un candidat plus LONG que la longueur attendue porte un ou des caractères
+  // parasites (bribe de la ligne voisine happée par tesseract) — pas
+  // forcément en fin de ligne. Un slice(0, len) fixe suppose le parasite en
+  // fin, décale toute la ligne d'autant quand il est en tête, et fait rater
+  // les fenêtres à position fixe (date de naissance, expiration) même quand
+  // le contenu réel est parfaitement lu. On essaie donc TOUTES les fenêtres
+  // de la longueur attendue plutôt qu'une seule — les filtres structurels qui
+  // suivent (regex par format) éliminent d'eux-mêmes les mauvais décalages.
+  function alignedWindows(l: string, len: number): string[] {
+    if (l.length === len) return [l];
+    if (l.length < len) return [l.padEnd(len, '<')];
+    const windows: string[] = [];
+    for (let start = 0; start <= l.length - len; start++) windows.push(l.slice(start, start + len));
+    return windows;
+  }
+
   // ── TD3 : 2 lignes de 44 chars ──────────────────────────────────────────
   {
-    const td3 = candidates
-      .filter(l => l.length >= 38 && l.length <= 52)
-      .map(l => l.length >= 44 ? l.slice(0, 44) : l.padEnd(44, '<'));
+    const td3 = candidates.filter(l => l.length >= 38 && l.length <= 52).flatMap(l => alignedWindows(l, 44));
 
     const l1Candidates = td3.filter(l => /^[PIVA]/.test(l));
     const l2Candidates = td3.filter(
@@ -115,6 +129,12 @@ export function extractMrzLines(
   }
 
   // ── TD1 : 3 lignes de 30 chars ──────────────────────────────────────────
+  // (windows non appliqué ici : contrairement à TD3/TD2, ce bloc ne
+  // sélectionne pas ses 3 lignes par contrainte structurelle individuelle —
+  // il prend les 3 premiers candidats de longueur compatible tels quels, ce
+  // qui suppose une correspondance 1 candidat ↔ 1 ligne réelle. Faire glisser
+  // une fenêtre casserait cette hypothèse en multipliant les candidats issus
+  // d'une seule ligne trop longue.)
   {
     const td1 = candidates
       .filter(l => l.length >= 26 && l.length <= 36)
@@ -130,9 +150,7 @@ export function extractMrzLines(
 
   // ── TD2 : 2 lignes de 36 chars ──────────────────────────────────────────
   {
-    const td2 = candidates
-      .filter(l => l.length >= 32 && l.length <= 42)
-      .map(l => l.length >= 36 ? l.slice(0, 36) : l.padEnd(36, '<'));
+    const td2 = candidates.filter(l => l.length >= 32 && l.length <= 42).flatMap(l => alignedWindows(l, 36));
 
     const td2L1 = td2.filter(l => /^[PIV]/.test(l));
     const td2L2 = td2.filter(l => /^\d{6}$/.test(l.slice(13, 19)));

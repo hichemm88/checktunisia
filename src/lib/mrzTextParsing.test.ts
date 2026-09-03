@@ -121,6 +121,32 @@ describe('extractMrzLines', () => {
     expect(result?.lines[0]).toBe(line1);
   });
 
+  it('recovers a line with a stray LEADING character (misaligns a fixed slice)', () => {
+    // Real failure observed on a real passport photo: tesseract glued one stray
+    // character from the row above onto the front of the MRZ line-2 text. A
+    // naive slice(0, 44) on the resulting 45-char string keeps the garbage char
+    // and drops the true trailing char instead — shifting every fixed-position
+    // field (birth date, expiry) by one and breaking the structural match, even
+    // though the real 44-char MRZ content is fully present and correct.
+    const [line1, line2] = buildTd3('KHALED', 'KENZA', {
+      docNumber: 'X1234567', nationality: 'DZA', birth: '820827', sex: 'F', expiry: '340801',
+    });
+    const noisyLine2 = `R${line2}`; // stray leading char, e.g. from the line above
+    const result = extractMrzLines(`${line1}\n${noisyLine2}`);
+    expect(result?.format).toBe('TD3');
+    expect(result?.lines[1]).toBe(line2);
+  });
+
+  it('recovers a line with a stray TRAILING character too (slice(0,len) already handled this)', () => {
+    const [line1, line2] = buildTd3('MARTIN', 'PAUL', {
+      docNumber: 'A1234567', nationality: 'TUN', birth: '900101', sex: 'M', expiry: '300101',
+    });
+    const noisyLine2 = `${line2}Z`;
+    const result = extractMrzLines(`${line1}\n${noisyLine2}`);
+    expect(result?.format).toBe('TD3');
+    expect(result?.lines[1]).toBe(line2);
+  });
+
   it('detects a TD1 (national ID, 3×30) triple', () => {
     // TD1 line 2: birth[0-5], check[6], sex[7], expiry[8-13], check[14], nationality[15-17]...
     const birth = '850505';

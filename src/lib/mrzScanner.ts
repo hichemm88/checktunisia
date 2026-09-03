@@ -264,11 +264,20 @@ export type MrzScanResult = MrzData & {
 };
 
 // Budget de temps pour la boucle de tentatives OCR (hors chargement du worker,
-// déjà compté à part). Passé ce délai, on arrête d'essayer d'autres
+// déjà compté à part). Passé ce délai, on arrête d'essayer D'AUTRES
 // rotations/candidats et on rend la main — mieux vaut basculer plus tôt sur
 // Claude vision (qui a son propre timeout serveur) que de laisser l'appareil
 // enchaîner jusqu'à ~14 passes OCR sans limite.
-const ATTEMPT_BUDGET_MS = 6500;
+//
+// 12s, pas 6.5s : le chunk OpenCV (~3,9 Mo gzippés) doit être TÉLÉCHARGÉ sur le
+// réseau réel de l'appareil avant que `detectMrzCandidates` puisse tourner —
+// un test en Node local (npm déjà sur disque, aucune latence réseau) ne peut
+// pas voir ce coût. Avec 6.5s, ce téléchargement suffisait à lui seul à
+// dépasser le budget en 4G moyenne, et le secours OpenCV — la partie qui
+// corrige vraiment les photos difficiles — n'obtenait alors JAMAIS sa chance
+// de passer un seul candidat par l'OCR, malgré le préchargement en tâche de
+// fond dès le lancement du scan.
+const ATTEMPT_BUDGET_MS = 12_000;
 
 export async function scanMrz(
   file: File,
@@ -342,15 +351,17 @@ export async function scanMrz(
   // (pas d'OCR dans la détection elle-même, donc bien moins coûteux que des
   // rotations à l'aveugle). On n'accepte qu'une lecture FIABLE (check digits OK)
   // avec numéro de document ET date de naissance présents.
+  //
+  // PAS de re-vérification du budget dans la boucle ci-dessous (seulement
+  // avant de LANCER detectMrzCandidates) : une fois le chargement WASM et la
+  // détection payés — le plus gros du coût, et réseau, donc hors de notre
+  // contrôle — jeter les candidats déjà obtenus sans même tenter l'OCR dessus
+  // gâcherait ce travail pour rien. On va au bout des candidats trouvés.
   const tryOpenCv = async (base: number, span: number, maxCandidates: number): Promise<MrzData | null> => {
     if (budgetExpired()) return null;
     try {
       const candidates = await detectMrzCandidates(file, maxCandidates);
       for (let i = 0; i < candidates.length; i++) {
-        if (budgetExpired()) {
-          console.warn('[MRZ] budget de temps dépassé pendant le secours OpenCV');
-          return null;
-        }
         report(base + Math.round((i / Math.max(1, candidates.length)) * span));
         try {
           const text = await runOcr(worker, candidates[i], '6');
