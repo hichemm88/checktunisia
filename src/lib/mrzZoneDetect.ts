@@ -56,8 +56,23 @@ function fileToCanvas(file: File, maxEdge: number): Promise<HTMLCanvasElement> {
   });
 }
 
-/** Deskew + crop the given (skewed) bounding rect from a grayscale Mat. */
-function extractDeskewedStrip(cv: Cv, gray: Mat, rotatedRect: any): HTMLCanvasElement | null {
+/**
+ * Deskew + crop the given (skewed) bounding rect from a grayscale Mat.
+ *
+ * `extendUp`: the contour finder isolates ONE MRZ line reliably (almost always
+ * the bottom one — a passport's upper text/photo/security print tends to melt
+ * the top line into one big undifferentiated blob that the wide-short-band
+ * filter correctly rejects, leaving only the bottom line as its own contour).
+ * Verified against a real passport photo: the line-1 name row never formed
+ * its own qualifying contour at all, so a tight crop around the ONE band that
+ * *was* found only ever yields half the MRZ — never enough for
+ * `extractMrzLines` to accept (it requires an MRZ line 1 AND line 2 in the
+ * same OCR text). Anchoring the crop's BOTTOM on the detected band and
+ * extending upward (rather than padding symmetrically, which was tried and
+ * visibly degraded OCR quality — CLAHE over-amplifies the extra blank space)
+ * recovers the adjacent line above at the same, already-proven quality.
+ */
+function extractDeskewedStrip(cv: Cv, gray: Mat, rotatedRect: any, extendUp: boolean): HTMLCanvasElement | null {
   const angleRaw = rotatedRect.angle;
   const size = rotatedRect.size;
   let w = size.width;
@@ -74,13 +89,18 @@ function extractDeskewedStrip(cv: Cv, gray: Mat, rotatedRect: any): HTMLCanvasEl
   const dsize = new cv.Size(gray.cols, gray.rows);
   cv.warpAffine(gray, rotated, M, dsize, cv.INTER_CUBIC, cv.BORDER_REPLICATE, new cv.Scalar());
 
-  // Pad the crop a little so no glyph edge is clipped.
+  // Pad the crop a little so no glyph edge is clipped. `extendUp` pads far more
+  // generously (≈1 extra line height) to reach the adjacent MRZ line, and
+  // anchors the BOTTOM of the crop on the detected band instead of centering
+  // the padding — extending only upward, toward where a missed line sits.
   const padX = Math.round(h * 0.15);
-  const padY = Math.round(h * 0.25);
+  const padY = Math.round(h * (extendUp ? 0.9 : 0.25));
   const cw = Math.min(gray.cols, Math.round(w) + padX * 2);
   const ch = Math.min(gray.rows, Math.round(h) + padY * 2);
   const x = Math.max(0, Math.round(center.x - cw / 2));
-  const y = Math.max(0, Math.round(center.y - ch / 2));
+  const y = extendUp
+    ? Math.max(0, Math.round(center.y + h / 2 + padY * 0.3) - ch)
+    : Math.max(0, Math.round(center.y - ch / 2));
   const rw = Math.min(cw, gray.cols - x);
   const rh = Math.min(ch, gray.rows - y);
 
@@ -93,7 +113,7 @@ function extractDeskewedStrip(cv: Cv, gray: Mat, rotatedRect: any): HTMLCanvasEl
     cv.resize(roi, big, new cv.Size(0, 0), OCR_UPSCALE, OCR_UPSCALE, cv.INTER_CUBIC);
 
     // CLAHE (adaptive contrast) then Otsu binarisation.
-    const clahe = cv.createCLAHE(2.0, new cv.Size(8, 8));
+    const clahe = new cv.CLAHE(2.0, new cv.Size(8, 8));
     const eq = new cv.Mat();
     clahe.apply(big, eq);
     const bin = new cv.Mat();
@@ -169,8 +189,15 @@ function detectBandsInMat(cv: Cv, src: Mat, limit: number): Candidate[] {
 
   scored.sort((a, b) => b.score - a.score);
   for (const s of scored.slice(0, limit)) {
-    const canvas = extractDeskewedStrip(cv, gray, s.rect);
-    if (canvas) out.push({ score: s.score, url: canvas.toDataURL('image/png') });
+    // Tight crop (the detected band alone) AND an upward-extended crop (the
+    // detected band + the adjacent line above it, see extractDeskewedStrip) —
+    // whichever one actually contains both MRZ lines is what lets a caller
+    // reach a confident (check-digit-verified) read; the other is a cheap,
+    // harmless extra attempt when the tight one was already sufficient.
+    const tight = extractDeskewedStrip(cv, gray, s.rect, false);
+    if (tight) out.push({ score: s.score, url: tight.toDataURL('image/png') });
+    const extended = extractDeskewedStrip(cv, gray, s.rect, true);
+    if (extended) out.push({ score: s.score, url: extended.toDataURL('image/png') });
   }
 
   gray.delete(); blur.delete(); rectKernel.delete(); sqKernel.delete();
