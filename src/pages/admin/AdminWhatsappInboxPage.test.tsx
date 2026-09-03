@@ -142,6 +142,34 @@ describe('écran Réponses des autorités', () => {
     reply.mockResolvedValue(OPEN_THREAD.timeline[1]);
   });
 
+  it("va rechercher les nouveaux messages sans qu'on recharge la page", async () => {
+    /*
+     * L'ecran n'interrogeait le serveur qu'au chargement. Verifie dans le
+     * navigateur sur un message entrant synthetique : la reponse arrivait en
+     * base et n'apparaissait jamais a l'ecran — il fallait recharger.
+     *
+     * Ce n'est pas un simple confort : la reponse libre n'est possible que dans
+     * les 24 h qui suivent le message de l'agent (regle de Meta, rappelee en
+     * en-tete de l'ecran). Une reponse qu'on ne voit pas consomme en silence la
+     * fenetre pendant laquelle on pouvait encore y repondre.
+     *
+     * Le test avance l'horloge plutot que d'attendre : il verifie que l'ecran
+     * REDEMANDE, sans dependre du rythme exact.
+     */
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    try {
+      renderPage();
+      await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
+
+      await vi.advanceTimersByTimeAsync(31_000);
+
+      await waitFor(() => expect(list.mock.calls.length).toBeGreaterThan(1));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('liste les fils avec leur non-lus et le total global', async () => {
     renderPage();
 

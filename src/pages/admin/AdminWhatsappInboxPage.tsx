@@ -227,15 +227,39 @@ export const AdminWhatsappInboxPage = () => {
     return () => clearTimeout(id);
   }, [search]);
 
+  /*
+   * ── Pourquoi cet ecran se rafraichit tout seul ──────────────────────────
+   *
+   * Il n'interrogeait le serveur qu'au chargement. Verifie sur un message
+   * entrant synthetique : la reponse d'une autorite arrivait en base et
+   * n'apparaissait JAMAIS a l'ecran — il fallait recharger la page pour la
+   * voir. Sur une boite de reception, c'est la fonction meme qui manque.
+   *
+   * Ce n'est pas qu'un confort. La reponse libre n'est possible que dans les
+   * 24 h qui suivent le message de l'agent — regle de Meta, rappelee en
+   * en-tete de cet ecran. Une reponse qu'on ne voit pas consomme en silence la
+   * fenetre pendant laquelle on pouvait encore y repondre.
+   *
+   * 30 s : le meme rythme que les autres ecrans de veille du produit
+   * (SecurityPage, PendingSetupPage). React Query suspend le rythme quand
+   * l'onglet n'est pas au premier plan — le cout reste donc borne aux ecrans
+   * reellement regardes.
+   */
+  const RYTHME_VEILLE_MS = 30_000;
+
   const { data: list, isLoading } = useQuery({
     queryKey: ['admin-whatsapp-inbox', debounced, filter],
     queryFn: () => adminWhatsappInboxApi.list({ search: debounced || undefined, filter }),
+    refetchInterval: RYTHME_VEILLE_MS,
   });
 
   const { data: thread, isLoading: loadingThread } = useQuery({
     queryKey: ['admin-whatsapp-thread', selected],
     queryFn: () => adminWhatsappInboxApi.thread(selected as string),
     enabled: selected !== null,
+    // Le fil ouvert aussi : sans cela, l'operateur qui attend une reponse
+    // precise resterait devant une conversation figee.
+    refetchInterval: RYTHME_VEILLE_MS,
   });
 
   useEffect(() => {
