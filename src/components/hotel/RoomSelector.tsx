@@ -188,6 +188,7 @@ export const RoomSelector = ({
           <input
             className="input w-full ps-9"
             placeholder={t('checkinWizard.searchRoomPlaceholder')}
+            aria-label={t('checkinWizard.searchRoomPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
