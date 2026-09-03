@@ -191,14 +191,26 @@ async function runOcr(
  * relative au bundle → introuvables → createWorker() rejette avec un objet non-Error
  * → le catch remonte 'Scan échoué'.
  *
- * Solution : pointer vers jsDelivr pour le worker, le core WASM et les modèles.
- * La CSP vercel.json autorise cdn.jsdelivr.net dans connect-src ET worker-src.
+ * Solution : pointer vers jsDelivr pour les modèles de langue restants (voir
+ * langDataPath), mais le WORKER et le CORE WASM sont désormais bundlés en
+ * same-origin (voir CORE_PATH ci-dessous) — même raisonnement que le modèle
+ * OCRB (public/tessdata/) : le core Tesseract est un PRÉALABLE à toute
+ * tentative locale, y compris la toute première passe rapide. S'il dépend
+ * d'un CDN externe lent/filtré sur le réseau de l'utilisateur, l'OCR local
+ * échoue avant même d'avoir commencé — indépendamment de tout le reste du
+ * pipeline (rotations, secours OpenCV…). La CSP vercel.json autorise encore
+ * cdn.jsdelivr.net (connect-src + worker-src) pour langDataPath.
  */
 export const TESSERACT_VER  = '5.1.1';
 export const CDN            = 'https://cdn.jsdelivr.net/npm';
 // worker.min.js est copié dans public/ → servi en same-origin → pas de contrainte worker-src
 export const WORKER_PATH    = '/worker.min.js';
-export const CORE_PATH      = `${CDN}/tesseract.js-core@${TESSERACT_VER}`;
+// Core WASM (variantes LSTM + LSTM/SIMD — seules utilisées, oem=1|3 partout
+// dans ce fichier) bundlé dans public/tesseract-core/ → same-origin, jamais
+// dépendant de la disponibilité de jsDelivr pour démarrer un scan.
+// Fichiers à placer (copiés depuis node_modules/tesseract.js-core/) :
+//   tesseract-core-lstm.wasm(.js), tesseract-core-simd-lstm.wasm(.js)
+export const CORE_PATH      = '/tesseract-core';
 /**
  * Dossier CDN par langue pour les modèles tesseract.js standards (eng, ara, ...).
  *
