@@ -103,7 +103,10 @@ const RecentCheckInsSection = () => {
 };
 
 export const SearchPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // Même locale que RecentCheckInsSection : les deux listes cohabitent sur
+  // l'écran et ne doivent pas dater différemment.
+  const locale = dateLocaleFor(i18n.language);
   const WATCHLIST_COLORS: Record<WatchlistSeverity, { bg: string; border: string; text: string; label: string }> = {
     critique: { bg: 'var(--qayed-erreur-fond)', border: 'var(--qayed-erreur)', text: 'var(--qayed-erreur-texte)', label: t('authoritySearch.severityCritical') },
     eleve:    { bg: 'var(--qayed-vigilance-fond)', border: 'var(--qayed-vigilance)', text: 'var(--qayed-vigilance-texte)', label: t('authoritySearch.severityHigh') },
@@ -343,18 +346,26 @@ export const SearchPage = () => {
                         })()}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {g.date_of_birth} · {g.sex} · {g.nationality_code}
+                        {fmtDate(g.date_of_birth, locale)} · {g.sex} · {g.nationality_code}
                         {g.document_number && <> · <span className="font-mono">{g.document_number}</span></>}
                       </p>
                       {g.last_stay && (
                         <p className="text-xs text-gray-400 mt-0.5">
-                          {t('authoritySearch.lastStay')} : {g.last_stay.hotel_name} ({g.last_stay.check_in_date})
+                          {t('authoritySearch.lastStay')} : {g.last_stay.hotel_name} ({fmtDate(g.last_stay.check_in_date, locale)})
                         </p>
                       )}
                     </div>
                   </div>
                   <Badge variant={(g.last_stay?.status as any) ?? 'default'}>
-                    {g.last_stay?.status ?? t('authoritySearch.historical')}
+                    {/*
+                      `status` est un jeton de base ('active', 'completed') : il
+                      s'affichait tel quel, en anglais, au milieu d'une interface
+                      traduite. Les libellés existaient déjà (checkinStatus.*),
+                      ils n'étaient simplement pas utilisés ici.
+                    */}
+                    {g.last_stay?.status
+                      ? t(`checkinStatus.${g.last_stay.status}`, { defaultValue: g.last_stay.status })
+                      : t('authoritySearch.historical')}
                   </Badge>
                 </button>
               );
