@@ -11,7 +11,7 @@ import { App } from './App';
 // passante au premier rendu de la landing.
 const Analytics = lazy(() => import('@vercel/analytics/react').then((m) => ({ default: m.Analytics })));
 import './index.css';
-import './i18n';
+import { i18nReady } from './i18n';
 
 // Avant tout le reste : une erreur survenue pendant l'amorçage doit être
 // capturée elle aussi. Inerte sans VITE_SENTRY_DSN.
@@ -109,6 +109,20 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
   }
 }
 
+/*
+ * Le rendu attend que la langue de depart soit chargee.
+ *
+ * Les traductions ne sont plus dans le chunk d'entree : elles arrivent par un
+ * `import()` propre a la langue detectee. Rendre sans attendre afficherait un
+ * ecran de clefs brutes le temps de ce chargement — un defaut bien plus visible
+ * que les kilo-octets economises.
+ *
+ * `catch` et non `then` seul : si le fichier de langue ne se charge pas
+ * (reseau coupe, chunk perime apres un deploiement), il vaut mieux une
+ * interface non traduite qu'une page blanche. i18next rend alors les clefs, et
+ * l'application reste utilisable.
+ */
+i18nReady.catch(() => { /* rendu quand meme, en clefs brutes */ }).then(() => {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
@@ -123,3 +137,4 @@ createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </StrictMode>,
 );
+});
