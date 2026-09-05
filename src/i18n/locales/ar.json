@@ -373,7 +373,8 @@
       "initializing": "جارٍ التهيئة…",
       "disconnected": "الجلسة منقطعة",
       "loggedOut": "يلزم إعادة الاقتران (رمز QR)",
-      "authFailure": "فشل المصادقة"
+      "authFailure": "فشل المصادقة",
+      "cloudActive": "القناة النشطة: Cloud API (تعطيل نظام الويب)"
     },
     "status": {
       "pending": "قيد الانتظار",
@@ -449,6 +450,7 @@
     "queue": "المهام الفاشلة",
     "queuePending": "{{count}} قيد الانتظار",
     "whatsappSession": "جلسة واتساب",
+    "whatsappSessionLegacy": "نظام الويب معطّل (Cloud API نشطة)",
     "whatsappQueue": "البطاقات الفاشلة",
     "lastReady": "آخر جلسة جاهزة: {{date}}",
     "backup": "آخر نسخة احتياطية",

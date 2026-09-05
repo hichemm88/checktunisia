@@ -373,7 +373,8 @@
       "initializing": "Initialisation…",
       "disconnected": "Session déconnectée",
       "loggedOut": "Ré-appairage nécessaire (QR)",
-      "authFailure": "Échec d'authentification"
+      "authFailure": "Échec d'authentification",
+      "cloudActive": "Canal actif : API Cloud (relais Web inutilisé)"
     },
     "status": {
       "pending": "En attente",
@@ -449,6 +450,7 @@
     "queue": "Jobs en échec",
     "queuePending": "{{count}} en attente",
     "whatsappSession": "Session WhatsApp",
+    "whatsappSessionLegacy": "Relais Web inutilisé (API Cloud active)",
     "whatsappQueue": "Fiches en échec",
     "lastReady": "Dernière session prête : {{date}}",
     "backup": "Dernière sauvegarde",

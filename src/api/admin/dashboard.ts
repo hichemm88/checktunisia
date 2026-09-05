@@ -106,6 +106,13 @@ export interface AdminHealth {
       last_ready_at: string | null;
       heartbeat_at: string | null;
       revoked_at: string | null;
+      /**
+       * Faux quand le canal actif est l'API Cloud : ce statut ne décrit plus
+       * que le relais Web abandonné, figé sur son dernier état d'avant
+       * bascule. Optionnel pour rester lisible si le front est déployé avant
+       * l'API.
+       */
+      relevant?: boolean;
     } | null;
   };
   /**

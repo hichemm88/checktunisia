@@ -88,12 +88,18 @@ const WhatsappStatusStrip = () => {
   // plus rien ne part tant qu'un QR n'est pas scanné — s'affichait en pastille
   // ambre, et son libellé retombait sur une clé i18n inexistante.
   const sessionKey = { auth_failure: 'authFailure', logged_out: 'loggedOut' }[health.session] ?? health.session;
-  const ok = health.session === 'ready' && !health.paused;
-  const down = health.session === 'disconnected' || health.session === 'auth_failure' || health.session === 'logged_out';
+  // `session` ne décrit que le relais Web abandonné : sur le canal Cloud
+  // (actif par défaut), il reste figé sur `logged_out` depuis le
+  // bannissement du numéro et ne dit plus rien du canal réellement utilisé.
+  const sessionRelevant = health.session_relevant ?? true;
+  const ok = !sessionRelevant || (health.session === 'ready' && !health.paused);
+  const down = sessionRelevant && (health.session === 'disconnected' || health.session === 'auth_failure' || health.session === 'logged_out');
   const dot = ok ? 'bg-green-500' : down ? 'bg-red-500' : 'bg-amber-400';
-  const label = health.paused
-    ? t('adminWhatsapp.pausedTag')
-    : t(`adminWhatsapp.session.${sessionKey}`);
+  const label = !sessionRelevant
+    ? t('adminHealth.whatsappSessionLegacy')
+    : health.paused
+      ? t('adminWhatsapp.pausedTag')
+      : t(`adminWhatsapp.session.${sessionKey}`);
 
   return (
     <Link
@@ -585,8 +591,12 @@ const HealthPanel = () => {
       : t('adminHealth.queuePendingUnknown');
 
   const session = data.whatsapp.session;
-  const waAlert = session?.needs_pairing || session?.status === 'logged_out';
-  const waWarn = !waAlert && (session?.paused || (session?.status !== 'ready' && session != null));
+  // `relevant` est faux quand le canal actif est l'API Cloud : le statut de
+  // session ne décrit alors plus que le relais Web abandonné, figé sur son
+  // dernier état d'avant bascule — jamais une panne en cours.
+  const sessionRelevant = session?.relevant ?? true;
+  const waAlert = sessionRelevant && (session?.needs_pairing || session?.status === 'logged_out');
+  const waWarn = !waAlert && sessionRelevant && (session?.paused || (session?.status !== 'ready' && session != null));
 
   const Signal = ({ label, value, level, hint, wrapHint }: { label: string; value: string; level: 'ok' | 'warn' | 'alert'; hint?: string; wrapHint?: boolean }) => {
     const color = level === 'alert' ? 'var(--qayed-erreur)' : level === 'warn' ? 'var(--qayed-vigilance)' : 'var(--qayed-conforme)';
@@ -637,8 +647,14 @@ const HealthPanel = () => {
       />
       <Signal
         label={t('adminHealth.whatsappSession')}
-        hint={session?.last_ready_at ? t('adminHealth.lastReady', { date: fmtDate(session.last_ready_at, locale) }) : undefined}
-        value={session?.status ?? '—'}
+        hint={
+          !sessionRelevant
+            ? undefined
+            : session?.last_ready_at
+              ? t('adminHealth.lastReady', { date: fmtDate(session.last_ready_at, locale) })
+              : undefined
+        }
+        value={!sessionRelevant ? t('adminHealth.whatsappSessionLegacy') : (session?.status ?? '—')}
         level={waAlert ? 'alert' : waWarn ? 'warn' : 'ok'}
       />
       <Signal

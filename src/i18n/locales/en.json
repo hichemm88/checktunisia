@@ -373,7 +373,8 @@
       "initializing": "Initializing…",
       "disconnected": "Session disconnected",
       "loggedOut": "Re-pairing required (QR)",
-      "authFailure": "Authentication failure"
+      "authFailure": "Authentication failure",
+      "cloudActive": "Active channel: Cloud API (Web relay unused)"
     },
     "status": {
       "pending": "Pending",
@@ -449,6 +450,7 @@
     "queue": "Failed jobs",
     "queuePending": "{{count}} pending",
     "whatsappSession": "WhatsApp session",
+    "whatsappSessionLegacy": "Web relay unused (Cloud API active)",
     "whatsappQueue": "Failed fiches",
     "lastReady": "Last ready session: {{date}}",
     "backup": "Last backup",

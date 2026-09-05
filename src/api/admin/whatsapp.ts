@@ -21,6 +21,18 @@ export type WhatsappStatus = 'pending' | 'sent' | 'failed' | 'cancelled';
 export interface WhatsappHealth {
   enabled: boolean;
   session: WhatsappSession;
+  /**
+   * `session` ne décrit que le relais Web historique (session appairée par
+   * QR) : sur le canal Cloud API — actif par défaut depuis la bascule —, il
+   * reste figé sur son dernier état d'avant bascule (typiquement
+   * `logged_out`, depuis le bannissement du numéro) et ne veut plus rien
+   * dire. `session_relevant` dit si `session` décrit encore le canal
+   * réellement utilisé.
+   *
+   * Optionnel : l'écran doit rester lisible si le front est déployé avant l'API.
+   */
+  session_relevant?: boolean;
+  channel?: string;
   reason: string | null;
   paused: boolean;
   last_ready_at: string | null;

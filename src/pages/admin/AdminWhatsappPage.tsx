@@ -47,7 +47,15 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
   const { t, i18n } = useTranslation();
   const locale = dateLocaleFor(i18n.language);
   const qc = useQueryClient();
-  const session = SESSION_STYLE[health.session] ?? SESSION_STYLE.initializing;
+  // `health.session` ne décrit que le relais Web historique (session
+  // appairée par QR) : sur le canal Cloud API — actif par défaut depuis la
+  // bascule —, il reste figé sur son dernier état d'avant bascule
+  // (typiquement « ré-appairage nécessaire », depuis le bannissement du
+  // numéro) et ne dit plus rien du canal réellement utilisé.
+  const sessionRelevant = health.session_relevant ?? true;
+  const session = sessionRelevant
+    ? (SESSION_STYLE[health.session] ?? SESSION_STYLE.initializing)
+    : { dot: 'bg-green-500', key: 'cloudActive' };
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['admin-whatsapp-health'] });
@@ -94,7 +102,7 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
                 <span className="ms-2 align-middle"><Badge variant="expired">{t('adminWhatsapp.pausedTag')}</Badge></span>
               )}
             </p>
-            {health.reason && <p className="text-xs text-gray-400">{health.reason}</p>}
+            {sessionRelevant && health.reason && <p className="text-xs text-gray-400">{health.reason}</p>}
           </div>
         </div>
         <Badge variant={health.enabled ? 'active' : 'cancelled'}>
