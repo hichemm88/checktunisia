@@ -359,6 +359,7 @@
     "sendTest": "Test message",
     "resend": "Resend",
     "resendAll": "Retry all ({{n}})",
+    "dismissFailed": "Dismiss failed ({{n}})",
     "lastReady": "Last connected",
     "allProperties": "All properties",
     "allStatuses": "All statuses",
@@ -373,7 +374,8 @@
       "initializing": "Initializing…",
       "disconnected": "Session disconnected",
       "loggedOut": "Re-pairing required (QR)",
-      "authFailure": "Authentication failure"
+      "authFailure": "Authentication failure",
+      "cloudActive": "Active channel: Cloud API (Web relay unused)"
     },
     "status": {
       "pending": "Pending",
@@ -392,7 +394,8 @@
       "resumed": "Sending resumed.",
       "testSent": "Test message queued.",
       "resent": "Message re-queued.",
-      "resentAll": "All failed messages re-queued."
+      "resentAll": "All failed messages re-queued.",
+      "dismissedFailed": "Failed fiches were cancelled (kept in the log)."
     },
     "photoAttached": "Photo attached",
     "sentTo": "Recipient:",
@@ -449,6 +452,7 @@
     "queue": "Failed jobs",
     "queuePending": "{{count}} pending",
     "whatsappSession": "WhatsApp session",
+    "whatsappSessionLegacy": "Web relay unused (Cloud API active)",
     "whatsappQueue": "Failed fiches",
     "lastReady": "Last ready session: {{date}}",
     "backup": "Last backup",

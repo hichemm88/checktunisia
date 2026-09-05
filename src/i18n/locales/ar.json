@@ -359,6 +359,7 @@
     "sendTest": "رسالة اختبار",
     "resend": "إعادة الإرسال",
     "resendAll": "إعادة إرسال الكل ({{n}})",
+    "dismissFailed": "إلغاء الفاشلة ({{n}})",
     "lastReady": "آخر اتصال",
     "allProperties": "كل المنشآت",
     "allStatuses": "كل الحالات",
@@ -373,7 +374,8 @@
       "initializing": "جارٍ التهيئة…",
       "disconnected": "الجلسة منقطعة",
       "loggedOut": "يلزم إعادة الاقتران (رمز QR)",
-      "authFailure": "فشل المصادقة"
+      "authFailure": "فشل المصادقة",
+      "cloudActive": "القناة النشطة: Cloud API (تعطيل نظام الويب)"
     },
     "status": {
       "pending": "قيد الانتظار",
@@ -392,7 +394,8 @@
       "resumed": "تم استئناف الإرسال.",
       "testSent": "تمت جدولة رسالة الاختبار.",
       "resent": "تمت إعادة جدولة الإرسال.",
-      "resentAll": "تمت إعادة جدولة جميع الرسائل الفاشلة."
+      "resentAll": "تمت إعادة جدولة جميع الرسائل الفاشلة.",
+      "dismissedFailed": "تم إلغاء البطاقات الفاشلة (محفوظة في السجل)."
     },
     "photoAttached": "صورة مرفقة",
     "sentTo": "المستلم:",
@@ -449,6 +452,7 @@
     "queue": "المهام الفاشلة",
     "queuePending": "{{count}} قيد الانتظار",
     "whatsappSession": "جلسة واتساب",
+    "whatsappSessionLegacy": "نظام الويب معطّل (Cloud API نشطة)",
     "whatsappQueue": "البطاقات الفاشلة",
     "lastReady": "آخر جلسة جاهزة: {{date}}",
     "backup": "آخر نسخة احتياطية",

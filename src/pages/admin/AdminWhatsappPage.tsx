@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, Send, Pause, Play, AlertTriangle, Gauge, Image as ImageIcon, ImageOff } from 'lucide-react';
+import { RefreshCw, Send, Pause, Play, AlertTriangle, Gauge, Image as ImageIcon, ImageOff, XCircle } from 'lucide-react';
 import {
   adminWhatsappApi,
   type WhatsappHealth,
@@ -47,7 +47,15 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
   const { t, i18n } = useTranslation();
   const locale = dateLocaleFor(i18n.language);
   const qc = useQueryClient();
-  const session = SESSION_STYLE[health.session] ?? SESSION_STYLE.initializing;
+  // `health.session` ne décrit que le relais Web historique (session
+  // appairée par QR) : sur le canal Cloud API — actif par défaut depuis la
+  // bascule —, il reste figé sur son dernier état d'avant bascule
+  // (typiquement « ré-appairage nécessaire », depuis le bannissement du
+  // numéro) et ne dit plus rien du canal réellement utilisé.
+  const sessionRelevant = health.session_relevant ?? true;
+  const session = sessionRelevant
+    ? (SESSION_STYLE[health.session] ?? SESSION_STYLE.initializing)
+    : { dot: 'bg-green-500', key: 'cloudActive' };
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['admin-whatsapp-health'] });
@@ -74,6 +82,11 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
     successMessage: t('adminWhatsapp.toast.resentAll'),
     onSuccess: invalidate,
   });
+  const dismissFailedM = useAdminMutation({
+    mutationFn: () => adminWhatsappApi.dismissFailed(),
+    successMessage: t('adminWhatsapp.toast.dismissedFailed'),
+    onSuccess: invalidate,
+  });
 
   const stat = (label: string, value: number, color: string) => (
     <div className="flex flex-col items-center rounded-xl bg-warm-100 px-4 py-2 min-w-[72px]">
@@ -94,7 +107,7 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
                 <span className="ms-2 align-middle"><Badge variant="expired">{t('adminWhatsapp.pausedTag')}</Badge></span>
               )}
             </p>
-            {health.reason && <p className="text-xs text-gray-400">{health.reason}</p>}
+            {sessionRelevant && health.reason && <p className="text-xs text-gray-400">{health.reason}</p>}
           </div>
         </div>
         <Badge variant={health.enabled ? 'active' : 'cancelled'}>
@@ -183,6 +196,14 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
         {(health.queue.stuck ?? health.queue.failed) > 0 && (
           <Button size="sm" variant="secondary" onClick={() => resendAllM.mutate()} loading={resendAllM.isPending}>
             <RefreshCw className="h-4 w-4" /> {t('adminWhatsapp.resendAll', { n: health.queue.stuck ?? health.queue.failed })}
+          </Button>
+        )}
+        {/* Pendant de « Renvoyer tout » : renoncer plutôt que retenter. Annule
+            sans supprimer (compteur « Annulés »), donc ne vise que `failed` —
+            jamais les fiches en attente d'un backoff, qui repartiront seules. */}
+        {health.queue.failed > 0 && (
+          <Button size="sm" variant="secondary" onClick={() => dismissFailedM.mutate()} loading={dismissFailedM.isPending}>
+            <XCircle className="h-4 w-4" /> {t('adminWhatsapp.dismissFailed', { n: health.queue.failed })}
           </Button>
         )}
         {health.last_ready_at && (
