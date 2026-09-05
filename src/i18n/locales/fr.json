@@ -359,6 +359,7 @@
     "sendTest": "Message test",
     "resend": "Renvoyer",
     "resendAll": "Relancer tout ({{n}})",
+    "dismissFailed": "Annuler les échecs ({{n}})",
     "lastReady": "Dernière connexion",
     "allProperties": "Toutes les propriétés",
     "allStatuses": "Tous les statuts",
@@ -393,7 +394,8 @@
       "resumed": "Envois repris.",
       "testSent": "Message test enfilé.",
       "resent": "Envoi remis en file.",
-      "resentAll": "Tous les envois échoués ont été remis en file."
+      "resentAll": "Tous les envois échoués ont été remis en file.",
+      "dismissedFailed": "Les fiches en échec ont été annulées (conservées dans le journal)."
     },
     "photoAttached": "Photo jointe",
     "sentTo": "Destinataire :",

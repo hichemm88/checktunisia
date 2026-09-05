@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, Send, Pause, Play, AlertTriangle, Gauge, Image as ImageIcon, ImageOff } from 'lucide-react';
+import { RefreshCw, Send, Pause, Play, AlertTriangle, Gauge, Image as ImageIcon, ImageOff, XCircle } from 'lucide-react';
 import {
   adminWhatsappApi,
   type WhatsappHealth,
@@ -80,6 +80,11 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
   const resendAllM = useAdminMutation({
     mutationFn: () => adminWhatsappApi.resendAll(),
     successMessage: t('adminWhatsapp.toast.resentAll'),
+    onSuccess: invalidate,
+  });
+  const dismissFailedM = useAdminMutation({
+    mutationFn: () => adminWhatsappApi.dismissFailed(),
+    successMessage: t('adminWhatsapp.toast.dismissedFailed'),
     onSuccess: invalidate,
   });
 
@@ -191,6 +196,14 @@ const HealthPanel = ({ health }: { health: WhatsappHealth }) => {
         {(health.queue.stuck ?? health.queue.failed) > 0 && (
           <Button size="sm" variant="secondary" onClick={() => resendAllM.mutate()} loading={resendAllM.isPending}>
             <RefreshCw className="h-4 w-4" /> {t('adminWhatsapp.resendAll', { n: health.queue.stuck ?? health.queue.failed })}
+          </Button>
+        )}
+        {/* Pendant de « Renvoyer tout » : renoncer plutôt que retenter. Annule
+            sans supprimer (compteur « Annulés »), donc ne vise que `failed` —
+            jamais les fiches en attente d'un backoff, qui repartiront seules. */}
+        {health.queue.failed > 0 && (
+          <Button size="sm" variant="secondary" onClick={() => dismissFailedM.mutate()} loading={dismissFailedM.isPending}>
+            <XCircle className="h-4 w-4" /> {t('adminWhatsapp.dismissFailed', { n: health.queue.failed })}
           </Button>
         )}
         {health.last_ready_at && (

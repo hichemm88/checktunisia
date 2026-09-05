@@ -359,6 +359,7 @@
     "sendTest": "Test message",
     "resend": "Resend",
     "resendAll": "Retry all ({{n}})",
+    "dismissFailed": "Dismiss failed ({{n}})",
     "lastReady": "Last connected",
     "allProperties": "All properties",
     "allStatuses": "All statuses",
@@ -393,7 +394,8 @@
       "resumed": "Sending resumed.",
       "testSent": "Test message queued.",
       "resent": "Message re-queued.",
-      "resentAll": "All failed messages re-queued."
+      "resentAll": "All failed messages re-queued.",
+      "dismissedFailed": "Failed fiches were cancelled (kept in the log)."
     },
     "photoAttached": "Photo attached",
     "sentTo": "Recipient:",
