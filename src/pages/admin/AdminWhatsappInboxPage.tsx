@@ -18,11 +18,13 @@ import {
   type InboxConversation,
   type InboxEntry,
   type InboxFilter,
+  type InboxReaction,
   type InboxReplyCapability,
 } from '@/api/admin/whatsappInbox';
 import { ListSkeleton } from '@/components/ui/ListSkeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
+import { useUnreadAuthorityReplies, useDecrementUnreadAuthorityReplies } from '@/hooks/useUnreadAuthorityReplies';
 
 const FILTERS: InboxFilter[] = ['all', 'unread', 'awaiting', 'replied'];
 
@@ -70,12 +72,28 @@ const DeliveryTicks = ({ status }: { status: string | null }) => {
   );
 };
 
+/**
+ * Le chip emoji accroché au coin d'une bulle — jamais un message à part.
+ * Positionné en chevauchement, comme sur WhatsApp ; le survol donne l'heure.
+ */
+const ReactionChip = ({ reaction }: { reaction: InboxReaction }) => {
+  const { t } = useTranslation();
+  return (
+    <span
+      className="absolute -bottom-2 end-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full border border-white bg-white px-1 text-xs shadow-sm"
+      title={t('whatsappInbox.reactedAt', { at: formatTime(reaction.at) })}
+    >
+      {reaction.emoji}
+    </span>
+  );
+};
+
 /** Une fiche de police dans la chronologie : un événement, pas une bulle. */
 const FicheBubble = ({ entry }: { entry: Extract<InboxEntry, { kind: 'fiche' }> }) => {
   const { t } = useTranslation();
   return (
     <div className="flex justify-end">
-      <div className="max-w-[80%] rounded-2xl rounded-ee-sm border border-gray-200 bg-white p-3">
+      <div className="relative max-w-[80%] rounded-2xl rounded-ee-sm border border-gray-200 bg-white p-3">
         <p className="flex items-center gap-1.5 text-xs font-bold" style={{ color: 'var(--qayed-cachet)' }}>
           <FileText className="h-3.5 w-3.5" />
           {entry.is_test ? t('whatsappInbox.testFiche') : t('whatsappInbox.ficheSent')}
@@ -92,6 +110,7 @@ const FicheBubble = ({ entry }: { entry: Extract<InboxEntry, { kind: 'fiche' }> 
           <DeliveryTicks status={entry.error ? 'failed' : entry.delivery_status} />
           {entry.read_at && <span>{t('whatsappInbox.readAt', { at: formatTime(entry.read_at) })}</span>}
         </div>
+        {entry.reaction && <ReactionChip reaction={entry.reaction} />}
       </div>
     </div>
   );
@@ -105,7 +124,7 @@ const MessageBubble = ({ entry }: { entry: Extract<InboxEntry, { kind: 'message'
   return (
     <div className={inbound ? 'flex justify-start' : 'flex justify-end'}>
       <div
-        className={`max-w-[80%] rounded-2xl p-3 ${inbound ? 'rounded-ss-sm' : 'rounded-ee-sm'}`}
+        className={`relative max-w-[80%] rounded-2xl p-3 ${inbound ? 'rounded-ss-sm' : 'rounded-ee-sm'}`}
         style={
           inbound
             ? { background: 'var(--qayed-gris-100, #f3f4f6)' }
@@ -130,6 +149,7 @@ const MessageBubble = ({ entry }: { entry: Extract<InboxEntry, { kind: 'message'
           {entry.sent_by && <span>{entry.sent_by}</span>}
         </div>
         {entry.error && !inbound && <p className="mt-1 text-[11px] text-white/90">{entry.error}</p>}
+        {entry.reaction && <ReactionChip reaction={entry.reaction} />}
       </div>
     </div>
   );
@@ -220,6 +240,11 @@ export const AdminWhatsappInboxPage = () => {
   const [selected, setSelected] = useState<string | null>(null);
   const timelineEnd = useRef<HTMLDivElement>(null);
 
+  // Même hook que le badge de la sidebar : un seul chiffre, jamais deux
+  // sondages indépendants qui pourraient diverger.
+  const unreadTotal = useUnreadAuthorityReplies();
+  const decrementUnread = useDecrementUnreadAuthorityReplies();
+
   // La recherche part au clavier : une requête par frappe interrogerait la
   // base à chaque lettre pour un résultat que personne n'a le temps de lire.
   useEffect(() => {
@@ -290,12 +315,12 @@ export const AdminWhatsappInboxPage = () => {
       <div className="flex flex-wrap items-center gap-2">
         <Inbox className="h-5 w-5" style={{ color: 'var(--qayed-cachet)' }} />
         <h1 className="qayed-display text-xl text-gray-900">{t('whatsappInbox.pageTitle')}</h1>
-        {(list?.meta.unread_total ?? 0) > 0 && (
+        {unreadTotal > 0 && (
           <span
             className="rounded-full px-2 py-0.5 text-xs font-bold text-white"
             style={{ background: 'var(--qayed-cachet)' }}
           >
-            {list?.meta.unread_total}
+            {unreadTotal}
           </span>
         )}
       </div>
@@ -338,7 +363,22 @@ export const AdminWhatsappInboxPage = () => {
             {conversations.map((c) => (
               <button
                 key={c.id}
-                onClick={() => setSelected(c.id)}
+                onClick={() => {
+                  setSelected(c.id);
+                  if (c.unread_count > 0) {
+                    // Optimiste : le serveur marquera le fil lu au chargement
+                    // du thread, mais l'administrateur ne doit pas voir le
+                    // badge rester affiché pendant l'aller-retour réseau.
+                    decrementUnread(c.unread_count);
+                    queryClient.setQueryData<typeof list>(['admin-whatsapp-inbox', debounced, filter], (prev) =>
+                      prev && {
+                        ...prev,
+                        data: prev.data.map((x) => (x.id === c.id ? { ...x, unread_count: 0 } : x)),
+                        meta: { ...prev.meta, unread_total: Math.max(0, prev.meta.unread_total - c.unread_count) },
+                      },
+                    );
+                  }
+                }}
                 aria-current={selected === c.id}
                 className={`flex w-full flex-col items-start gap-0.5 border-b border-gray-50 px-4 py-3 text-start transition-colors hover:bg-gray-50 ${selected === c.id ? 'bg-gray-50' : ''}`}
               >

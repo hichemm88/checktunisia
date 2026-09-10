@@ -1757,6 +1757,7 @@
     "ficheSent": "Fiche de police transmise",
     "testFiche": "Fiche de test",
     "readAt": "Lue le {{at}}",
+    "reactedAt": "Réaction reçue le {{at}}",
     "replyPlaceholder": "Votre réponse à l'autorité…",
     "send": "Envoyer",
     "replySent": "Réponse envoyée.",

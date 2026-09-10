@@ -10,12 +10,14 @@ import type { InboxConversation, InboxThread, InboxListMeta } from '@/api/admin/
 const list = vi.fn();
 const thread = vi.fn();
 const reply = vi.fn();
+const unreadCount = vi.fn();
 
 vi.mock('@/api/admin/whatsappInbox', () => ({
   adminWhatsappInboxApi: {
     list: (params: unknown) => list(params),
     thread: (id: string) => thread(id),
     reply: (id: string, message: string) => reply(id, message),
+    unreadCount: () => unreadCount(),
   },
 }));
 
@@ -102,6 +104,7 @@ const OPEN_THREAD: InboxThread = {
       delivered_at: '2026-09-02T14:25:30Z',
       read_at: '2026-09-02T14:26:00Z',
       error: null,
+      reaction: null,
     },
     {
       kind: 'message',
@@ -120,6 +123,7 @@ const OPEN_THREAD: InboxThread = {
       read_at: null,
       error: null,
       sent_by: null,
+      reaction: null,
     },
   ],
   reply: { allowed: true, window_closes_at: '2026-09-03T14:32:00Z', max_length: 4096, reason: null },
@@ -140,6 +144,9 @@ describe('écran Réponses des autorités', () => {
     list.mockResolvedValue({ data: CONVERSATIONS, meta: META });
     thread.mockResolvedValue(OPEN_THREAD);
     reply.mockResolvedValue(OPEN_THREAD.timeline[1]);
+    // Même source que `meta.unread_total` : les fixtures sont volontairement
+    // égales pour ne pas laisser croire à deux compteurs indépendants.
+    unreadCount.mockResolvedValue(META.unread_total);
   });
 
   it("va rechercher les nouveaux messages sans qu'on recharge la page", async () => {
@@ -263,6 +270,27 @@ describe('écran Réponses des autorités', () => {
     fireEvent.click(screen.getByText('BEN SALAH Karim'));
 
     await waitFor(() => expect(screen.getByText('Image')).toBeTruthy());
+  });
+
+  it('accroche une réaction reçue sur la bulle visée, jamais comme message à part', async () => {
+    thread.mockResolvedValue({
+      ...OPEN_THREAD,
+      timeline: [
+        OPEN_THREAD.timeline[0],
+        { ...OPEN_THREAD.timeline[1], reaction: { emoji: '👍', at: '2026-09-02T14:33:00Z' } },
+      ],
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('BEN SALAH Karim')).toBeTruthy());
+    fireEvent.click(screen.getByText('BEN SALAH Karim'));
+
+    // L'emoji apparaît (comme chip sur la bulle), mais le fil garde EXACTEMENT
+    // ses deux entrées d'origine (fiche + message) : la réaction n'en ajoute
+    // aucune troisième.
+    await waitFor(() => expect(screen.getByText('👍')).toBeTruthy());
+    expect(screen.getByText('Fiche de police transmise')).toBeTruthy();
+    expect(screen.getAllByText('Merci, bien reçu').length).toBeGreaterThan(0);
   });
 
   it('filtre sur les fils en attente de réponse', async () => {

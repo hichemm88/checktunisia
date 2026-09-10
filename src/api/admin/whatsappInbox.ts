@@ -46,6 +46,12 @@ export interface InboxConversation {
   service_window_closes_at: string | null;
 }
 
+/** Réaction emoji actuellement posée sur un message ou une fiche (jamais retirée). */
+export interface InboxReaction {
+  emoji: string;
+  at: string | null;
+}
+
 export interface InboxFicheEntry {
   kind: 'fiche';
   id: string;
@@ -63,6 +69,7 @@ export interface InboxFicheEntry {
   delivered_at: string | null;
   read_at: string | null;
   error: string | null;
+  reaction: InboxReaction | null;
 }
 
 export interface InboxMessageEntry {
@@ -83,6 +90,7 @@ export interface InboxMessageEntry {
   read_at: string | null;
   error: string | null;
   sent_by: string | null;
+  reaction: InboxReaction | null;
 }
 
 export type InboxEntry = InboxFicheEntry | InboxMessageEntry;
@@ -122,4 +130,12 @@ export const adminWhatsappInboxApi = {
     api
       .post<{ data: InboxMessageEntry }>(`/admin/whatsapp/inbox/${id}/reply`, { message })
       .then((r) => r.data.data),
+
+  /**
+   * Même définition que `meta.unread_total` de `list()` ci-dessus — un
+   * endpoint dédié, léger, pour que le badge de la sidebar n'ait pas besoin
+   * de charger toute la liste des fils depuis n'importe quel écran.
+   */
+  unreadCount: () =>
+    api.get<{ data: { count: number } }>('/admin/whatsapp/inbox/unread-count').then((r) => r.data.data.count),
 };

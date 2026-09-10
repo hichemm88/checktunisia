@@ -13,10 +13,14 @@ import { adminSearchApi, type GlobalSearchResult } from '@/api/admin/search';
 import { QayedStamp } from '@/components/ui/QayedStamp';
 import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher';
 import { PasskeyPromptBanner } from '@/components/security/PasskeyPromptBanner';
+import { useUnreadAuthorityReplies } from '@/hooks/useUnreadAuthorityReplies';
 import { SkipToContent, MAIN_CONTENT_ID } from './SkipToContent';
 
-interface NavItem { to: string; icon: typeof LayoutDashboard; label: string }
+interface NavItem { to: string; icon: typeof LayoutDashboard; label: string; badge?: number }
 interface NavGroup { title?: string; items: NavItem[] }
+
+/** `99+` au-delà de 99 : un badge de nav n'a pas à afficher un compte exact à trois chiffres. */
+const badgeLabel = (count: number) => (count > 99 ? '99+' : String(count));
 
 /**
  * Navigation admin regroupée par thème : le tableau de bord isolé en tête, puis
@@ -26,6 +30,7 @@ interface NavGroup { title?: string; items: NavItem[] }
  */
 const useNavGroups = (): NavGroup[] => {
   const { t } = useTranslation();
+  const unreadAuthorityReplies = useUnreadAuthorityReplies();
   return [
     { items: [
       { to: '/admin/dashboard',     icon: LayoutDashboard, label: t('adminLayout.nav.dashboard') },
@@ -54,7 +59,10 @@ const useNavGroups = (): NavGroup[] => {
       { to: '/admin/activity',      icon: Activity,        label: t('adminLayout.nav.activity') },
       // MODULE PROVISOIRE — relais WhatsApp (à retirer après homologation MI).
       { to: '/admin/whatsapp',      icon: MessageCircle,   label: t('adminLayout.nav.whatsapp') },
-      { to: '/admin/whatsapp/inbox', icon: Inbox,        label: t('adminLayout.nav.whatsappInbox') },
+      {
+        to: '/admin/whatsapp/inbox', icon: Inbox, label: t('adminLayout.nav.whatsappInbox'),
+        badge: unreadAuthorityReplies > 0 ? unreadAuthorityReplies : undefined,
+      },
     ] },
   ];
 };
@@ -227,7 +235,7 @@ const SidebarContent = ({ onNavigate, onLogout }: { onNavigate?: () => void; onL
               <p className="px-3 pb-1.5 text-xs font-bold uppercase tracking-wider text-white/35">{group.title}</p>
             )}
             <div className="flex flex-col gap-0.5">
-              {group.items.map(({ to, icon: Icon, label }) => (
+              {group.items.map(({ to, icon: Icon, label, badge }) => (
                 <NavLink
                   key={to}
                   to={to}
@@ -240,7 +248,15 @@ const SidebarContent = ({ onNavigate, onLogout }: { onNavigate?: () => void; onL
                   style={({ isActive }) => (isActive ? { background: 'var(--qayed-cachet)' } : undefined)}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  {label}
+                  <span className="flex-1 truncate">{label}</span>
+                  {!!badge && (
+                    <span
+                      className="shrink-0 rounded-full bg-white px-1.5 py-0.5 text-[10px] font-bold"
+                      style={{ color: 'var(--qayed-cachet)' }}
+                    >
+                      {badgeLabel(badge)}
+                    </span>
+                  )}
                 </NavLink>
               ))}
             </div>

@@ -1757,6 +1757,7 @@
     "ficheSent": "Police sheet sent",
     "testFiche": "Test sheet",
     "readAt": "Read on {{at}}",
+    "reactedAt": "Reaction received on {{at}}",
     "replyPlaceholder": "Your reply to the authority…",
     "send": "Send",
     "replySent": "Reply sent.",
