@@ -75,9 +75,13 @@ export const FicheWidgetPage = ({ token }: { token: string }) => {
   }, [token]);
 
   const handleAddGuest = async (guest: GuestInput) => {
-    const added = await ficheWidgetApi.addGuest(guest);
-    setGuests((g) => [...g, { ...added, removable: true }]);
-    setShowForm(false);
+    try {
+      const added = await ficheWidgetApi.addGuest(guest);
+      setGuests((g) => [...g, { ...added, removable: true }]);
+      setShowForm(false);
+    } catch (err) {
+      throw new Error(extractWidgetError(err).message);
+    }
   };
 
   const handleRemoveGuest = async (guestId: string) => {
