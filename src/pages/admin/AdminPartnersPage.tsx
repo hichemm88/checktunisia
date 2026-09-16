@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Building2, Copy, Globe2, KeyRound, Link2, Plug, Plus, RefreshCw, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Building2, Copy, Globe2, KeyRound, Link2, Pencil, Plug, Plus, RefreshCw, Trash2, X } from 'lucide-react';
 import {
   adminPartnersApi,
   type AdminPartner,
@@ -50,6 +50,78 @@ const CreatePartnerForm = ({ onDone }: { onDone: () => void }) => {
         <Button size="sm" loading={mut.isPending} disabled={!name} onClick={() => mut.mutate()}>{t('common.add')}</Button>
         <Button size="sm" variant="ghost" onClick={onDone}>{t('common.cancel')}</Button>
       </div>
+    </div>
+  );
+};
+
+// ─── Origines widget autorisées ─────────────────────────────────────────────
+
+/** Schéma https + hôte (+ port optionnel), rien d'autre — même règle que côté serveur (PartnerAdminController::ORIGIN_REGEX). */
+const ORIGIN_REGEX = /^https:\/\/[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?(:\d{1,5})?$/;
+
+const OriginsSection = ({ partnerId }: { partnerId: string }) => {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const { data: detail } = useQuery({ queryKey: ['admin-partner-detail', partnerId], queryFn: () => adminPartnersApi.show(partnerId) });
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (detail && !editing) setText(detail.allowed_widget_origins.join(', '));
+  }, [detail, editing]);
+
+  const updateMut = useAdminMutation({
+    mutationFn: (origins: string[]) => adminPartnersApi.update(partnerId, { allowed_widget_origins: origins }),
+    successMessage: t('adminPartners.originsSaved'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-partner-detail', partnerId] }); setEditing(false); },
+  });
+
+  const save = () => {
+    const origins = text.split(',').map((o) => o.trim()).filter(Boolean);
+    const invalid = origins.find((o) => !ORIGIN_REGEX.test(o));
+    if (invalid) {
+      setError(t('adminPartners.originInvalid', { origin: invalid }));
+      return;
+    }
+    setError(null);
+    updateMut.mutate(origins);
+  };
+
+  return (
+    <div>
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('adminPartners.widgetOrigins')}</p>
+
+      {!editing ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap gap-1.5">
+            {(detail?.allowed_widget_origins ?? []).map((o) => (
+              <span key={o} className="rounded-full bg-white border border-gray-100 px-2 py-0.5 text-xs font-mono">{o}</span>
+            ))}
+            {detail && detail.allowed_widget_origins.length === 0 && (
+              <p className="text-xs text-gray-400">{t('adminPartners.noOrigins')}</p>
+            )}
+          </div>
+          <Button size="sm" variant="secondary" onClick={() => setEditing(true)} className="w-fit">
+            <Pencil className="h-3.5 w-3.5" /> {t('common.edit')}
+          </Button>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2">
+          <Input
+            label={t('adminPartners.widgetOrigins')}
+            hint={t('adminPartners.widgetOriginsHint')}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="https://diar.example"
+          />
+          {error && <p className="text-xs text-red-500">{error}</p>}
+          <div className="flex gap-2">
+            <Button size="sm" loading={updateMut.isPending} onClick={save}>{t('common.save')}</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setError(null); }}>{t('common.cancel')}</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -366,6 +438,7 @@ export const AdminPartnersPage = () => {
 
               <MetricsSection partnerId={selected.id} />
               <KeysSection partnerId={selected.id} />
+              <OriginsSection partnerId={selected.id} />
               <LinksSection partnerId={selected.id} />
               <WebhooksSection partnerId={selected.id} />
             </div>

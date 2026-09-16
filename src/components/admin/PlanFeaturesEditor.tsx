@@ -16,6 +16,8 @@ export interface FeatureValues {
   /** Quota mensuel de check-ins — jamais bloquant (alertes + facturation du dépassement). */
   checkins_per_month: string;
   whatsapp_relay: boolean | null; // null (overrides) = hériter du pack
+  /** Accès à l'API publique v1 + widget embarqué (partenaires). */
+  api_access: boolean | null; // null (overrides) = hériter du pack
 }
 
 export const featureValuesFrom = (features: Record<string, unknown> | null | undefined, asOverrides = false): FeatureValues => ({
@@ -26,6 +28,9 @@ export const featureValuesFrom = (features: Record<string, unknown> | null | und
   whatsapp_relay: features && 'whatsapp_relay' in features
     ? Boolean(features.whatsapp_relay)
     : (asOverrides ? null : true),
+  api_access: features && 'api_access' in features
+    ? Boolean(features.api_access)
+    : (asOverrides ? null : false),
 });
 
 /** Payload API : clés omises quand « hérité », null quand illimité explicite. */
@@ -43,6 +48,7 @@ export const featureValuesToPayload = (v: FeatureValues, asOverrides = false): R
   num(v.ocr_scans_per_month, 'ocr_scans_per_month');
   num(v.checkins_per_month, 'checkins_per_month');
   if (v.whatsapp_relay !== null) out.whatsapp_relay = v.whatsapp_relay;
+  if (v.api_access !== null) out.api_access = v.api_access;
   return out;
 };
 
@@ -87,6 +93,22 @@ export const PlanFeaturesEditor = ({ value, onChange, asOverrides = false, usage
         </label>
         {asOverrides && value.whatsapp_relay !== null && (
           <button type="button" className="text-xs text-gray-400 underline hover:text-gray-600" onClick={() => set('whatsapp_relay', null)}>
+            {t('planFeatures.inherit')}
+          </button>
+        )}
+      </div>
+      <div className="flex items-center gap-4">
+        <label className="flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            ref={(el) => { if (el) el.indeterminate = value.api_access === null; }}
+            checked={value.api_access === true}
+            onChange={(e) => set('api_access', e.target.checked)}
+          />
+          {t('planFeatures.apiAccess')}
+        </label>
+        {asOverrides && value.api_access !== null && (
+          <button type="button" className="text-xs text-gray-400 underline hover:text-gray-600" onClick={() => set('api_access', null)}>
             {t('planFeatures.inherit')}
           </button>
         )}

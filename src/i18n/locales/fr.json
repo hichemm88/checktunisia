@@ -1523,6 +1523,7 @@
     "maxUsers": "Utilisateurs",
     "ocrScans": "Scans OCR / mois",
     "whatsappRelay": "Relais WhatsApp police",
+    "apiAccess": "Accès API partenaires",
     "on": "actif",
     "off": "coupé",
     "unlimitedHint": "Champ vide = illimité. Ces limites sont réellement appliquées côté serveur (web et mobile).",
@@ -2113,7 +2114,12 @@
     "sessionsCreated": "Sessions créées",
     "fichesSubmitted": "Fiches soumises",
     "completionRate": "Taux de complétion",
-    "webhookErrors": "Erreurs webhook"
+    "webhookErrors": "Erreurs webhook",
+    "widgetOrigins": "Origines widget autorisées",
+    "widgetOriginsHint": "Séparées par des virgules. Origine complète uniquement (https://hôte), sans chemin ni caractère générique — ex. https://diar.example",
+    "noOrigins": "Aucune origine autorisée pour l'instant — le widget refusera de s'ouvrir en iframe.",
+    "originInvalid": "Origine invalide : « {{origin}} » — format attendu https://hôte, sans chemin ni astérisque.",
+    "originsSaved": "Origines widget mises à jour."
   },
   "integrations": {
     "title": "Intégrations",
