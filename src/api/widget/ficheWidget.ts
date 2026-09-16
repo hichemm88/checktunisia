@@ -84,9 +84,10 @@ export const ficheWidgetApi = {
 
   removeGuest: (guestId: string) => widgetApi.delete(`/guests/${guestId}`),
 
-  uploadScan: (file: Blob) => {
+  uploadScan: (file: Blob, documentType: 'cin' | 'passport' = 'cin') => {
     const form = new FormData();
     form.append('passport_image', file, 'document.jpg');
+    form.append('document_type', documentType);
     return widgetApi
       .post<{ data: { scan_id: string; status: string } }>('/scan', form, {
         headers: { 'Content-Type': 'multipart/form-data' },

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Camera } from 'lucide-react';
+import { Camera, BookUser } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -30,6 +30,7 @@ export const GuestForm = ({
   const { t } = useTranslation();
   const [guest, setGuest] = useState<GuestInput>({ ...emptyGuest(), ...prefill });
   const [scanning, setScanning] = useState(false);
+  const [scanDocType, setScanDocType] = useState<'cin' | 'passport'>('cin');
   const [scanId, setScanId] = useState<string | null>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -44,7 +45,7 @@ export const GuestForm = ({
     setScanning(false);
     setScanError(null);
     try {
-      const { scan_id } = await ficheWidgetApi.uploadScan(blob);
+      const { scan_id } = await ficheWidgetApi.uploadScan(blob, scanDocType);
       setScanId(scan_id);
       // Court sondage — le scan aboutit en quelques secondes.
       for (let i = 0; i < 15; i++) {
@@ -96,14 +97,25 @@ export const GuestForm = ({
 
   return (
     <div className="space-y-4 rounded-2xl border border-qayed-ligne bg-white p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h3 className="font-display text-base font-bold text-qayed-encre">{t('widget.newGuest')}</h3>
-        <Button variant="secondary" size="sm" onClick={() => setScanning(true)}>
-          <Camera className="h-4 w-4" aria-hidden="true" /> {t('widget.scanDocument')}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" size="sm" onClick={() => { setScanDocType('cin'); setScanning(true); }}>
+            <Camera className="h-4 w-4" aria-hidden="true" /> {t('widget.scanCin')}
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => { setScanDocType('passport'); setScanning(true); }}>
+            <BookUser className="h-4 w-4" aria-hidden="true" /> {t('widget.scanPassport')}
+          </Button>
+        </div>
       </div>
 
-      {scanning && <CINCapture onCapture={handleCapture} onClose={() => setScanning(false)} />}
+      {scanning && (
+        <CINCapture
+          variant={scanDocType === 'passport' ? 'mrz' : 'cin'}
+          onCapture={handleCapture}
+          onClose={() => setScanning(false)}
+        />
+      )}
       {scanError && <p className="text-sm text-qayed-erreur-texte">{scanError}</p>}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

@@ -23,7 +23,9 @@ const backendOrigin = () => {
 const ENDPOINTS: { method: string; path: string; desc: string }[] = [
   { method: 'POST', path: '/v1/establishment-links', desc: 'Échange un code de liaison contre un accès à un établissement.' },
   { method: 'GET', path: '/v1/establishments', desc: 'Liste les établissements liés à cette clé, avec leur quota.' },
+  { method: 'GET', path: '/v1/establishments/{hotel_id}/rooms', desc: 'Chambres réelles de l\'établissement — pour construire votre table de correspondance et envoyer room_id.' },
   { method: 'POST', path: '/v1/fiche-sessions', desc: 'Crée (ou réutilise) une session de fiche pour une réservation.' },
+  { method: 'GET', path: '/v1/fiche-sessions/by-booking-ref', desc: 'Retrouve la dernière session connue sans avoir gardé le session_id.' },
   { method: 'GET', path: '/v1/fiche-sessions/{session_id}', desc: 'Statut d\'une session (pending / submitted / expired).' },
   { method: 'GET', path: '/v1/fiches/{fiche_id}', desc: 'Détail d\'une fiche soumise.' },
 ];
