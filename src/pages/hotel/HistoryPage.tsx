@@ -388,6 +388,14 @@ export const HistoryPage = () => {
                           {t('hotelHistory.docExpired')}
                         </span>
                       )}
+                      {ci.source === 'api' && (
+                        <span
+                          className="ms-1.5 rounded-full px-1.5 py-0.5 text-xs font-bold align-middle"
+                          style={{ background: 'var(--qayed-cachet-dilue)', color: 'var(--qayed-cachet)' }}
+                        >
+                          {t('hotelHistory.viaPartner', { partner: ci.partner_name ?? '—' })}
+                        </span>
+                      )}
                     </span>
                     <span className="text-xs text-gray-400">
                       {fmtRange(ci.check_in_date, ci.expected_check_out_date, locale)}

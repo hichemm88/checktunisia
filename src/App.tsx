@@ -38,6 +38,7 @@ const AdminLayout = lazy(() => import('@/components/layout/AdminLayout').then((m
 const AdminMenusPage = lazy(() => import('@/pages/admin/AdminMenusPage').then((m) => ({ default: m.AdminMenusPage })));
 const AdminPageEditorPage = lazy(() => import('@/pages/admin/AdminPageEditorPage'));
 const AdminPagesPage = lazy(() => import('@/pages/admin/AdminPagesPage').then((m) => ({ default: m.AdminPagesPage })));
+const AdminPartnersPage = lazy(() => import('@/pages/admin/AdminPartnersPage').then((m) => ({ default: m.AdminPartnersPage })));
 const AdminPaymentsPage = lazy(() => import('@/pages/admin/AdminPaymentsPage').then((m) => ({ default: m.AdminPaymentsPage })));
 const AdminQuotasPage = lazy(() => import('@/pages/admin/AdminQuotasPage').then((m) => ({ default: m.AdminQuotasPage })));
 const AdminSubscriptionsPage = lazy(() => import('@/pages/admin/AdminSubscriptionsPage').then((m) => ({ default: m.AdminSubscriptionsPage })));
@@ -47,12 +48,14 @@ const AlertsPage = lazy(() => import('@/pages/authority/AlertsPage').then((m) =>
 const AuthorityDashboardPage = lazy(() => import('@/pages/authority/AuthorityDashboardPage').then((m) => ({ default: m.AuthorityDashboardPage })));
 const CheckInWizardPage = lazy(() => import('@/pages/hotel/CheckInWizardPage').then((m) => ({ default: m.CheckInWizardPage })));
 const DashboardPage = lazy(() => import('@/pages/hotel/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const DocsApiPage = lazy(() => import('@/pages/docs/DocsApiPage').then((m) => ({ default: m.DocsApiPage })));
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })));
 const GuestProfilePage = lazy(() => import('@/pages/authority/GuestProfilePage').then((m) => ({ default: m.GuestProfilePage })));
 const HistoryDetailPage = lazy(() => import('@/pages/hotel/HistoryDetailPage').then((m) => ({ default: m.HistoryDetailPage })));
 const HistoryPage = lazy(() => import('@/pages/hotel/HistoryPage').then((m) => ({ default: m.HistoryPage })));
 const HotelDetailPage = lazy(() => import('@/pages/authority/HotelDetailPage').then((m) => ({ default: m.HotelDetailPage })));
 const HotelsPage = lazy(() => import('@/pages/authority/HotelsPage').then((m) => ({ default: m.HotelsPage })));
+const IntegrationsPage = lazy(() => import('@/pages/hotel/IntegrationsPage').then((m) => ({ default: m.IntegrationsPage })));
 const OnboardingPage = lazy(() => import('@/pages/hotel/OnboardingPage').then((m) => ({ default: m.OnboardingPage })));
 const PaymentFailedPage = lazy(() => import('@/pages/hotel/PaymentFailedPage').then((m) => ({ default: m.PaymentFailedPage })));
 const PaymentSuccessPage = lazy(() => import('@/pages/hotel/PaymentSuccessPage').then((m) => ({ default: m.PaymentSuccessPage })));
@@ -188,6 +191,9 @@ export const App = () => (
         La homepage est la page CMS `home` (langue active), gérée dans l'admin. */}
     <Route path="/"         element={<PublicRoute element={<CmsPage slugOverride="home" />} />} />
     <Route path="/register" element={<PublicRoute element={<RegisterPage />} />} />
+    {/* Doc développeurs de l'API publique v1 — accessible sans connexion, y
+        compris à un intégrateur qui n'a pas de compte Qayed. */}
+    <Route path="/docs/api" element={<DocsApiPage />} />
     <Route path="/login"                element={<LoginPage />} />
     <Route path="/forgot-password"      element={<ForgotPasswordPage />} />
     <Route path="/set-password"         element={<SetPasswordPage />} />
@@ -229,6 +235,11 @@ export const App = () => (
                 abonnement sans pouvoir le modifier. */}
             <Route path="/hotel/subscription"   element={<SubscriptionPage />} />
           </Route>
+          {/* API publique v1 — section Intégrations, owner uniquement (comme
+              l'onboarding : le serveur protège aussi ces endpoints via org.owner). */}
+          <Route element={<RequireOrgOwner />}>
+            <Route path="/hotel/integrations"   element={<IntegrationsPage />} />
+          </Route>
           <Route path="/hotel/security"         element={<SecurityPage />} />
           <Route path="/hotel/payment/success"  element={<PaymentSuccessPage />} />
           <Route path="/hotel/payment/failed"   element={<PaymentFailedPage />} />
@@ -256,6 +267,7 @@ export const App = () => (
           <Route path="/admin/ai-costs"      element={<AdminAiCostsPage />} />
           <Route path="/admin/meta-costs"    element={<AdminMetaCostsPage />} />
           <Route path="/admin/hosts"         element={<AdminHostsPage />} />
+          <Route path="/admin/partners"      element={<AdminPartnersPage />} />
           <Route path="/admin/hotels"        element={<AdminHotelsPage />} />
           <Route path="/admin/users"         element={<AdminUsersPage />} />
           <Route path="/admin/authority"     element={<AdminAuthorityPage />} />

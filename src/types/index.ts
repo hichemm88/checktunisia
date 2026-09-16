@@ -66,6 +66,9 @@ export interface CheckIn {
   primary_guest?: { first_name: string; last_name: string; nationality_code: string };
   created_by?: { id: string; first_name: string; last_name: string };
   completed_at?: string; created_at: string;
+  /** API publique v1 : 'api' pour une fiche créée par un partenaire, 'native' sinon. */
+  source?: 'native' | 'api';
+  partner_name?: string | null;
 }
 
 export interface SubscriptionPlan {

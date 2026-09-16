@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Building, CreditCard, Users, Plus, Trash2, Save,
   Pencil, X, MapPin, Send, Activity,
-  CheckCircle, AlertCircle, Download, Landmark, Gauge, TrendingUp, KeyRound,
+  CheckCircle, AlertCircle, Download, Landmark, Gauge, TrendingUp, KeyRound, Plug,
 } from 'lucide-react';
 import { HotelLayout } from '@/components/layout/HotelLayout';
 import { Card, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -631,6 +631,28 @@ const QuotaCard = ({ quota }: { quota: NonNullable<Awaited<ReturnType<typeof set
  * confirmation, paiement, résiliation, historique). Cet onglet reste la vue
  * de synthèse et les factures.
  */
+/** Renvoi vers la section Intégrations (API publique v1 — liaison partenaire PMS). */
+const IntegrationsTabCard = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>
+          <div className="flex items-center gap-2">
+            <Plug className="h-4 w-4 text-gray-400" /> {t('integrations.title')}
+          </div>
+        </CardTitle>
+      </CardHeader>
+      <div className="mt-3 flex flex-col gap-3">
+        <p className="text-sm text-gray-600">{t('integrations.subtitle')}</p>
+        <Button onClick={() => navigate('/hotel/integrations')}>{t('integrations.title')}</Button>
+      </div>
+    </Card>
+  );
+};
+
 const ManageSubscriptionCard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -1058,7 +1080,7 @@ const DestinatairesTab = () => {
   );
 };
 
-type Tab = 'societe' | 'equipe' | 'destinataires' | 'activite' | 'abonnement';
+type Tab = 'societe' | 'equipe' | 'destinataires' | 'activite' | 'abonnement' | 'integrations';
 
 const TAB_DEFS: { id: Tab; labelKey: string; icon: React.ElementType }[] = [
   { id: 'societe',       labelKey: 'settingsPage.tabCompany',      icon: Building   },
@@ -1066,6 +1088,7 @@ const TAB_DEFS: { id: Tab; labelKey: string; icon: React.ElementType }[] = [
   { id: 'destinataires', labelKey: 'settingsPage.recipientsTab',   icon: Send       },
   { id: 'activite',      labelKey: 'settingsPage.activity',        icon: Activity   },
   { id: 'abonnement',    labelKey: 'settingsPage.subscription',    icon: CreditCard },
+  { id: 'integrations',  labelKey: 'integrations.title',           icon: Plug       },
 ];
 
 export const SettingsPage = () => {
@@ -1080,6 +1103,7 @@ export const SettingsPage = () => {
   const visibleTabs = TAB_DEFS.filter(td => {
     if (td.id === 'societe' || td.id === 'equipe') return isOwner;
     if (td.id === 'destinataires' || td.id === 'activite') return isAdmin;
+    if (td.id === 'integrations') return isOwner;
     return isOwner || !isAdmin; // abonnement : owner + comportement réceptionniste inchangé
   });
   // ?tab=abonnement — deep-link depuis le bandeau quota du dashboard,
@@ -1123,6 +1147,7 @@ export const SettingsPage = () => {
           {tab === 'destinataires' && isAdmin && <DestinatairesTab />}
           {tab === 'activite'     && isAdmin && <ActiviteTab />}
           {tab === 'abonnement'   && (isOwner || !isAdmin) && <AbonnementTab />}
+          {tab === 'integrations' && isOwner && <IntegrationsTabCard />}
         </div>
 
       </div>
