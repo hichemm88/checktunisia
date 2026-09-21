@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <g transform="rotate(-6 24 24)">
+    <rect x="4" y="4" width="40" height="40" rx="9" fill="#F6F5F1" stroke="#5346A8" stroke-width="3.2"/>
+    <text x="24" y="25" text-anchor="middle" dominant-baseline="central" font-family="'IBM Plex Sans Arabic', Tahoma, Arial, sans-serif" font-weight="700" font-size="19" fill="#5346A8">قيد</text>
+  </g>
+</svg>
