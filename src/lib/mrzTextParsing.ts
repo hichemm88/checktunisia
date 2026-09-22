@@ -10,6 +10,7 @@
  */
 
 import { parse as mrzParse } from 'mrz';
+import { isSuspiciousName, sameName } from './namePlausibility';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -286,5 +287,20 @@ export function parseOcrText(text: string): { data: MrzData; confident: boolean 
 
   // Nom de famille au minimum pour considérer qu'on a une lecture.
   if (!data.last_name) return null;
-  return { data, confident: isConfidentRead(result) };
+
+  /*
+   * Les chiffres de contrôle ne protègent AUCUN caractère du nom (ligne 1
+   * MRZ) : une lecture aux chiffres impeccables peut porter un nom lu de
+   * travers (texte d'étiquette happé au lieu du nom imprimé — voir
+   * namePlausibility.ts). On l'ajoute donc à la décision « confiant » : un
+   * nom qui a cette forme bascule sur Claude vision comme une vraie faute de
+   * lecture, plutôt que d'être gardé tel quel parce que le numéro/la date
+   * concordaient.
+   */
+  const namesLookReal =
+    !isSuspiciousName(data.first_name) &&
+    !isSuspiciousName(data.last_name) &&
+    !sameName(data.first_name, data.last_name);
+
+  return { data, confident: isConfidentRead(result) && namesLookReal };
 }

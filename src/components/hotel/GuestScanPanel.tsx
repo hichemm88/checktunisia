@@ -22,6 +22,7 @@ import { scanCin } from '@/api/scanCin';
 import { scanMrzVision } from '@/api/scanMrz';
 import { reportLocalMrzScan } from '@/api/scanEvents';
 import { useAuthStore } from '@/stores/authStore';
+import { isSuspiciousName, sameName } from '@/lib/namePlausibility';
 import { type CheckIn, type CinConfidence, type CinScanResponse } from '@/types';
 
 // ─── Pastille de confiance (scan CIN uniquement) ──────────────────────────────
@@ -116,7 +117,13 @@ export const GuestScanPanel = ({
   // ── Capture caméra in-app (partagée CIN / MRZ) ─────────────────────────────
   const [capture, setCapture] = useState<null | 'cin' | 'mrz'>(null);
   const [cinScan, setCinScan] = useState<CinScanResponse | null>(null);
-  const [conf, setConf] = useState<{ cinNumber: CinConfidence; names: CinConfidence; birthDate: CinConfidence } | null>(null);
+  // Les trois champs sont indépendamment nullables : le chemin MRZ/passeport
+  // (ci-dessous) n'a de jugement de confiance QUE sur le nom, jamais sur le
+  // numéro de document ni la date — leur laisser `null` évite d'afficher une
+  // pastille verte « fiable » sur un champ qui n'a simplement pas été jugé.
+  const [conf, setConf] = useState<{
+    cinNumber: CinConfidence | null; names: CinConfidence | null; birthDate: CinConfidence | null;
+  } | null>(null);
   const [cinImageUrl, setCinImageUrl] = useState<string | null>(null);
   const [cinError, setCinError] = useState<string | null>(null);
   const [usedExisting, setUsedExisting] = useState(false);
@@ -165,15 +172,29 @@ export const GuestScanPanel = ({
   };
 
   // Remplit le formulaire à partir d'une lecture MRZ (locale OU Claude vision).
+  //
+  // Dernier filet, quelle que soit la SOURCE (local, vision, ou vision
+  // indisponible → repli sur le local douteux) : aucun chiffre de contrôle
+  // MRZ ne protège le nom (ligne 1), donc rien en amont ne peut garantir que
+  // ce texte est bien un nom plutôt qu'une légende imprimée happée par
+  // erreur — voir namePlausibility.ts, né d'un incident réel où une fiche
+  // est partie avec un nom illisible vers une autorité. Un champ suspect est
+  // vidé (jamais transmis tel quel) et signalé par la pastille rouge déjà
+  // utilisée pour le scan CIN ; les champs requis bloquent alors la
+  // soumission jusqu'à correction manuelle.
   const applyMrz = (mrz: {
     first_name?: string | null; last_name?: string | null; date_of_birth?: string | null;
     sex?: 'M' | 'F' | 'X' | null; nationality_code?: string | null; document_type?: string;
     document_number?: string | null; issuing_country_code?: string | null; expiry_date?: string | null;
   }) => {
+    const bothIdentical = sameName(mrz.first_name, mrz.last_name);
+    const firstSuspicious = bothIdentical || isSuspiciousName(mrz.first_name);
+    const lastSuspicious = bothIdentical || isSuspiciousName(mrz.last_name);
+
     setGuestForm((f) => ({
       ...f,
-      first_name: mrz.first_name ?? '',
-      last_name: mrz.last_name ?? '',
+      first_name: firstSuspicious ? '' : mrz.first_name ?? '',
+      last_name: lastSuspicious ? '' : mrz.last_name ?? '',
       date_of_birth: mrz.date_of_birth ?? '',
       sex: mrz.sex === 'M' || mrz.sex === 'F' || mrz.sex === 'X' ? mrz.sex : undefined,
       nationality_code: mrz.nationality_code ?? '',
@@ -183,6 +204,14 @@ export const GuestScanPanel = ({
       expiry_date: mrz.expiry_date ?? '',
       is_primary: isPrimary,
     }));
+
+    if (firstSuspicious || lastSuspicious) {
+      setConf({ cinNumber: null, names: 'low', birthDate: null });
+      toast(t('guestScan.nameLooksWrong'), 'error');
+    } else {
+      setConf(null);
+    }
+
     setExtractedOk(true);
     setScanState('done');
   };
@@ -431,11 +460,13 @@ export const GuestScanPanel = ({
 
   const isCin = scanKind === 'cin' && !!cinScan;
   // Focus auto sur le premier champ non-`high` (ordre : numéro, nom, prénom, date).
+  // `null` = ce champ n'a simplement pas été jugé (chemin MRZ/passeport, qui
+  // ne juge que le nom) : à ne pas confondre avec « jugé et à revoir ».
   const focusKey =
     !conf ? null
-    : conf.cinNumber !== 'high' ? 'document_number'
-    : conf.names !== 'high' ? 'last_name'
-    : conf.birthDate !== 'high' ? 'date_of_birth'
+    : conf.cinNumber && conf.cinNumber !== 'high' ? 'document_number'
+    : conf.names && conf.names !== 'high' ? 'last_name'
+    : conf.birthDate && conf.birthDate !== 'high' ? 'date_of_birth'
     : null;
 
   const reset = () => {

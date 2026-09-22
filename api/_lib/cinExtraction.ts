@@ -6,6 +6,7 @@
 
 import { z } from 'zod';
 import { parseTunisianBirthDate } from './tunisianMonths.js';
+import { isSuspiciousName, sameName } from './namePlausibility.js';
 
 // ─── Prompt système (à intégrer tel quel — cf. §4 du document d'implémentation) ──
 
@@ -140,8 +141,16 @@ export function parseCinResponse(rawText: string) {
     nationality: 'TUN' as const,
     confidence: {
       cinNumber: cinNumber ? d.confidence.cinNumber : ('low' as const),
-      // La translittération latine n'est jamais mieux que `medium`.
-      names: capMedium(d.confidence.names),
+      // La translittération latine n'est jamais mieux que `medium` — et
+      // retombe à `low` (champ vidé côté écran, saisie manuelle exigée) si sa
+      // FORME évoque une légende imprimée happée par erreur plutôt qu'un nom :
+      // aucun chiffre de contrôle ne protège ce champ, voir namePlausibility.ts.
+      names:
+        isSuspiciousName(d.lastNameLatin) ||
+        isSuspiciousName(d.firstNameLatin) ||
+        sameName(d.lastNameLatin, d.firstNameLatin)
+          ? ('low' as const)
+          : capMedium(d.confidence.names),
       birthDate: birthDate ? d.confidence.birthDate : ('low' as const),
     },
   };

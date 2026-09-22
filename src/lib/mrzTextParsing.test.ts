@@ -249,6 +249,24 @@ describe('parseOcrText (integration: OCR text → MrzData + confident)', () => {
     if (result) expect(result.confident).toBe(false);
   });
 
+  it('is not confident when the surname is a printed label, not a name, even with perfect check digits', () => {
+    /*
+     * Reproduces a real incident: a transmitted fiche carried the surname
+     * "ABEEXPEDIGAQIDATEOFISSUEAUTORIDADEAUTHO" — the OCR had read printed
+     * bio-page captions ("Data de Emissão/Date of Issue",
+     * "Autoridade/Authority") instead of the actual printed name. No MRZ
+     * check digit protects the name field (line 1 carries none at all), so
+     * this MRZ is built with fully VALID check digits on every other field —
+     * proving the name-shape check is what catches it, not luck.
+     */
+    const [line1, line2] = buildTd3('ABEEXPEDIGAQIDATEOFISSUEAUTORIDADEAUTHO', '', {
+      docNumber: 'FW972947', nationality: 'BRA', birth: '940721', sex: 'F', expiry: '280913',
+    });
+    const result = parseOcrText(`${line1}\n${line2}`);
+    expect(result).not.toBeNull();
+    expect(result?.confident).toBe(false);
+  });
+
   it('falls back to a tolerant date extraction when the mrz package nulls the field', () => {
     // Only last_name is required to return a result; a birth date field with an
     // OCR-confusable but unmapped character still round-trips via fallbackTd3Date.

@@ -1125,6 +1125,7 @@
     "scanFailed": "Scan échoué",
     "scanFailedManualKeepsPhoto": "Document non lu — saisissez les informations. La photo est conservée et partira avec la fiche.",
     "verifyExtracted": "Lecture incertaine et analyse avancée indisponible — vérifiez bien les champs pré-remplis.",
+    "nameLooksWrong": "Le nom lu ne ressemble pas à un nom — saisissez-le vous-même, il n'a pas été rempli automatiquement.",
     "noDocumentAck": "Aucun document scanné. Je confirme que le document n'est pas disponible ou lisible — la fiche de police partira sans photo.",
     "scanFailedRetry": "Scan échoué. Réessayez ou saisissez manuellement.",
     "photoUploadFailed": "Photo du document non enregistrée — la fiche partira sans photo. Rescannez le document.",
