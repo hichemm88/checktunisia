@@ -89,3 +89,50 @@ export interface ObjectionTag {
   id: string;
   label: string;
 }
+
+export interface DashboardData {
+  total: number;
+  funnel: { status: PipelineStatus; count: number }[];
+  by_zone: { zone: Zone; count: number }[];
+  by_priority: { priority: Priority; count: number }[];
+  response_rate: { contacted: number; responded: number; rate: number };
+  top_objections: { label: string; count: number }[];
+}
+
+/** Champs canoniques d'une ligne d'import — voir ColumnMapper/RowNormalizer côté backend. */
+export interface ImportRowFields {
+  name: string;
+  whatsapp_phone: string | null;
+  address: string | null;
+  size: Size | null;
+  segment: Segment | null;
+  decision_maker_name: string | null;
+  origin_channel: string | null;
+  qualification_notes: string | null;
+  status: PipelineStatus;
+  next_action_at: string | null;
+  last_action_note: string | null;
+}
+
+export interface ImportPreviewRow {
+  row_number: number;
+  fields: ImportRowFields;
+  issues: string[];
+  is_duplicate: boolean;
+  duplicate_of: { id: string; name: string } | null;
+}
+
+export interface ImportPreview {
+  unmapped_columns: string[];
+  rows: ImportPreviewRow[];
+  total: number;
+  duplicates: number;
+}
+
+export type ImportResolution = 'create' | 'merge' | 'skip';
+
+export interface ImportCommitResult {
+  created: number;
+  merged: number;
+  skipped: number;
+}
