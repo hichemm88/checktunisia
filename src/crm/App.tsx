@@ -6,6 +6,8 @@ import { PipelinePage } from '@/crm/pages/PipelinePage';
 import { EstablishmentDetailPage } from '@/crm/pages/EstablishmentDetailPage';
 import { DashboardPage } from '@/crm/pages/DashboardPage';
 import { SettingsPage } from '@/crm/pages/SettingsPage';
+import { TemplatesPage } from '@/crm/pages/TemplatesPage';
+import { ImportPage } from '@/crm/pages/ImportPage';
 
 export function CrmApp() {
   return (
@@ -18,6 +20,8 @@ export function CrmApp() {
         <Route path="/etablissements/:id" element={<EstablishmentDetailPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/reglages" element={<SettingsPage />} />
+        <Route path="/modeles" element={<TemplatesPage />} />
+        <Route path="/import" element={<ImportPage />} />
       </Route>
     </Routes>
   );
