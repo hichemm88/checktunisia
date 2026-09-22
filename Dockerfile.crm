@@ -1,0 +1,39 @@
+# Service Railway DÉDIÉ à crm.qayed.tn (mini-CRM de prospection interne),
+# séparé de l'app principale (qayed.tn, hébergée sur Vercel) — voir
+# checktunisia-backend#84 pour la justification de l'architecture retenue.
+#
+# Build multi-étapes : la première installe TOUT le dépôt (le build a besoin
+# de tailwind.config.js, tsconfig, etc. à la racine — ce n'est pas un
+# sous-dossier isolé), la seconde ne garde que le résultat statique
+# (dist-crm/), servi par `serve` en mode single-page (repli sur index.html
+# pour toute route React Router non trouvée — voir package.json,
+# npm run build:crm copie crm.html vers index.html à cet effet).
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+
+# crm.qayed.tn et api.qayed.tn sont deux services Railway DIFFÉRENTS (pas de
+# chemin relatif possible) : l'URL de l'API doit donc être connue au moment du
+# build, Vite figeant import.meta.env.* dans le bundle produit — une variable
+# posée seulement à l'exécution du conteneur n'aurait aucun effet. Railway
+# transmet ses variables de service comme --build-arg à `docker build` pour
+# tout ARG déclaré ici sous le même nom : poser VITE_CRM_API_URL dans les
+# Variables du service Railway (pas de défaut ici, volontairement — un défaut
+# pointant vers un chemin relatif produirait un build "silencieusement cassé"
+# qui compile mais n'appelle jamais la bonne API).
+ARG VITE_CRM_API_URL
+ENV VITE_CRM_API_URL=$VITE_CRM_API_URL
+RUN npm run build:crm
+
+FROM node:20-alpine
+WORKDIR /app
+RUN npm install --global serve@14
+COPY --from=build /app/dist-crm ./dist-crm
+
+# Railway fournit $PORT dynamiquement ; 3000 n'est qu'un repli pour un test
+# local (`docker run -p 3000:3000 ...`).
+ENV PORT=3000
+EXPOSE 3000
+CMD ["sh", "-c", "serve -s dist-crm -l ${PORT}"]
