@@ -1781,7 +1781,12 @@
       "location": "Location",
       "contacts": "Contact",
       "unsupported": "Unsupported message"
-    }
+    },
+    "viewAttachment": "View attachment",
+    "openAttachment": "Open / download",
+    "attachmentError": "Attachment unavailable",
+    "attachmentExpired": "Attachment expired on WhatsApp's side (not retrieved within 30 days).",
+    "attachmentAlt": "Attachment received"
   },
   "adminCoupons": {
     "title": "Coupons",

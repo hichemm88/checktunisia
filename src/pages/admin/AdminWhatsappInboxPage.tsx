@@ -12,6 +12,8 @@ import {
   Check,
   CheckCheck,
   Clock,
+  Download,
+  Loader2,
 } from 'lucide-react';
 import {
   adminWhatsappInboxApi,
@@ -116,8 +118,98 @@ const FicheBubble = ({ entry }: { entry: Extract<InboxEntry, { kind: 'fiche' }> 
   );
 };
 
+/**
+ * Pièce jointe reçue d'un agent — rapatriée UNIQUEMENT sur demande explicite
+ * (clic), jamais au chargement du fil : chaque vue coûte un appel à Meta, et
+ * la plupart des messages avec média ne seront jamais ouverts.
+ *
+ * Le Blob obtenu n'est ni mis en cache ni renvoyé au serveur : il vit dans un
+ * objet URL local, révoqué au démontage — rien de plus qu'une image affichée
+ * à l'écran le temps de la consultation.
+ */
+const MediaAttachment = ({
+  conversationId,
+  messageId,
+  filename,
+}: {
+  conversationId: string;
+  messageId: string;
+  filename: string | null;
+}) => {
+  const { t } = useTranslation();
+  const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'expired'>('idle');
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  const [mime, setMime] = useState<string>('');
+
+  useEffect(() => () => {
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+  }, [objectUrl]);
+
+  const load = async () => {
+    setStatus('loading');
+    try {
+      const blob = await adminWhatsappInboxApi.media(conversationId, messageId);
+      setMime(blob.type);
+      setObjectUrl(URL.createObjectURL(blob));
+      setStatus('idle');
+    } catch (error: unknown) {
+      const expired = (error as { response?: { status?: number } })?.response?.status === 410;
+      setStatus(expired ? 'expired' : 'error');
+    }
+  };
+
+  if (objectUrl) {
+    return mime.startsWith('image/') ? (
+      <a href={objectUrl} target="_blank" rel="noopener noreferrer" className="mt-2 block">
+        <img
+          src={objectUrl}
+          // Jamais alt="" : un alt vide déclare l'image « décorative » pour un
+          // lecteur d'écran, ce qu'une pièce jointe reçue d'un agent n'est pas.
+          alt={filename ?? t('whatsappInbox.attachmentAlt')}
+          className="max-h-56 rounded-lg border border-gray-200"
+        />
+      </a>
+    ) : (
+      <a
+        href={objectUrl}
+        download={filename ?? 'media'}
+        className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold underline"
+      >
+        <Download className="h-3.5 w-3.5" />
+        {t('whatsappInbox.openAttachment')}
+      </a>
+    );
+  }
+
+  if (status === 'expired') {
+    return <p className="mt-1 text-[11px] italic opacity-70">{t('whatsappInbox.attachmentExpired')}</p>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={load}
+      disabled={status === 'loading'}
+      className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold underline disabled:opacity-60"
+    >
+      {status === 'loading' ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <Download className="h-3.5 w-3.5" />
+      )}
+      {status === 'error' ? t('whatsappInbox.attachmentError') : t('whatsappInbox.viewAttachment')}
+    </button>
+  );
+};
+
 /** Un texte : réponse d'un agent (à gauche) ou de l'administration (à droite). */
-const MessageBubble = ({ entry }: { entry: Extract<InboxEntry, { kind: 'message' }> }) => {
+const MessageBubble = ({
+  entry,
+  conversationId,
+}: {
+  entry: Extract<InboxEntry, { kind: 'message' }>;
+  conversationId: string;
+}) => {
   const { t } = useTranslation();
   const inbound = entry.direction === 'inbound';
 
@@ -140,6 +232,9 @@ const MessageBubble = ({ entry }: { entry: Extract<InboxEntry, { kind: 'message'
             {t(`whatsappInbox.mediaType.${entry.type}`, { defaultValue: entry.type })}
             {entry.media_filename ? ` · ${entry.media_filename}` : ''}
           </p>
+        )}
+        {entry.has_media && (
+          <MediaAttachment conversationId={conversationId} messageId={entry.id} filename={entry.media_filename} />
         )}
         <div
           className={`mt-1.5 flex flex-wrap items-center gap-x-3 text-[11px] ${inbound ? 'text-gray-400' : 'text-white/70'}`}
@@ -450,7 +545,7 @@ export const AdminWhatsappInboxPage = () => {
                   entry.kind === 'fiche' ? (
                     <FicheBubble key={`f-${entry.id}`} entry={entry} />
                   ) : (
-                    <MessageBubble key={`m-${entry.id}`} entry={entry} />
+                    <MessageBubble key={`m-${entry.id}`} entry={entry} conversationId={selected as string} />
                   ),
                 )}
                 <div ref={timelineEnd} />

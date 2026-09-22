@@ -1785,7 +1785,12 @@
       "location": "Localisation",
       "contacts": "Contact",
       "unsupported": "Message non pris en charge"
-    }
+    },
+    "viewAttachment": "Voir la pièce jointe",
+    "openAttachment": "Ouvrir / télécharger",
+    "attachmentError": "Pièce jointe indisponible",
+    "attachmentExpired": "Pièce jointe expirée côté WhatsApp (non récupérée dans les 30 jours).",
+    "attachmentAlt": "Pièce jointe reçue"
   },
   "adminCoupons": {
     "title": "Codes promo",

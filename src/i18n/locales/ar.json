@@ -1759,7 +1759,12 @@
       "location": "موقع",
       "contacts": "جهة اتصال",
       "unsupported": "رسالة غير مدعومة"
-    }
+    },
+    "viewAttachment": "عرض المرفق",
+    "openAttachment": "فتح / تحميل",
+    "attachmentError": "المرفق غير متوفر",
+    "attachmentExpired": "انتهت صلاحية المرفق لدى واتساب (لم يُسترجع خلال 30 يومًا).",
+    "attachmentAlt": "مرفق مستلم"
   },
   "adminCoupons": {
     "title": "رموز الخصم",

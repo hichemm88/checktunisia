@@ -11,6 +11,7 @@ const list = vi.fn();
 const thread = vi.fn();
 const reply = vi.fn();
 const unreadCount = vi.fn();
+const media = vi.fn();
 
 vi.mock('@/api/admin/whatsappInbox', () => ({
   adminWhatsappInboxApi: {
@@ -18,6 +19,7 @@ vi.mock('@/api/admin/whatsappInbox', () => ({
     thread: (id: string) => thread(id),
     reply: (id: string, message: string) => reply(id, message),
     unreadCount: () => unreadCount(),
+    media: (conversationId: string, messageId: string) => media(conversationId, messageId),
   },
 }));
 
@@ -291,6 +293,62 @@ describe('écran Réponses des autorités', () => {
     await waitFor(() => expect(screen.getByText('👍')).toBeTruthy());
     expect(screen.getByText('Fiche de police transmise')).toBeTruthy();
     expect(screen.getAllByText('Merci, bien reçu').length).toBeGreaterThan(0);
+  });
+
+  it("ne rapatrie une pièce jointe qu'au clic, puis l'affiche", async () => {
+    // Le Blob n'est jamais chargé au rendu du fil : le coût (un appel Meta)
+    // ne doit être payé que si l'administrateur demande explicitement à voir.
+    const objectUrl = 'blob:mock-media-url';
+    vi.stubGlobal('URL', { ...URL, createObjectURL: vi.fn(() => objectUrl), revokeObjectURL: vi.fn() });
+    media.mockResolvedValue(new Blob(['fake-bytes'], { type: 'image/jpeg' }));
+
+    thread.mockResolvedValue({
+      ...OPEN_THREAD,
+      timeline: [
+        OPEN_THREAD.timeline[0],
+        {
+          ...OPEN_THREAD.timeline[1],
+          type: 'image',
+          body: null,
+          has_media: true,
+          media_mime: 'image/jpeg',
+          media_filename: null,
+        },
+      ],
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('BEN SALAH Karim')).toBeTruthy());
+    fireEvent.click(screen.getByText('BEN SALAH Karim'));
+
+    const viewButton = await screen.findByRole('button', { name: /Voir la pièce jointe/ });
+    expect(media).not.toHaveBeenCalled();
+
+    fireEvent.click(viewButton);
+    await waitFor(() => expect(media).toHaveBeenCalledWith('c-1', 'm-1'));
+
+    const img = await screen.findByRole('img');
+    expect(img.getAttribute('src')).toBe(objectUrl);
+  });
+
+  it('dit que la pièce jointe est expirée plutôt que de traiter ça comme un bug', async () => {
+    media.mockRejectedValue({ response: { status: 410 } });
+
+    thread.mockResolvedValue({
+      ...OPEN_THREAD,
+      timeline: [
+        OPEN_THREAD.timeline[0],
+        { ...OPEN_THREAD.timeline[1], type: 'image', body: null, has_media: true, media_mime: null, media_filename: null },
+      ],
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText('BEN SALAH Karim')).toBeTruthy());
+    fireEvent.click(screen.getByText('BEN SALAH Karim'));
+
+    fireEvent.click(await screen.findByRole('button', { name: /Voir la pièce jointe/ }));
+
+    await waitFor(() => expect(screen.getByText(/expirée côté WhatsApp/)).toBeTruthy());
   });
 
   it('filtre sur les fils en attente de réponse', async () => {

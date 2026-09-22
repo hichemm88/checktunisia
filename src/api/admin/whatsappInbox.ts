@@ -138,4 +138,16 @@ export const adminWhatsappInboxApi = {
    */
   unreadCount: () =>
     api.get<{ data: { count: number } }>('/admin/whatsapp/inbox/unread-count').then((r) => r.data.data.count),
+
+  /**
+   * Pièce jointe reçue d'un agent, rapatriée à la demande — jamais mise en
+   * cache ni stockée ici : un Blob par appel, jeté par l'appelant une fois
+   * affiché ou téléchargé.
+   */
+  media: (conversationId: string, messageId: string) =>
+    api
+      .get<Blob>(`/admin/whatsapp/inbox/${conversationId}/messages/${messageId}/media`, {
+        responseType: 'blob',
+      })
+      .then((r) => r.data),
 };
