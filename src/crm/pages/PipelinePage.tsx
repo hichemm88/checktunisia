@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { clsx } from 'clsx';
-import { Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { crmApi } from '@/crm/lib/api';
 import type { Establishment, MessageTemplate, PipelineStatus, Zone } from '@/crm/types';
 import { EstablishmentCard } from '@/crm/components/EstablishmentCard';
@@ -73,7 +74,16 @@ export function PipelinePage() {
 
   return (
     <div className="px-4 pt-6">
-      <h1 className="mb-4 font-display text-2xl text-qayed-encre">Pipeline</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="font-display text-2xl text-qayed-encre">Pipeline</h1>
+        <Link
+          to="/etablissements/nouveau"
+          className="flex h-btn-sm items-center gap-1 rounded-btn bg-qayed-cachet px-3 text-sm font-semibold text-white"
+        >
+          <Plus className="h-4 w-4" />
+          Nouveau
+        </Link>
+      </div>
 
       <div className="relative mb-3">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-qayed-fiche" />

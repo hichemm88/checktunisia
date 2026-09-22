@@ -9,6 +9,7 @@ import { SettingsPage } from '@/crm/pages/SettingsPage';
 import { TemplatesPage } from '@/crm/pages/TemplatesPage';
 import { ImportPage } from '@/crm/pages/ImportPage';
 import { MembersPage } from '@/crm/pages/MembersPage';
+import { NewEstablishmentPage } from '@/crm/pages/NewEstablishmentPage';
 
 export function CrmApp() {
   return (
@@ -18,6 +19,7 @@ export function CrmApp() {
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<TodayPage />} />
         <Route path="/pipeline" element={<PipelinePage />} />
+        <Route path="/etablissements/nouveau" element={<NewEstablishmentPage />} />
         <Route path="/etablissements/:id" element={<EstablishmentDetailPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/reglages" element={<SettingsPage />} />
