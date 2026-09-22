@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, Download } from 'lucide-react';
 import { useCrmAuthStore } from '@/crm/stores/authStore';
 import { crmApi } from '@/crm/lib/api';
+import { NotificationSettings } from '@/crm/components/NotificationSettings';
+import { InstallAppCard } from '@/crm/components/InstallAppCard';
 
 export function SettingsPage() {
   const { user, logout } = useCrmAuthStore();
@@ -47,7 +49,9 @@ export function SettingsPage() {
         </button>
       </div>
 
-      <p className="mb-4 text-sm text-qayed-fiche">Les notifications push arrivent dans une prochaine étape.</p>
+      <InstallAppCard />
+
+      <NotificationSettings />
 
       <button
         type="button"

@@ -25,6 +25,16 @@ COPY . .
 # qui compile mais n'appelle jamais la bonne API).
 ARG VITE_CRM_API_URL
 ENV VITE_CRM_API_URL=$VITE_CRM_API_URL
+
+# Clé PUBLIQUE VAPID (§ Notifications push) — même raison de figer au build
+# que VITE_CRM_API_URL ci-dessus. Poser VITE_VAPID_PUBLIC_KEY dans les
+# Variables du service Railway, avec la MÊME valeur que VAPID_PUBLIC_KEY côté
+# backend (voir checktunisia-backend .env.example) : ce sont les deux moitiés
+# publique/privée de la même paire de clés. Vide => bouton "Activer les
+# notifications" inerte, rien d'autre ne casse.
+ARG VITE_VAPID_PUBLIC_KEY
+ENV VITE_VAPID_PUBLIC_KEY=$VITE_VAPID_PUBLIC_KEY
+
 RUN npm run build:crm
 
 FROM node:20-alpine
