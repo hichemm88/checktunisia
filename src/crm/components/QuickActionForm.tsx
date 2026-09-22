@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { clsx } from 'clsx';
 import { crmApi } from '@/crm/lib/api';
-import { ACTION_TYPE_LABELS, QUICK_ACTION_TYPES } from '@/crm/lib/actionTypes';
+import { ACTION_CHANNELS, ACTION_TYPE_LABELS, CHANNEL_RELEVANT_TYPES, QUICK_ACTION_TYPES } from '@/crm/lib/actionTypes';
 import type { ActionType } from '@/crm/types';
 
 /**
@@ -10,24 +10,39 @@ import type { ActionType } from '@/crm/types';
  * type journalise immédiatement (occurred_at = maintenant, sans contenu) ;
  * un second tap optionnel ouvre une note libre avant validation, pour qui
  * veut préciser sans que ce soit le chemin par défaut.
+ *
+ * Le canal (WhatsApp/Messenger/téléphone/sur place) est optionnel et ne
+ * s'affiche que pour les types où il a un sens (message envoyé, appel,
+ * réponse reçue) — c'est le seul moyen de noter un contact pris ailleurs
+ * que par le bouton WhatsApp (qui journalise déjà le sien automatiquement).
  */
 export function QuickActionForm({ establishmentId }: { establishmentId: string }) {
   const queryClient = useQueryClient();
   const [pendingType, setPendingType] = useState<ActionType | null>(null);
+  const [channel, setChannel] = useState('');
   const [content, setContent] = useState('');
 
   const addAction = useMutation({
-    mutationFn: async (payload: { type: ActionType; content?: string }) => {
+    mutationFn: async (payload: { type: ActionType; channel?: string; content?: string }) => {
       await crmApi.post(`/establishments/${establishmentId}/actions`, payload);
     },
     onSuccess: () => {
       setPendingType(null);
+      setChannel('');
       setContent('');
       queryClient.invalidateQueries({ queryKey: ['prospection', 'actions', establishmentId] });
       queryClient.invalidateQueries({ queryKey: ['prospection', 'establishment', establishmentId] });
       queryClient.invalidateQueries({ queryKey: ['prospection', 'today'] });
     },
   });
+
+  function submit(type: ActionType) {
+    addAction.mutate({
+      type,
+      channel: CHANNEL_RELEVANT_TYPES.includes(type) && channel ? channel : undefined,
+      content: content || undefined,
+    });
+  }
 
   return (
     <div className="space-y-2">
@@ -39,7 +54,7 @@ export function QuickActionForm({ establishmentId }: { establishmentId: string }
             disabled={addAction.isPending}
             onClick={() => {
               if (pendingType === type) {
-                addAction.mutate({ type, content: content || undefined });
+                submit(type);
               } else {
                 setPendingType(type);
               }
@@ -58,6 +73,21 @@ export function QuickActionForm({ establishmentId }: { establishmentId: string }
 
       {pendingType && (
         <div className="rounded-card border border-qayed-ligne bg-white p-3">
+          {CHANNEL_RELEVANT_TYPES.includes(pendingType) && (
+            <select
+              value={channel}
+              onChange={(e) => setChannel(e.target.value)}
+              className="mb-2 h-input w-full rounded-input border border-qayed-ligne bg-white px-3 text-sm"
+            >
+              <option value="">Canal (facultatif)</option>
+              {ACTION_CHANNELS.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          )}
+
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -69,7 +99,7 @@ export function QuickActionForm({ establishmentId }: { establishmentId: string }
             <button
               type="button"
               disabled={addAction.isPending}
-              onClick={() => addAction.mutate({ type: pendingType, content: content || undefined })}
+              onClick={() => submit(pendingType)}
               className="h-btn-sm flex-1 rounded-btn bg-qayed-cachet font-semibold text-white disabled:opacity-60"
             >
               Valider « {ACTION_TYPE_LABELS[pendingType]} »
@@ -78,6 +108,7 @@ export function QuickActionForm({ establishmentId }: { establishmentId: string }
               type="button"
               onClick={() => {
                 setPendingType(null);
+                setChannel('');
                 setContent('');
               }}
               className="h-btn-sm rounded-btn border border-qayed-ligne px-3 font-semibold text-qayed-fiche"

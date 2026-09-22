@@ -18,5 +18,14 @@ export const ACTION_TYPE_LABELS: Record<ActionType, string> = {
  * "2 taps max") : un sous-ensemble volontairement court des types possibles —
  * `demo_planifiee`/`demo_faite`/`changement_statut` passent par le sélecteur
  * de statut (qui journalise déjà automatiquement), pas par ce formulaire.
+ *
+ * `message_envoye` y figure aussi : le bouton WhatsApp journalise déjà ce
+ * type pour ses propres envois, mais un contact pris par un AUTRE canal
+ * (Messenger, téléphone, sur place) n'a que ce chemin pour être noté.
  */
-export const QUICK_ACTION_TYPES: ActionType[] = ['appel', 'reponse_recue', 'relance', 'note'];
+export const QUICK_ACTION_TYPES: ActionType[] = ['message_envoye', 'appel', 'reponse_recue', 'relance', 'note'];
+
+/** Canaux reconnus par le backend (voir StoreActionRequest) — optionnel, seulement pertinent pour un contact (message/appel/réponse). */
+export const ACTION_CHANNELS = ['WhatsApp', 'Messenger', 'téléphone', 'sur place'] as const;
+
+export const CHANNEL_RELEVANT_TYPES: ActionType[] = ['message_envoye', 'appel', 'reponse_recue'];
