@@ -10,6 +10,15 @@
     <title>Qayed CRM — Prospection</title>
     <link rel="preload" href="/fonts/archivo-400-900-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/plex-sans-400-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+    <!-- Installation PWA (§ Notifications push / écran "Installer l'app") -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- Safari iOS ignore manifest.webmanifest pour le mode standalone : ces
+         balises historiques restent le seul moyen de l'obtenir. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Qayed CRM" />
   </head>
   <body>
     <div id="crm-root"></div>
