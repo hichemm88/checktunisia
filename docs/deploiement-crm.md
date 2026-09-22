@@ -13,6 +13,18 @@ Rien à créer : le module `prospection` fait partie du même déploiement que l
 | `PROSPECTION_MEMBER_EMAIL` | e-mail du second compte (optionnel au démarrage) |
 | `PROSPECTION_MEMBER_PASSWORD` | mot de passe du second compte (optionnel) |
 | `CORS_ALLOWED_ORIGINS` | **ajouter** `https://crm.qayed.tn` à la liste existante (variable additive, ne remplace rien — voir `App\Support\CorsOrigins`) |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | notifications push — voir « Notifications push » ci-dessous pour les générer |
+| `VAPID_SUBJECT` | `mailto:contact@qayed.tn` (par défaut si absent) |
+
+### Notifications push — générer les clés VAPID
+
+Une seule paire de clés suffit pour toute l'installation (pas une par utilisateur). Depuis le service backend (Railway → Shell, ou en local avant le premier déploiement) :
+
+```
+php artisan tinker --execute="dump(\Minishlink\WebPush\VAPID::createVapidKeys())"
+```
+
+Poser la clé **privée** dans `VAPID_PRIVATE_KEY` (backend uniquement, jamais côté frontend) et la clé **publique** à deux endroits : `VAPID_PUBLIC_KEY` sur le service backend **et** `VITE_VAPID_PUBLIC_KEY` sur le service frontend (§2 ci-dessous — c'est une clé publique, l'embarquer dans le bundle JS n'a rien de sensible). Sans ces variables, le module reste inerte : le bouton « Activer les notifications » échoue proprement, rien d'autre n'en dépend.
 
 Au déploiement, `docker/start.sh` fait tourner les migrations (crée le schéma Postgres `prospection`, isolé du reste — voir `config/database.php`) et les 3 seeders du module (comptes, templates de message, référentiel d'objections). Aucune autre variable n'est obligatoire : `PROSPECTION_DB_*` restent vides et le module partage alors la même base Postgres que la production, dans son propre schéma.
 
@@ -31,6 +43,7 @@ Une réponse `422` (identifiants invalides) confirme que les routes sont bien en
    - **Builder** : Dockerfile.
    - **Dockerfile Path** : `Dockerfile.crm`.
 3. **Variables du service** (obligatoire) : `VITE_CRM_API_URL=https://api.qayed.tn/api/v1/prospection`. `crm.qayed.tn` et `api.qayed.tn` sont deux services Railway différents — pas de chemin relatif possible. Vite fige cette URL dans le bundle **au moment du build** (le `Dockerfile.crm` la reçoit comme build-arg, voir son commentaire) ; la poser seulement après coup et redéployer sans rebuild n'aurait aucun effet. `$PORT`, lui, est fourni automatiquement par Railway et n'a rien à configurer. Vérifier aussi que `CORS_ALLOWED_ORIGINS` côté backend inclut bien `https://crm.qayed.tn` (étape 1) — sinon le navigateur bloque les requêtes malgré une URL correcte.
+   Ajouter aussi `VITE_VAPID_PUBLIC_KEY`, **même valeur** que `VAPID_PUBLIC_KEY` côté backend (voir « Notifications push » ci-dessus) — même contrainte de build-arg figé au build, pas à l'exécution.
 4. **Settings → Networking → Custom Domain** : ajouter `crm.qayed.tn`. Railway indique un enregistrement DNS (CNAME, généralement `xxxx.up.railway.app`) à créer chez le fournisseur DNS du domaine `qayed.tn`.
 5. Chez le fournisseur DNS : créer le CNAME `crm` → la valeur donnée par Railway. La propagation prend généralement quelques minutes à quelques heures.
 6. Railway émet automatiquement le certificat TLS une fois le CNAME propagé — HTTPS actif sans étape supplémentaire.
@@ -41,6 +54,14 @@ Une réponse `422` (identifiants invalides) confirme que les routes sont bien en
 - Le fichier `https://crm.qayed.tn/robots.txt` renvoie `Disallow: /` et la page porte `<meta name="robots" content="noindex">` — non indexé par construction (garde-fou explicite du prompt).
 - Se connecter avec le compte admin seedé → l'écran "Aujourd'hui" doit charger (vide au départ, avant tout import).
 
-## Ce qui reste à construire (pas encore dans cette PR)
+- Pour les notifications push : sur un appareil, Réglages → « Activer les notifications » → « Tester les notifications ». Une notification doit apparaître sur l'appareil dans les secondes qui suivent.
+- Le récap du matin et les rappels de démo dépendent du planificateur Laravel (`Schedule::command(...)->everyFifteenMinutes()`, voir `routes/console.php`) — `docker/start.sh` lance déjà `schedule:work` en tâche de fond, aucune configuration Railway supplémentaire n'est nécessaire pour ça.
 
-Écrans complets (fiche prospect, actions rapides, bouton WhatsApp), Templates/Dashboard/Import, notifications push — voir le suivi dans les PR de ce dépôt et de `checktunisia-backend`.
+## Ordre de fusion des PR
+
+Le CRM a été construit par étapes, une PR par écran/fonctionnalité (voir aussi `docs/crm-prospection.md` pour la vue d'ensemble fonctionnelle). Dépendances entre branches, dans l'ordre à fusionner :
+
+1. `checktunisia-backend` : schéma (déjà fusionnée), API établissements/actions/import (déjà fusionnée), **Templates+Dashboard**, **notifications push** — ces deux dernières sont indépendantes l'une de l'autre, fusionnables dans n'importe quel ordre.
+2. `checktunisia` (frontend) : **Aujourd'hui/Pipeline/Fiche** et **Modèles/Dashboard/Import** sont indépendantes entre elles (aucun fichier en commun) ; **notifications push** est empilée sur Modèles/Dashboard/Import (les deux modifient `SettingsPage.tsx`) et doit donc être fusionnée après elle, ou rebasée dessus si l'ordre est inversé.
+
+Après fusion de tout ce qui touche le backend, un redéploiement du service `api.qayed.tn` applique les nouvelles migrations et routes automatiquement (`docker/start.sh`). Après fusion de tout ce qui touche le frontend, un redéploiement du service `crm.qayed.tn` republie le bundle.

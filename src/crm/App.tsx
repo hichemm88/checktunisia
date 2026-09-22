@@ -8,6 +8,7 @@ import { DashboardPage } from '@/crm/pages/DashboardPage';
 import { SettingsPage } from '@/crm/pages/SettingsPage';
 import { TemplatesPage } from '@/crm/pages/TemplatesPage';
 import { ImportPage } from '@/crm/pages/ImportPage';
+import { MembersPage } from '@/crm/pages/MembersPage';
 
 export function CrmApp() {
   return (
@@ -22,6 +23,7 @@ export function CrmApp() {
         <Route path="/reglages" element={<SettingsPage />} />
         <Route path="/modeles" element={<TemplatesPage />} />
         <Route path="/import" element={<ImportPage />} />
+        <Route path="/membres" element={<MembersPage />} />
       </Route>
     </Routes>
   );
