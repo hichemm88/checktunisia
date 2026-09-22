@@ -1,14 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
 import { crmApi } from '@/crm/lib/api';
-import type { Establishment } from '@/crm/types';
-import { StatusBadge } from '@/crm/components/StatusBadge';
+import type { Establishment, MessageTemplate } from '@/crm/types';
+import { EstablishmentCard } from '@/crm/components/EstablishmentCard';
 
-/**
- * Écran d'accueil "Aujourd'hui" — version scaffold : liste les relances
- * dues/en retard et les démos du jour. Les actions rapides (WhatsApp, Fait,
- * Reporter) arrivent avec l'écran complet (voir suite du prompt).
- */
+/** Écran d'accueil "Aujourd'hui" (§ Écran 1) : relances dues/en retard puis démos du jour, actions rapides à un pouce. */
 export function TodayPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['prospection', 'today'],
@@ -16,6 +11,15 @@ export function TodayPage() {
       const res = await crmApi.get<{ data: { relances: Establishment[]; demos: Establishment[] } }>(
         '/establishments/today',
       );
+
+      return res.data.data;
+    },
+  });
+
+  const { data: templates } = useQuery({
+    queryKey: ['prospection', 'message-templates'],
+    queryFn: async () => {
+      const res = await crmApi.get<{ data: MessageTemplate[] }>('/message-templates');
 
       return res.data.data;
     },
@@ -38,7 +42,7 @@ export function TodayPage() {
             ) : (
               <ul className="space-y-2">
                 {data.relances.map((e) => (
-                  <EstablishmentCard key={e.id} establishment={e} />
+                  <EstablishmentCard key={e.id} establishment={e} templates={templates ?? []} quickActions />
                 ))}
               </ul>
             )}
@@ -53,7 +57,7 @@ export function TodayPage() {
             ) : (
               <ul className="space-y-2">
                 {data.demos.map((e) => (
-                  <EstablishmentCard key={e.id} establishment={e} />
+                  <EstablishmentCard key={e.id} establishment={e} templates={templates ?? []} quickActions />
                 ))}
               </ul>
             )}
@@ -61,26 +65,5 @@ export function TodayPage() {
         </div>
       )}
     </div>
-  );
-}
-
-function EstablishmentCard({ establishment }: { establishment: Establishment }) {
-  return (
-    <li>
-      <Link
-        to={`/etablissements/${establishment.id}`}
-        className="flex items-center justify-between rounded-card border border-qayed-ligne bg-white p-4 shadow-sm active:bg-qayed-cachet-dilue"
-      >
-        <div>
-          <p className="font-medium text-qayed-encre">{establishment.name}</p>
-          <StatusBadge status={establishment.status} />
-        </div>
-        {establishment.is_overdue && (
-          <span className="rounded-full bg-qayed-vigilance-fond px-2 py-1 text-xs font-semibold text-qayed-vigilance-texte">
-            Retard
-          </span>
-        )}
-      </Link>
-    </li>
   );
 }
