@@ -52,6 +52,20 @@ export const checkInsApi = {
     api.post<{ data: { queued: boolean; email: string } }>('/hotel/exports/police-fiches', { date_from, date_to })
       .then((r) => r.data.data),
 
+  /**
+   * PDF d'impression de la fiche de police d'UN check-in — même template que
+   * l'export/WhatsApp (voir CheckInController::policeFichePdf). Ouvert dans
+   * un nouvel onglet (réponse `inline`) : imprimer revient à utiliser le
+   * bouton du lecteur PDF du navigateur.
+   */
+  printPoliceFiche: async (id: string) => {
+    const res = await api.get(`/hotel/check-ins/${id}/police-fiche`, { responseType: 'blob' });
+    const url = URL.createObjectURL(res.data as Blob);
+    window.open(url, '_blank');
+    // Délai avant révocation : le nouvel onglet doit d'abord charger le blob.
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  },
+
   get: (id: string) =>
     api.get<ApiItem<CheckIn>>(`/hotel/check-ins/${id}`).then((r) => r.data.data),
 

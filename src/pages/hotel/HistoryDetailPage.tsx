@@ -1,5 +1,4 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +12,6 @@ import { checkInsApi } from '@/api/checkIns';
 import { settingsApi } from '@/api/settings';
 import { useToast } from '@/components/ui/Toast';
 import { extractErrors } from '@/lib/api';
-import { PoliceFiche } from '@/components/PoliceFiche';
 import { GuestScanPanel } from '@/components/hotel/GuestScanPanel';
 import { GuestEditForm } from '@/components/hotel/GuestEditForm';
 import { EditCheckInModal } from '@/components/hotel/EditCheckInModal';
@@ -92,6 +90,13 @@ export const HistoryDetailPage = () => {
       qc.invalidateQueries({ queryKey: ['check-in', id] });
       toast(t('hotelHistoryDetail.guestRemoved'), 'success');
     },
+    onError: (err) => toast(extractErrors(err), 'error'),
+  });
+
+  // Même format que l'export/WhatsApp — ouvre le PDF serveur dans un nouvel
+  // onglet plutôt que d'imprimer un composant React distinct.
+  const printFicheMutation = useMutation({
+    mutationFn: () => checkInsApi.printPoliceFiche(id!),
     onError: (err) => toast(extractErrors(err), 'error'),
   });
 
@@ -439,7 +444,8 @@ export const HistoryDetailPage = () => {
                 variant="secondary"
                 fullWidth
                 size="lg"
-                onClick={() => window.print()}
+                loading={printFicheMutation.isPending}
+                onClick={() => printFicheMutation.mutate()}
                 className="gap-2"
               >
                 <Printer className="h-5 w-5" /> {t('hotelHistoryDetail.printPoliceForm')}
@@ -502,10 +508,6 @@ export const HistoryDetailPage = () => {
       {showEditModal && (
         <EditCheckInModal checkIn={ci} onClose={() => setShowEditModal(false)} />
       )}
-
-      {/* Portal vers document.body — body > *:not(#police-fiche-root) { display:none }
-          isole la fiche sans layout de l'app React */}
-      {hotel && createPortal(<PoliceFiche checkIn={ci} hotel={hotel} />, document.body)}
     </>
   );
 };
