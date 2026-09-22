@@ -90,6 +90,15 @@ export interface ObjectionTag {
   label: string;
 }
 
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: CrmRole;
+  active: boolean;
+  last_login_at: string | null;
+}
+
 export interface DashboardData {
   total: number;
   funnel: { status: PipelineStatus; count: number }[];

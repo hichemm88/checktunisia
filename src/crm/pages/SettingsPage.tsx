@@ -36,6 +36,7 @@ export function SettingsPage() {
       </div>
 
       <div className="mb-6 divide-y divide-qayed-ligne overflow-hidden rounded-card border border-qayed-ligne bg-white">
+        {user?.role === 'admin' && <SettingsLink to="/membres" label="Membres de l'équipe" />}
         <SettingsLink to="/modeles" label="Modèles de message" />
         <SettingsLink to="/import" label="Importer le fichier existant" />
         <button
