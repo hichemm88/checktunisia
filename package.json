@@ -8,7 +8,7 @@
     "dev:crm": "vite --host --config vite.crm.config.ts",
     "build": "vite build",
     "build:widget": "vite build --config vite.widget.config.ts",
-    "build:crm": "vite build --config vite.crm.config.ts",
+    "build:crm": "vite build --config vite.crm.config.ts && cp dist-crm/crm.html dist-crm/index.html",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "oxlint",

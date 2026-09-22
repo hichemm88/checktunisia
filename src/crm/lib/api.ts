@@ -2,14 +2,21 @@ import axios from 'axios';
 import { useCrmAuthStore } from '@/crm/stores/authStore';
 
 /**
- * Client HTTP du CRM de prospection. Même origine que crm.qayed.tn en
- * production (l'API tourne dans le même service Railway que le backend
- * principal, sous /api/v1/prospection — voir le README pour le pourquoi) :
- * VITE_CRM_API_URL n'a donc besoin d'être posée qu'en développement, où le
- * frontend et l'API ne sont pas servis depuis le même port.
+ * Client HTTP du CRM de prospection. crm.qayed.tn (ce frontend) et
+ * api.qayed.tn (le backend) sont deux services Railway DISTINCTS — voir
+ * docs/deploiement-crm.md — donc pas de chemin relatif possible en
+ * production : VITE_CRM_API_URL doit y être posée (build-arg du service
+ * Railway du frontend, voir Dockerfile.crm). Le repli sur un chemin relatif
+ * ne sert qu'au développement local, où vite.crm.config.ts proxifie /api
+ * vers l'API tournant sur un autre port.
+ *
+ * `||` et non `??` : une variable de build absente donne une chaîne VIDE
+ * (pas `undefined`) une fois passée par le Dockerfile, que `??` laisserait
+ * passer telle quelle — une baseURL vide romprait silencieusement tous les
+ * appels en production.
  */
 export const crmApi = axios.create({
-  baseURL: import.meta.env.VITE_CRM_API_URL ?? '/api/v1/prospection',
+  baseURL: import.meta.env.VITE_CRM_API_URL || '/api/v1/prospection',
   headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
   timeout: 20_000,
 });
