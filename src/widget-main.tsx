@@ -2,11 +2,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-// Imports nommés : Vite n'embarque que ces trois sections de chaque fichier
+// Imports nommés : Vite n'embarque que ces quatre sections de chaque fichier
 // de langue, pas les traductions de toute l'application.
-import { widget as frWidget, cinScan as frCinScan, common as frCommon } from './i18n/locales/fr.json';
-import { widget as enWidget, cinScan as enCinScan, common as enCommon } from './i18n/locales/en.json';
-import { widget as arWidget, cinScan as arCinScan, common as arCommon } from './i18n/locales/ar.json';
+import { widget as frWidget, cinScan as frCinScan, guestScan as frGuestScan, common as frCommon } from './i18n/locales/fr.json';
+import { widget as enWidget, cinScan as enCinScan, guestScan as enGuestScan, common as enCommon } from './i18n/locales/en.json';
+import { widget as arWidget, cinScan as arCinScan, guestScan as arGuestScan, common as arCommon } from './i18n/locales/ar.json';
 import './index.css';
 import { FicheWidgetPage } from './pages/widget/FicheWidgetPage';
 
@@ -21,9 +21,9 @@ import { FicheWidgetPage } from './pages/widget/FicheWidgetPage';
  */
 i18n.use(initReactI18next).init({
   resources: {
-    fr: { translation: { widget: frWidget, cinScan: frCinScan, common: frCommon } },
-    en: { translation: { widget: enWidget, cinScan: enCinScan, common: enCommon } },
-    ar: { translation: { widget: arWidget, cinScan: arCinScan, common: arCommon } },
+    fr: { translation: { widget: frWidget, cinScan: frCinScan, guestScan: frGuestScan, common: frCommon } },
+    en: { translation: { widget: enWidget, cinScan: enCinScan, guestScan: enGuestScan, common: enCommon } },
+    ar: { translation: { widget: arWidget, cinScan: arCinScan, guestScan: arGuestScan, common: arCommon } },
   },
   lng: 'fr',
   fallbackLng: 'fr',

@@ -36,7 +36,8 @@ const ENDPOINTS: { method: string; path: string; desc: string }[] = [
   { method: 'POST', path: '/v1/fiche-sessions', desc: 'Crée (ou réutilise) une session de fiche pour une réservation.' },
   { method: 'GET', path: '/v1/fiche-sessions/by-booking-ref', desc: 'Retrouve la dernière session connue sans avoir gardé le session_id.' },
   { method: 'GET', path: '/v1/fiche-sessions/{session_id}', desc: 'Statut d\'une session (pending / submitted / expired), avec guest_count et expected_guest_count.' },
-  { method: 'GET', path: '/v1/fiches/{fiche_id}', desc: 'Détail d\'une fiche soumise, avec son séjour (arrival_date, departure_date, checked_out_at, room_id, stay_status).' },
+  { method: 'GET', path: '/v1/fiches', desc: 'Fiches validées d\'un établissement lié, saisies via l\'API ou directement dans Qayed (source), paginées par curseur ; filtres arrival_from, arrival_to, updated_since. Aucun numéro de document ni date de naissance.' },
+  { method: 'GET', path: '/v1/fiches/{fiche_id}', desc: 'Détail d\'une fiche soumise, avec son séjour (arrival_date, departure_date, checked_out_at, room_id, stay_status) et son delivery_status.' },
   { method: 'PATCH', path: '/v1/fiches/{fiche_id}', desc: 'Prolongation, départ anticipé ou changement de chambre (departure_date, room_id, room), sans widget.' },
 ];
 
@@ -69,7 +70,7 @@ export const DocsApiPage = () => {
         <header>
           <h1 className="font-display text-3xl font-bold text-qayed-encre">API publique Qayed v1</h1>
           <p className="mt-1 text-xs text-qayed-fiche">
-            Version 1.1.0 — hôte <code>{PUBLIC_API_ORIGIN}</code> (API et widget). N'utilisez pas{' '}
+            Version 1.2.0 — hôte <code>{PUBLIC_API_ORIGIN}</code> (API et widget). N'utilisez pas{' '}
             <code>https://qayed.tn</code>, qui redirige vers le site vitrine et ne sert aucune API.
           </p>
           <p className="mt-2 text-qayed-fiche">
@@ -247,7 +248,9 @@ window.addEventListener('message', (event) => {
         <section className="space-y-3">
           <h2 className="font-display text-xl font-bold text-qayed-encre">Webhooks</h2>
           <p className="text-sm text-qayed-encre">
-            Événements : <code>fiche.submitted</code>, <code>fiche.failed</code>, <code>session.expired</code>.
+            Événements : <code>fiche.submitted</code>, <code>fiche.failed</code>, <code>session.expired</code>,{' '}
+            <code>fiche.delivered</code> et <code>fiche.delivery_failed</code> (1.2.0 : envoi de la fiche à l'autorité
+            abouti ou en échec définitif ; live uniquement, une seule fois par fiche, sans donnée personnelle).
             Chaque livraison porte l'en-tête <code>Qayed-Signature: t=&#123;timestamp&#125;,v1=&#123;hex&#125;</code>, où{' '}
             <code>hex = HMAC-SHA256(secret, "&#123;timestamp&#125;.&#123;corps brut&#125;")</code>. Vérifiez la
             signature ET que <code>timestamp</code> n'a pas plus de 5 minutes avant de traiter le corps — voir les
@@ -274,6 +277,16 @@ window.addEventListener('message', (event) => {
           <p className="text-xs text-qayed-fiche">
             Format d'erreur uniforme : <code>&#123;"error":&#123;"code","message","doc_url"&#125;&#125;</code>.
           </p>
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="font-display text-xl font-bold text-qayed-encre">Nouveautés 1.2.0</h2>
+          <p className="text-sm text-qayed-fiche">Ajouts uniquement, aucun changement incompatible :</p>
+          <ul className="list-disc list-inside space-y-1 text-sm text-qayed-encre">
+            <li><code>GET /v1/fiches</code> : liste des fiches d'un établissement lié, saisies via votre intégration ou directement dans Qayed, paginée par curseur (<code>next_cursor</code>, <code>has_more</code>). Brouillons exclus ; une clé test ne voit que ses fiches de test.</li>
+            <li><code>delivery_status</code> (<code>sent</code>, <code>pending</code>, <code>failed</code>, <code>not_applicable</code>) sur les fiches et les sessions : <code>failed</code> dès qu'un envoi est en échec définitif, sinon <code>pending</code> tant qu'un envoi est en cours, sinon <code>sent</code>.</li>
+            <li>Webhooks <code>fiche.delivered</code> et <code>fiche.delivery_failed</code>.</li>
+          </ul>
         </section>
 
         <section className="space-y-3">

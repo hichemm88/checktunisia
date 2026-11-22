@@ -13,6 +13,7 @@ import { extractErrors } from '@/lib/api';
 import { useAdminMutation } from '@/hooks/useAdminMutation';
 import { ListSkeleton } from '@/components/ui/ListSkeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { PurgeTestDataSection } from '@/components/admin/PurgeTestDataSection';
 
 const dateFmt = (d: string | null) => (d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
 
@@ -488,6 +489,7 @@ export const AdminPartnersPage = () => {
               <OriginsSection partnerId={selected.id} />
               <LinksSection partnerId={selected.id} />
               <WebhooksSection partnerId={selected.id} />
+              <PurgeTestDataSection partnerId={selected.id} />
             </div>
           )}
         </div>

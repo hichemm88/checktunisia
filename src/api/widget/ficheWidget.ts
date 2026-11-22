@@ -22,7 +22,10 @@ widgetApi.interceptors.request.use((config) => {
 
 export interface BootstrapResponse {
   session_id: string;
-  widget_token: string;
+  /** null = fiche tenue par une autre personne (voir locked_by). */
+  widget_token: string | null;
+  /** v1.2 : nom de la personne qui saisit cette fiche en ce moment ('' si inconnu), null sinon. */
+  locked_by: string | null;
   mode: 'create' | 'amend';
   establishment_name: string;
   booking_ref: string;
@@ -42,6 +45,8 @@ export interface BootstrapResponse {
     last_name: string;
     nationality_code: string;
     is_primary: boolean;
+    /** Brouillon : oui ; fiche déjà transmise : seulement ceux ajoutés par cette session. */
+    removable: boolean;
   }>;
   /** Nombre de voyageurs attendus (>= 1) ; en amend, les existants comptent. */
   expected_guest_count: number;
@@ -94,6 +99,7 @@ export const ficheWidgetApi = {
     return widgetApi
       .post<{ data: { scan_id: string; status: string } }>('/scan', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 60_000,
       })
       .then((r) => r.data.data);
   },
@@ -113,6 +119,8 @@ export const ficheWidgetApi = {
    * statut récupère alors `extracted`. Court sondage sinon.
    */
   readDocument: async (file: Blob, documentType: 'cin' | 'passport') => {
+    // L'extraction serveur peut dépasser le délai par défaut : l'écran gère
+    // lui-même l'attente au-delà de 15 s (« Réessayer » / « Saisir à la main »).
     const { scan_id, status } = await ficheWidgetApi.uploadScan(file, documentType);
     const done = (st: string) => st === 'completed' || st === 'failed';
     let result = await ficheWidgetApi.scanStatus(scan_id);

@@ -1132,7 +1132,8 @@
     "rescan": "إعادة المسح أو التصحيح",
     "docExpiredSince": "الوثيقة منتهية الصلاحية منذ {{date}}",
     "docExpiresSoon": "تنتهي قريبًا",
-    "documentFieldsRequired": "رقم الوثيقة وبلد الإصدار إلزاميان لبطاقة الشرطة."
+    "documentFieldsRequired": "رقم الوثيقة وبلد الإصدار إلزاميان لبطاقة الشرطة.",
+    "chooseCountry": "اختر بلدا"
   },
   "auth": {
     "otp": {
@@ -2074,6 +2075,20 @@
     "documentType": "نوع الوثيقة",
     "docNationalId": "بطاقة التعريف الوطنية",
     "docResidencePermit": "بطاقة الإقامة",
-    "issuingCountry": "بلد الإصدار (رمز)"
+    "issuingCountry": "بلد الإصدار (رمز)",
+    "lockedTitle": "البطاقة قيد التعبئة من طرف {{name}}",
+    "lockedTitleUnknown": "البطاقة قيد التعبئة من طرف شخص آخر",
+    "lockedBody": "انتظر حتى ينتهي ثم أعد المحاولة.",
+    "retry": "أعد المحاولة",
+    "primaryGuest": "المسافر الرئيسي",
+    "saveGuest": "تسجيل هذا المسافر",
+    "guestsTitle": "المسافرون المصرح بهم",
+    "reviewList": "عرض البطاقة ({{count}} من {{total}})",
+    "addAnother": "إضافة مسافر",
+    "readingSlow": "القراءة تستغرق وقتا أطول من المتوقع.",
+    "readingSlowHint": "أعد المحاولة أو أدخل المعلومات يدويا.",
+    "sexRequired": "حدد جنس المسافر.",
+    "remainingGuests_one": "بقي {{count}} مسافر للتصريح.",
+    "remainingGuests_other": "بقي {{count}} مسافرين للتصريح."
   }
 }

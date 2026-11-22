@@ -2,7 +2,9 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-export const RTL_LANGUAGES = ['ar'];
+import { RTL_LANGUAGES } from './rtl';
+
+export { RTL_LANGUAGES };
 
 export const applyDocumentDirection = (lng: string) => {
   const isRtl = RTL_LANGUAGES.includes(lng);

@@ -59,6 +59,33 @@ export interface AdminWebhookDelivery {
   payload: Record<string, unknown>;
 }
 
+/** Comptes de la purge des données de test (voir PartnerTestDataPurgeService côté serveur). */
+export interface AdminPurgeCounts {
+  sessions: number;
+  drafts: number;
+  fiches: number;
+  guests: number;
+  travel_documents: number;
+  scans: number;
+  whatsapp_jobs: number;
+  notifications: number;
+  webhook_deliveries: number;
+  rooms_released: number;
+  kept_check_ins: number;
+}
+
+export interface AdminPurgePreview {
+  counts: AdminPurgeCounts;
+  total: number;
+  confirmation_token: string;
+}
+
+export interface AdminPurgeResult {
+  counts: AdminPurgeCounts;
+  total: number;
+  purged: true;
+}
+
 export const adminPartnersApi = {
   list: (params?: Record<string, string | number>) =>
     api.get<{ data: AdminPartner[]; meta: { total: number; current_page: number; per_page: number } }>('/admin/partners', { params }).then((r) => r.data),
@@ -103,6 +130,14 @@ export const adminPartnersApi = {
     api.get<{ data: AdminWebhookDelivery[]; meta: { total: number; current_page: number } }>(
       `/admin/partners/${id}/webhooks/${endpointId}/deliveries`, { params },
     ).then((r) => r.data),
+
+  /** Aperçu sans effet : comptes + jeton de confirmation lié à ces comptes exacts. */
+  previewTestDataPurge: (id: string) =>
+    api.post<{ data: AdminPurgePreview }>(`/admin/partners/${id}/purge-test-data`, { dry_run: true }).then((r) => r.data.data),
+
+  /** Exécution : refusée (409) si les données ont changé depuis l'aperçu. */
+  purgeTestData: (id: string, confirmationToken: string) =>
+    api.post<{ data: AdminPurgeResult }>(`/admin/partners/${id}/purge-test-data`, { confirmation_token: confirmationToken }).then((r) => r.data.data),
 
   redrive: (id: string, endpointId: string, deliveryId: number) =>
     api.post(`/admin/partners/${id}/webhooks/${endpointId}/deliveries/${deliveryId}/redrive`),

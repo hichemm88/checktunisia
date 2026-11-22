@@ -1,6 +1,6 @@
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { RTL_LANGUAGES } from '@/i18n';
+import { RTL_LANGUAGES } from '@/i18n/rtl';
 
 interface Props {
   className?: string;

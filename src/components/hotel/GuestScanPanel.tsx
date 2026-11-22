@@ -1,14 +1,11 @@
-import { useState, useRef, useEffect, type ChangeEvent, type ReactNode } from 'react';
+import { useState, useRef, useEffect, type ChangeEvent } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  AlertTriangle, ScanLine, CheckCircle, Loader2, Upload,
-  CreditCard, UserCheck, RotateCw, RotateCcw, X,
+  CheckCircle, UserCheck, RotateCw, RotateCcw, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ArrowNext } from '@/components/ui/DirectionalIcon';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { checkInsApi, type AddGuestPayload } from '@/api/checkIns';
 import { scansApi } from '@/api/scans';
 import { useToast } from '@/components/ui/Toast';
@@ -17,6 +14,7 @@ import { scanMrz, setMrzDebugSink } from '@/lib/mrzScanner';
 import { downscaleForUpload } from '@/lib/uploadImagePrep';
 import { guestFormBlockers } from '@/lib/guestFormGuards';
 import { CINCapture } from '@/components/hotel/CINCapture';
+import { GuestFields, ScanEntryCards, ScanReading } from '@/components/hotel/GuestScanParts';
 import { prepareCinImage } from '@/lib/cinImagePrep';
 import { scanCin } from '@/api/scanCin';
 import { scanMrzVision } from '@/api/scanMrz';
@@ -24,35 +22,6 @@ import { reportLocalMrzScan } from '@/api/scanEvents';
 import { useAuthStore } from '@/stores/authStore';
 import { isSuspiciousName, sameName } from '@/lib/namePlausibility';
 import { type CheckIn, type CinConfidence, type CinScanResponse } from '@/types';
-
-// ─── Pastille de confiance (scan CIN uniquement) ──────────────────────────────
-const CONF_STYLE: Record<CinConfidence, { bg: string; fg: string; key: string }> = {
-  high:   { bg: 'var(--qayed-conforme-fond)', fg: 'var(--qayed-conforme-texte)', key: 'cinScan.confHigh' },
-  medium: { bg: 'var(--qayed-vigilance-fond)', fg: 'var(--qayed-vigilance-texte)', key: 'cinScan.confMedium' },
-  low:    { bg: 'var(--qayed-erreur-fond)', fg: 'var(--qayed-erreur-texte)', key: 'cinScan.confLow' },
-};
-
-const ConfPill = ({ level }: { level: CinConfidence }) => {
-  const { t } = useTranslation();
-  const s = CONF_STYLE[level];
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold" style={{ background: s.bg, color: s.fg }}>
-      <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.fg }} />
-      {t(s.key)}
-    </span>
-  );
-};
-
-/** Champ avec label + pastille de confiance optionnelle (préremplissage CIN). */
-const Field = ({ label, level, children }: { label: string; level?: CinConfidence | null; children: ReactNode }) => (
-  <div className="flex flex-col gap-1.5">
-    <div className="flex items-center justify-between gap-2">
-      <span className="label mb-0">{label}</span>
-      {level && <ConfPill level={level} />}
-    </div>
-    {children}
-  </div>
-);
 
 // Déduit le sexe à partir de la filiation (بنت/بن) ou de la mention épouse (حرم).
 const inferSex = (filiationAr: string | null, spouseAr: string | null): 'M' | 'F' | '' => {
@@ -68,13 +37,7 @@ export const GuestScanPanel = ({
   checkIn: CheckIn; isPrimary: boolean; label: string;
   onSuccess: () => void; onCancel?: () => void;
 }) => {
-  const { t, i18n } = useTranslation();
-  const SEX_OPTIONS = [
-    { value: '',  label: t('common.sex')    },
-    { value: 'M', label: t('common.male')   },
-    { value: 'F', label: t('common.female') },
-    { value: 'X', label: t('common.other')  },
-  ];
+  const { t } = useTranslation();
   const { toast } = useToast();
   const activePropertyId = useAuthStore((s) => s.activePropertyId);
   const hotelId = useAuthStore((s) => s.user?.hotel?.id);
@@ -429,12 +392,6 @@ export const GuestScanPanel = ({
 
   const setG = (k: string, v: string) => setGuestForm((f) => ({ ...f, [k]: v }));
 
-  // Expiry check — réalité terrain : on enregistre quand même, le bouton reste actif.
-  const today = new Date().toISOString().slice(0, 10);
-  const soonLimit = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
-  const docExpired      = !!guestForm.expiry_date && guestForm.expiry_date < today;
-  const docExpiresSoon  = !!guestForm.expiry_date && !docExpired && guestForm.expiry_date < soonLimit;
-
   // Un champ `low` non rempli bloque la soumission (en plus des champs requis).
   const hasUnfilledLow = !!conf && (
     (conf.cinNumber === 'low' && !guestForm.document_number) ||
@@ -530,86 +487,25 @@ export const GuestScanPanel = ({
             </div>
           )}
 
-          {/* Carte 1 — CIN tunisienne (OCR Claude vision) */}
-          <button
-            onClick={() => { setCinError(null); setCapture('cin'); }}
-            className="group flex w-full items-center gap-3.5 rounded-2xl p-4 text-start shadow-card transition-all active:scale-[0.99]"
-            style={{ background: 'var(--qayed-cachet)', color: '#fff' }}
-          >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/15" aria-hidden="true">
-              <CreditCard className="h-6 w-6" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold leading-tight">{t('cinScan.entryCinTitle')}</p>
-              <p className="mt-0.5 text-xs text-white/80">{t('cinScan.scanCinSubtitle')}</p>
-            </div>
-            <ArrowNext className="h-5 w-5 shrink-0 opacity-70" />
-          </button>
-
-          {/* Carte 2 — Passeport / CIN étrangère avec MRZ (même importance) */}
-          <button
-            onClick={() => { setCinError(null); setCapture('mrz'); }}
-            className="group flex w-full items-center gap-3.5 rounded-2xl p-4 text-start shadow-card transition-all active:scale-[0.99]"
-            style={{ background: 'var(--qayed-encre)', color: '#fff' }}
-          >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10" aria-hidden="true">
-              <ScanLine className="h-6 w-6" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold leading-tight">{t('cinScan.entryPassportTitle')}</p>
-              <p className="mt-0.5 text-xs text-white/70">{t('cinScan.entryPassportSubtitle')}</p>
-            </div>
-            <ArrowNext className="h-5 w-5 shrink-0 opacity-70" />
-          </button>
-
-          {/* Actions secondaires, discrètes — cibles tactiles de 44px : elles
-              faisaient 14px de haut, sur l'écran le plus utilisé du produit. */}
-          <div className="mt-1 flex items-center justify-center gap-2">
-            <Button variant="link" size="sm" className="text-qayed-fiche hover:text-qayed-encre" onClick={() => uploadRef.current?.click()}>
-              <Upload className="h-3.5 w-3.5" aria-hidden="true" /> {t('guestScan.importPhoto')}
-            </Button>
-            <span className="h-3 w-px bg-qayed-ligne" aria-hidden="true" />
-            <Button variant="link" size="sm" className="text-qayed-fiche hover:text-qayed-encre" onClick={() => { setExtractedOk(false); setScanKind('mrz'); setScanState('done'); }}>
-              {t('guestScan.manualEntry')}
-            </Button>
-          </div>
+          <ScanEntryCards
+            onCin={() => { setCinError(null); setCapture('cin'); }}
+            onPassport={() => { setCinError(null); setCapture('mrz'); }}
+            onImport={() => uploadRef.current?.click()}
+            onManual={() => { setExtractedOk(false); setScanKind('mrz'); setScanState('done'); }}
+          />
         </div>
       )}
 
       {/* ── Scanning ── */}
       {scanState === 'scanning' && (
-        <div className="flex flex-col items-center gap-4 rounded-2xl bg-white py-9">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-qayed-cachet-dilue animate-pulse" aria-hidden="true">
-            <Loader2 className="h-7 w-7 animate-spin text-qayed-cachet" />
-          </div>
-          {scanKind === 'cin' ? (
-            <>
-              <p className="text-sm font-semibold text-qayed-gris-700">{t('cinScan.reading')}</p>
-              <p className="text-xs qayed-arabic text-qayed-fiche" dir="rtl">{t('cinScan.readingAr')}</p>
-            </>
-          ) : mrzFallback ? (
-            // Repli Claude vision après une lecture locale douteuse (barre indéterminée).
-            <>
-              <p className="text-sm font-semibold text-qayed-gris-700">{t('cinScan.mrzFallback')}</p>
-              <p className="text-xs text-qayed-fiche">{t('cinScan.mrzFallbackHint')}</p>
-            </>
-          ) : (
-            <>
-              <p className="text-sm font-semibold text-qayed-gris-700">{t('guestScan.readingMrz')}</p>
-              <div
-                className="w-full max-w-xs rounded-full bg-qayed-gris-100 h-2"
-                role="progressbar"
-                aria-valuenow={ocrProgress}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={t('guestScan.readingMrz')}
-              >
-                <div className="h-2 rounded-full bg-qayed-cachet transition-all duration-300" style={{ width: `${ocrProgress}%` }} />
-              </div>
-              <p className="text-xs text-qayed-fiche">{ocrProgress}%</p>
-            </>
-          )}
-        </div>
+        scanKind === 'cin' ? (
+          <ScanReading title={t('cinScan.reading')} subtitleAr={t('cinScan.readingAr')} />
+        ) : mrzFallback ? (
+          // Repli Claude vision après une lecture locale douteuse (barre indéterminée).
+          <ScanReading title={t('cinScan.mrzFallback')} subtitle={t('cinScan.mrzFallbackHint')} />
+        ) : (
+          <ScanReading title={t('guestScan.readingMrz')} progress={ocrProgress} />
+        )
       )}
 
       {/* ── Done — form ── */}
@@ -654,82 +550,14 @@ export const GuestScanPanel = ({
             </div>
           )}
 
-          <div className="flex flex-col gap-3">
-            <Select
-              label={t('guestScan.documentType')}
-              options={[
-                { value: 'passport', label: t('guestScan.passport') },
-                { value: 'national_id', label: t('guestScan.nationalId') },
-              ]}
-              value={guestForm.document_type ?? 'passport'}
-              onChange={(e) => setG('document_type', e.target.value)}
-            />
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Field label={t('guestScan.firstName')} level={conf?.names}>
-                <Input value={guestForm.first_name ?? ''} onChange={(e) => setG('first_name', e.target.value)} autoFocus={focusKey === 'last_name'} required />
-              </Field>
-              <Field label={t('guestScan.lastName')} level={conf?.names}>
-                <Input value={guestForm.last_name ?? ''} onChange={(e) => setG('last_name', e.target.value)} required />
-              </Field>
-            </div>
-
-            {/* Champs arabes (RTL, IBM Plex Sans Arabic) — scan CIN uniquement */}
-            {isCin && (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Field label={t('cinScan.lastNameAr')} level={conf?.names}>
-                  <Input dir="rtl" className="qayed-arabic text-right" value={guestForm.last_name_ar ?? ''} onChange={(e) => setG('last_name_ar', e.target.value)} />
-                </Field>
-                <Field label={t('cinScan.firstNameAr')} level={conf?.names}>
-                  <Input dir="rtl" className="qayed-arabic text-right" value={guestForm.first_name_ar ?? ''} onChange={(e) => setG('first_name_ar', e.target.value)} />
-                </Field>
-                <div className="sm:col-span-2">
-                  <Field label={t('cinScan.filiationAr')}>
-                    <Input dir="rtl" className="qayed-arabic text-right" value={guestForm.filiation_ar ?? ''} onChange={(e) => setG('filiation_ar', e.target.value)} />
-                  </Field>
-                </div>
-                {(guestForm.spouse_ar || cinScan?.spouseAr) && (
-                  <div className="sm:col-span-2">
-                    <Field label={t('cinScan.spouseAr')}>
-                      <Input dir="rtl" className="qayed-arabic text-right" value={guestForm.spouse_ar ?? ''} onChange={(e) => setG('spouse_ar', e.target.value)} />
-                    </Field>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <Field label={t('guestScan.dateOfBirth')} level={conf?.birthDate}>
-              <Input type="date" value={guestForm.date_of_birth ?? ''} onChange={(e) => setG('date_of_birth', e.target.value)} autoFocus={focusKey === 'date_of_birth'} required />
-            </Field>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Select label={t('common.sex')} options={SEX_OPTIONS} value={guestForm.sex ?? ''} onChange={(e) => setG('sex', e.target.value)} />
-              <Input label={t('guestScan.nationality')} placeholder="TUN" value={guestForm.nationality_code ?? ''} onChange={(e) => setG('nationality_code', e.target.value.toUpperCase())} maxLength={3} />
-            </div>
-
-            <Field label={isCin ? t('cinScan.cinNumber') : t('guestScan.documentNumber')} level={conf?.cinNumber}>
-              <Input value={guestForm.document_number ?? ''} onChange={(e) => setG('document_number', e.target.value)} autoFocus={focusKey === 'document_number'} required />
-            </Field>
-
-            {isCin && guestForm.birth_place_ar !== undefined && (
-              <Field label={t('cinScan.birthPlaceAr')}>
-                <Input dir="rtl" className="qayed-arabic text-right" value={guestForm.birth_place_ar ?? ''} onChange={(e) => setG('birth_place_ar', e.target.value)} />
-              </Field>
-            )}
-
-            {/* Pays de délivrance + expiration : masqués pour la CIN (pas d'expiration) */}
-            {!isCin && (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Input label={t('guestScan.issuingCountry')} placeholder="TUN" value={guestForm.issuing_country_code ?? ''} onChange={(e) => setG('issuing_country_code', e.target.value.toUpperCase())} maxLength={3} required />
-                <div className="flex flex-col gap-1">
-                  <Input label={t('guestScan.expiry')} type="date" value={guestForm.expiry_date ?? ''} onChange={(e) => setG('expiry_date', e.target.value)} />
-                  {docExpiresSoon && (
-                    <p className="text-xs font-medium text-qayed-vigilance-texte">{t('guestScan.docExpiresSoon')}</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          <GuestFields
+            form={guestForm}
+            set={setG}
+            conf={conf}
+            isCin={isCin}
+            showArabic={isCin}
+            focusKey={focusKey}
+          />
 
           {hasUnfilledLow && (
             <p className="text-xs font-medium text-qayed-erreur-texte" role="alert">{t('cinScan.lowFieldRequired')}</p>
@@ -737,20 +565,6 @@ export const GuestScanPanel = ({
 
           {docFieldsMissing && (
             <p className="text-xs font-medium text-qayed-erreur-texte" role="alert">{t('guestScan.documentFieldsRequired')}</p>
-          )}
-
-          {docExpired && (
-            <div className="flex items-start gap-2 rounded-xl border border-qayed-vigilance bg-qayed-vigilance-fond px-3 py-2.5">
-              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-qayed-vigilance-texte" aria-hidden="true" />
-              <p className="text-xs font-semibold text-qayed-vigilance-texte">
-                {t('guestScan.docExpiredSince', {
-                  date: new Date(guestForm.expiry_date!).toLocaleDateString(
-                    i18n.language === 'ar' ? 'ar-TN' : i18n.language === 'en' ? 'en-GB' : 'fr-TN',
-                    { day: 'numeric', month: 'long', year: 'numeric' },
-                  ),
-                })}
-              </p>
-            </div>
           )}
 
           {docRequired && (

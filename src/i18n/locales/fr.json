@@ -1132,7 +1132,7 @@
     "photographHint": "Photographiez la page du passeport avec la zone MRZ (deux lignes de codes) bien visible.",
     "takePhoto": "Prendre une photo",
     "importPhoto": "Importer une photo",
-    "manualEntry": "Saisie manuelle",
+    "manualEntry": "Saisir à la main",
     "readingMrz": "Lecture MRZ en cours…",
     "readSuccess": "Document lu avec succès — vérifiez les données",
     "documentType": "Type de document",
@@ -1149,7 +1149,8 @@
     "rescan": "Rescanner ou corriger",
     "docExpiredSince": "Document expiré depuis le {{date}}",
     "docExpiresSoon": "Expire bientôt",
-    "documentFieldsRequired": "Le numéro de document et le pays de délivrance sont obligatoires pour la fiche de police."
+    "documentFieldsRequired": "Le numéro de document et le pays de délivrance sont obligatoires pour la fiche de police.",
+    "chooseCountry": "Choisir un pays"
   },
   "auth": {
     "otp": {
@@ -2096,7 +2097,21 @@
     "documentType": "Type de document",
     "docNationalId": "Carte d’identité",
     "docResidencePermit": "Titre de séjour",
-    "issuingCountry": "Pays émetteur (code)"
+    "issuingCountry": "Pays émetteur (code)",
+    "lockedTitle": "Fiche en cours de saisie par {{name}}",
+    "lockedTitleUnknown": "Fiche en cours de saisie par une autre personne",
+    "lockedBody": "Attendez la fin de sa saisie, puis réessayez.",
+    "retry": "Réessayer",
+    "primaryGuest": "Voyageur principal",
+    "saveGuest": "Enregistrer ce voyageur",
+    "guestsTitle": "Voyageurs déclarés",
+    "reviewList": "Voir la fiche ({{count}} sur {{total}})",
+    "addAnother": "Ajouter un voyageur",
+    "readingSlow": "La lecture prend plus de temps que prévu.",
+    "readingSlowHint": "Réessayez, ou saisissez les informations à la main.",
+    "sexRequired": "Indiquez le sexe du voyageur.",
+    "remainingGuests_one": "Il reste {{count}} voyageur à déclarer.",
+    "remainingGuests_other": "Il reste {{count}} voyageurs à déclarer."
   },
   "adminPartners": {
     "title": "Partenaires API",
@@ -2139,7 +2154,38 @@
     "widgetOriginsHint": "Séparées par des virgules. Origine complète uniquement (https://hôte), sans chemin ni caractère générique — ex. https://diar.example",
     "noOrigins": "Aucune origine autorisée pour l'instant — le widget refusera de s'ouvrir en iframe.",
     "originInvalid": "Origine invalide : « {{origin}} » — format attendu https://hôte, sans chemin ni astérisque.",
-    "originsSaved": "Origines widget mises à jour."
+    "originsSaved": "Origines widget mises à jour.",
+    "purge": {
+      "section": "Données de test",
+      "hint": "Supprime définitivement les sessions, brouillons, fiches et séjours créés avec les clés de test de ce partenaire.",
+      "button": "Purger les données de test",
+      "title": "Purger les données de test",
+      "intro": "{{count}} élément de test sera supprimé définitivement :",
+      "intro_other": "{{count}} éléments de test seront supprimés définitivement :",
+      "nothing": "Aucune donnée de test à purger pour ce partenaire.",
+      "changed": "Les données de test ont changé depuis l'aperçu : vérifiez les nouveaux nombres puis confirmez à nouveau.",
+      "roomsReleased": "{{count}} chambre libérée.",
+      "roomsReleased_other": "{{count}} chambres libérées.",
+      "kept": "{{count}} fiche conservée (créée ou complétée avec une clé live, ou alerte watchlist).",
+      "kept_other": "{{count}} fiches conservées (créées ou complétées avec une clé live, ou alerte watchlist).",
+      "neverLive": "Les fiches créées avec une clé live et celles saisies dans Qayed ne sont jamais touchées.",
+      "typeTotal": "Pour confirmer, saisissez le nombre d'éléments à supprimer ({{count}})",
+      "confirm": "Supprimer {{count}} élément",
+      "confirm_other": "Supprimer {{count}} éléments",
+      "done": "{{count}} élément de test supprimé.",
+      "done_other": "{{count}} éléments de test supprimés.",
+      "counts": {
+        "sessions": "Sessions de fiche",
+        "drafts": "Brouillons",
+        "fiches": "Fiches (séjours)",
+        "guests": "Voyageurs",
+        "travel_documents": "Documents de voyage",
+        "scans": "Scans (images)",
+        "whatsapp_jobs": "Envois WhatsApp en file",
+        "notifications": "Notifications",
+        "webhook_deliveries": "Livraisons webhook"
+      }
+    }
   },
   "integrations": {
     "title": "Intégrations",

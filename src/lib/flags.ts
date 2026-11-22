@@ -76,3 +76,28 @@ export const getFlagUrl = (alpha3?: string | null): string | null => {
   const a2 = A3_TO_A2[alpha3.toUpperCase()];
   return a2 ? `/flags/${a2.toLowerCase()}.png` : null;
 };
+
+/**
+ * Nom du pays dans la langue de l'interface pour un code alpha-3 (« TUN » →
+ * « Tunisie »). Repli sur le code lui-même si inconnu ou si le navigateur ne
+ * fournit pas Intl.DisplayNames.
+ */
+export const countryName = (alpha3: string | null | undefined, locale: string): string => {
+  const code = (alpha3 ?? '').toUpperCase();
+  const a2 = A3_TO_A2[code];
+  if (!a2) return code;
+  try {
+    return new Intl.DisplayNames([locale], { type: 'region' }).of(a2) ?? code;
+  } catch {
+    return code;
+  }
+};
+
+/** Liste des pays (Tunisie en tête, puis ordre alphabétique localisé). */
+export const countryOptions = (locale: string): Array<{ value: string; label: string }> => {
+  const all = Object.keys(A3_TO_A2)
+    .filter((c) => c !== 'TUN')
+    .map((c) => ({ value: c, label: countryName(c, locale) }))
+    .sort((a, b) => a.label.localeCompare(b.label, locale));
+  return [{ value: 'TUN', label: countryName('TUN', locale) }, ...all];
+};

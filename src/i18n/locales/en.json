@@ -1131,7 +1131,7 @@
     "photographHint": "Photograph the passport page with the MRZ zone (two code lines) clearly visible.",
     "takePhoto": "Take a photo",
     "importPhoto": "Import a photo",
-    "manualEntry": "Manual entry",
+    "manualEntry": "Enter by hand",
     "readingMrz": "Reading MRZ…",
     "readSuccess": "Document read successfully — check the data",
     "documentType": "Document type",
@@ -1148,7 +1148,8 @@
     "rescan": "Rescan or correct",
     "docExpiredSince": "Document expired since {{date}}",
     "docExpiresSoon": "Expires soon",
-    "documentFieldsRequired": "Document number and issuing country are required for the police record."
+    "documentFieldsRequired": "Document number and issuing country are required for the police record.",
+    "chooseCountry": "Choose a country"
   },
   "auth": {
     "otp": {
@@ -2092,6 +2093,20 @@
     "documentType": "Document type",
     "docNationalId": "National ID card",
     "docResidencePermit": "Residence permit",
-    "issuingCountry": "Issuing country (code)"
+    "issuingCountry": "Issuing country (code)",
+    "lockedTitle": "This form is being filled in by {{name}}",
+    "lockedTitleUnknown": "This form is being filled in by someone else",
+    "lockedBody": "Wait until this entry is finished, then try again.",
+    "retry": "Try again",
+    "primaryGuest": "Main guest",
+    "saveGuest": "Save this guest",
+    "guestsTitle": "Declared guests",
+    "reviewList": "Review the form ({{count}} of {{total}})",
+    "addAnother": "Add a guest",
+    "readingSlow": "Reading is taking longer than expected.",
+    "readingSlowHint": "Try again, or enter the details by hand.",
+    "sexRequired": "Select the guest’s sex.",
+    "remainingGuests_one": "{{count}} guest left to declare.",
+    "remainingGuests_other": "{{count}} guests left to declare."
   }
 }
