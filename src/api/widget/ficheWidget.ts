@@ -43,6 +43,9 @@ export interface BootstrapResponse {
     nationality_code: string;
     is_primary: boolean;
   }>;
+  /** Nombre de voyageurs attendus (>= 1) ; en amend, les existants comptent. */
+  expected_guest_count: number;
+  locale: 'fr' | 'ar' | 'en';
 }
 
 export interface GuestDocument {
@@ -100,8 +103,25 @@ export const ficheWidgetApi = {
       `/scan/${scanId}/status`,
     ).then((r) => r.data.data),
 
-  submit: () =>
-    widgetApi.post<{ session_id: string; fiche_id: string; guest_count: number }>('/submit').then((r) => r.data),
+  /** Dates prises en compte par le serveur en mode create uniquement. */
+  submit: (body: { arrival_date?: string; departure_date?: string } = {}) =>
+    widgetApi.post<{ session_id: string; fiche_id: string; guest_count: number }>('/submit', body).then((r) => r.data),
+
+  /**
+   * Envoi + lecture du document. L'extraction est synchrone : la réponse du
+   * POST porte déjà en général `completed` ou `failed`, et un seul appel de
+   * statut récupère alors `extracted`. Court sondage sinon.
+   */
+  readDocument: async (file: Blob, documentType: 'cin' | 'passport') => {
+    const { scan_id, status } = await ficheWidgetApi.uploadScan(file, documentType);
+    const done = (st: string) => st === 'completed' || st === 'failed';
+    let result = await ficheWidgetApi.scanStatus(scan_id);
+    for (let i = 0; !done(result.status) && !done(status) && i < 10; i++) {
+      await new Promise((r) => setTimeout(r, 1500));
+      result = await ficheWidgetApi.scanStatus(scan_id);
+    }
+    return { scan_id, ...result };
+  },
 };
 
 export const extractWidgetError = (err: unknown): { code: string; message: string } => {

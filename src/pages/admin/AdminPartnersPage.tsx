@@ -198,15 +198,62 @@ const LinksSection = ({ partnerId }: { partnerId: string }) => {
   const qc = useQueryClient();
   const { data: links } = useQuery({ queryKey: ['admin-partner-links', partnerId], queryFn: () => adminPartnersApi.links(partnerId) });
 
+  const [picking, setPicking] = useState(false);
+  const [search, setSearch] = useState('');
+  const { data: linkable } = useQuery({
+    queryKey: ['admin-partner-linkable', partnerId, search],
+    queryFn: () => adminPartnersApi.linkableHotels(partnerId, search),
+    enabled: picking,
+  });
+
   const revokeMut = useAdminMutation({
     mutationFn: (linkId: string) => adminPartnersApi.revokeLink(partnerId, linkId),
     successMessage: t('adminPartners.linkRevoked'),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-partner-links', partnerId] }),
   });
 
+  const linkMut = useAdminMutation({
+    mutationFn: (hotelId: string) => adminPartnersApi.link(partnerId, hotelId),
+    successMessage: t('adminPartners.linkCreated'),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-partner-links', partnerId] });
+      qc.invalidateQueries({ queryKey: ['admin-partner-linkable', partnerId] });
+    },
+  });
+
   return (
     <div>
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">{t('adminPartners.establishmentLinks')}</p>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('adminPartners.establishmentLinks')}</p>
+        <Button size="sm" variant="secondary" onClick={() => setPicking((v) => !v)}>
+          {picking ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />} {t(picking ? 'common.close' : 'adminPartners.linkEstablishment')}
+        </Button>
+      </div>
+      {picking && (
+        <div className="mb-3 rounded-lg border border-gray-100 bg-white p-3">
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t('adminPartners.searchEstablishment')}
+            aria-label={t('adminPartners.searchEstablishment')}
+          />
+          <div className="mt-2 flex max-h-64 flex-col gap-1 overflow-y-auto">
+            {linkable?.map((h) => (
+              <button
+                key={h.id}
+                type="button"
+                disabled={linkMut.isPending}
+                onClick={() => linkMut.mutate(h.id)}
+                className="flex min-h-[44px] items-center justify-between rounded-md px-2 text-left hover:bg-gray-50"
+              >
+                <span className="text-sm">{h.name}</span>
+                <span className="text-[11px] text-gray-400">{h.organization_name}</span>
+              </button>
+            ))}
+            {linkable && !linkable.length && <p className="text-xs text-gray-400">{t('adminPartners.noLinkable')}</p>}
+          </div>
+        </div>
+      )}
       <div className="flex flex-col gap-2">
         {links?.map((l) => (
           <div key={l.id} className="flex items-center justify-between rounded-lg bg-white border border-gray-100 px-3 py-2">

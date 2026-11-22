@@ -80,6 +80,13 @@ export const adminPartnersApi = {
 
   revokeLink: (id: string, linkId: string) => api.post(`/admin/partners/${id}/links/${linkId}/revoke`),
 
+  linkableHotels: (id: string, q: string) =>
+    api.get<{ data: { id: string; name: string; organization_name: string | null }[] }>(`/admin/partners/${id}/linkable-hotels`, { params: { q } })
+      .then((r) => r.data.data),
+
+  link: (id: string, hotelId: string) =>
+    api.post<{ data: AdminPartnerLink }>(`/admin/partners/${id}/links`, { hotel_id: hotelId }).then((r) => r.data.data),
+
   metrics: (id: string) => api.get<{ data: AdminPartnerMetrics }>(`/admin/partners/${id}/metrics`).then((r) => r.data.data),
 
   webhooks: (id: string) => api.get<{ data: AdminWebhookEndpoint[] }>(`/admin/partners/${id}/webhooks`).then((r) => r.data.data),

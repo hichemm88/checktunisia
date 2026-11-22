@@ -11,7 +11,15 @@ import { SiteChrome } from '@/cms/SiteChrome';
  * pour import direct dans Postman/Insomnia ou un générateur de client.
  */
 
+/**
+ * Hôte public de l'API et du widget. Jamais https://qayed.tn : il redirige
+ * (308) vers le site vitrine, qui ne sert aucune route d'API. En dev, on
+ * pointe sur le backend local pour que les liens restent cliquables.
+ */
+const PUBLIC_API_ORIGIN = 'https://api.qayed.tn';
+
 const backendOrigin = () => {
+  if (!import.meta.env.DEV) return PUBLIC_API_ORIGIN;
   const apiUrl = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api/v1';
   try {
     return new URL(apiUrl, window.location.origin).origin;
@@ -23,11 +31,13 @@ const backendOrigin = () => {
 const ENDPOINTS: { method: string; path: string; desc: string }[] = [
   { method: 'POST', path: '/v1/establishment-links', desc: 'Échange un code de liaison contre un accès à un établissement.' },
   { method: 'GET', path: '/v1/establishments', desc: 'Liste les établissements liés à cette clé, avec leur quota.' },
+  { method: 'GET', path: '/v1/operators', desc: 'Utilisateurs actifs des hébergeurs liés (id, name, role ; jamais d\'e-mail ni de téléphone) — pour relier vos comptes aux comptes Qayed et envoyer operator.user_id.' },
   { method: 'GET', path: '/v1/establishments/{hotel_id}/rooms', desc: 'Chambres réelles de l\'établissement — pour construire votre table de correspondance et envoyer room_id.' },
   { method: 'POST', path: '/v1/fiche-sessions', desc: 'Crée (ou réutilise) une session de fiche pour une réservation.' },
   { method: 'GET', path: '/v1/fiche-sessions/by-booking-ref', desc: 'Retrouve la dernière session connue sans avoir gardé le session_id.' },
-  { method: 'GET', path: '/v1/fiche-sessions/{session_id}', desc: 'Statut d\'une session (pending / submitted / expired).' },
-  { method: 'GET', path: '/v1/fiches/{fiche_id}', desc: 'Détail d\'une fiche soumise.' },
+  { method: 'GET', path: '/v1/fiche-sessions/{session_id}', desc: 'Statut d\'une session (pending / submitted / expired), avec guest_count et expected_guest_count.' },
+  { method: 'GET', path: '/v1/fiches/{fiche_id}', desc: 'Détail d\'une fiche soumise, avec son séjour (arrival_date, departure_date, checked_out_at, room_id, stay_status).' },
+  { method: 'PATCH', path: '/v1/fiches/{fiche_id}', desc: 'Prolongation, départ anticipé ou changement de chambre (departure_date, room_id, room), sans widget.' },
 ];
 
 const ERROR_CODES: { code: string; status: number; desc: string }[] = [
@@ -58,6 +68,10 @@ export const DocsApiPage = () => {
       <div className="mx-auto max-w-3xl px-4 py-12 space-y-10">
         <header>
           <h1 className="font-display text-3xl font-bold text-qayed-encre">API publique Qayed v1</h1>
+          <p className="mt-1 text-xs text-qayed-fiche">
+            Version 1.1.0 — hôte <code>{PUBLIC_API_ORIGIN}</code> (API et widget). N'utilisez pas{' '}
+            <code>https://qayed.tn</code>, qui redirige vers le site vitrine et ne sert aucune API.
+          </p>
           <p className="mt-2 text-qayed-fiche">
             Créez et soumettez des fiches de police depuis votre logiciel, sans jamais dupliquer le formulaire
             réglementaire hors de Qayed — sur le modèle Stripe Checkout : votre backend crée une session, un widget
@@ -93,16 +107,39 @@ export const DocsApiPage = () => {
     "arrival_date": "2026-09-20",
     "departure_date": "2026-09-23",
     "room": "204",
+    "room_id": "<room_id>",
     "guests": [],
-    "metadata": {}
+    "metadata": {},
+    "operator": { "user_id": "<user_id de GET /v1/operators>", "name": "Sami" },
+    "locale": "fr"
   }'`}</CodeBlock>
               Un second appel avec le même <code>booking_ref</code> pendant que la session est encore ouverte renvoie
               la même session (200, pas 201) — un double clic ne crée jamais de doublon.
+              <ul className="mt-2 list-disc list-inside space-y-1 text-qayed-fiche">
+                <li>
+                  <code>operator</code> et <code>locale</code> (<code>fr</code> par défaut, <code>ar</code>,{' '}
+                  <code>en</code>) sont optionnels. Si <code>operator.user_id</code> désigne un utilisateur actif du
+                  même hébergeur, la fiche lui est attribuée exactement comme s'il l'avait saisie dans Qayed
+                  (historique, journal d'audit, statistiques) et la réponse porte <code>operator_matched: true</code>.
+                  Sinon (absent, inconnu, désactivé, autre hébergeur, mal formé) : jamais d'erreur, repli sur
+                  l'utilisateur d'intégration, <code>operator.name</code> conservé dans le journal d'audit,{' '}
+                  <code>operator_matched: false</code>. Un compte désactivé avant la soumission retombe aussi sur
+                  l'utilisateur d'intégration.
+                </li>
+                <li>
+                  Un <code>room_id</code> dont la chambre a encore un séjour ouvert n'est jamais refusé : ce séjour est
+                  clos (à sa date de départ prévue si elle est passée, sinon à la date du jour) et la session est
+                  créée.
+                </li>
+              </ul>
             </li>
             <li>
               <strong>Widget</strong> — ouvrez <code>widget_url</code> dans une iframe (voir le snippet d'intégration
-              ci-dessus). Le réceptionniste y retrouve le vrai formulaire Qayed, pré-rempli, et peut ajouter/retirer
-              des voyageurs avant de soumettre.
+              ci-dessus), avec <code>allow="camera"</code>. Le widget s'ouvre directement sur le scan du premier
+              voyageur, avec un bandeau pré-rempli (dates, chambre, noms), un seul bouton principal par écran et un
+              compteur « 2 sur 3 ». La validation partielle est permise (« Valider avec 2 voyageurs sur 3 ») : pour
+              compléter plus tard, recréez une session pour le même <code>booking_ref</code> (mode{' '}
+              <code>amend</code>, toujours la même fiche).
             </li>
             <li>
               <strong>Webhook</strong> — configurez une URL de webhook depuis le panel admin Qayed (côté partenaire).
@@ -111,7 +148,12 @@ export const DocsApiPage = () => {
           </ol>
           <p className="text-sm text-qayed-fiche">
             En mode test (clé <code>qyd_test_...</code>) : aucune fiche n'est transmise à l'autorité et aucun quota
-            n'est décompté — isolation complète, idéal pour développer votre intégration.
+            n'est décompté — isolation complète, idéal pour développer votre intégration. Le webhook{' '}
+            <code>fiche.submitted</code> n'est <strong>pas</strong> envoyé en mode test : validez votre intégration de
+            bout en bout en relisant le statut avec <code>GET /v1/fiche-sessions/&#123;session_id&#125;</code> ou{' '}
+            <code>GET /v1/fiche-sessions/by-booking-ref</code>, qui renvoient <code>guest_count</code> (voyageurs
+            effectivement déclarés ; 0 tant que la fiche est un brouillon) et <code>expected_guest_count</code>{' '}
+            (voyageurs passés à la création, minimum 1), en test comme en live.
           </p>
         </section>
 
@@ -144,6 +186,65 @@ export const DocsApiPage = () => {
         </section>
 
         <section className="space-y-3">
+          <h2 className="font-display text-xl font-bold text-qayed-encre">Séjours et départs automatiques</h2>
+          <p className="text-sm text-qayed-encre">
+            Votre logiciel est la source de vérité des séjours créés via l'API. Pour une prolongation, un départ
+            anticipé ou un changement de chambre, sans widget :
+          </p>
+          <CodeBlock>{`curl -X PATCH ${origin}/v1/fiches/<fiche_id> \\
+  -H "Authorization: Bearer qyd_test_..." \\
+  -H "Content-Type: application/json" \\
+  -d '{"departure_date": "2026-09-25", "room_id": "<room_id>"}'`}</CodeBlock>
+          <ul className="list-disc list-inside space-y-1 text-sm text-qayed-fiche">
+            <li>
+              Champs : <code>departure_date</code>, <code>room_id</code> (issu de{' '}
+              <code>GET /v1/establishments/&#123;id&#125;/rooms</code>), <code>room</code> (libellé, peut être{' '}
+              <code>null</code>). <code>422 validation_error</code> si le corps est vide, si{' '}
+              <code>departure_date</code> précède l'arrivée ou si <code>room_id</code> est inconnu ;{' '}
+              <code>404 fiche_not_found</code> pour une fiche non créée par vous.
+            </li>
+            <li>
+              Un changement de chambre clôt tout séjour encore ouvert dans la chambre cible. Prolonger jusqu'à
+              aujourd'hui ou plus tard un séjour déjà clos automatiquement le rouvre. Chaque modification est tracée
+              dans le journal d'audit.
+            </li>
+            <li>
+              La réponse est celle de <code>GET /v1/fiches/&#123;fiche_id&#125;</code> : <code>arrival_date</code>,{' '}
+              <code>departure_date</code>, <code>checked_out_at</code> (date ou <code>null</code>),{' '}
+              <code>room_id</code>, <code>stay_status</code> (<code>draft</code>, <code>active</code>,{' '}
+              <code>completed</code>, <code>cancelled</code>).
+            </li>
+          </ul>
+          <p className="text-sm text-qayed-encre">
+            Chaque jour à 05:30 (heure de Tunis), les séjours créés via l'API dont la date de départ prévue est atteinte
+            sont clos à cette date, avec exactement les effets d'un départ saisi dans Qayed (journal d'audit,
+            notification au manager ; rien n'est envoyé à l'autorité, aucun quota). Les séjours saisis dans Qayed ne
+            sont pas concernés. L'occupation d'une chambre étant dérivée des séjours ouverts, elle reste occupée si un
+            autre séjour y est ouvert. Une nouvelle fiche le jour J sur une chambre dont le séjour précédent se termine
+            le jour J ou avant n'est jamais refusée ni retardée. Tenez donc <code>departure_date</code> exacte avec{' '}
+            <code>PATCH</code>.
+          </p>
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="font-display text-xl font-bold text-qayed-encre">Messages du widget (postMessage)</h2>
+          <p className="text-sm text-qayed-encre">
+            Le widget envoie à la fenêtre parente <code>qayed:submitted</code>{' '}
+            <code>&#123;type, session_id, fiche_id, guest_count&#125;</code>, <code>qayed:closed</code>{' '}
+            <code>&#123;type, session_id&#125;</code> et <code>qayed:error</code> <code>&#123;type, code&#125;</code>.
+            Ils sont émis avec <code>targetOrigin '*'</code> : vérifiez toujours{' '}
+            <code>event.origin === '{PUBLIC_API_ORIGIN}'</code> (le plus sûr : <code>new URL(widget_url).origin</code>).
+            Ce sont des signaux d'interface ; la source de vérité est le webhook signé (live) ou le{' '}
+            <code>GET</code> du statut de session (test et live).
+          </p>
+          <CodeBlock>{`const QAYED_ORIGIN = new URL(widgetUrl).origin; // ${PUBLIC_API_ORIGIN}
+window.addEventListener('message', (event) => {
+  if (event.origin !== QAYED_ORIGIN) return;
+  if (event.data?.type === 'qayed:submitted') { /* rafraîchir l'UI */ }
+});`}</CodeBlock>
+        </section>
+
+        <section className="space-y-3">
           <h2 className="font-display text-xl font-bold text-qayed-encre">Webhooks</h2>
           <p className="text-sm text-qayed-encre">
             Événements : <code>fiche.submitted</code>, <code>fiche.failed</code>, <code>session.expired</code>.
@@ -173,6 +274,20 @@ export const DocsApiPage = () => {
           <p className="text-xs text-qayed-fiche">
             Format d'erreur uniforme : <code>&#123;"error":&#123;"code","message","doc_url"&#125;&#125;</code>.
           </p>
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="font-display text-xl font-bold text-qayed-encre">Nouveautés 1.1.0</h2>
+          <p className="text-sm text-qayed-fiche">Ajouts optionnels uniquement, aucun changement incompatible :</p>
+          <ul className="list-disc list-inside space-y-1 text-sm text-qayed-encre">
+            <li>Hôte corrigé : <code>{PUBLIC_API_ORIGIN}</code> pour l'API, <code>widget_url</code> et l'origine des messages <code>postMessage</code>.</li>
+            <li><code>GET /v1/operators</code> : utilisateurs des hébergeurs liés, pour relier vos comptes aux comptes Qayed.</li>
+            <li><code>POST /v1/fiche-sessions</code> : champs optionnels <code>operator</code> et <code>locale</code>, réponse <code>operator_matched</code> ; un <code>room_id</code> dont la chambre est occupée n'est plus jamais refusé.</li>
+            <li><code>GET /v1/fiche-sessions/…</code> : <code>guest_count</code> et <code>expected_guest_count</code>, en test comme en live.</li>
+            <li><code>PATCH /v1/fiches/&#123;fiche_id&#125;</code> ; <code>GET /v1/fiches/&#123;fiche_id&#125;</code> renvoie le séjour.</li>
+            <li>Départs automatiques quotidiens (05:30, heure de Tunis) des séjours créés via l'API.</li>
+            <li>Widget : ouverture directe sur le scan, compteur de voyageurs, validation partielle complétée plus tard en mode <code>amend</code>, messages <code>postMessage</code> documentés.</li>
+          </ul>
         </section>
       </div>
     </SiteChrome>
