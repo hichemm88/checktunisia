@@ -12,6 +12,7 @@ const widgetApi = axios.create({
   timeout: 20_000,
 });
 
+const WIDGET_BASE = import.meta.env.VITE_WIDGET_API_URL ?? '/widget/v1';
 let widgetToken: string | null = null;
 export const setWidgetToken = (token: string) => { widgetToken = token; };
 
@@ -79,12 +80,36 @@ export interface GuestInput {
 }
 
 export interface ApiErrorPayload {
-  error: { code: string; message: string; doc_url: string };
+  error: { code: string; message: string; doc_url: string; taken_over_by?: string | null };
 }
 
 export const ficheWidgetApi = {
-  bootstrap: (token: string) =>
-    widgetApi.get<BootstrapResponse>(`/bootstrap?token=${encodeURIComponent(token)}`).then((r) => r.data),
+  /** takeover : « Reprendre la saisie » d'une fiche tenue par un collègue. */
+  bootstrap: (token: string, takeover = false) =>
+    widgetApi.get<BootstrapResponse>(`/bootstrap?token=${encodeURIComponent(token)}${takeover ? '&takeover=1' : ''}`).then((r) => r.data),
+
+  /** Action réelle (saisie, navigation) : renouvelle le verrou de saisie. */
+  touchLock: () => widgetApi.post('/lock'),
+
+  /** État seul, sans renouveler : échoue en 409 session_taken_over après une reprise. */
+  checkLock: () => widgetApi.get('/lock'),
+
+  /**
+   * Fermeture du widget : libère la fiche tout de suite. keepalive pour
+   * survivre à la fermeture de l'iframe ou de la page.
+   */
+  releaseLock: () => {
+    if (!widgetToken) return;
+    try {
+      void fetch(`${WIDGET_BASE}/lock`, {
+        method: 'DELETE',
+        keepalive: true,
+        headers: { Accept: 'application/json', Authorization: `Bearer ${widgetToken}` },
+      }).catch(() => undefined);
+    } catch {
+      /* au pire, le verrou tombe seul après 2 minutes */
+    }
+  },
 
   addGuest: (data: GuestInput) =>
     widgetApi.post<{ data: { id: string; first_name: string; last_name: string; nationality_code: string } }>('/guests', data)
@@ -132,10 +157,10 @@ export const ficheWidgetApi = {
   },
 };
 
-export const extractWidgetError = (err: unknown): { code: string; message: string } => {
+export const extractWidgetError = (err: unknown): { code: string; message: string; takenOverBy?: string } => {
   if (axios.isAxiosError(err) && err.response?.data?.error) {
     const e = (err.response.data as ApiErrorPayload).error;
-    return { code: e.code, message: e.message };
+    return { code: e.code, message: e.message, takenOverBy: e.taken_over_by ?? '' };
   }
   return { code: 'unknown', message: 'Une erreur inattendue est survenue.' };
 };

@@ -72,9 +72,10 @@ export const FicheWidgetPage = ({ token }: { token: string }) => {
   const { t, i18n } = useTranslation();
   useVisibleHeight();
 
-  const [phase, setPhase] = useState<'loading' | 'locked' | 'ready' | 'error' | 'submitted'>('loading');
+  const [phase, setPhase] = useState<'loading' | 'locked' | 'takenOver' | 'ready' | 'error' | 'submitted'>('loading');
   const [fatalError, setFatalError] = useState<string | null>(null);
   const [lockedBy, setLockedBy] = useState<string>('');
+  const [takenOverBy, setTakenOverBy] = useState<string>('');
   const [bootstrap, setBootstrap] = useState<BootstrapResponse | null>(null);
   const [guests, setGuests] = useState<DeclaredGuest[]>([]);
   const [target, setTarget] = useState(1);
@@ -115,7 +116,18 @@ export const FicheWidgetPage = ({ token }: { token: string }) => {
     setNotice(null);
   };
 
-  const boot = async () => {
+  /** Saisie reprise par un collègue : plus aucune action possible ici. */
+  const showError = (err: unknown) => {
+    const e = extractWidgetError(err);
+    if (e.code === 'session_taken_over') {
+      setTakenOverBy(e.takenOverBy ?? '');
+      setPhase('takenOver');
+      return;
+    }
+    setNotice(e.message);
+  };
+
+  const boot = async (takeover = false) => {
     if (!token) {
       setFatalError(t('widget.genericError'));
       setPhase('error');
@@ -124,12 +136,12 @@ export const FicheWidgetPage = ({ token }: { token: string }) => {
     const cacheKey = sessionCacheKey(token);
     setPhase('loading');
     try {
-      const cached = safeSession.get(cacheKey);
+      const cached = takeover ? null : safeSession.get(cacheKey);
       let data: BootstrapResponse;
       if (cached) {
         data = JSON.parse(cached) as BootstrapResponse;
       } else {
-        data = await ficheWidgetApi.bootstrap(token);
+        data = await ficheWidgetApi.bootstrap(token, takeover);
         // Une fiche verrouillée n'a rien consommé : on pourra réessayer avec ce lien.
         if (data.widget_token) safeSession.set(cacheKey, JSON.stringify(data));
       }
@@ -146,6 +158,9 @@ export const FicheWidgetPage = ({ token }: { token: string }) => {
         return;
       }
       setWidgetToken(data.widget_token);
+      // Page rechargée : on reprend le verrou (libéré à la fermeture), ou on
+      // apprend qu'un collègue a repris la saisie entre-temps.
+      if (cached) await ficheWidgetApi.touchLock();
 
       const existing = data.existing_guests.map((g) => ({
         id: g.id, first_name: g.first_name, last_name: g.last_name, is_primary: g.is_primary, removable: g.removable,
@@ -157,7 +172,12 @@ export const FicheWidgetPage = ({ token }: { token: string }) => {
       setStep(openingStep(existing.length, tgt));
       setPhase('ready');
     } catch (err) {
-      const { code, message } = extractWidgetError(err);
+      const { code, message, takenOverBy: by } = extractWidgetError(err);
+      if (code === 'session_taken_over') {
+        setTakenOverBy(by ?? '');
+        setPhase('takenOver');
+        return;
+      }
       setFatalError(message);
       setPhase('error');
       postToParent({ type: 'qayed:error', code });
@@ -168,6 +188,42 @@ export const FicheWidgetPage = ({ token }: { token: string }) => {
     void boot();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  // Verrou de saisie vivant pendant la saisie : renouvelé par les actions
+  // réelles (au plus une fois toutes les 30 s), vérifié sans le renouveler
+  // toutes les 20 s pour voir une reprise par un collègue, libéré dès que la
+  // page disparaît (iframe retirée, onglet fermé).
+  useEffect(() => {
+    if (phase !== 'ready') return;
+    let last = Date.now();
+    const onActivity = () => {
+      if (Date.now() - last < 30_000) return;
+      last = Date.now();
+      ficheWidgetApi.touchLock().catch(showError);
+    };
+    const check = () => {
+      if (document.visibilityState === 'visible') ficheWidgetApi.checkLock().catch(showError);
+    };
+    const release = () => ficheWidgetApi.releaseLock();
+    const events = ['pointerdown', 'keydown', 'input'] as const;
+    events.forEach((e) => document.addEventListener(e, onActivity, true));
+    document.addEventListener('visibilitychange', check);
+    window.addEventListener('pagehide', release);
+    const timer = window.setInterval(check, 20_000);
+    return () => {
+      events.forEach((e) => document.removeEventListener(e, onActivity, true));
+      document.removeEventListener('visibilitychange', check);
+      window.removeEventListener('pagehide', release);
+      window.clearInterval(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
+
+  // Navigation entre les écrans de saisie = action réelle.
+  useEffect(() => {
+    if (phase === 'ready') ficheWidgetApi.touchLock().catch(showError);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
 
   // Confirmation visible environ une seconde avant de prévenir le parent.
   useEffect(() => {
@@ -244,7 +300,7 @@ export const FicheWidgetPage = ({ token }: { token: string }) => {
       setResult(res);
       setPhase('submitted');
     } catch (err) {
-      setNotice(extractWidgetError(err).message);
+      showError(err);
     } finally {
       setBusy(false);
     }
@@ -263,7 +319,7 @@ export const FicheWidgetPage = ({ token }: { token: string }) => {
       startGuest();
       setStep(openingStep(next.length, target));
     } catch (err) {
-      setNotice(extractWidgetError(err).message);
+      showError(err);
     } finally {
       setBusy(false);
     }
@@ -274,7 +330,7 @@ export const FicheWidgetPage = ({ token }: { token: string }) => {
       await ficheWidgetApi.removeGuest(id);
       setGuests((g) => g.filter((x) => x.id !== id));
     } catch (err) {
-      setNotice(extractWidgetError(err).message);
+      showError(err);
     }
   };
 
@@ -283,7 +339,11 @@ export const FicheWidgetPage = ({ token }: { token: string }) => {
     startGuest();
   };
 
-  const close = () => postToParent({ type: 'qayed:closed', session_id: bootstrap?.session_id });
+  const close = () => {
+    // Fermé sans valider : la fiche se libère tout de suite pour les collègues.
+    if (phase === 'ready') ficheWidgetApi.releaseLock();
+    postToParent({ type: 'qayed:closed', session_id: bootstrap?.session_id });
+  };
 
   // Plein cadre : l'iframe entière, sans marge ni cadre.
   const shell = 'flex w-full flex-col overflow-x-hidden bg-qayed-papier';
@@ -310,7 +370,19 @@ export const FicheWidgetPage = ({ token }: { token: string }) => {
           {lockedBy ? t('widget.lockedTitle', { name: lockedBy }) : t('widget.lockedTitleUnknown')}
         </h1>
         <p className="text-sm text-qayed-fiche">{t('widget.lockedBody')}</p>
-        <Button onClick={() => void boot()}>{t('widget.retry')}</Button>
+        <Button onClick={() => void boot(true)}>{t('widget.takeOver')}</Button>
+        <Button variant="link" onClick={close}>{t('widget.close')}</Button>
+      </div>
+    );
+  }
+
+  if (phase === 'takenOver') {
+    return (
+      <div className={cn(shell, 'items-center justify-center gap-3 px-6 text-center')} style={shellStyle} role="alert">
+        <h1 className="font-display text-lg font-bold text-qayed-encre">
+          {takenOverBy ? t('widget.takenOverTitle', { name: takenOverBy }) : t('widget.takenOverTitleUnknown')}
+        </h1>
+        <p className="text-sm text-qayed-fiche">{t('widget.takenOverBody')}</p>
         <Button variant="link" onClick={close}>{t('widget.close')}</Button>
       </div>
     );

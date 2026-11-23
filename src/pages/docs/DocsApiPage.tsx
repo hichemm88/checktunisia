@@ -36,6 +36,7 @@ const ENDPOINTS: { method: string; path: string; desc: string }[] = [
   { method: 'POST', path: '/v1/fiche-sessions', desc: 'Crée (ou réutilise) une session de fiche pour une réservation.' },
   { method: 'GET', path: '/v1/fiche-sessions/by-booking-ref', desc: 'Retrouve la dernière session connue sans avoir gardé le session_id.' },
   { method: 'GET', path: '/v1/fiche-sessions/{session_id}', desc: 'Statut d\'une session (pending / submitted / expired), avec guest_count et expected_guest_count.' },
+  { method: 'DELETE', path: '/v1/fiche-sessions/{session_id}/lock', desc: 'Libère le verrou de saisie quand vous fermez la modale du widget : la fiche est aussitôt disponible pour un collègue, la saisie déjà faite est conservée. Réponse 204, idempotent.' },
   { method: 'GET', path: '/v1/fiches', desc: 'Fiches validées d\'un établissement lié, saisies via l\'API ou directement dans Qayed (source), paginées par curseur ; filtres arrival_from, arrival_to, updated_since. Aucun numéro de document ni date de naissance.' },
   { method: 'GET', path: '/v1/fiches/{fiche_id}', desc: 'Détail d\'une fiche soumise, avec son séjour (arrival_date, departure_date, checked_out_at, room_id, stay_status), son delivery_status et guests (prénom et nom de chaque voyageur, rien d\'autre).' },
   { method: 'PATCH', path: '/v1/fiches/{fiche_id}', desc: 'Prolongation, départ anticipé ou changement de chambre (departure_date, room_id, room), sans widget ; booking_ref rattache une fiche saisie dans Qayed à votre réservation.' },
@@ -55,6 +56,9 @@ const ERROR_CODES: { code: string; status: number; desc: string }[] = [
   { code: 'invalid_signature', status: 401, desc: 'Jeton de widget invalide.' },
   { code: 'rate_limited', status: 429, desc: 'Trop de requêtes.' },
   { code: 'validation_error', status: 422, desc: 'Erreur de validation des champs envoyés.' },
+  { code: 'booking_ref_conflict', status: 409, desc: 'Une autre fiche du même établissement porte déjà ce booking_ref.' },
+  { code: 'booking_ref_already_set', status: 409, desc: 'La fiche est déjà rattachée à une autre référence de réservation.' },
+  { code: 'session_taken_over', status: 409, desc: 'Widget uniquement : la saisie a été reprise par un collègue (error.taken_over_by).' },
 ];
 
 const CodeBlock = ({ children }: { children: string }) => (
@@ -254,6 +258,22 @@ export const DocsApiPage = () => {
         </section>
 
         <section className="space-y-3">
+          <h2 className="font-display text-xl font-bold text-qayed-encre">Verrou de saisie</h2>
+          <p className="text-sm text-qayed-encre">
+            Pendant qu'une personne saisit une fiche, une autre qui l'ouvre voit « &#123;nom&#125; est en train de saisir
+            cette fiche » et un bouton « Reprendre la saisie ». La reprise lui transfère la fiche avec tout ce qui est
+            déjà saisi ; le premier écran affiche « Saisie reprise par &#123;nom&#125; » et ne peut plus valider.
+          </p>
+          <ul className="list-disc list-inside space-y-1 text-sm text-qayed-fiche">
+            <li>Le verrou tombe après 2 minutes sans action dans le widget et se lève dès la fermeture du widget.</li>
+            <li>Le même compte n'est jamais bloqué par son propre verrou, quel que soit l'appareil.</li>
+            <li>Si vous retirez l'iframe vous-même, libérez la fiche explicitement (réponse 204) :</li>
+          </ul>
+          <CodeBlock>{`curl -X DELETE ${origin}/v1/fiche-sessions/<session_id>/lock \\
+  -H "Authorization: Bearer qyd_live_..."`}</CodeBlock>
+        </section>
+
+        <section className="space-y-3">
           <h2 className="font-display text-xl font-bold text-qayed-encre">Messages du widget (postMessage)</h2>
           <p className="text-sm text-qayed-encre">
             Le widget envoie à la fenêtre parente <code>qayed:submitted</code>{' '}
@@ -314,6 +334,7 @@ window.addEventListener('message', (event) => {
             <li>Webhooks <code>fiche.delivered</code> et <code>fiche.delivery_failed</code> (un endpoint existant doit y être abonné : demandez-le à Qayed).</li>
             <li><code>GET /v1/fiches/&#123;fiche_id&#125;</code> renvoie <code>guests</code> : <code>first_name</code> et <code>last_name</code> de chaque voyageur déclaré (principal en tête), aucune autre donnée.</li>
             <li><code>PATCH /v1/fiches/&#123;fiche_id&#125;</code> accepte <code>booking_ref</code> pour rattacher une fiche saisie dans Qayed ; <code>POST /v1/fiche-sessions</code> la rouvre alors en complément.</li>
+            <li>Verrou de saisie vivant (2 minutes sans action, levé à la fermeture, reprise par un collègue) et <code>DELETE /v1/fiche-sessions/&#123;session_id&#125;/lock</code>.</li>
           </ul>
         </section>
 
