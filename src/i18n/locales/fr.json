@@ -2185,7 +2185,8 @@
         "notifications": "Notifications",
         "webhook_deliveries": "Livraisons webhook"
       }
-    }
+    },
+    "webhookEvents": "Événements envoyés"
   },
   "integrations": {
     "title": "Intégrations",

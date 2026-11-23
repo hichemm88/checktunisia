@@ -38,6 +38,16 @@ export interface AdminPartnerMetrics {
   webhook_errors: number;
 }
 
+/** Événements webhook proposés à l'abonnement (même liste que PartnerWebhookAdminController::EVENTS). */
+export const WEBHOOK_EVENTS = ['fiche.submitted', 'fiche.failed', 'session.expired', 'fiche.delivered', 'fiche.delivery_failed'] as const;
+
+/** Bascule un événement dans la liste d'abonnement, en gardant l'ordre de référence. */
+export const toggleWebhookEvent = (current: string[], event: string): string[] => {
+  const next = new Set(current);
+  if (next.has(event)) next.delete(event); else next.add(event);
+  return [...WEBHOOK_EVENTS.filter((e) => next.has(e)), ...[...next].filter((e) => !(WEBHOOK_EVENTS as readonly string[]).includes(e))];
+};
+
 export interface AdminWebhookEndpoint {
   id: string;
   url: string;

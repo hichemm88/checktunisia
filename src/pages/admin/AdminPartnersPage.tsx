@@ -6,6 +6,8 @@ import {
   adminPartnersApi,
   type AdminPartner,
   type AdminWebhookEndpoint,
+  WEBHOOK_EVENTS,
+  toggleWebhookEvent,
 } from '@/api/admin/partners';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -334,6 +336,11 @@ const WebhooksSection = ({ partnerId }: { partnerId: string }) => {
     mutationFn: (endpoint: AdminWebhookEndpoint) => adminPartnersApi.updateWebhook(partnerId, endpoint.id, { active: !endpoint.active }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-partner-webhooks', partnerId] }),
   });
+  const eventsMut = useAdminMutation({
+    mutationFn: ({ endpoint, event }: { endpoint: AdminWebhookEndpoint; event: string }) =>
+      adminPartnersApi.updateWebhook(partnerId, endpoint.id, { events: toggleWebhookEvent(endpoint.events ?? [], event) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-partner-webhooks', partnerId] }),
+  });
   const deleteMut = useAdminMutation({
     mutationFn: (endpointId: string) => adminPartnersApi.deleteWebhook(partnerId, endpointId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-partner-webhooks', partnerId] }),
@@ -374,6 +381,19 @@ const WebhooksSection = ({ partnerId }: { partnerId: string }) => {
               <button onClick={() => toggleMut.mutate(e)} className="text-gray-300 hover:text-[--qayed-cachet]"><Plug className="h-3.5 w-3.5" /></button>
               <button onClick={() => deleteMut.mutate(e.id)} className="text-gray-300 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
             </div>
+            <fieldset className="mt-2 flex flex-wrap gap-x-3 gap-y-1" disabled={eventsMut.isPending}>
+              <legend className="sr-only">{t('adminPartners.webhookEvents')}</legend>
+              {WEBHOOK_EVENTS.map((ev) => (
+                <label key={ev} className="flex min-h-[28px] items-center gap-1.5 text-[11px] text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={(e.events ?? []).includes(ev)}
+                    onChange={() => eventsMut.mutate({ endpoint: e, event: ev })}
+                  />
+                  <code>{ev}</code>
+                </label>
+              ))}
+            </fieldset>
             {expanded === e.id && <DeliveriesLog partnerId={partnerId} endpoint={e} />}
           </div>
         ))}

@@ -37,8 +37,8 @@ const ENDPOINTS: { method: string; path: string; desc: string }[] = [
   { method: 'GET', path: '/v1/fiche-sessions/by-booking-ref', desc: 'Retrouve la dernière session connue sans avoir gardé le session_id.' },
   { method: 'GET', path: '/v1/fiche-sessions/{session_id}', desc: 'Statut d\'une session (pending / submitted / expired), avec guest_count et expected_guest_count.' },
   { method: 'GET', path: '/v1/fiches', desc: 'Fiches validées d\'un établissement lié, saisies via l\'API ou directement dans Qayed (source), paginées par curseur ; filtres arrival_from, arrival_to, updated_since. Aucun numéro de document ni date de naissance.' },
-  { method: 'GET', path: '/v1/fiches/{fiche_id}', desc: 'Détail d\'une fiche soumise, avec son séjour (arrival_date, departure_date, checked_out_at, room_id, stay_status) et son delivery_status.' },
-  { method: 'PATCH', path: '/v1/fiches/{fiche_id}', desc: 'Prolongation, départ anticipé ou changement de chambre (departure_date, room_id, room), sans widget.' },
+  { method: 'GET', path: '/v1/fiches/{fiche_id}', desc: 'Détail d\'une fiche soumise, avec son séjour (arrival_date, departure_date, checked_out_at, room_id, stay_status), son delivery_status et guests (prénom et nom de chaque voyageur, rien d\'autre).' },
+  { method: 'PATCH', path: '/v1/fiches/{fiche_id}', desc: 'Prolongation, départ anticipé ou changement de chambre (departure_date, room_id, room), sans widget ; booking_ref rattache une fiche saisie dans Qayed à votre réservation.' },
 ];
 
 const ERROR_CODES: { code: string; status: number; desc: string }[] = [
@@ -228,6 +228,32 @@ export const DocsApiPage = () => {
         </section>
 
         <section className="space-y-3">
+          <h2 className="font-display text-xl font-bold text-qayed-encre">Rattacher une fiche saisie dans Qayed</h2>
+          <p className="text-sm text-qayed-encre">
+            Une fiche saisie directement dans Qayed (<code>source: "qayed"</code> dans <code>GET /v1/fiches</code>) et
+            sans référence de réservation peut être rattachée à votre réservation, pour ne jamais en créer une seconde :
+          </p>
+          <CodeBlock>{`curl -X PATCH ${origin}/v1/fiches/<fiche_id> \\
+  -H "Authorization: Bearer qyd_live_..." \\
+  -H "Content-Type: application/json" \\
+  -d '{"booking_ref": "RES-2026-0042"}'`}</CodeBlock>
+          <ul className="list-disc list-inside space-y-1 text-sm text-qayed-fiche">
+            <li>
+              Ensuite, <code>POST /v1/fiche-sessions</code> avec ce <code>booking_ref</code> rouvre cette fiche en mode{' '}
+              <code>amend</code> (complément) au lieu d'en créer une nouvelle. La fiche garde <code>source: "qayed"</code>{' '}
+              et devient lisible par <code>GET /v1/fiches/&#123;fiche_id&#125;</code>.
+            </li>
+            <li>
+              <code>409 booking_ref_conflict</code> si une autre fiche du même établissement porte déjà ce{' '}
+              <code>booking_ref</code> ; <code>409 booking_ref_already_set</code> si la fiche a déjà une autre
+              référence (rejouer la même valeur est sans effet) ; <code>404 fiche_not_found</code> pour un brouillon, une
+              fiche d'un établissement non lié ou déjà rattachée à un autre partenaire.
+            </li>
+            <li>Clé live uniquement : une clé de test ne voit pas les fiches réelles.</li>
+          </ul>
+        </section>
+
+        <section className="space-y-3">
           <h2 className="font-display text-xl font-bold text-qayed-encre">Messages du widget (postMessage)</h2>
           <p className="text-sm text-qayed-encre">
             Le widget envoie à la fenêtre parente <code>qayed:submitted</code>{' '}
@@ -285,7 +311,9 @@ window.addEventListener('message', (event) => {
           <ul className="list-disc list-inside space-y-1 text-sm text-qayed-encre">
             <li><code>GET /v1/fiches</code> : liste des fiches d'un établissement lié, saisies via votre intégration ou directement dans Qayed, paginée par curseur (<code>next_cursor</code>, <code>has_more</code>). Brouillons exclus ; une clé test ne voit que ses fiches de test.</li>
             <li><code>delivery_status</code> (<code>sent</code>, <code>pending</code>, <code>failed</code>, <code>not_applicable</code>) sur les fiches et les sessions : <code>failed</code> dès qu'un envoi est en échec définitif, sinon <code>pending</code> tant qu'un envoi est en cours, sinon <code>sent</code>.</li>
-            <li>Webhooks <code>fiche.delivered</code> et <code>fiche.delivery_failed</code>.</li>
+            <li>Webhooks <code>fiche.delivered</code> et <code>fiche.delivery_failed</code> (un endpoint existant doit y être abonné : demandez-le à Qayed).</li>
+            <li><code>GET /v1/fiches/&#123;fiche_id&#125;</code> renvoie <code>guests</code> : <code>first_name</code> et <code>last_name</code> de chaque voyageur déclaré (principal en tête), aucune autre donnée.</li>
+            <li><code>PATCH /v1/fiches/&#123;fiche_id&#125;</code> accepte <code>booking_ref</code> pour rattacher une fiche saisie dans Qayed ; <code>POST /v1/fiche-sessions</code> la rouvre alors en complément.</li>
           </ul>
         </section>
 
